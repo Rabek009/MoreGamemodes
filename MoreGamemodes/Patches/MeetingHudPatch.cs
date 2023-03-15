@@ -5,28 +5,6 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
     class MeetingHudStartPatch
     {
-        public static void Prefix(MeetingHud __instance)
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                foreach (var ar in PlayerControl.AllPlayerControls)
-                {
-                    if (ar != PlayerControl.LocalPlayer)
-                        pc.RpcSetNamePrivate(Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)], ar, true);
-                }         
-            }
-            if (Main.CamouflageTimer > 1f)
-            {
-                PlayerControl.LocalPlayer.RpcSetColor((byte)Main.StandardColors[PlayerControl.LocalPlayer.PlayerId]);
-                PlayerControl.LocalPlayer.RpcSetName(Main.StandardNames[PlayerControl.LocalPlayer.PlayerId]);
-                PlayerControl.LocalPlayer.RpcSetHat(Main.StandardHats[PlayerControl.LocalPlayer.PlayerId]);
-                PlayerControl.LocalPlayer.RpcSetSkin(Main.StandardSkins[PlayerControl.LocalPlayer.PlayerId]);
-                PlayerControl.LocalPlayer.RpcSetPet("pet_clank");
-                PlayerControl.LocalPlayer.RpcSetVisor(Main.StandardVisors[PlayerControl.LocalPlayer.PlayerId]);
-            }
-            Main.IsMeeting = true;
-        }
         public static void Postfix(MeetingHud __instance)
         {
             if (!AmongUsClient.Instance.AmHost)
@@ -59,6 +37,18 @@ namespace MoreGamemodes
                 MeetingHud.Instance.SkipVoteButton.SetDisabled();
                 HudManager.Instance.Chat.SetVisible(PlayerControl.LocalPlayer.Data.IsDead);
                 return;
+            }
+            if (Main.CamouflageTimer > 0f)
+            {
+                Main.CamouflageTimer = 0f;
+                Utils.RevertCamouflage();
+                PlayerControl.LocalPlayer.ReportDeadBody(PlayerControl.LocalPlayer.Data);
+                MeetingHud.Instance.RpcClose();
+            }
+            if (Options.RandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    pc.RpcRandomVentTeleport();
             }
             Main.IsMeeting = false;
         }

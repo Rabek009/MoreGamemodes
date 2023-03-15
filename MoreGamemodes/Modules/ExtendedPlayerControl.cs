@@ -18,7 +18,7 @@ namespace MoreGamemodes
             if (AmongUsClient.Instance.AmHost) player.NetTransform.SnapTo(location);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.None);
             NetHelpers.WriteVector2(location, writer);
-            writer.Write(player.NetTransform.lastSequenceId);         
+            writer.Write(player.NetTransform.lastSequenceId);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
         public static void RpcRandomVentTeleport(this PlayerControl player)
@@ -46,17 +46,21 @@ namespace MoreGamemodes
                 writer.Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName));
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
 
-                MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SendChat, SendOption.None, player.GetClientId());
-                writer2.Write(message);
+                MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
+                writer2.Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName));
                 AmongUsClient.Instance.FinishRpcImmediately(writer2);
 
-                MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
-                writer3.Write(Main.GameStarted ? Main.LastNotifyNames[(sender.PlayerId, player.PlayerId)] : name);
+                MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SendChat, SendOption.None, player.GetClientId());
+                writer3.Write(message);
                 AmongUsClient.Instance.FinishRpcImmediately(writer3);
 
                 MessageWriter writer4 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
                 writer4.Write(Main.GameStarted ? Main.LastNotifyNames[(sender.PlayerId, player.PlayerId)] : name);
                 AmongUsClient.Instance.FinishRpcImmediately(writer4);
+
+                MessageWriter writer5 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
+                writer5.Write(Main.GameStarted ? Main.LastNotifyNames[(sender.PlayerId, player.PlayerId)] : name);
+                AmongUsClient.Instance.FinishRpcImmediately(writer5);
             }
         }
         public static void RpcSendChatV2(this PlayerControl player, string message)
@@ -68,20 +72,24 @@ namespace MoreGamemodes
             writer.Write(Main.GameStarted ? Main.StandardNames[player.PlayerId] : name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
 
-            MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None);
-            writer2.Write(message);
+            MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None);
+            writer2.Write(Main.GameStarted ? Main.StandardNames[player.PlayerId] : name);
             AmongUsClient.Instance.FinishRpcImmediately(writer2);
+
+            MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None);
+            writer3.Write(message);
+            AmongUsClient.Instance.FinishRpcImmediately(writer3);
 
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, pc.GetClientId());
-                writer3.Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name);
-                AmongUsClient.Instance.FinishRpcImmediately(writer3);
-
                 MessageWriter writer4 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, pc.GetClientId());
                 writer4.Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name);
                 AmongUsClient.Instance.FinishRpcImmediately(writer4);
-            }
+
+                MessageWriter writer5 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, pc.GetClientId());
+                writer5.Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name);
+                AmongUsClient.Instance.FinishRpcImmediately(writer5);
+            }  
         }
         public static void RpcSetDesyncRole(this PlayerControl player, RoleTypes role, int clientId)
         {
@@ -145,7 +153,7 @@ namespace MoreGamemodes
             new LateTask(() =>
             {
                 shifter.RpcShapeshift(target, shouldAnimate);
-            }, 0.1f, "Shapeshift");
+            }, 0.01f, "Shapeshift");
         }
         public static void RpcRevertShapeshiftV2(this PlayerControl shifter, bool shouldAnimate)
         {
@@ -160,7 +168,7 @@ namespace MoreGamemodes
             new LateTask(() =>
             {
                 shifter.RpcRevertShapeshift(shouldAnimate);
-            }, 0.1f, "Revert Shapeshift");
+            }, 0.01f, "Revert Shapeshift");
         }
         public static void RpcResetAbilityCooldown(this PlayerControl target)
         {
@@ -235,6 +243,14 @@ namespace MoreGamemodes
             var itemFound = Main.AllPlayersItems.TryGetValue(player.PlayerId, out item);
             return itemFound ? item : Items.None;
         }
+        public static int Lives(this PlayerControl player)
+        {
+            var lives = 0;
+            if (player == null)
+                return lives;
+            var livesFound = Main.Lives.TryGetValue(player.PlayerId, out lives);
+            return livesFound ? lives : 0;
+        }
         public static bool CanVent(this PlayerControl player)
         {
             if (((Options.CurrentGamemode == Gamemodes.HideAndSeek && !Options.HnSImpostorsCanVent.GetBool()) || (Options.CurrentGamemode == Gamemodes.ShiftAndSeek && !Options.SnSImpostorsCanVent.GetBool())) && Main.Impostors.Contains(player.PlayerId))
@@ -242,6 +258,8 @@ namespace MoreGamemodes
             if (Options.CurrentGamemode == Gamemodes.BombTag)
                 return false;
             if (Options.CurrentGamemode == Gamemodes.RandomItems && Main.HackTimer > 1f && (Main.Impostors.Contains(player.PlayerId) == false || Options.HackAffectsImpostors.GetBool()))
+                return false;
+            if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
                 return false;
             return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
         }
@@ -262,6 +280,47 @@ namespace MoreGamemodes
             PlayerControl target = min.Key;
             return target;
         }
+        public static void RpcGuardAndKill(this PlayerControl killer, PlayerControl target, int colorId = 0)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            if (killer.AmOwner)
+            {
+                killer.ProtectPlayer(target, colorId);
+                killer.MurderPlayer(target);
+            }
+            else
+            {
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.ProtectPlayer, SendOption.None, killer.GetClientId());
+                writer.WriteNetObject(target);
+                writer.Write(colorId);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
 
+                MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.ProtectPlayer, SendOption.None, killer.GetClientId());
+                writer2.WriteNetObject(target);
+                writer2.Write(colorId);
+                AmongUsClient.Instance.FinishRpcImmediately(writer2);
+
+                new LateTask(() =>
+                {
+                    MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, killer.GetClientId());
+                    writer3.WriteNetObject(target);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer3);
+                }, 0.01f, "Late Kill");
+                
+            }
+        }
+        public static void RpcSetKillTimer(this PlayerControl player, float timer)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            if (player.AmOwner)
+            {
+                player.SetKillTimer(timer);
+                return;
+            }
+            var cooldown = GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.KillCooldown);
+            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.KillCooldown, timer * 2);
+            Utils.SyncSettingsToAll(GameOptionsManager.Instance.CurrentGameOptions);
+            player.RpcGuardAndKill(player);
+        }
     }
 }

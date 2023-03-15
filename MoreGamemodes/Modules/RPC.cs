@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Hazel;
-using UnityEngine;
 
 namespace MoreGamemodes
 {
