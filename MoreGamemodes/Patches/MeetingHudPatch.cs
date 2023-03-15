@@ -7,6 +7,7 @@ namespace MoreGamemodes
     {
         public static void Prefix(MeetingHud __instance)
         {
+            if (!AmongUsClient.Instance.AmHost) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 foreach (var ar in PlayerControl.AllPlayerControls)
