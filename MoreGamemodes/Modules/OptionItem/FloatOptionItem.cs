@@ -4,6 +4,7 @@ namespace MoreGamemodes
     {
         public FloatValueRule Rule;
 
+        // コンストラクタ
         public FloatOptionItem(int id, string name, float defaultValue, TabGroup tab, bool isSingleValue, FloatValueRule rule)
         : base(id, name, rule.GetNearestIndex(defaultValue), tab, isSingleValue)
         {
@@ -18,6 +19,7 @@ namespace MoreGamemodes
             );
         }
 
+        // Getter
         public override int GetInt() => (int)Rule.GetValueByIndex(CurrentValue);
         public override float GetFloat() => Rule.GetValueByIndex(CurrentValue);
         public override string GetString()

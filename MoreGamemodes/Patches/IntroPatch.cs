@@ -51,69 +51,58 @@ namespace MoreGamemodes
                 __instance.TeamTitle.color = Color.green;
                 __instance.BackgroundBar.material.color = Color.green;
             }
-            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
-                __instance.TeamTitle.text = "Battle Royale";
         }
     }
-    [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.ShowRole))]
+    [HarmonyPatch(typeof(IntroCutscene._ShowRole_d__35), nameof(IntroCutscene._ShowRole_d__35.MoveNext))]
     class RoleIntroPatch
     {
-        public static void Postfix(IntroCutscene __instance)
+        public static void Postfix(IntroCutscene._ShowRole_d__35 __instance)
         {
-            new LateTask(() =>
+            if (Options.CurrentGamemode == Gamemodes.HideAndSeek)
             {
-                if (Options.CurrentGamemode == Gamemodes.HideAndSeek)
+                if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Crewmate)
                 {
-                    if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Crewmate)
-                    {
-                        __instance.RoleText.text = "Hider";
-                        __instance.RoleBlurbText.text = "Do your tasks and survive";
-                    }
-                    else if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Impostor)
-                    {
-                        __instance.RoleText.text = "Seeker";
-                        __instance.RoleBlurbText.text = "Kill all hiders";
-                    }
+                    __instance.__4__this.RoleText.text = "Hider";
+                    __instance.__4__this.RoleBlurbText.text = "Do your tasks and survive";
                 }
-                else if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
+                else if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Impostor)
                 {
-                    if (PlayerControl.LocalPlayer.Data.Role.IsImpostor)
-                    {
-                        __instance.RoleText.text = "Shifter";
-                        __instance.RoleBlurbText.text = "Shift into your victim";
-                    }
-                    else
-                    {
-                        __instance.RoleText.text = "Hider";
-                        __instance.RoleBlurbText.text = "Hide in vents and do tasks";
-                    }
+                    __instance.__4__this.RoleText.text = "Seeker";
+                    __instance.__4__this.RoleBlurbText.text = "Kill all hiders";
                 }
-                else if (Options.CurrentGamemode == Gamemodes.BombTag)
+            }
+            else if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
+            {
+                if (PlayerControl.LocalPlayer.Data.Role.IsImpostor)
                 {
-                    if (PlayerControl.LocalPlayer.HasBomb())
-                    {
-                        __instance.RoleText.text = "You have bomb";
-                        __instance.RoleText.color = Color.gray;
-                        __instance.RoleBlurbText.text = "Give your bomb away";
-                        __instance.RoleBlurbText.color = Color.gray;
-                        __instance.YouAreText.color = Color.clear;
-                    }
-                    else
-                    {
-                        __instance.RoleText.text = "You haven't bomb";
-                        __instance.RoleText.color = Color.green;
-                        __instance.RoleBlurbText.text = "Don't get bomb";
-                        __instance.RoleBlurbText.color = Color.green;
-                        __instance.YouAreText.color = Color.clear;
-                    }
+                    __instance.__4__this.RoleText.text = "Shifter";
+                    __instance.__4__this.RoleBlurbText.text = "Shift into your victim";
                 }
-                else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
+                else
                 {
-                    __instance.RoleText.text = "Player";
-                    __instance.RoleBlurbText.text = "Kill everyone and survive";
-                    __instance.YouAreText.color = Color.clear;
+                    __instance.__4__this.RoleText.text = "Hider";
+                    __instance.__4__this.RoleBlurbText.text = "Hide in vents and do tasks";
                 }
-            }, 0.01f, "Show Role");
+            }
+            else if (Options.CurrentGamemode == Gamemodes.BombTag)
+            {
+                if (PlayerControl.LocalPlayer.HasBomb())
+                {
+                    __instance.__4__this.RoleText.text = "You have bomb";
+                    __instance.__4__this.RoleText.color = Color.gray;
+                    __instance.__4__this.RoleBlurbText.text = "Give your bomb away";
+                    __instance.__4__this.RoleBlurbText.color = Color.gray;
+                    __instance.__4__this.YouAreText.color = Color.clear;
+                }
+                else
+                {
+                    __instance.__4__this.RoleText.text = "You haven't bomb";
+                    __instance.__4__this.RoleText.color = Color.green;
+                    __instance.__4__this.RoleBlurbText.text = "Don't get bomb";
+                    __instance.__4__this.RoleBlurbText.color = Color.green;
+                    __instance.__4__this.YouAreText.color = Color.clear;
+                }
+            }
         }
     }
 }

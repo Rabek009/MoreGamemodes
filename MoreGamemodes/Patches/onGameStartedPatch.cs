@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using AmongUs.GameOptions;
 using UnityEngine;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -22,10 +23,10 @@ namespace MoreGamemodes
             Main.HackTimer = 0f;
             Main.FlashTimer = 0f;
             Main.CamouflageTimer = 0f;
-            Main.Lives = new Dictionary<byte, int>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
+                if (Main.StandardNames[pc.PlayerId] == "≋")
+                    Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
                 Main.StandardColors[pc.PlayerId] = pc.Data.DefaultOutfit.ColorId;
                 Main.StandardHats[pc.PlayerId] = pc.Data.DefaultOutfit.HatId;
                 Main.StandardSkins[pc.PlayerId] = pc.Data.DefaultOutfit.SkinId;
@@ -35,7 +36,6 @@ namespace MoreGamemodes
                 pc.RpcSetBomb(false);
                 pc.RpcSetItem(Items.None);
                 Main.ShieldTimer[pc.PlayerId] = 0f;
-                Main.Lives[pc.PlayerId] = Options.Lives.GetInt();
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
@@ -92,33 +92,6 @@ namespace MoreGamemodes
                     }
                 }
             }
-            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
-            {
-                GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (pc.AmOwner)
-                        pc.RpcSetRole(RoleTypes.Impostor);
-                    else
-                        pc.RpcSetRole(RoleTypes.Crewmate);
-                }
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (!pc.AmOwner)
-                    {
-                        pc.RpcSetDesyncRole(RoleTypes.Impostor, pc.GetClientId());
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                        {
-                            if (pc != ar)
-                                ar.RpcSetDesyncRole(RoleTypes.Crewmate, pc.GetClientId());
-                        }
-                    }
-                }
-            }
             Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
 
         }
@@ -147,6 +120,14 @@ namespace MoreGamemodes
                         if (Options.ImpostorsAreVisible.GetBool())
                             pc.RpcSetName(Utils.ColorString(Color.red, pc.Data.PlayerName));
                         pc.RpcToggleCanVent(Options.SnSImpostorsCanVent.GetBool());
+                    }
+                    else
+                    {
+                        if (Options.ImpostorsAreVisible.GetBool())
+                        {
+                            foreach (var ar in PlayerControl.AllPlayerControls)
+                                pc.RpcSetNamePrivate("CREWMATE\n" + pc.Data.PlayerName, ar);
+                        }
                     }
                 }
             }
@@ -190,14 +171,6 @@ namespace MoreGamemodes
                     pc.RpcToggleCanVent(false);
                 }
             }
-            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
-            {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    pc.RpcToggleCanVent(false);
-                    pc.RpcSetName(Utils.ColorString(Color.white, Main.StandardNames[pc.PlayerId]));
-                }              
-            }
         }
     }
 
@@ -217,7 +190,7 @@ namespace MoreGamemodes
             }
             Main.CanGameEnd = true;
             Main.Timer = 0f;
-            if (Options.RandomSpawn.GetBool())
+            if ((Options.CurrentGamemode == Gamemodes.HideAndSeek && Options.HnSTeleportOnStart.GetBool()) || (Options.CurrentGamemode == Gamemodes.ShiftAndSeek && Options.SnSTeleportOnStart.GetBool()) || (Options.CurrentGamemode == Gamemodes.BombTag && Options.BTTeleportOnStart.GetBool()))
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.RpcRandomVentTeleport();

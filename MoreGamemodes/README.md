@@ -96,7 +96,7 @@ meetings, sabotages or venting. Click kill button to give bomb away. Last standi
 | Max players with bomb    |
 
 ### Random items
-Crewmates get items by doing tasks, impostors by killing. Items are given randomly. Pet your pet to use item. Some items(knowledge,<br>
+Crewmates get items by doing tasks, impostors by killing. Items are given randomly. Pet your pet to use item. Some items(knowlegde,<br>
 gun, illusion, finder and rope) works on nearest player. Other rules are just like in classic game. Random items works with special roles.<br>
 
 #### Items
@@ -112,13 +112,13 @@ Increases discussion and voting time. Only crewmates can get this item.<br>
 | Voting time increase     |
 
 
-##### Knowledge
+##### Knowlegde
 You can investigate nearest player. If this player is good, he has green name. If this player is bad, he has red name. Depending on options<br> target can see your name in black after this. Only crewmates can get this item.<br>
 
 ###### Game options
 | Name                 |
 | -------------------- |
-| Enable knowledge     |
+| Enable knowlegde     |
 | Crewmates see reveal |
 | Impostors see reveal |
 
@@ -240,28 +240,6 @@ Type /stop to end meeting immediately with skip result. Impostors can get this i
 | ------------------------ |
 | Enable stop              |
 | Can be given to crewmate |
-
-### Battle royale
-Everyone is impostors. Clik kill button to attack. If you get hit, you lose 1 live. When your lives drop down to 0, you die and lose.<br>
-Last one alive wins! No reporting, emergiencies, venting and sabotaging. Depending on options you see arrow to nearst player.<br>
-
-#### Game options
-| Name                    |
-| ----------------------- |
-| Lives                   |
-| Lives visible to others |
-| Arrow to nearest player |
-
-### Additional gamemodes
-Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.<br>
-
-#### Random spawn
-At start teleports everyone to random vent. Depending on options it teleports after meeting too.<br>
-
-##### Game options
-| Name                   |
-| ---------------------- |
-| Teleport after meeting |
 
 ## Other functions
 

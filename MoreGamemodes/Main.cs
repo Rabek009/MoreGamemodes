@@ -5,6 +5,7 @@ using HarmonyLib;
 using System.Linq;
 using System.Collections.Generic;
 using AmongUs.GameOptions;
+using System.Reflection;
 using UnityEngine;
 
 namespace MoreGamemodes;
@@ -46,7 +47,6 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, byte> AllKills;
     public static Dictionary<byte, float> ShieldTimer;
     public static bool IsMeeting;
-    public static Dictionary<byte, int> Lives;
     public override void Load()
     {
         Instance = this;
@@ -77,8 +77,7 @@ public partial class Main : BasePlugin
         AllKills = new Dictionary<byte, byte>();
         ShieldTimer = new Dictionary<byte, float>();
         IsMeeting = false;
-        Lives = new Dictionary<byte, int>();
-
+        BepInEx.Logging.Logger.CreateLogSource("MoreGamemodes").LogInfo(string.Join("\n", Assembly.GetExecutingAssembly().GetManifestResourceNames()));
         Harmony.PatchAll();
     }
 
@@ -89,7 +88,7 @@ public partial class Main : BasePlugin
         {
             GameStarted = false;
             if (__instance.AmOwner)
-            {
+            { 
                 CanGameEnd = true;
                 Timer = 0f;
                 StandardColors = new Dictionary<byte, int>();
@@ -109,8 +108,13 @@ public partial class Main : BasePlugin
                 AllKills = new Dictionary<byte, byte>();
                 ShieldTimer = new Dictionary<byte, float>();
                 IsMeeting = false;
-                Lives = new Dictionary<byte, int>();
             }
+            StandardNames[__instance.PlayerId] = "≋";
+            StandardColors[__instance.PlayerId] = __instance.Data.DefaultOutfit.ColorId;
+            StandardHats[__instance.PlayerId] = __instance.Data.DefaultOutfit.HatId;
+            StandardSkins[__instance.PlayerId] = __instance.Data.DefaultOutfit.SkinId;
+            StandardPets[__instance.PlayerId] = __instance.Data.DefaultOutfit.PetId;
+            StandardVisors[__instance.PlayerId] = __instance.Data.DefaultOutfit.VisorId;
         }
     }
 }
@@ -132,7 +136,6 @@ public enum Gamemodes
     ShiftAndSeek,
     BombTag,
     RandomItems,
-    BattleRoyale,
     All = int.MaxValue
 }
 public enum Items
@@ -140,7 +143,7 @@ public enum Items
     None = 0,
     //crewmate
     TimeSlower,
-    Knowledge,
+    Knowlegde,
     Shield,
     Gun,
     Illusion,

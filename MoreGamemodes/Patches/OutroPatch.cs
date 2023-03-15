@@ -26,7 +26,6 @@ namespace MoreGamemodes
             Main.ShieldTimer = new Dictionary<byte, float>();
             GameOptionsManager.Instance.CurrentGameOptions = Main.RealOptions.DeepCopy();
             Main.RealOptions = null;
-            Main.Lives = new Dictionary<byte, int>();
         }
     }
 }

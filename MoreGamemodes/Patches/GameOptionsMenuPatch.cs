@@ -109,14 +109,10 @@ namespace MoreGamemodes
                     tab = TabGroup.BombTagSettings; break;
                 case Gamemodes.RandomItems:
                     tab = TabGroup.RandomItemsSettings; break;
-                case Gamemodes.BattleRoyale:
-                    tab = TabGroup.BattleRoyaleSettings; break;
             }
 
             if (Options.CurrentGamemode != Gamemodes.Classic)
                 AddOptionTab(tab, HudManager.Instance.KillButton.graphic.sprite);
-
-            AddOptionTab(TabGroup.AdditionalGamemodes, HudManager.Instance.ImpostorVentButton.graphic.sprite);
 
             for (var i = 0; i < tabs.Count; ++i)
             {
@@ -158,10 +154,7 @@ namespace MoreGamemodes
                     tabs.Add(TabGroup.BombTagSettings); break;
                 case Gamemodes.RandomItems:
                     tabs.Add(TabGroup.RandomItemsSettings); break;
-                case Gamemodes.BattleRoyale:
-                    tabs.Add(TabGroup.BattleRoyaleSettings); break;
             }
-            tabs.Add(TabGroup.AdditionalGamemodes);
             foreach (var tab in tabs)
             {
                 if (__instance.transform.parent.parent.name != tab + "Tab") continue;

@@ -4,6 +4,9 @@ using System;
 using Assets.CoreScripts;
 using System.Text;
 using AmongUs.GameOptions;
+using System.Collections.Generic;
+using Hazel;
+using Reactor.Networking.Rpc;
 
 namespace MoreGamemodes
 {
@@ -466,10 +469,6 @@ namespace MoreGamemodes
                                 Options.Gamemode.CurrentValue = 4;
                                 PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is random items", "GamemodesChanger");
                                 break;
-                            case "battleroyale":
-                                Options.Gamemode.CurrentValue = 5;
-                                PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is battle royale", "GamemodesChanger");
-                                break;
                         }
                         break;
                     case "/color":
@@ -520,9 +519,6 @@ namespace MoreGamemodes
                                     case "randomitems":
                                         Utils.SendChat("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
                                         break;
-                                    case "battleroyale":
-                                        Utils.SendChat("Battle Royale: Click kill button to attack. When player is attacked, he loses 1 live. If he still have lives left, he survives. If not, he die. Depending on options players have arrow to nearest player. Last standing alive wins!", "Gamemodes");
-                                        break;
                                     default:
                                         switch (Options.CurrentGamemode)
                                         {
@@ -541,9 +537,6 @@ namespace MoreGamemodes
                                             case Gamemodes.RandomItems:
                                                 Utils.SendChat("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
                                                 break;
-                                            case Gamemodes.BattleRoyale:
-                                                Utils.SendChat("Battle Royale: Click kill button to attack. When player is attacked, he loses 1 live. If he still have lives left, he survives. If not, he die. Depending on options players have arrow to nearest player. Last standing alive wins!", "Gamemodes");
-                                                break;
                                         }
                                         break;
                                 }
@@ -556,8 +549,8 @@ namespace MoreGamemodes
                                     case "timeslower":
                                         PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSlower), "Items");
                                         break;
-                                    case "knowledge":
-                                        PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Knowledge), "Items");
+                                    case "knowlegde":
+                                        PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Knowlegde), "Items");
                                         break;
                                     case "gun":
                                         PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Gun), "Items");
@@ -617,8 +610,6 @@ namespace MoreGamemodes
                         {
                             MeetingHud.Instance.RpcClose();
                             PlayerControl.LocalPlayer.RpcSetItem(Items.None);
-                            for (int i = 1; i <= 20; ++i)
-                                Utils.SendChat("Someone used /stop command!", "Spam");
                         }
                         break;
                     case "/n":
@@ -634,25 +625,28 @@ namespace MoreGamemodes
                         switch (Options.CurrentGamemode)
                         {
                             case Gamemodes.Classic:
-                                message = "Gamemode: Classic\n";
+                                message = "Gamemode: Classic";
                                 break;
                             case Gamemodes.HideAndSeek:
                                 message = "Gamemode: Hide and seek\n\n";
+                                message += "Teleport on start: "; message += Options.HnSTeleportOnStart.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors blind time: " + Options.HnSImpostorsBlindTime.GetFloat() + "s\n";
                                 message += "Impostors can kill during blind: "; message += Options.HnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors can vent: "; message += Options.HnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
+                                message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON" : "OFF";
                                 break;
                             case Gamemodes.ShiftAndSeek:
                                 message = "Gamemode: Shift and seek\n\n";
+                                message += "Teleport on start: "; message += Options.SnSTeleportOnStart.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors blind time: " + Options.SnSImpostorsBlindTime.GetFloat() + "s\n";
                                 message += "Impostors can kill during blind: "; message += Options.SnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
+                                message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON" : "OFF";
                                 break;
                             case Gamemodes.BombTag:
                                 message = "Gamemode: Bomb tag\n\n";
+                                message += "Teleport on start: "; message += Options.BTTeleportOnStart.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Teleport after explosion: "; message += Options.TeleportAfterExplosion.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Explosion delay: " + Options.ExplosionDelay.GetInt() + "s\n";
                                 message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
@@ -666,8 +660,8 @@ namespace MoreGamemodes
                                     message += "Discussion time increase: " + Options.DiscussionTimeIncrease.GetInt() + "s\n";
                                     message += "Voting time increase: " + Options.VotingTimeIncrease.GetInt() + "s\n";
                                 }
-                                message += "\nKnowledge: "; message += Options.EnableKnowledge.GetBool() ? "ON\n" : "OFF\n";
-                                if (Options.EnableKnowledge.GetBool())
+                                message += "\nKnowlegde: "; message += Options.EnableKnowlegde.GetBool() ? "ON\n" : "OFF\n";
+                                if (Options.EnableKnowlegde.GetBool())
                                 {
                                     message += "Crewmates see reveal: "; message += Options.CrewmatesSeeReveal.GetBool() ? "ON\n" : "OFF\n";
                                     message += "Impostors see reveal: "; message += Options.ImpostorsSeeReveal.GetBool() ? "ON\n" : "OFF\n";
@@ -708,7 +702,7 @@ namespace MoreGamemodes
                                 {
                                     message += "Camouflage duration: " + Options.CamouflageDuration.GetFloat() + "s\n";
                                 }
-                                message += "\nMulti Teleport: "; message += Options.EnableMultiTeleport.GetBool() ? "ON\n" : "OFF\n";
+                                message += "\nMultiTeleport: "; message += Options.EnableMultiTeleport.GetBool() ? "ON\n" : "OFF\n";
                                 message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
                                 message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
                                 if (Options.EnableButton.GetBool())
@@ -723,24 +717,8 @@ namespace MoreGamemodes
                                     message += "Can be given to crewmate: "; message += Options.CanBeGivenToCrewmate.GetBool() ? "ON\n" : "OFF\n";
                                 }
                                 break;
-                            case Gamemodes.BattleRoyale:
-                                message = "Gamemode: Battle royale\n\n";
-                                message += "Lives: " + Options.Lives.GetInt() + "\n";
-                                message += "Lives Visible To Others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Arrow To Nearest Player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Grace Period: " + Options.GracePeriod.GetFloat() + "s\n";
-                                break;
                         }
-                        Utils.SendChat(message, "Options");
-
-                        message = "Additional Gamemodes:\n";
-                        if (Options.RandomSpawn.GetBool())
-                        {
-                            message += "\nRandom Spawn\n";
-                            message += "Teleport After Meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
-                        }
-                        if (message != "Additional Gamemodes:\n")
-                            Utils.SendChat(message, "Options");
+                        Utils.SendChat(message, "Options");         
                         break;
                     case "/id":
                         canceled = true;
@@ -862,9 +840,6 @@ namespace MoreGamemodes
                                 case "randomitems":
                                     player.RpcSendMessage("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
                                     break;
-                                case "battleroyale":
-                                    player.RpcSendMessage("Battle Royale: Click kill button to attack. When player is attacked, he loses 1 live. If he still have lives left, he survives. If not, he die. Depending on options players have arrow to nearest player. Last standing alive wins!", "Gamemodes");
-                                    break;
                                 default:
                                     switch (Options.CurrentGamemode)
                                     {
@@ -883,9 +858,6 @@ namespace MoreGamemodes
                                         case Gamemodes.RandomItems:
                                             player.RpcSendMessage("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
                                             break;
-                                        case Gamemodes.BattleRoyale:
-                                            player.RpcSendMessage("Battle Royale: Click kill button to attack. When player is attacked, he loses 1 live. If he still have lives left, he survives. If not, he die. Depending on options players have arrow to nearest player. Last standing alive wins!", "Gamemodes");
-                                            break;
                                     }
                                     break;
                             }
@@ -898,8 +870,8 @@ namespace MoreGamemodes
                                 case "timeslower":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSlower), "Items");
                                     break;
-                                case "knowledge":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Knowledge), "Items");
+                                case "knowlegde":
+                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Knowlegde), "Items");
                                     break;
                                 case "gun":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Gun), "Items");
@@ -959,9 +931,7 @@ namespace MoreGamemodes
                     {
                         MeetingHud.Instance.RpcClose();
                         player.RpcSetItem(Items.None);
-                        for (int i = 1; i <= 20; ++i)
-                            Utils.SendChat("Someone used /stop command!", "Spam");
-                    }          
+                    }
                     break;
                 case "/n":
                 case "/now":
@@ -976,25 +946,28 @@ namespace MoreGamemodes
                     switch (Options.CurrentGamemode)
                     {
                         case Gamemodes.Classic:
-                            message = "Gamemode: Classic\n";
+                            message = "Gamemode: Classic";
                             break;
                         case Gamemodes.HideAndSeek:
                             message = "Gamemode: Hide and seek\n\n";
+                            message += "Teleport on start: "; message += Options.HnSTeleportOnStart.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors blind time: " + Options.HnSImpostorsBlindTime.GetFloat() + "s\n";
                             message += "Impostors can kill during blind: "; message += Options.HnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.HnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON" : "OFF";
                             break;
                         case Gamemodes.ShiftAndSeek:
                             message = "Gamemode: Shift and seek\n\n";
+                            message += "Teleport on start: "; message += Options.SnSTeleportOnStart.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors blind time: " + Options.SnSImpostorsBlindTime.GetFloat() + "s\n";
                             message += "Impostors can kill during blind: "; message += Options.SnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON" : "OFF";
                             break;
                         case Gamemodes.BombTag:
                             message = "Gamemode: Bomb tag\n\n";
+                            message += "Teleport on start: "; message += Options.BTTeleportOnStart.GetBool() ? "ON\n" : "OFF\n";
                             message += "Teleport after explosion: "; message += Options.TeleportAfterExplosion.GetBool() ? "ON\n" : "OFF\n";
                             message += "Explosion delay: " + Options.ExplosionDelay.GetInt() + "s\n";
                             message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
@@ -1008,8 +981,8 @@ namespace MoreGamemodes
                                 message += "Discussion time increase: " + Options.DiscussionTimeIncrease.GetInt() + "s\n";
                                 message += "Voting time increase: " + Options.VotingTimeIncrease.GetInt() + "s\n";
                             }
-                            message += "\nKnowledge: "; message += Options.EnableKnowledge.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableKnowledge.GetBool())
+                            message += "\nKnowlegde: "; message += Options.EnableKnowlegde.GetBool() ? "ON\n" : "OFF\n";
+                            if (Options.EnableKnowlegde.GetBool())
                             {
                                 message += "Crewmates see reveal: "; message += Options.CrewmatesSeeReveal.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors see reveal: "; message += Options.ImpostorsSeeReveal.GetBool() ? "ON\n" : "OFF\n";
@@ -1050,7 +1023,7 @@ namespace MoreGamemodes
                             {
                                 message += "Camouflage duration: " + Options.CamouflageDuration.GetFloat() + "s\n";
                             }
-                            message += "\nMulti Teleport: "; message += Options.EnableMultiTeleport.GetBool() ? "ON\n" : "OFF\n";
+                            message += "\nMultiTeleport: "; message += Options.EnableMultiTeleport.GetBool() ? "ON\n" : "OFF\n";
                             message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
                             message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EnableButton.GetBool())
@@ -1065,24 +1038,8 @@ namespace MoreGamemodes
                                 message += "Can be given to crewmate: "; message += Options.CanBeGivenToCrewmate.GetBool() ? "ON\n" : "OFF\n";
                             }
                             break;
-                        case Gamemodes.BattleRoyale:
-                            message = "Gamemode: Battle royale\n\n";
-                            message += "Lives: " + Options.Lives.GetInt() + "\n";
-                            message += "Lives Visible To Others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Arrow To Nearest Player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Grace Period: " + Options.GracePeriod.GetFloat() + "s\n";
-                            break;
                     }
                     player.RpcSendMessage(message, "Options");
-
-                    message = "Additional Gamemodes:\n";
-                    if (Options.RandomSpawn.GetBool())
-                    {
-                        message += "\nRandom Spawn\n";
-                        message += "Teleport After Meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
-                    }
-                    if (message != "Additional Gamemodes:\n")
-                        player.RpcSendMessage(message, "Options");
                     break;
                 case "/id":
                     canceled = true;

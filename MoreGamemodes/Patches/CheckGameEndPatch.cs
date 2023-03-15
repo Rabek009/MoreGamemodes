@@ -21,27 +21,20 @@ namespace MoreGamemodes
             }
             else if (Options.CurrentGamemode == Gamemodes.HideAndSeek)
             {
-                if (CheckAndEndGameForEveryoneDied(__instance)) return false;
                 if (CheckAndEndGameForHideAndSeek(__instance)) return false;
                 if (CheckAndEndGameForTaskWin(__instance)) return false;
                 if (CheckAndEndGameForCrewmateWin(__instance)) return false;
             }
             else if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
             {
-                if (CheckAndEndGameForEveryoneDied(__instance)) return false;
                 if (CheckAndEndGameForHideAndSeek(__instance)) return false;
                 if (CheckAndEndGameForTaskWin(__instance)) return false;
                 if (CheckAndEndGameForCrewmateWin(__instance)) return false;
             }
             else if (Options.CurrentGamemode == Gamemodes.BombTag)
             {
+                if (CheckAndEndGameForBombTag(__instance)) return false;
                 if (CheckAndEndGameForEveryoneDied(__instance)) return false;
-                if (CheckAndEndGameForBattleRoyale(__instance)) return false;          
-            }
-            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
-            {
-                if (CheckAndEndGameForEveryoneDied(__instance)) return false;
-                if (CheckAndEndGameForBattleRoyale(__instance)) return false;
             }
             return false;
         }
@@ -77,10 +70,7 @@ namespace MoreGamemodes
                     if (!Main.Impostors.Contains(pc.PlayerId))
                         winners.Add(pc.PlayerId);
                 }
-                var reason = GameOverReason.HumansByVote;
-                if (TempData.LastDeathReason == DeathReason.Disconnect)
-                    reason = GameOverReason.ImpostorDisconnect;
-                StartEndGame(reason, winners);
+                StartEndGame(GameOverReason.HumansByVote, winners);
                 return true;
             }
             return false;
@@ -108,7 +98,7 @@ namespace MoreGamemodes
             }
             return false;
         }
-        private static bool CheckAndEndGameForBattleRoyale(ShipStatus __instance)
+        private static bool CheckAndEndGameForBombTag(ShipStatus __instance)
         {
             List<PlayerControl> AllAlivePlayers = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -160,7 +150,7 @@ namespace MoreGamemodes
                 case GameOverReason.HideAndSeek_ByKills: ImpostorWin = true; break;
                 default: ImpostorWin = false; break;
             }
-            foreach (var pc in Main.AllPlayerControls)
+            foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (!pc.Data.IsDead) ReviveReqiredPlayerIds.Add(pc.PlayerId);
                 if (winners.Contains(pc.PlayerId))
@@ -178,7 +168,7 @@ namespace MoreGamemodes
                         pc.RpcSetRole(RoleTypes.ImpostorGhost);
                 }
             }
-            foreach (var pc in Main.AllPlayerControls)
+            foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (winners.Contains(pc.PlayerId))
                 {

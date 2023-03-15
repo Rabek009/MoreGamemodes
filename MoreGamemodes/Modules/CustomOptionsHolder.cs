@@ -28,7 +28,7 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items"
         };
 
         //Main Settings
@@ -38,30 +38,33 @@ namespace MoreGamemodes
         public static OptionItem CanUseColorCommand;
         public static OptionItem CanUseNameCommand;
 
-        //Hide And Seek
+        //HideAndSeek
+        public static OptionItem HnSTeleportOnStart;
         public static OptionItem HnSImpostorsBlindTime;
         public static OptionItem HnSImpostorsCanKillDuringBlind;
         public static OptionItem HnSImpostorsCanVent;
         public static OptionItem HnSImpostorsCanCloseDoors;
 
-        //Shift And Seek
+        //ShiftAndSeek
+        public static OptionItem SnSTeleportOnStart;
         public static OptionItem SnSImpostorsBlindTime;
         public static OptionItem SnSImpostorsCanKillDuringBlind;
         public static OptionItem SnSImpostorsCanVent;
         public static OptionItem SnSImpostorsCanCloseDoors;
         public static OptionItem ImpostorsAreVisible;
 
-        //Bomb Tag
+        //Bombtag
+        public static OptionItem BTTeleportOnStart;
         public static OptionItem TeleportAfterExplosion;
         public static OptionItem ExplosionDelay;
         public static OptionItem PlayersWithBomb;
         public static OptionItem MaxPlayersWithBomb;
 
-        //Random Items
+        //RandomItems
         public static OptionItem EnableTimeSlower;
         public static OptionItem DiscussionTimeIncrease;
         public static OptionItem VotingTimeIncrease;
-        public static OptionItem EnableKnowledge;
+        public static OptionItem EnableKnowlegde;
         public static OptionItem CrewmatesSeeReveal;
         public static OptionItem ImpostorsSeeReveal;
         public static OptionItem EnableShield;
@@ -91,16 +94,6 @@ namespace MoreGamemodes
         public static OptionItem EnableStop;
         public static OptionItem CanBeGivenToCrewmate;
 
-        //Battle Royale
-        public static OptionItem Lives;
-        public static OptionItem LivesVisibleToOthers;
-        public static OptionItem ArrowToNearestPlayer;
-        public static OptionItem GracePeriod;
-
-        //Additional Gamemodes
-        public static OptionItem RandomSpawn;
-        public static OptionItem TeleportAfterMeeting;
-
         public static bool IsLoaded = false;
 
         public static void Load()
@@ -119,6 +112,7 @@ namespace MoreGamemodes
             CanUseNameCommand = BooleanOptionItem.Create(4, "Can Use /name Command", false, TabGroup.MainSettings, false);
 
             //Hide And seek
+            HnSTeleportOnStart = BooleanOptionItem.Create(1000, "Teleport On Start", true, TabGroup.HideAndSeekSettings, false);
             HnSImpostorsBlindTime = FloatOptionItem.Create(1001, "Impostors Blind Time", new(0f, 30f, 0.5f), 10f, TabGroup.HideAndSeekSettings, false)
                 .SetValueFormat(OptionFormat.Seconds);
             HnSImpostorsCanKillDuringBlind = BooleanOptionItem.Create(1002, "Impostors Can Kill During Blind", false, TabGroup.HideAndSeekSettings, false);
@@ -126,6 +120,7 @@ namespace MoreGamemodes
             HnSImpostorsCanCloseDoors = BooleanOptionItem.Create(1004, "Impostors Can Close Doors", false, TabGroup.HideAndSeekSettings, false);
 
             //Shift And Seek
+            SnSTeleportOnStart = BooleanOptionItem.Create(2000, "Teleport On Start", true, TabGroup.ShiftAndSeekSettings, false);
             SnSImpostorsBlindTime = FloatOptionItem.Create(2001, "Impostors Blind Time", new(0f, 30f, 0.5f), 10f, TabGroup.ShiftAndSeekSettings, false)
                 .SetValueFormat(OptionFormat.Seconds);
             SnSImpostorsCanKillDuringBlind = BooleanOptionItem.Create(2002, "Impostors Can Kill During Blind", false, TabGroup.ShiftAndSeekSettings, false);
@@ -134,6 +129,7 @@ namespace MoreGamemodes
             ImpostorsAreVisible = BooleanOptionItem.Create(2005, "Impostors Are Visible", true, TabGroup.ShiftAndSeekSettings, false);
 
             //Bomb Tag
+            BTTeleportOnStart = BooleanOptionItem.Create(3000, "Teleport On Start", false, TabGroup.BombTagSettings, false);
             TeleportAfterExplosion = BooleanOptionItem.Create(3001, "Teleport After Explosion", false, TabGroup.BombTagSettings, false);
             ExplosionDelay = IntegerOptionItem.Create(3002, "Explosion Delay", new(5, 120, 1), 25, TabGroup.BombTagSettings, false)
                 .SetValueFormat(OptionFormat.Seconds);
@@ -150,11 +146,11 @@ namespace MoreGamemodes
             VotingTimeIncrease = IntegerOptionItem.Create(4002, "Voting Time Increase", new(1, 100, 1), 15, TabGroup.RandomItemsSettings, false)
                 .SetValueFormat(OptionFormat.Seconds)
                 .SetParent(EnableTimeSlower);
-            EnableKnowledge = BooleanOptionItem.Create(4003, "Enable Knowledge", false, TabGroup.RandomItemsSettings, false);
+            EnableKnowlegde = BooleanOptionItem.Create(4003, "Enable Knowlegde", false, TabGroup.RandomItemsSettings, false);
             CrewmatesSeeReveal = BooleanOptionItem.Create(4004, "Crewmates See Reveal", false, TabGroup.RandomItemsSettings, false)
-                .SetParent(EnableKnowledge);
+                .SetParent(EnableKnowlegde);
             ImpostorsSeeReveal = BooleanOptionItem.Create(4005, "Impostors See Reveal", true, TabGroup.RandomItemsSettings, false)
-                .SetParent(EnableKnowledge);
+                .SetParent(EnableKnowlegde);
             EnableShield = BooleanOptionItem.Create(4006, "Enable Shield", false, TabGroup.RandomItemsSettings, false);
             ShieldDuration = FloatOptionItem.Create(4007, "Shield Duration", new(1f, 60f, 0.5f), 10f, TabGroup.RandomItemsSettings, false)
                 .SetValueFormat(OptionFormat.Seconds)
@@ -201,18 +197,6 @@ namespace MoreGamemodes
             EnableStop = BooleanOptionItem.Create(4030, "Enable Stop", false, TabGroup.RandomItemsSettings, false);
             CanBeGivenToCrewmate = BooleanOptionItem.Create(4031, "Can Be Given To Crewmate", true, TabGroup.RandomItemsSettings, false)
                 .SetParent(EnableStop);
-
-            //Battle Royale
-            Lives = IntegerOptionItem.Create(5000, "Lives", new(1, 99, 1), 3, TabGroup.BattleRoyaleSettings, false);
-            LivesVisibleToOthers = BooleanOptionItem.Create(5001, "Lives Visible To Others", false, TabGroup.BattleRoyaleSettings, false);
-            ArrowToNearestPlayer = BooleanOptionItem.Create(5002, "Arrow To Nearest Player", true, TabGroup.BattleRoyaleSettings, false);
-            GracePeriod = FloatOptionItem.Create(5003, "Grace Period", new(0f, 60f, 0.5f), 10f, TabGroup.BattleRoyaleSettings, false)
-                .SetValueFormat(OptionFormat.Seconds);
-
-            //Additional Gamemodes
-            RandomSpawn = BooleanOptionItem.Create(100000, "Random Spawn", false, TabGroup.AdditionalGamemodes, false);
-            TeleportAfterMeeting = BooleanOptionItem.Create(100001, "Teleport After Meeting", true, TabGroup.AdditionalGamemodes, false)
-                .SetParent(RandomSpawn);
 
             IsLoaded = true;
         }

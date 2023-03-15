@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using AmongUs.GameOptions;
 using UnityEngine;
 
 namespace MoreGamemodes
@@ -67,12 +68,56 @@ namespace MoreGamemodes
                         __instance.ReportButton.SetDisabled();
                         __instance.KillButton.ToggleVisible(false);
                     }
+                    if (player.Data.IsDead)
+                    {
+                        __instance.KillButton.SetDisabled();
+                        __instance.KillButton.ToggleVisible(false);
+                    }
                     break;
                 case Gamemodes.RandomItems:
-                    if (!Main.GameStarted || player.GetItem() == Items.None || player.GetItem() == Items.Stop)
+                    if (player.Data.Role.Role == RoleTypes.GuardianAngel)
+                    {
+                        if (Main.HackTimer > 1f)
+                        {
+                            __instance.AbilityButton.SetDisabled();
+                            __instance.AbilityButton.ToggleVisible(false);
+                        }
+                    }
+                    if (player.Data.Role.Role == RoleTypes.ImpostorGhost)
+                    {
+                        if (Main.HackTimer > 1f && Options.HackAffectsImpostors.GetBool())
+                        {
+                            __instance.SabotageButton.SetDisabled();
+                            __instance.SabotageButton.ToggleVisible(false);
+                        }
+                    }
+                    if (!player.Data.Role.IsSimpleRole)
+                    {
+                        if (Main.HackTimer > 1f && (Main.Impostors.Contains(player.PlayerId) == false || Options.HackAffectsImpostors.GetBool()))
+                        {
+                            __instance.AbilityButton.SetDisabled();
+                            __instance.AbilityButton.ToggleVisible(false);
+                        }
+                    }
+                    if (!Main.GameStarted || player.GetItem() == Items.None || player.GetItem() == Items.Stop || Main.HackTimer > 1f)
                     {
                         __instance.PetButton.SetDisabled();
                         __instance.PetButton.ToggleVisible(false);
+                    }
+                    if (Main.HackTimer > 1f && (Main.Impostors.Contains(player.PlayerId) == false || Options.HackAffectsImpostors.GetBool()))
+                    {
+                        __instance.AbilityButton.SetDisabled();
+                        __instance.AbilityButton.ToggleVisible(false);
+                        __instance.ImpostorVentButton.SetDisabled();
+                        __instance.ImpostorVentButton.ToggleVisible(false);
+                        __instance.KillButton.SetDisabled();
+                        __instance.KillButton.ToggleVisible(false);
+                        __instance.ReportButton.SetDisabled();
+                        __instance.ReportButton.ToggleVisible(false);
+                        __instance.SabotageButton.SetDisabled();
+                        __instance.SabotageButton.ToggleVisible(false);
+                        __instance.UseButton.SetDisabled();
+                        __instance.UseButton.ToggleVisible(false);
                     }
                     if (__instance.PetButton.isActiveAndEnabled)
                     {
@@ -81,7 +126,7 @@ namespace MoreGamemodes
                             case Items.TimeSlower:
                                 __instance.PetButton.OverrideText("Slow Time");
                                 break;
-                            case Items.Knowledge:
+                            case Items.Knowlegde:
                                 __instance.PetButton.OverrideText("Reveal");
                                 break;
                             case Items.Shield:
@@ -123,15 +168,6 @@ namespace MoreGamemodes
                         }
                     }
                     break;
-                case Gamemodes.BattleRoyale:
-                    __instance.ImpostorVentButton.SetDisabled();
-                    __instance.ImpostorVentButton.ToggleVisible(false);
-                    __instance.ReportButton.SetDisabled();
-                    __instance.ReportButton.ToggleVisible(false);
-                    __instance.SabotageButton.SetDisabled();
-                    __instance.SabotageButton.ToggleVisible(false);
-                    __instance.KillButton.OverrideText("Attack");
-                    break;
             }
         }
     }
@@ -142,7 +178,7 @@ namespace MoreGamemodes
         public static void Postfix(MapBehaviour __instance)
         {
             if ((Options.CurrentGamemode == Gamemodes.HideAndSeek && !Options.HnSImpostorsCanCloseDoors.GetBool()) || (Options.CurrentGamemode == Gamemodes.ShiftAndSeek && !Options.SnSImpostorsCanCloseDoors.GetBool()) ||
-                Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale)
+                Options.CurrentGamemode == Gamemodes.BombTag)
             {
                 __instance.Close();
                 __instance.ShowNormalMap();
