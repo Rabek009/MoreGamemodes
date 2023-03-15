@@ -28,7 +28,7 @@ namespace MoreGamemodes
             new LateTask(() =>
             {
                 client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v0.0.2! If you use other verison of this mod, please leave!", "Welcome");
-            }, 1.5f, "Welcome Message");
+            }, 1.5f, "WelcomeMessage");
         }
     }
 }
