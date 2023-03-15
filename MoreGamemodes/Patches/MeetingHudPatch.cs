@@ -5,6 +5,14 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
     class MeetingHudStartPatch
     {
+        public static void Prefix(MeetingHud __instance)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                foreach (var ar in PlayerControl.AllPlayerControls)
+                    pc.RpcSetNamePrivate(Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)], ar, true);
+            }
+        }
         public static void Postfix(MeetingHud __instance)
         {
             if (!AmongUsClient.Instance.AmHost)
@@ -23,7 +31,8 @@ namespace MoreGamemodes
                 if (target == null) continue;
 
                 pva.NameText.text = Main.LastNotifyNames[(target.PlayerId, seer.PlayerId)];
-            }
+            }        
+            Main.IsMeeting = true;
         }
     }
 

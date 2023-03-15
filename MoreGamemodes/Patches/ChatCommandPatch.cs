@@ -4,6 +4,7 @@ using System;
 using Assets.CoreScripts;
 using System.Text;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -1136,7 +1137,9 @@ namespace MoreGamemodes
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
             if (chatText.IndexOf("who", StringComparison.OrdinalIgnoreCase) >= 0)
                 DestroyableSingleton<Telemetry>.Instance.SendWho();
-            __instance.RpcSendChatV2(chatText);
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
+            messageWriter.Write(chatText);
+            messageWriter.EndMessage();
             __result = true;
             return false;
         }

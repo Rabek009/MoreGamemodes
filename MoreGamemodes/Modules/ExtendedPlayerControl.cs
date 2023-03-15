@@ -63,34 +63,6 @@ namespace MoreGamemodes
                 AmongUsClient.Instance.FinishRpcImmediately(writer5);
             }
         }
-        public static void RpcSendChatV2(this PlayerControl player, string message)
-        {
-            if (player == null) return;
-            var name = player.Data.PlayerName;
-
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None);
-            writer.Write(Main.GameStarted ? Main.StandardNames[player.PlayerId] : name);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-
-            MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None);
-            writer2.Write(Main.GameStarted ? Main.StandardNames[player.PlayerId] : name);
-            AmongUsClient.Instance.FinishRpcImmediately(writer2);
-
-            MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None);
-            writer3.Write(message);
-            AmongUsClient.Instance.FinishRpcImmediately(writer3);
-
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                MessageWriter writer4 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, pc.GetClientId());
-                writer4.Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name);
-                AmongUsClient.Instance.FinishRpcImmediately(writer4);
-
-                MessageWriter writer5 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, pc.GetClientId());
-                writer5.Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name);
-                AmongUsClient.Instance.FinishRpcImmediately(writer5);
-            }  
-        }
         public static void RpcSetDesyncRole(this PlayerControl player, RoleTypes role, int clientId)
         {
             if (player == null) return;
