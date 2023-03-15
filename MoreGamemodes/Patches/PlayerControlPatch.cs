@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Hazel;
 using AmongUs.GameOptions;
-using Cpp2IL.Core.Analysis.Actions.x86.Important;
-using UnityEngine.Playables;
 
 namespace MoreGamemodes
 {
@@ -75,6 +73,23 @@ namespace MoreGamemodes
                     return false;
                 }
             }
+            if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
+            {
+                if (Main.Timer < Options.GracePeriod.GetFloat())
+                    return false;
+                if (target.Lives() > 1)
+                {
+                    --Main.Lives[target.PlayerId];
+                    killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
+                }
+                else
+                {
+                    Main.Lives[target.PlayerId] = 0;
+                    killer.RpcMurderPlayer(target);
+                    killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
+                }
+                return false;
+            }
             return true;
         }
     }
@@ -98,7 +113,7 @@ namespace MoreGamemodes
                 Main.AllKills[target.PlayerId] = killer.PlayerId;
             }
 
-            if (Main.Impostors.Contains(target.PlayerId) || Options.CurrentGamemode == Gamemodes.BombTag)
+            if (Main.Impostors.Contains(target.PlayerId) || Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale)
                 target.RpcSetRole(RoleTypes.ImpostorGhost);
         }
     }
@@ -122,6 +137,8 @@ namespace MoreGamemodes
                         shapeshifter.RpcSetNamePrivate(Main.LastNotifyNames[(shapeshifter.PlayerId, pc.PlayerId)], pc, true);
                     break;
             }
+            if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
+                shapeshifter.RpcSetName(Utils.ColorString(Color.red, Main.StandardNames[target.PlayerId]));
         }
     }
 
@@ -130,7 +147,7 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] GameData.PlayerInfo target)
         {
-            if (Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.BombTag) return false;
+            if (Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale) return false;
             if (Options.CurrentGamemode == Gamemodes.RandomItems && Main.HackTimer > 1f && (Main.Impostors.Contains(__instance.PlayerId) == false || Options.HackAffectsImpostors.GetBool())) return false;
             return true;
         }
@@ -205,7 +222,7 @@ namespace MoreGamemodes
                 }
                 Main.Timer = 0f;
             }
-            if (Options.CurrentGamemode == Gamemodes.RandomItems && Main.GameStarted)
+            else if (Options.CurrentGamemode == Gamemodes.RandomItems && Main.GameStarted)
             {
                 if (Main.FlashTimer > 1f)
                 {
@@ -234,7 +251,7 @@ namespace MoreGamemodes
                     Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
                     Main.HackTimer = 0f;
                 }
-                if (Main.CamouflageTimer > 0f)
+                if (Main.CamouflageTimer > 0f && !Main.IsMeeting)
                 {
                     Main.CamouflageTimer -= Time.fixedDeltaTime;
                 }
@@ -284,7 +301,7 @@ namespace MoreGamemodes
                                     Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
                                     pc.RpcSetItem(Items.None);
                                     break;
-                                case Items.Knowlegde:
+                                case Items.Knowledge:
                                     var target = pc.GetClosestPlayer();
                                     if (Main.Impostors.Contains(target.PlayerId))
                                     {
@@ -395,6 +412,33 @@ namespace MoreGamemodes
                         }
                         pc.MyPhysics.RpcCancelPetV2();
                     }
+                }
+            }
+            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale && Main.GameStarted)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    var livesText = "";
+                    if (pc.Lives() <= 5)
+                    {
+                        for (int i = 1; i <= pc.Lives(); i++)
+                            livesText += "♥";
+                    }
+                    else
+                        livesText = "Lives: " + pc.Lives();
+
+                    var arrow = Utils.GetArrow(pc.transform.position, pc.GetClosestPlayer().transform.position);
+                    livesText = Utils.ColorString(Color.red, livesText);
+                    arrow = Utils.ColorString(Palette.PlayerColors[Main.StandardColors[pc.GetClosestPlayer().PlayerId]], arrow);
+                    if (pc.Data.IsDead)
+                        arrow = "";
+                    if (Options.LivesVisibleToOthers.GetBool())
+                    {
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            pc.RpcSetNamePrivate(Utils.ColorString(Color.white, Main.StandardNames[pc.PlayerId]) + (pc == ar && Options.ArrowToNearestPlayer.GetBool() ? " " + arrow : "") + "\n" + livesText, ar);
+                    }
+                    else
+                        pc.RpcSetNamePrivate(Utils.ColorString(Color.white, Main.StandardNames[pc.PlayerId]) + (Options.ArrowToNearestPlayer.GetBool() ? " " + arrow : "") + "\n" + livesText);
                 }
             }
             if (Main.GameStarted)

@@ -7,9 +7,9 @@ namespace MoreGamemodes
     class OnPlayerJoinedPatch
     {
         public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
-        {
+        {  
             if (!AmongUsClient.Instance.AmHost) return;
-            Main.StandardNames[client.Character.PlayerId] = client.Character.Data.DefaultOutfit.PlayerName;
+            Main.StandardNames[client.Character.PlayerId] = client.Character.Data.PlayerName;
             Main.StandardColors[client.Character.PlayerId] = client.Character.Data.DefaultOutfit.ColorId;
             Main.StandardHats[client.Character.PlayerId] = client.Character.Data.DefaultOutfit.HatId;
             Main.StandardSkins[client.Character.PlayerId] = client.Character.Data.DefaultOutfit.SkinId;
@@ -27,7 +27,7 @@ namespace MoreGamemodes
             if (client.Character.AmOwner) return;
             new LateTask(() =>
             {
-                client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes!", "Welcome");
+                client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v0.0.2! If you use other verison of this mod, please leave!", "Welcome");
             }, 1.5f, "Welcome Message");
         }
     }

@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using AmongUs.GameOptions;
 using Hazel;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
 using UnityEngine;
 
@@ -41,7 +38,7 @@ namespace MoreGamemodes
             List<Items> items = new();
             var rand = new System.Random();
             if (Options.EnableTimeSlower.GetBool()) items.Add(Items.TimeSlower);
-            if (Options.EnableKnowlegde.GetBool()) items.Add(Items.Knowlegde);
+            if (Options.EnableKnowledge.GetBool()) items.Add(Items.Knowledge);
             if (Options.EnableShield.GetBool()) items.Add(Items.Shield);
             if (Options.EnableGun.GetBool()) items.Add(Items.Gun);
             if (Options.EnableIllusion.GetBool()) items.Add(Items.Illusion);
@@ -78,8 +75,8 @@ namespace MoreGamemodes
             {
                 case Items.TimeSlower:
                     return "Time Slower";
-                case Items.Knowlegde:
-                    return "Knowlegde";
+                case Items.Knowledge:
+                    return "Knowledge";
                 case Items.Shield:
                     return "Shield";
                 case Items.Gun:
@@ -117,7 +114,7 @@ namespace MoreGamemodes
             {
                 case Items.TimeSlower:
                     return "Increase voting time";
-                case Items.Knowlegde:
+                case Items.Knowledge:
                     return "Find out if someone is bad";
                 case Items.Shield:
                     return "Grant yourself a shield";
@@ -156,8 +153,8 @@ namespace MoreGamemodes
             {
                 case Items.TimeSlower:
                     return "Time Slower(Crewmate only): Increase discussion and voting time by amount in settings.";
-                case Items.Knowlegde:
-                    return "Knowlegde(Crewmate only): You can investigate nearest player. Green name means that he's crewmate, red name means impostor. Depending on options target can see that you investigated him. Black name means that this person investigated you";
+                case Items.Knowledge:
+                    return "Knowledge(Crewmate only): You can investigate nearest player. Green name means that he's crewmate, red name means impostor. Depending on options target can see that you investigated him. Black name means that this person investigated you";
                 case Items.Shield:
                     return "Shield(Crewmate only): You grant yourself a shield for some time. If someone try kill you in this time, he can't. You will see that this person tried to kill you.";
                 case Items.Gun:
@@ -293,40 +290,6 @@ namespace MoreGamemodes
             }
         }
 
-        public static Sprite LoadSprite(string path, float pixelsPerUnit)
-        {
-            try
-            {
-                Texture2D texture = LoadTexture(path);
-                return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
-            }
-            catch
-            {
-                System.Console.WriteLine("Error loading sprite from path: " + path);
-            }
-            return null;
-        }
-
-        public static unsafe Texture2D LoadTexture(string path)
-        {
-            try
-            {
-                Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, true);
-                Assembly assembly = Assembly.GetExecutingAssembly();
-                Stream stream = assembly.GetManifestResourceStream(path);
-                var length = stream.Length;
-                var byteTexture = new Il2CppStructArray<byte>(length);
-                stream.Read(new Span<byte>(IntPtr.Add(byteTexture.Pointer, IntPtr.Size * 4).ToPointer(), (int)length));
-                ImageConversion.LoadImage(texture, byteTexture, false);
-                return texture;
-            }
-            catch
-            {
-                System.Console.WriteLine("Error loading texture from resources: " + path);
-            }
-            return null;
-        }
-
         public static void Camouflage()
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -442,6 +405,22 @@ namespace MoreGamemodes
             bot.RpcSetVisor(visorId);
             bot.RpcSetLevel(level);
             bot.RpcSetNamePlate(namePlateId);
+        }
+
+        public static string GetArrow(Vector3 from, Vector3 to)
+        {
+            var dir = to - from;
+            byte index;
+            if (dir.magnitude < 2)
+            {
+                index = 8;
+            }
+            else
+            {
+                var angle = Vector3.SignedAngle(Vector3.down, dir, Vector3.back) + 180 + 22.5;
+                index = (byte)(((int)(angle / 45)) % 8);
+            }
+            return "↑↗→↘↓↙←↖・"[index].ToString();
         }
     }
 }

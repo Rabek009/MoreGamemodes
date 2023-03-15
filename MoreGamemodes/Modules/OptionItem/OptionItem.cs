@@ -54,7 +54,6 @@ namespace MoreGamemodes
 
         public event EventHandler<UpdateValueEventArgs> UpdateValueEvent;
 
-        // コンストラクタ
         public OptionItem(int id, string name, int defaultValue, TabGroup tab, bool isSingleValue)
         {
             Id = id;
@@ -220,7 +219,9 @@ namespace MoreGamemodes
         HideAndSeekSettings,
         ShiftAndSeekSettings,
         BombTagSettings,
-        RandomItemsSettings
+        RandomItemsSettings,
+        BattleRoyaleSettings,
+        AdditionalGamemodes,
     }
     public enum OptionFormat
     {
