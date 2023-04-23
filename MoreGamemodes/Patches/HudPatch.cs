@@ -93,6 +93,9 @@ namespace MoreGamemodes
                             case Items.Illusion:
                                 __instance.PetButton.OverrideText("Manipulate");
                                 break;
+                            case Items.Radar:
+                                __instance.PetButton.OverrideText("Radar");
+                                break;
                             case Items.TimeSpeeder:
                                 __instance.PetButton.OverrideText("Speed Time");
                                 break;
@@ -108,6 +111,9 @@ namespace MoreGamemodes
                             case Items.MultiTeleport:
                                 __instance.PetButton.OverrideText("Multi TP");
                                 break;
+                            case Items.Bomb:
+                                __instance.PetButton.OverrideText("Detonated");
+                                break;
                             case Items.Teleport:
                                 __instance.PetButton.OverrideText("Teleport");
                                 break;
@@ -120,6 +126,9 @@ namespace MoreGamemodes
                             case Items.Rope:
                                 __instance.PetButton.OverrideText("Pull");
                                 break;
+                            case Items.Newsletter:
+                                __instance.PetButton.OverrideText("Get Info");
+                                break;
                         }
                     }
                     break;
@@ -131,6 +140,15 @@ namespace MoreGamemodes
                     __instance.SabotageButton.SetDisabled();
                     __instance.SabotageButton.ToggleVisible(false);
                     __instance.KillButton.OverrideText("Attack");
+                    break;
+                case Gamemodes.Speedrun:
+                    __instance.ReportButton.SetDisabled();
+                    __instance.ReportButton.ToggleVisible(false);
+                    if (Options.CurrentBodyType == SpeedrunBodyTypes.Ghost)
+                    {
+                        __instance.AbilityButton.SetDisabled();
+                        __instance.AbilityButton.ToggleVisible(false);
+                    }
                     break;
             }
         }

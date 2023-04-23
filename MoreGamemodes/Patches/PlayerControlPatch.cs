@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using System.Linq;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Hazel;
@@ -72,6 +71,9 @@ namespace MoreGamemodes
                     target.RpcSetNamePrivate(Utils.ColorString(Color.cyan, Main.StandardNames[target.PlayerId]), killer);
                     return false;
                 }
+                
+                if (Main.CamouflageTimer > 0f)
+                    target.RpcSetColor((byte)Main.StandardColors[target.PlayerId]);
             }
             if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
             {
@@ -101,18 +103,14 @@ namespace MoreGamemodes
         {
             if (!target.Data.IsDead || !AmongUsClient.Instance.AmHost) return;
             PlayerControl killer = __instance;
-            if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
-            {
-                target.RpcSetName(Main.StandardNames[target.PlayerId]);
-            }
-            else if (Options.CurrentGamemode == Gamemodes.RandomItems)
+            if (target.GetDeathReason() == DeathReasons.Alive)
+                target.RpcSetDeathReason(DeathReasons.Killed);
+            if (Options.CurrentGamemode == Gamemodes.RandomItems)
             {
                 if (Main.Impostors.Contains(killer.PlayerId))
                     killer.RpcSetItem(Utils.RandomItemImpostor());
                 target.RpcSetItem(Items.None);
-                Main.AllKills[target.PlayerId] = killer.PlayerId;
             }
-
             if (Main.Impostors.Contains(target.PlayerId) || Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale)
                 target.RpcSetRole(RoleTypes.ImpostorGhost);
         }
@@ -158,6 +156,10 @@ namespace MoreGamemodes
     {
         public static void Postfix(PlayerControl __instance)
         {
+            if (Main.GameStarted && __instance == PlayerControl.LocalPlayer)
+            {
+                Main.Timer += Time.fixedDeltaTime;
+            }
             if (!AmongUsClient.Instance.AmHost) return;
             if (!__instance.AmOwner) return;
             if (Options.CurrentGamemode == Gamemodes.HideAndSeek && Main.GameStarted)
@@ -184,6 +186,7 @@ namespace MoreGamemodes
                 {
                     if (pc.HasBomb() && !pc.Data.IsDead)
                     {
+                        pc.RpcSetDeathReason(DeathReasons.Bombed);
                         pc.RpcMurderPlayer(pc);
                     }
                 }
@@ -260,6 +263,14 @@ namespace MoreGamemodes
                     Utils.RevertCamouflage();
                     Main.CamouflageTimer = 0f;
                 }
+                if (Main.NoBombTimer > 0f)
+                {
+                    Main.NoBombTimer -= Time.fixedDeltaTime;
+                }
+                if (Main.NoBombTimer > 0f && Main.NoBombTimer <= 1f)
+                {
+                    Main.NoBombTimer = 0f;
+                }
 
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -287,130 +298,6 @@ namespace MoreGamemodes
                             else
                                 pc.RpcSetNamePrivate(Main.StandardNames[pc.PlayerId]);
                         }
-                    }
-
-                    if (pc.petting)
-                    {
-                        if (Main.HackTimer <= 1f || (Main.Impostors.Contains(pc.PlayerId) && Options.HackAffectsImpostors.GetBool() == false))
-                        {
-                            switch (pc.GetItem())
-                            {
-                                case Items.TimeSlower:
-                                    GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.DiscussionTime, Main.RealOptions.GetInt(Int32OptionNames.DiscussionTime) + Options.DiscussionTimeIncrease.GetInt());
-                                    GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.VotingTime, Main.RealOptions.GetInt(Int32OptionNames.VotingTime) + Options.VotingTimeIncrease.GetInt());
-                                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Knowledge:
-                                    var target = pc.GetClosestPlayer();
-                                    if (Main.Impostors.Contains(target.PlayerId))
-                                    {
-                                        target.RpcSetNamePrivate(Utils.ColorString(Color.red, Main.StandardNames[target.PlayerId]), pc);
-                                        if (Options.ImpostorsSeeReveal.GetBool())
-                                            pc.RpcSetNamePrivate(Utils.ColorString(Color.black, Main.StandardNames[pc.PlayerId]), target);
-                                    }
-                                    else
-                                    {
-                                        target.RpcSetNamePrivate(Utils.ColorString(Color.green, Main.StandardNames[target.PlayerId]), pc);
-                                        if (Options.CrewmatesSeeReveal.GetBool())
-                                            pc.RpcSetNamePrivate(Utils.ColorString(Color.black, Main.StandardNames[pc.PlayerId]), target);
-                                    }
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Shield:
-                                    Main.ShieldTimer[pc.PlayerId] = Options.ShieldDuration.GetFloat() + 1f;
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Gun:
-                                    var target0 = pc.GetClosestPlayer();
-                                    if (Main.Impostors.Contains(target0.PlayerId))
-                                        pc.RpcMurderPlayer(target0);
-                                    else
-                                    {
-                                        if (Options.CanKillCrewmate.GetBool())
-                                            pc.RpcMurderPlayer(target0);
-                                        else
-                                        {
-                                            if (Options.MisfireKillsCrewmate.GetBool())
-                                                pc.RpcMurderPlayer(target0);
-                                            pc.RpcMurderPlayer(pc);
-                                        }
-                                    }
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Illusion:
-                                    var target1 = pc.GetClosestPlayer();
-                                    if (Main.Impostors.Contains(target1.PlayerId))
-                                        target1.RpcMurderPlayer(pc);
-                                    else
-                                        target1.RpcSetNamePrivate(Utils.ColorString(Color.green, Main.StandardNames[target1.PlayerId]), pc);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.TimeSpeeder:
-                                    GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.DiscussionTime, Math.Max(Main.RealOptions.GetInt(Int32OptionNames.DiscussionTime) - Options.DiscussionTimeDecrease.GetInt(), 0));
-                                    GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.VotingTime, Math.Max(Main.RealOptions.GetInt(Int32OptionNames.VotingTime) - Options.VotingTimeDecrease.GetInt(), 10));
-                                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Flash:
-                                    Main.FlashTimer = Options.FlashDuration.GetFloat() + 1f;
-                                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.CrewLightMod, 0f);
-                                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ImpostorLightMod, Options.ImpostorVisionInFlash.GetFloat());
-                                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Hack:
-                                    Main.HackTimer = Options.HackDuration.GetFloat() + 1f;
-                                    if (Options.HackAffectsImpostors.GetBool())
-                                    {
-                                        GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ShapeshifterDuration, 1f);
-                                        GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ShapeshifterCooldown, 0.001f);
-                                        GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, false);
-                                    }
-                                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.EngineerInVentMaxTime, 1f);
-                                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.EngineerCooldown, 0.001f);
-                                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ScientistBatteryCharge, 1f);
-                                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ScientistCooldown, 0.001f);
-                                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Camouflage:
-                                    if (Main.CamouflageTimer > 0f) break;
-                                    Main.CamouflageTimer = Options.CamouflageDuration.GetFloat() + 1f;
-                                    Utils.Camouflage();
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.MultiTeleport:
-                                    foreach (var ar in PlayerControl.AllPlayerControls)
-                                    {
-                                        if (ar != pc)
-                                            ar.RpcTeleport(pc.transform.position);
-                                    }
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Teleport:
-                                    pc.RpcRandomVentTeleport();
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Button:
-                                    if ((Utils.IsActive(SystemTypes.LifeSupp) || Utils.IsActive(SystemTypes.Reactor) || Utils.IsActive(SystemTypes.Laboratory) || Utils.IsActive(SystemTypes.Electrical) || Utils.IsActive(SystemTypes.Comms)) && !Options.CanUseDuringSabotage.GetBool())
-                                        break;
-                                    pc?.ReportDeadBody(null);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Finder:
-                                    var target2 = pc.GetClosestPlayer();
-                                    pc.RpcTeleport(target2.transform.position);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                                case Items.Rope:
-                                    var target3 = pc.GetClosestPlayer();
-                                    target3.RpcTeleport(pc.transform.position);
-                                    pc.RpcSetItem(Items.None);
-                                    break;
-                            }
-                        }
-                        pc.MyPhysics.RpcCancelPetV2();
                     }
                 }
             }
@@ -441,9 +328,28 @@ namespace MoreGamemodes
                         pc.RpcSetNamePrivate(Utils.ColorString(Color.white, Main.StandardNames[pc.PlayerId]) + (Options.ArrowToNearestPlayer.GetBool() ? " " + arrow : "") + "\n" + livesText);
                 }
             }
-            if (Main.GameStarted)
+            else if (Options.CurrentGamemode == Gamemodes.Speedrun && Main.GameStarted)
             {
-                Main.Timer += Time.fixedDeltaTime;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    var tasksCompleted = 0;
+                    var totalTasks = 0;
+                    foreach (var task in pc.myTasks)
+                    {
+                        ++totalTasks;
+                        if (task.IsComplete)
+                            ++tasksCompleted;
+                    }
+                    if (Options.CurrentBodyType == SpeedrunBodyTypes.Ghost)
+                        --totalTasks;
+                    if (Options.TasksVisibleToOthers.GetBool())
+                    {
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            pc.RpcSetNamePrivate(Main.StandardNames[pc.PlayerId] + Utils.ColorString(Color.yellow, "(" + tasksCompleted + "/" + totalTasks + ")"), ar);
+                    }
+                    else
+                        pc.RpcSetNamePrivate(Main.StandardNames[pc.PlayerId] + Utils.ColorString(Color.yellow, "(" + tasksCompleted + "/" + totalTasks + ")"));
+                }
             }
         }
     }

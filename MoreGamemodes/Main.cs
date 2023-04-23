@@ -24,7 +24,6 @@ public partial class Main : BasePlugin
     public static ConfigEntry<string> Preset4 { get; private set; }
     public static ConfigEntry<string> Preset5 { get; private set; }
     public static bool GameStarted;
-    public static bool CanGameEnd;
     public static float Timer;
     public static IEnumerable<PlayerControl> AllPlayerControls => PlayerControl.AllPlayerControls.ToArray().Where(p => p != null);
     public static Dictionary<byte, int> StandardColors;
@@ -33,9 +32,9 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, string> StandardSkins;
     public static Dictionary<byte, string> StandardPets;
     public static Dictionary<byte, string> StandardVisors;
+    public static Dictionary<byte, string> StandardNamePlates;
     public static Dictionary<byte, byte> AllShapeshifts;
     public static List<byte> Impostors;
-    public static Dictionary<byte, RoleTypes> StandardRoles;
     public static Dictionary<(byte, byte), string> LastNotifyNames;
     public static Dictionary<byte, bool> HasBomb;
     public static IGameOptions RealOptions;
@@ -43,10 +42,13 @@ public partial class Main : BasePlugin
     public static float FlashTimer;
     public static float HackTimer;
     public static float CamouflageTimer;
-    public static Dictionary<byte, byte> AllKills;
     public static Dictionary<byte, float> ShieldTimer;
     public static bool IsMeeting;
     public static Dictionary<byte, int> Lives;
+    public static Dictionary<byte, DeathReasons> AllPlayersDeathReason;
+    public static float NoBombTimer;
+    public static bool SkipMeeting;
+
     public override void Load()
     {
         Instance = this;
@@ -55,8 +57,8 @@ public partial class Main : BasePlugin
         Preset3 = Config.Bind("Preset Name Options", "Preset3", "Preset 3");
         Preset4 = Config.Bind("Preset Name Options", "Preset4", "Preset 4");
         Preset5 = Config.Bind("Preset Name Options", "Preset5", "Preset 5");
+
         GameStarted = false;
-        CanGameEnd = true;
         Timer = 0f;
         StandardColors = new Dictionary<byte, int>();
         StandardNames = new Dictionary<byte, string>();
@@ -64,9 +66,9 @@ public partial class Main : BasePlugin
         StandardSkins = new Dictionary<byte, string>();
         StandardPets = new Dictionary<byte, string>();
         StandardVisors = new Dictionary<byte, string>();
+        StandardNamePlates = new Dictionary<byte, string>();
         AllShapeshifts = new Dictionary<byte, byte>();
         Impostors = new List<byte>();
-        StandardRoles = new Dictionary<byte, RoleTypes>();
         LastNotifyNames = new Dictionary<(byte, byte), string>();
         HasBomb= new Dictionary<byte, bool>();
         RealOptions = null;
@@ -74,10 +76,12 @@ public partial class Main : BasePlugin
         FlashTimer = 0f;
         HackTimer = 0f;
         CamouflageTimer = 0f;
-        AllKills = new Dictionary<byte, byte>();
         ShieldTimer = new Dictionary<byte, float>();
         IsMeeting = false;
         Lives = new Dictionary<byte, int>();
+        AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
+        NoBombTimer = 0f;
+        SkipMeeting = false;
 
         Harmony.PatchAll();
     }
@@ -90,7 +94,6 @@ public partial class Main : BasePlugin
             GameStarted = false;
             if (__instance.AmOwner)
             {
-                CanGameEnd = true;
                 Timer = 0f;
                 StandardColors = new Dictionary<byte, int>();
                 StandardNames = new Dictionary<byte, string>();
@@ -98,18 +101,20 @@ public partial class Main : BasePlugin
                 StandardSkins = new Dictionary<byte, string>();
                 StandardPets = new Dictionary<byte, string>();
                 StandardVisors = new Dictionary<byte, string>();
+                StandardNamePlates = new Dictionary<byte, string>();
                 Impostors = new List<byte>();
-                StandardRoles = new Dictionary<byte, RoleTypes>();
                 LastNotifyNames = new Dictionary<(byte, byte), string>();
                 HasBomb = new Dictionary<byte, bool>();
                 AllPlayersItems = new Dictionary<byte, Items>();
                 FlashTimer = 0f;
                 HackTimer = 0f;
                 CamouflageTimer = 0f;
-                AllKills = new Dictionary<byte, byte>();
                 ShieldTimer = new Dictionary<byte, float>();
                 IsMeeting = false;
                 Lives = new Dictionary<byte, int>();
+                AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
+                NoBombTimer = 0f;
+                SkipMeeting = false;
             }
         }
     }
@@ -133,7 +138,8 @@ public enum Gamemodes
     BombTag,
     RandomItems,
     BattleRoyale,
-    All = int.MaxValue
+    Speedrun,
+    All = int.MaxValue,
 }
 public enum Items
 {
@@ -144,16 +150,37 @@ public enum Items
     Shield,
     Gun,
     Illusion,
+    Radar,
     //impostor
     TimeSpeeder,
     Flash,
     Hack,
     Camouflage,
     MultiTeleport,
+    Bomb,
     //both
     Teleport,
     Button,
     Finder,
     Rope,
     Stop,
+    Newsletter,
+}
+public enum SpeedrunBodyTypes
+{
+    Crewmate,
+    Engineer,
+    Ghost,
+    All = int.MaxValue,
+}
+public enum DeathReasons
+{
+    Alive,
+    Killed,
+    Exiled,
+    Disconnected,
+    Command,
+    Bombed,
+    Misfire,
+    Suicide,
 }

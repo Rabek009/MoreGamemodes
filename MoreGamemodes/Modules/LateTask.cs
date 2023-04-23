@@ -10,6 +10,7 @@ namespace MoreGamemodes
         public Action action;
         public bool deleteOnMeeting;
         public static List<LateTask> Tasks = new();
+
         public bool Run(float deltaTime)
         {
             timer -= deltaTime;
@@ -20,6 +21,7 @@ namespace MoreGamemodes
             }
             return false;
         }
+
         public LateTask(Action action, float time, string name = "No Name Task", bool deleteOnMeeting = false)
         {
             this.action = action;
@@ -28,6 +30,7 @@ namespace MoreGamemodes
             this.deleteOnMeeting = deleteOnMeeting;
             Tasks.Add(this);
         }
+
         public static void Update(float deltaTime)
         {
             var TasksToRemove = new List<LateTask>();

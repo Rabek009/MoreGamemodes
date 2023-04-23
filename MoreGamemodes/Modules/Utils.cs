@@ -42,11 +42,13 @@ namespace MoreGamemodes
             if (Options.EnableShield.GetBool()) items.Add(Items.Shield);
             if (Options.EnableGun.GetBool()) items.Add(Items.Gun);
             if (Options.EnableIllusion.GetBool()) items.Add(Items.Illusion);
+            if (Options.EnableRadar.GetBool()) items.Add(Items.Radar);
             if (Options.EnableTeleport.GetBool()) items.Add(Items.Teleport);
             if (Options.EnableButton.GetBool()) items.Add(Items.Button);
             if (Options.EnableFinder.GetBool()) items.Add(Items.Finder);
             if (Options.EnableRope.GetBool()) items.Add(Items.Rope);
             if (Options.EnableStop.GetBool() && Options.CanBeGivenToCrewmate.GetBool()) items.Add(Items.Stop);
+            if (Options.EnableNewsletter.GetBool()) items.Add(Items.Newsletter);
 
             return items[rand.Next(0, items.Count)];
         }
@@ -60,11 +62,13 @@ namespace MoreGamemodes
             if (Options.EnableHack.GetBool()) items.Add(Items.Hack);
             if (Options.EnableCamouflage.GetBool()) items.Add(Items.Camouflage);
             if (Options.EnableMultiTeleport.GetBool()) items.Add(Items.MultiTeleport);
+            if (Options.EnableBomb.GetBool()) items.Add(Items.Bomb);
             if (Options.EnableTeleport.GetBool()) items.Add(Items.Teleport);
             if (Options.EnableButton.GetBool()) items.Add(Items.Button);
             if (Options.EnableFinder.GetBool()) items.Add(Items.Finder);
             if (Options.EnableRope.GetBool()) items.Add(Items.Rope);
             if (Options.EnableStop.GetBool()) items.Add(Items.Stop);
+            if (Options.EnableNewsletter.GetBool()) items.Add(Items.Newsletter);
 
             return items[rand.Next(0, items.Count)];
         }
@@ -83,6 +87,8 @@ namespace MoreGamemodes
                     return "Gun";
                 case Items.Illusion:
                     return "Illusion";
+                case Items.Radar:
+                    return "Radar";
                 case Items.TimeSpeeder:
                     return "Time Speeder";
                 case Items.Flash:
@@ -93,6 +99,8 @@ namespace MoreGamemodes
                     return "Camouflage";
                 case Items.MultiTeleport:
                     return "Multi Teleport";
+                case Items.Bomb:
+                    return "Bomb";
                 case Items.Teleport:
                     return "Teleport";
                 case Items.Button:
@@ -103,6 +111,8 @@ namespace MoreGamemodes
                     return "Rope";
                 case Items.Stop:
                     return "Stop";
+                case Items.Newsletter:
+                    return "Newsletter";
                 default:
                     return "INVALID ITEM";
             }
@@ -122,6 +132,8 @@ namespace MoreGamemodes
                     return "Shoot impostor";
                 case Items.Illusion:
                     return "Make impostor kill you";
+                case Items.Radar:
+                    return "See if impostors are near";
                 case Items.TimeSpeeder:
                     return "Decrease voting time";
                 case Items.Flash:
@@ -132,6 +144,8 @@ namespace MoreGamemodes
                     return "Make everyone look the same";
                 case Items.MultiTeleport:
                     return "Teleport everyone to you";
+                case Items.Bomb:
+                    return "Sacrifice yourself to kill nearby players";
                 case Items.Teleport:
                     return "Teleport to random vent";
                 case Items.Button:
@@ -142,6 +156,8 @@ namespace MoreGamemodes
                     return "Teleport nearest player to you";
                 case Items.Stop:
                     return "Type /stop command to end meeting";
+                case Items.Newsletter:
+                    return "Get extra informations";
                 default:
                     return "INVALID DESCRIPTION";
             }
@@ -161,6 +177,8 @@ namespace MoreGamemodes
                     return "Gun(Crewmate only): If nearest player is impostor, you kill him. Otherwise you die.";
                 case Items.Illusion:
                     return "Illusion(Crewmate only): If nearest player is impostor, he kills you.";
+                case Items.Radar:
+                    return "Radar(Crewmate only): You see reactor flash if impostor is nearby.";
                 case Items.TimeSpeeder:
                     return "Time Speeder(Impostor only): Increase discussion and voting time by amount in settings.";
                 case Items.Flash:
@@ -171,6 +189,8 @@ namespace MoreGamemodes
                     return "Camouflage(Impostor only): Everyone turns into gray bean for few seconds.";
                 case Items.MultiTeleport:
                     return "Multi Teleport(Impostor only): Everyone gets teleported to you.";
+                case Items.Bomb:
+                    return "Bomb(Impostor only): Everyone near you die, but you sacrifice yourself. Depending on options explosion can kill other impostors. If no one is alive after explosion impostors still win! You can't use bomb 10 seconds after meeting or multi teleport.";
                 case Items.Teleport:
                     return "Teleport(Both): Teleports you to random vents.";
                 case Items.Button:
@@ -181,6 +201,8 @@ namespace MoreGamemodes
                     return "Rope(Both): Teleports nearest player to you.";
                 case Items.Stop:
                     return "Stop(Both/Impostor only): You can instantly end meeting without anyone ejected by typing /stop command.";
+                case Items.Newsletter:
+                    return "Newsletter(Both): Sends you information about how amny roles are alive, how people died. Informations refers to moment when item was used.";
                 default:
                     return "INVALID DESCRIPTION LONG";
             }
@@ -294,68 +316,95 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
 
-            PlayerControl.LocalPlayer.RpcSetColor(15);
-            PlayerControl.LocalPlayer.RpcSetName(Utils.ColorString(Color.clear, "Player"));
-            PlayerControl.LocalPlayer.RpcSetHat("");
-            PlayerControl.LocalPlayer.RpcSetSkin("");
-            PlayerControl.LocalPlayer.RpcSetPet("pet_test");
-            PlayerControl.LocalPlayer.RpcSetVisor("");
-
-            var ShapeshifterLeaveSkin = GameOptionsManager.Instance.currentGameOptions.GetBool(BoolOptionNames.ShapeshifterLeaveSkin);
-            GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, false);
-            SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-            foreach (var player in PlayerControl.AllPlayerControls)
-            {
-                if (!player.Data.IsDead)
-                    player.RpcShapeshiftV2(PlayerControl.LocalPlayer, true);
-            }
-            GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, ShapeshifterLeaveSkin);
-            SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
             foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.Data.Role.Role == RoleTypes.Shapeshifter)
-                    pc.RpcSetAbilityCooldown(255f);
-            }
+                pc.RpcSetOutfit(15, ColorString(Color.clear, "Player"), "", "", "pet_test", "");     
         }
         public static void RevertCamouflage()
         {
             if (!AmongUsClient.Instance.AmHost) return;
 
-            PlayerControl.LocalPlayer.RpcSetColor((byte)Main.StandardColors[PlayerControl.LocalPlayer.PlayerId]);
-            PlayerControl.LocalPlayer.RpcSetName(Main.StandardNames[PlayerControl.LocalPlayer.PlayerId]);
-            PlayerControl.LocalPlayer.RpcSetHat(Main.StandardHats[PlayerControl.LocalPlayer.PlayerId]);
-            PlayerControl.LocalPlayer.RpcSetSkin(Main.StandardSkins[PlayerControl.LocalPlayer.PlayerId]);
-            PlayerControl.LocalPlayer.RpcSetPet("pet_clank");
-            PlayerControl.LocalPlayer.RpcSetVisor(Main.StandardVisors[PlayerControl.LocalPlayer.PlayerId]);
-
-            var ShapeshifterLeaveSkin = GameOptionsManager.Instance.currentGameOptions.GetBool(BoolOptionNames.ShapeshifterLeaveSkin);
-            GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, false);
-            SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);        
-            foreach (var player in PlayerControl.AllPlayerControls)
-            {
-                if (!player.Data.IsDead)
-                    player.RpcRevertShapeshiftV2(true);
-            }
-            GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, ShapeshifterLeaveSkin);
-            SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.Data.Role.Role == RoleTypes.Shapeshifter)
-                    pc.RpcSetAbilityCooldown(255f);
-            }
-
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
+                pc.RpcSetOutfit(Main.StandardColors[pc.PlayerId], Main.StandardNames[pc.PlayerId], Main.StandardHats[pc.PlayerId], Main.StandardSkins[pc.PlayerId], "pet_clank", Main.StandardVisors[pc.PlayerId]);
                 foreach (var ar in PlayerControl.AllPlayerControls)
                     pc.RpcSetNamePrivate(Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)], ar, true);
-            }          
+            }
         }
 
-        public static void SendChat(string message, string messageName)
+        public static void SendChat(string message, string messageName, ChatController chat = null)
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-                pc.RpcSendMessage(message, messageName);
+            if (chat != null)
+            {
+                chat.TextArea.Clear();
+                chat.TextArea.SetText("");
+                chat.quickChatMenu.ResetGlyphs();
+            }
+            var messageSender = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
+            var name = messageSender.Data.PlayerName;
+
+            messageSender.SetName(ColorString(Color.blue, "MG.SystemMessage." + messageName));
+            DestroyableSingleton<HudManager>.Instance.Chat.AddChat(messageSender, message);
+            messageSender.SetName(name);
+
+            CustomRpcSender sender = CustomRpcSender.Create("Send Chat Message", SendOption.None);
+            sender.StartMessage(-1);
+            sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                .Write(ColorString(Color.blue, "MG.SystemMessage." + messageName))
+                .EndRpc();
+            sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SendChat)
+            .Write(message)
+                .EndRpc();
+            sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                .Write(name)
+                .EndRpc();
+            sender.EndMessage();
+            sender.SendMessage();
+
+            if (Main.GameStarted)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    messageSender.RpcSetNamePrivate(Main.LastNotifyNames[(messageSender.PlayerId, pc.PlayerId)], pc, true);
+            }   
+        }
+
+        public static void SendChatV2(List<string> messages, string messageName, ChatController chat = null)
+        {
+            if (chat != null)
+            {
+                chat.TextArea.Clear();
+                chat.TextArea.SetText("");
+                chat.quickChatMenu.ResetGlyphs();
+            }
+            var messageSender = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
+            var name = messageSender.Data.PlayerName;
+
+            messageSender.SetName(ColorString(Color.blue, "MG.SystemMessage." + messageName));
+            for (int i = 0; i < messages.Count; ++i)
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(messageSender, messages[i]);
+            messageSender.SetName(name);
+
+            CustomRpcSender sender = CustomRpcSender.Create("Send Chat Message", SendOption.None);
+            sender.StartMessage(-1);
+            sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                .Write(ColorString(Color.blue, "MG.SystemMessage." + messageName))
+                .EndRpc();
+            for (int i = 0; i < messages.Count; ++i)
+            {
+                sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SendChat)
+                    .Write(messages[i])
+                    .EndRpc();
+            }
+            sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                .Write(name)
+                .EndRpc();
+            sender.EndMessage();
+            sender.SendMessage();
+
+            if (Main.GameStarted)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    messageSender.RpcSetNamePrivate(Main.LastNotifyNames[(messageSender.PlayerId, pc.PlayerId)], pc, true);
+            }
         }
 
         public static byte[] ToBytes(this IGameOptions gameOptions)
@@ -378,7 +427,6 @@ namespace MoreGamemodes
                 {
                     writer.WritePacked(GameData.Instance.NetId);
                     GameData.Instance.Serialize(writer, true);
-
                 }
                 writer.EndMessage();
             }
@@ -421,6 +469,36 @@ namespace MoreGamemodes
                 index = (byte)(((int)(angle / 45)) % 8);
             }
             return "↑↗→↘↓↙←↖・"[index].ToString();
+        }
+
+        public static string BodyTypeString(SpeedrunBodyTypes bodyType)
+        {
+            switch (bodyType)
+            {
+                case SpeedrunBodyTypes.Crewmate:
+                    return "Crewmate";
+                case SpeedrunBodyTypes.Engineer:
+                    return "Engineer";
+                case SpeedrunBodyTypes.Ghost:
+                    return "Ghost";
+                default:
+                    return "INVALID BODY TYPE";
+            }
+        }
+
+        public static Sprite GetTabSprite(TabGroup tab)
+        {
+            switch (tab)
+            {
+                case TabGroup.MainSettings:
+                    return HudManager.Instance.UseButton.graphic.sprite;
+                case TabGroup.GamemodeSettings:
+                    return HudManager.Instance.KillButton.graphic.sprite;
+                case TabGroup.AdditionalGamemodes:
+                    return HudManager.Instance.ImpostorVentButton.graphic.sprite;
+                default:
+                    return new Sprite();
+            }
         }
     }
 }

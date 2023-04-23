@@ -9,12 +9,13 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CoStartGame))]
     class CoStartGamePatch
     {
-        public static void Postfix(AmongUsClient __instance)
+        public static void Prefix(AmongUsClient __instance)
         {
             if (!__instance.AmHost) return;
+            Main.RealOptions = null;
+            Main.RealOptions = GameOptionsManager.Instance.CurrentGameOptions.DeepCopy();
             Main.AllShapeshifts = new Dictionary<byte, byte>();
             Main.Impostors = new List<byte>();
-            Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             Main.LastNotifyNames = new Dictionary<(byte, byte), string>();
             Main.AllPlayersItems = new Dictionary<byte, Items>();
             Main.ShieldTimer = new Dictionary<byte, float>();
@@ -23,6 +24,9 @@ namespace MoreGamemodes
             Main.FlashTimer = 0f;
             Main.CamouflageTimer = 0f;
             Main.Lives = new Dictionary<byte, int>();
+            Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
+            Main.NoBombTimer = 0f;
+            Main.SkipMeeting = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
@@ -31,16 +35,16 @@ namespace MoreGamemodes
                 Main.StandardSkins[pc.PlayerId] = pc.Data.DefaultOutfit.SkinId;
                 Main.StandardPets[pc.PlayerId] = pc.Data.DefaultOutfit.PetId;
                 Main.StandardVisors[pc.PlayerId] = pc.Data.DefaultOutfit.VisorId;
+                Main.StandardNamePlates[pc.PlayerId] = pc.Data.DefaultOutfit.NamePlateId;
                 Main.AllShapeshifts[pc.PlayerId] = pc.PlayerId;
                 pc.RpcSetBomb(false);
                 pc.RpcSetItem(Items.None);
                 Main.ShieldTimer[pc.PlayerId] = 0f;
                 Main.Lives[pc.PlayerId] = Options.Lives.GetInt();
+                pc.RpcSetDeathReason(DeathReasons.Alive);
                 foreach (var ar in PlayerControl.AllPlayerControls)
-                {
-                    Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
-                }
-            }
+                   Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
+            }    
             RPC.RpcSyncCustomOptions();
         }
     }
@@ -51,27 +55,27 @@ namespace MoreGamemodes
         public static void Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            Main.RealOptions = GameOptionsManager.Instance.CurrentGameOptions.DeepCopy();
             if (Options.CurrentGamemode == Gamemodes.HideAndSeek)
             {
-                GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
             }
             else if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
             {
-                GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, 15, 100);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 15, 100);
+                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, 15, 100);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 15, 100);
             }
             else if (Options.CurrentGamemode == Gamemodes.BombTag)
             {
-                GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
-                GameOptionsManager.Instance.currentNormalGameOptions.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.ExplosionDelay.GetInt() + 0.1f);
+                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
+                GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.ExplosionDelay.GetInt() + 0.1f);
+                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner)
@@ -94,11 +98,12 @@ namespace MoreGamemodes
             }
             else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
             {
-                GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
-                GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner)
@@ -119,8 +124,19 @@ namespace MoreGamemodes
                     }
                 }
             }
+            else if (Options.CurrentGamemode == Gamemodes.Speedrun)
+            {
+                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+                GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 15, 100);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (Options.CurrentBodyType == SpeedrunBodyTypes.Engineer)
+                        pc.RpcSetRole(RoleTypes.Engineer);
+                    else
+                        pc.RpcSetRole(RoleTypes.Crewmate);
+                }
+            }
             Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-
         }
         public static void Postfix()
         {
@@ -213,9 +229,8 @@ namespace MoreGamemodes
             {
                 if (pc.Data.Role.IsImpostor)
                     pc.RpcAddImpostor();
-                Main.StandardRoles[pc.PlayerId] = pc.Data.Role.Role;
+                pc.RpcSetRole(RoleTypes.Shapeshifter);
             }
-            Main.CanGameEnd = true;
             Main.Timer = 0f;
             if (Options.RandomSpawn.GetBool())
             {
@@ -234,24 +249,26 @@ namespace MoreGamemodes
             }
             if (Options.CurrentGamemode == Gamemodes.RandomItems)
             {
-                var sender = CustomRpcSender.Create(name: "RpcSetPetAtStart");
-                sender.StartMessage();
                 foreach (var pc in PlayerControl.AllPlayerControls)
+                    Main.StandardPets[pc.PlayerId] = "pet_clank";
+                new LateTask(() =>
                 {
-                    pc.SetPet("pet_clank", pc.CurrentOutfit.ColorId);
-                    sender.AutoStartRpc(pc.NetId, (byte)RpcCalls.SetPetStr)
-                        .Write("pet_clank")
-                        .EndRpc();
-                }
-                sender.EndMessage();
-                sender.SendMessage();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                        pc.RpcSetOutfit(petId: "pet_clank");
+                }, 0.3f, "Grant Pet For Everyone");
+                Main.NoBombTimer = 11f;
             }
-            new LateTask(() =>
+            if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                    pc.RpcSetDesyncRole(RoleTypes.Shapeshifter, -3);
-                Utils.SendGameData();
-            }, 2f, "Set impostor for server");
+                if (Options.CurrentBodyType == SpeedrunBodyTypes.Ghost)
+                {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        pc.RpcSetDeathReason(DeathReasons.Command);
+                        pc.RpcExileV2();
+                    }       
+                }
+            }
             Utils.SendGameData();             
         }
     }

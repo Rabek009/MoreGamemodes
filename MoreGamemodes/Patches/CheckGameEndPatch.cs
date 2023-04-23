@@ -13,7 +13,6 @@ namespace MoreGamemodes
             if (!GameData.Instance) return false;
             if (DestroyableSingleton<TutorialManager>.InstanceExists) return true;
             if (Options.NoGameEnd.GetBool()) return false;
-            if (!Main.CanGameEnd) return false;
 
             if (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.RandomItems)
             {
@@ -21,31 +20,35 @@ namespace MoreGamemodes
             }
             else if (Options.CurrentGamemode == Gamemodes.HideAndSeek)
             {
-                if (CheckAndEndGameForEveryoneDied(__instance)) return false;
-                if (CheckAndEndGameForHideAndSeek(__instance)) return false;
-                if (CheckAndEndGameForTaskWin(__instance)) return false;
-                if (CheckAndEndGameForCrewmateWin(__instance)) return false;
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForHideAndSeek()) return false;
+                if (CheckAndEndGameForTaskWin()) return false;
+                if (CheckAndEndGameForCrewmateWin()) return false;
             }
             else if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
             {
-                if (CheckAndEndGameForEveryoneDied(__instance)) return false;
-                if (CheckAndEndGameForHideAndSeek(__instance)) return false;
-                if (CheckAndEndGameForTaskWin(__instance)) return false;
-                if (CheckAndEndGameForCrewmateWin(__instance)) return false;
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForHideAndSeek()) return false;
+                if (CheckAndEndGameForTaskWin()) return false;
+                if (CheckAndEndGameForCrewmateWin()) return false;
             }
             else if (Options.CurrentGamemode == Gamemodes.BombTag)
             {
-                if (CheckAndEndGameForEveryoneDied(__instance)) return false;
-                if (CheckAndEndGameForBattleRoyale(__instance)) return false;          
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForBattleRoyale()) return false;          
             }
             else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
             {
-                if (CheckAndEndGameForEveryoneDied(__instance)) return false;
-                if (CheckAndEndGameForBattleRoyale(__instance)) return false;
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForBattleRoyale()) return false;
+            }
+            else if (Options.CurrentGamemode == Gamemodes.Speedrun)
+            {
+                if (CheckAndEndGameForSpeedrun()) return false;
             }
             return false;
         }
-        private static bool CheckAndEndGameForTaskWin(ShipStatus __instance)
+        private static bool CheckAndEndGameForTaskWin()
         {
             if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
             {
@@ -60,7 +63,7 @@ namespace MoreGamemodes
             }
             return false;
         }
-        private static bool CheckAndEndGameForCrewmateWin(ShipStatus __instance)
+        private static bool CheckAndEndGameForCrewmateWin()
         {
             var numImpostorAlive = 0;
             List<PlayerControl> AllAlivePlayers = new();
@@ -86,7 +89,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        private static bool CheckAndEndGameForHideAndSeek(ShipStatus __instance)
+        private static bool CheckAndEndGameForHideAndSeek()
         {
             var numImpostorAlive = 0;
             List<PlayerControl> AllAlivePlayers = new();
@@ -108,7 +111,8 @@ namespace MoreGamemodes
             }
             return false;
         }
-        private static bool CheckAndEndGameForBattleRoyale(ShipStatus __instance)
+
+        private static bool CheckAndEndGameForBattleRoyale()
         {
             List<PlayerControl> AllAlivePlayers = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -128,7 +132,8 @@ namespace MoreGamemodes
             }
             return false;
         }
-        private static bool CheckAndEndGameForEveryoneDied(ShipStatus __instance)
+
+        private static bool CheckAndEndGameForEveryoneDied()
         {
             List<PlayerControl> AllAlivePlayers = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -143,6 +148,32 @@ namespace MoreGamemodes
             }
             return false;
         }
+
+        private static bool CheckAndEndGameForSpeedrun()
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                var tasksCompleted = 0;
+                var totalTasks = 0;
+                foreach (var task in pc.myTasks)
+                {
+                    ++totalTasks;
+                    if (task.IsComplete)
+                        ++tasksCompleted;
+                }
+                if (Options.CurrentBodyType == SpeedrunBodyTypes.Ghost)
+                    --totalTasks;
+                if (tasksCompleted >= totalTasks)
+                {
+                    List<byte> winners = new List<byte>();
+                    winners.Add(pc.PlayerId);
+                    StartEndGame(GameOverReason.HumansByTask, winners);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static void StartEndGame(GameOverReason reason, List<byte> winners)
         {
             var sender = new CustomRpcSender("EndGameSender", SendOption.Reliable, true);

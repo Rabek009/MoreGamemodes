@@ -4,7 +4,6 @@ using System.Linq;
 using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
-using static UnityEngine.RemoteConfigSettingsHelper;
 using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
@@ -40,7 +39,7 @@ namespace MoreGamemodes
             var gameTab = GameObject.Find("GameTab");
             List<GameObject> tabs = new() { gameTab, roleTab };
 
-            void AddOptionTab(TabGroup tab, Sprite sprite)
+            foreach (var tab in Enum.GetValues(typeof(TabGroup)))
             {
                 var obj = gameSettings.transform.parent.Find(tab + "Tab");
                 if (obj != null)
@@ -64,7 +63,7 @@ namespace MoreGamemodes
                 var scOptions = new List<OptionBehaviour>();
                 foreach (var option in OptionItem.AllOptions)
                 {
-                    if (option.Tab != tab) continue;
+                    if (option.Tab != (TabGroup)tab) continue;
                     if (option.OptionBehaviour == null)
                     {
                         var stringOption = Object.Instantiate(template, Menu.transform);
@@ -90,33 +89,11 @@ namespace MoreGamemodes
                 menus.Add(Settings.gameObject);
 
                 var Tab = Object.Instantiate(roleTab, roleTab.transform.parent);
-                Tab.transform.FindChild("Hat Button").FindChild("Icon").GetComponent<SpriteRenderer>().sprite = sprite;
+                Tab.transform.FindChild("Hat Button").FindChild("Icon").GetComponent<SpriteRenderer>().sprite = Utils.GetTabSprite((TabGroup)tab);
                 tabs.Add(Tab);
                 var TabHighlight = Tab.transform.FindChild("Hat Button").FindChild("Tab Background").GetComponent<SpriteRenderer>();
                 highlights.Add(TabHighlight);
             }
-
-            AddOptionTab(TabGroup.MainSettings, HudManager.Instance.UseButton.graphic.sprite);
-
-            var tab = TabGroup.MainSettings;
-            switch (Options.CurrentGamemode)
-            {
-                case Gamemodes.HideAndSeek:
-                    tab = TabGroup.HideAndSeekSettings; break;
-                case Gamemodes.ShiftAndSeek:
-                    tab = TabGroup.ShiftAndSeekSettings; break;
-                case Gamemodes.BombTag:
-                    tab = TabGroup.BombTagSettings; break;
-                case Gamemodes.RandomItems:
-                    tab = TabGroup.RandomItemsSettings; break;
-                case Gamemodes.BattleRoyale:
-                    tab = TabGroup.BattleRoyaleSettings; break;
-            }
-
-            if (Options.CurrentGamemode != Gamemodes.Classic)
-                AddOptionTab(tab, HudManager.Instance.KillButton.graphic.sprite);
-
-            AddOptionTab(TabGroup.AdditionalGamemodes, HudManager.Instance.ImpostorVentButton.graphic.sprite);
 
             for (var i = 0; i < tabs.Count; ++i)
             {
@@ -146,23 +123,7 @@ namespace MoreGamemodes
         public static void Postfix(GameOptionsMenu __instance)
         {
             if (__instance.transform.parent.parent.name == "Game Settings") return;
-            List<TabGroup> tabs = new List<TabGroup>();
-            tabs.Add(TabGroup.MainSettings);
-            switch (Options.CurrentGamemode)
-            {
-                case Gamemodes.HideAndSeek:
-                    tabs.Add(TabGroup.HideAndSeekSettings); break;
-                case Gamemodes.ShiftAndSeek:
-                    tabs.Add(TabGroup.ShiftAndSeekSettings); break;
-                case Gamemodes.BombTag:
-                    tabs.Add(TabGroup.BombTagSettings); break;
-                case Gamemodes.RandomItems:
-                    tabs.Add(TabGroup.RandomItemsSettings); break;
-                case Gamemodes.BattleRoyale:
-                    tabs.Add(TabGroup.BattleRoyaleSettings); break;
-            }
-            tabs.Add(TabGroup.AdditionalGamemodes);
-            foreach (var tab in tabs)
+            foreach (var tab in Enum.GetValues(typeof(TabGroup)))
             {
                 if (__instance.transform.parent.parent.name != tab + "Tab") continue;
                 __instance.transform.FindChild("../../GameGroup/Text").GetComponent<TMPro.TextMeshPro>().SetText(tab.ToString());
@@ -182,7 +143,8 @@ namespace MoreGamemodes
                     var enabled = true;
                     var parent = option.Parent;
 
-                    enabled = AmongUsClient.Instance.AmHost;
+                    enabled = AmongUsClient.Instance.AmHost &&
+                        !option.IsHiddenOn(Options.CurrentGamemode);
 
                     var opt = option.OptionBehaviour.transform.Find("Background").GetComponent<SpriteRenderer>();
                     opt.size = new(5.0f, 0.45f);

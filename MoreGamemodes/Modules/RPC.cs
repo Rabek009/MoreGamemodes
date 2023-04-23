@@ -78,6 +78,7 @@ namespace MoreGamemodes
             }
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
+
         public static void RpcSetBomb(this PlayerControl player, bool hasBomb)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -87,6 +88,7 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             Main.HasBomb[player.PlayerId] = hasBomb;
         }
+
         public static void RpcSetItem(this PlayerControl player, Items item)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -96,6 +98,7 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             Main.AllPlayersItems[player.PlayerId] = item;
         }
+
         public static void RpcAddImpostor(this PlayerControl player)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -104,6 +107,7 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             Main.Impostors.Add(player.PlayerId);
         }
+
         public static void RpcToggleCanVent(this PlayerControl player, bool canVent)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -113,6 +117,7 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             player.Data.Role.CanVent = canVent;
         }
+
         public static void RpcToggleCanUseKillButton(this PlayerControl player, bool canUseKillButton)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -122,6 +127,7 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             player.Data.Role.CanUseKillButton = canUseKillButton;
         }
+
         public static void RpcToggleCanBeKilled(this PlayerControl player, bool canBeKilled)
         {
             if (!AmongUsClient.Instance.AmHost) return;

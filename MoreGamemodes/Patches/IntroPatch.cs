@@ -36,8 +36,15 @@ namespace MoreGamemodes
         {
             if (Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
                 __instance.TeamTitle.text = "Hider";
+            else if (Options.CurrentGamemode == Gamemodes.Speedrun)
+            {
+                __instance.TeamTitle.text = "Speedrun";
+                __instance.TeamTitle.color = Color.yellow;
+                __instance.BackgroundBar.material.color = Color.yellow;
+            }
         }
     }
+
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.BeginImpostor))]
     class BeginImpostorPatch
     {
@@ -55,6 +62,7 @@ namespace MoreGamemodes
                 __instance.TeamTitle.text = "Battle Royale";
         }
     }
+
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.ShowRole))]
     class RoleIntroPatch
     {
@@ -112,6 +120,14 @@ namespace MoreGamemodes
                     __instance.RoleText.text = "Player";
                     __instance.RoleBlurbText.text = "Kill everyone and survive";
                     __instance.YouAreText.color = Color.clear;
+                }
+                else if (Options.CurrentGamemode == Gamemodes.Speedrun)
+                {
+                    __instance.RoleText.text = "Speedrunner";
+                    __instance.RoleText.color = Color.yellow;
+                    __instance.RoleBlurbText.text = "Finish tasks as fast as you can";
+                    __instance.RoleBlurbText.color = Color.yellow;
+                    __instance.YouAreText.color = Color.yellow;
                 }
             }, 0.01f, "Show Role");
         }

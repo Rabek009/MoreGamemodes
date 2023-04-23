@@ -6,6 +6,7 @@ using AmongUs.GameOptions;
 using Il2CppInterop.Runtime.InteropTypes;
 using System.Collections.Generic;
 using System.Data;
+using System;
 
 namespace MoreGamemodes
 {
@@ -21,6 +22,7 @@ namespace MoreGamemodes
             writer.Write(player.NetTransform.lastSequenceId);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
+
         public static void RpcRandomVentTeleport(this PlayerControl player)
         {
             var vents = UnityEngine.Object.FindObjectsOfType<Vent>();
@@ -28,41 +30,71 @@ namespace MoreGamemodes
             var vent = vents[rand.Next(0, vents.Count)];
             player.RpcTeleport(new Vector2(vent.transform.position.x, vent.transform.position.y + 0.3636f));
         }
+
         public static void RpcSendMessage(this PlayerControl player, string message, string messageName)
         {
-            var sender = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
+            var messageSender = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
             if (player == null) return;
-            var name = sender.Data.PlayerName;
+            var name = messageSender.Data.PlayerName;
 
             if (player.AmOwner)
             {
-                sender.SetName(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName));
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(sender, message);
-                sender.SetName(name);
+                messageSender.SetName(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName));
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(messageSender, message);
+                messageSender.SetName(name);
             }
             else
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
-                writer.Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName));
-                AmongUsClient.Instance.FinishRpcImmediately(writer);
-
-                MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
-                writer2.Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName));
-                AmongUsClient.Instance.FinishRpcImmediately(writer2);
-
-                MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SendChat, SendOption.None, player.GetClientId());
-                writer3.Write(message);
-                AmongUsClient.Instance.FinishRpcImmediately(writer3);
-
-                MessageWriter writer4 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
-                writer4.Write(Main.GameStarted ? Main.LastNotifyNames[(sender.PlayerId, player.PlayerId)] : name);
-                AmongUsClient.Instance.FinishRpcImmediately(writer4);
-
-                MessageWriter writer5 = AmongUsClient.Instance.StartRpcImmediately(sender.NetId, (byte)RpcCalls.SetName, SendOption.None, player.GetClientId());
-                writer5.Write(Main.GameStarted ? Main.LastNotifyNames[(sender.PlayerId, player.PlayerId)] : name);
-                AmongUsClient.Instance.FinishRpcImmediately(writer5);
+                CustomRpcSender sender = CustomRpcSender.Create("Send Chat Message", SendOption.None);
+                sender.StartMessage(player.GetClientId());
+                sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                    .Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName))
+                    .EndRpc();
+                sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SendChat)
+                    .Write(message)
+                    .EndRpc();
+                sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                    .Write(Main.GameStarted ? Main.LastNotifyNames[(messageSender.PlayerId, player.PlayerId)] : name)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
             }
         }
+
+        public static void RpcSendMessages(this PlayerControl player, List<string> messages, string messageName)
+        {
+            var messageSender = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
+            if (player == null) return;
+            var name = messageSender.Data.PlayerName;
+
+            if (player.AmOwner)
+            {
+                messageSender.SetName(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName));
+                for (int i = 0; i < messages.Count; ++i)
+                    DestroyableSingleton<HudManager>.Instance.Chat.AddChat(messageSender, messages[i]);
+                messageSender.SetName(name);
+            }
+            else
+            {
+                CustomRpcSender sender = CustomRpcSender.Create("Send Chat Message", SendOption.None);
+                sender.StartMessage(player.GetClientId());
+                sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                    .Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + messageName))
+                    .EndRpc();
+                for (int i = 0; i < messages.Count; ++i) 
+                {
+                    sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SendChat)
+                        .Write(messages[i])
+                        .EndRpc();
+                }
+                sender.StartRpc(messageSender.NetId, (byte)RpcCalls.SetName)
+                    .Write(Main.GameStarted ? Main.LastNotifyNames[(messageSender.PlayerId, player.PlayerId)] : name)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
+            }
+        }
+
         public static void RpcSetDesyncRole(this PlayerControl player, RoleTypes role, int clientId)
         {
             if (player == null) return;
@@ -70,6 +102,7 @@ namespace MoreGamemodes
             writer.Write((ushort)role);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
+
         public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
         {
             if (player == null || name == null || !AmongUsClient.Instance.AmHost) return;
@@ -89,59 +122,32 @@ namespace MoreGamemodes
             if (!isRaw)
                 Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
         }
-        public static void SyncCustomSettingsRPC()
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, 80, Hazel.SendOption.Reliable, -1);
-            foreach (var co in OptionItem.AllOptions)
-            {
-                writer.Write(co.GetValue());
-            }
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-        }
+
         public static bool TryCast<T>(this Il2CppObjectBase obj, out T casted)
         where T : Il2CppObjectBase
         {
             casted = obj.TryCast<T>();
             return casted != null;
         }
-        public static void RpcCancelPetV2(this PlayerPhysics playerPhysics)
-        {
-            if (playerPhysics.AmOwner)
-                playerPhysics.RpcCancelPet();
-            else
-                AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(playerPhysics.NetId, (byte)RpcCalls.CancelPet, SendOption.None));
-        }
+
         public static void RpcShapeshiftV2(this PlayerControl shifter, PlayerControl target, bool shouldAnimate)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (shifter.Data.IsDead)
-            {
-                shifter.RpcSendMessage("We were unable to shift you back into your regular self because of the Innersloth AntiCheat. Sorry!", "Anticheat");
-                return;
-            }
-            var role = shifter.Data.Role.Role;
-            shifter.RpcSetRoleV2(RoleTypes.Shapeshifter);
-            new LateTask(() =>
-            {
-                shifter.RpcShapeshift(target, shouldAnimate);
-            }, 0.01f, "Shapeshift");
+            if (shifter.Data.IsDead) return;
+            shifter.RpcShapeshift(target, shouldAnimate);
+            shifter.RpcResetAbilityCooldown();
+            Main.AllShapeshifts[shifter.PlayerId] = target.PlayerId;
         }
+
         public static void RpcRevertShapeshiftV2(this PlayerControl shifter, bool shouldAnimate)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (shifter.Data.IsDead)
-            {
-                shifter.RpcSendMessage("We were unable to shift you back into your regular self because of the Innersloth AntiCheat. Sorry!", "Anticheat");
-                return;
-            }
-            var role = shifter.Data.Role.Role;
-            shifter.RpcSetRoleV2(RoleTypes.Shapeshifter);
-            new LateTask(() =>
-            {
-                shifter.RpcRevertShapeshift(shouldAnimate);
-            }, 0.01f, "Revert Shapeshift");
+            if (shifter.Data.IsDead) return;
+            shifter.RpcRevertShapeshift(shouldAnimate);
+            shifter.RpcResetAbilityCooldown();
+            Main.AllShapeshifts[shifter.PlayerId] = shifter.PlayerId;
         }
+
         public static void RpcResetAbilityCooldown(this PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -155,50 +161,7 @@ namespace MoreGamemodes
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
             }
         }
-        public static void RpcSetAbilityCooldown(this PlayerControl target, float timer)
-        {
-            switch (target.Data.Role.Role)
-            {
-                case RoleTypes.Scientist:
-                    var scientistCooldown = GameOptionsManager.Instance.currentGameOptions.GetFloat(FloatOptionNames.ScientistCooldown);
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ScientistCooldown, timer);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    target.RpcResetAbilityCooldown();
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ScientistCooldown, scientistCooldown);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    break;
-                case RoleTypes.Engineer:
-                    var engineerCooldown = GameOptionsManager.Instance.currentGameOptions.GetFloat(FloatOptionNames.EngineerCooldown);
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.EngineerCooldown, timer);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    target.RpcResetAbilityCooldown();
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.EngineerCooldown, engineerCooldown);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    break;
-                case RoleTypes.GuardianAngel:
-                    var guardianAngelCooldown = GameOptionsManager.Instance.currentGameOptions.GetFloat(FloatOptionNames.GuardianAngelCooldown);
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.GuardianAngelCooldown, timer);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    target.RpcResetAbilityCooldown();
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.GuardianAngelCooldown, guardianAngelCooldown);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    break;
-                case RoleTypes.Shapeshifter:
-                    var shapeshifterCooldown = GameOptionsManager.Instance.currentGameOptions.GetFloat(FloatOptionNames.ShapeshifterCooldown);
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ShapeshifterCooldown, timer);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    target.RpcResetAbilityCooldown();
-                    GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ShapeshifterCooldown, shapeshifterCooldown);
-                    Utils.SyncSettingsToAll(GameOptionsManager.Instance.currentGameOptions);
-                    break;
-            }
-        }
-        public static void RpcSetRoleV2(this PlayerControl player, RoleTypes role)
-        {
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable);
-            writer.Write((byte)role);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-        }
+
         public static bool HasBomb(this PlayerControl player)
         {
             var hasBomb = false;
@@ -207,6 +170,7 @@ namespace MoreGamemodes
             var hasBombFound = Main.HasBomb.TryGetValue(player.PlayerId, out hasBomb);
             return hasBombFound ? hasBomb : false;
         }
+
         public static Items GetItem(this PlayerControl player)
         {
             var item = Items.None;
@@ -215,6 +179,7 @@ namespace MoreGamemodes
             var itemFound = Main.AllPlayersItems.TryGetValue(player.PlayerId, out item);
             return itemFound ? item : Items.None;
         }
+
         public static int Lives(this PlayerControl player)
         {
             var lives = 0;
@@ -223,6 +188,7 @@ namespace MoreGamemodes
             var livesFound = Main.Lives.TryGetValue(player.PlayerId, out lives);
             return livesFound ? lives : 0;
         }
+
         public static bool CanVent(this PlayerControl player)
         {
             if (((Options.CurrentGamemode == Gamemodes.HideAndSeek && !Options.HnSImpostorsCanVent.GetBool()) || (Options.CurrentGamemode == Gamemodes.ShiftAndSeek && !Options.SnSImpostorsCanVent.GetBool())) && Main.Impostors.Contains(player.PlayerId))
@@ -235,6 +201,7 @@ namespace MoreGamemodes
                 return false;
             return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
         }
+
         public static PlayerControl GetClosestPlayer(this PlayerControl player)
         {
             Vector2 playerpos = player.transform.position;
@@ -252,6 +219,7 @@ namespace MoreGamemodes
             PlayerControl target = min.Key;
             return target;
         }
+
         public static void RpcGuardAndKill(this PlayerControl killer, PlayerControl target, int colorId = 0)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -262,25 +230,20 @@ namespace MoreGamemodes
             }
             else
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.ProtectPlayer, SendOption.None, killer.GetClientId());
-                writer.WriteNetObject(target);
-                writer.Write(colorId);
-                AmongUsClient.Instance.FinishRpcImmediately(writer);
-
-                MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.ProtectPlayer, SendOption.None, killer.GetClientId());
-                writer2.WriteNetObject(target);
-                writer2.Write(colorId);
-                AmongUsClient.Instance.FinishRpcImmediately(writer2);
-
-                new LateTask(() =>
-                {
-                    MessageWriter writer3 = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, killer.GetClientId());
-                    writer3.WriteNetObject(target);
-                    AmongUsClient.Instance.FinishRpcImmediately(writer3);
-                }, 0.01f, "Late Kill");
-                
+                CustomRpcSender sender = CustomRpcSender.Create("Guard And Kill", SendOption.None);
+                sender.StartMessage(killer.GetClientId());
+                sender.StartRpc(killer.NetId, (byte)RpcCalls.ProtectPlayer)
+                    .WriteNetObject(target)
+                    .Write(colorId)
+                    .EndRpc();
+                sender.StartRpc(killer.NetId, (byte)RpcCalls.MurderPlayer)
+                    .WriteNetObject(target)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
             }
         }
+
         public static void RpcSetKillTimer(this PlayerControl player, float timer)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -293,6 +256,112 @@ namespace MoreGamemodes
             GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.KillCooldown, timer * 2);
             Utils.SyncSettingsToAll(GameOptionsManager.Instance.CurrentGameOptions);
             player.RpcGuardAndKill(player);
+            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.KillCooldown, cooldown);
+            Utils.SyncSettingsToAll(GameOptionsManager.Instance.CurrentGameOptions);
+        }
+
+        public static void RpcSetOutfit(this PlayerControl player, int colorId = -1, string name = null, string hatId = null, string skinId = null, string petId = null, string visorId = null, string namePlateId = null) 
+        {
+            var outfit = player.Data.Outfits[PlayerOutfitType.Default];
+            if (colorId == -1) colorId = outfit.ColorId;
+            if (name == null) name = outfit.PlayerName;
+            if (hatId == null) hatId = outfit.HatId;
+            if (skinId == null) skinId = outfit.SkinId;
+            if (petId == null) petId = outfit.PetId;
+            if (visorId == null) visorId = outfit.VisorId;
+            if (namePlateId == null) namePlateId = outfit.NamePlateId;
+
+            outfit.ColorId = colorId;
+            outfit.PlayerName = name;
+            outfit.HatId = hatId;
+            outfit.SkinId = skinId;
+            outfit.PetId = petId;
+            outfit.VisorId = visorId;
+            outfit.NamePlateId = namePlateId;
+            Utils.SendGameData();
+            new LateTask(() =>
+            {
+                player.RpcShapeshiftV2(player, false);
+                if (player.AmOwner)
+                    player.MyPhysics.RpcCancelPet();
+            }, 1f, "Set Look For Everyone");
+        }
+
+        public static void RpcExileV2(this PlayerControl player)
+        {
+            player.Exiled();
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcFixedMurderPlayer(this PlayerControl killer, PlayerControl target)
+        {
+            new LateTask(() => 
+            {
+                killer.RpcMurderPlayer(target);
+                if (killer.AmOwner)
+                    killer.MyPhysics.RpcCancelPet();
+            }, 0.01f, "Late Murder");
+        }
+
+        public static void RpcReactorFlash(this PlayerControl pc, float duration, Color color)
+        {
+            if (pc == null) return;
+            if (pc.PlayerId == 0)
+            {
+                var hud = DestroyableSingleton<HudManager>.Instance;
+                if (hud.FullScreen == null) return;
+                var obj = hud.transform.FindChild("FlashColor_FullScreen")?.gameObject;
+                if (obj == null)
+                {
+                    obj = GameObject.Instantiate(hud.FullScreen.gameObject, hud.transform);
+                    obj.name = "FlashColor_FullScreen";
+                }
+                hud.StartCoroutine(Effects.Lerp(duration, new Action<float>((t) =>
+                {
+                    obj.SetActive(t != 1f);
+                    obj.GetComponent<SpriteRenderer>().color = new(color.r, color.g, color.b, Mathf.Clamp01((-2f * Mathf.Abs(t - 0.5f) + 1) * color.a));
+                })));
+                return;
+            }
+            int clientId = pc.GetClientId();
+            byte reactorId = 3;
+            if (GameOptionsManager.Instance.currentNormalGameOptions.MapId == 2) reactorId = 21;
+
+            MessageWriter SabotageWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.RepairSystem, SendOption.Reliable, clientId);
+            SabotageWriter.Write(reactorId);
+            MessageExtensions.WriteNetObject(SabotageWriter, pc);
+            SabotageWriter.Write((byte)128);
+            AmongUsClient.Instance.FinishRpcImmediately(SabotageWriter);
+
+            new LateTask(() =>
+            {
+                MessageWriter SabotageFixWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.RepairSystem, SendOption.Reliable, clientId);
+                SabotageFixWriter.Write(reactorId);
+                MessageExtensions.WriteNetObject(SabotageFixWriter, pc);
+                SabotageFixWriter.Write((byte)16);
+                AmongUsClient.Instance.FinishRpcImmediately(SabotageFixWriter);
+            }, duration, "Fix Desync Reactor");
+
+            if (GameOptionsManager.Instance.currentNormalGameOptions.MapId == 4)
+                new LateTask(() =>
+                {
+                    MessageWriter SabotageFixWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.RepairSystem, SendOption.Reliable, clientId);
+                    SabotageFixWriter.Write(reactorId);
+                    MessageExtensions.WriteNetObject(SabotageFixWriter, pc);
+                    SabotageFixWriter.Write((byte)17);
+                    AmongUsClient.Instance.FinishRpcImmediately(SabotageFixWriter);
+                }, duration, "Fix Desync Reactor 2");
+        }
+
+        public static void RpcSetDeathReason(this PlayerControl player, DeathReasons reason)
+        {
+            Main.AllPlayersDeathReason[player.PlayerId] = reason;
+        }
+
+        public static DeathReasons GetDeathReason(this PlayerControl player)
+        {
+            return Main.AllPlayersDeathReason[player.PlayerId];
         }
     }
 }

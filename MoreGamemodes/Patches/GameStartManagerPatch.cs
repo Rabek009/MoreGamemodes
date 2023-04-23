@@ -20,5 +20,5 @@ namespace MoreGamemodes
             __result = GameOptionsManager.Instance.currentGameOptions.GetInt(Int32OptionNames.NumImpostors);
             return false;
         }
-    }
+    }  
 }

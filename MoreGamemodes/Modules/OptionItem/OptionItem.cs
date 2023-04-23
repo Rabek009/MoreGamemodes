@@ -21,7 +21,7 @@ namespace MoreGamemodes
 
         public Color NameColor { get; protected set; }
         public OptionFormat ValueFormat { get; protected set; }
-        public Gamemodes GameMode { get; protected set; }
+        public Gamemodes Gamemode { get; protected set; }
         public bool IsHeader { get; protected set; }
         public bool IsHidden { get; protected set; }
         public Dictionary<string, string> ReplacementDictionary
@@ -64,7 +64,7 @@ namespace MoreGamemodes
 
             NameColor = Color.white;
             ValueFormat = OptionFormat.None;
-            GameMode = Gamemodes.All;
+            Gamemode = Gamemodes.All;
             IsHeader = false;
             IsHidden = false;
 
@@ -99,7 +99,7 @@ namespace MoreGamemodes
 
         public OptionItem SetColor(Color value) => Do(i => i.NameColor = value);
         public OptionItem SetValueFormat(OptionFormat value) => Do(i => i.ValueFormat = value);
-        public OptionItem SetGameMode(Gamemodes value) => Do(i => i.GameMode = value);
+        public OptionItem SetGamemode(Gamemodes value) => Do(i => i.Gamemode = value);
         public OptionItem SetHeader(bool value) => Do(i => i.IsHeader = value);
         public OptionItem SetHidden(bool value) => Do(i => i.IsHidden = value);
 
@@ -138,7 +138,7 @@ namespace MoreGamemodes
 
         public virtual bool IsHiddenOn(Gamemodes mode)
         {
-            return IsHidden || (GameMode != Gamemodes.All && GameMode != mode);
+            return IsHidden || (Gamemode != Gamemodes.All && Gamemode != mode);
         }
 
         public string ApplyFormat(string value)
@@ -191,7 +191,7 @@ namespace MoreGamemodes
                 PlayerControl.LocalPlayer == null
             ) return;
 
-            ExtendedPlayerControl.SyncCustomSettingsRPC();
+            RPC.RpcSyncCustomOptions();
         }
 
 
@@ -216,11 +216,7 @@ namespace MoreGamemodes
     public enum TabGroup
     {
         MainSettings,
-        HideAndSeekSettings,
-        ShiftAndSeekSettings,
-        BombTagSettings,
-        RandomItemsSettings,
-        BattleRoyaleSettings,
+        GamemodeSettings,
         AdditionalGamemodes,
     }
     public enum OptionFormat
