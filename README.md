@@ -3,7 +3,7 @@
 ## About the mod
 
 More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
-Among Us version: 2023.2.28<br>
+Among Us version: 2023.3.28<br>
 
 ## Hotkeys
 
@@ -15,7 +15,6 @@ Among Us version: 2023.2.28<br>
 | `Shift`+`Z`+`Enter` | Make yourself dead             | In Game      |
 | `C`                 | Cancel game start              | In Countdown |
 | `Shift`             | Start the game immediately     | In Countdown |
-| `Shift`+`N`+`Enter` | Create bot that looks like you | Everywhere   |
 
 ### Mod client only
 | HotKey | Function              | Usable Scene |
@@ -151,6 +150,15 @@ If nearest player is impostor, he kills you. Otherwise you see that player's nam
 | --------------- |
 | Enable illusion |
 
+##### Radar
+Do reactor flash if impostor is nearby. Only crewmates can get this item.<br>
+
+###### Game Options
+| Name         |
+| ------------ |
+| Enable radar |
+| Radar range  |
+
 ##### Time speeder
 Decreases discussion and voting time. Only impostors can get this item.<br>
 
@@ -199,6 +207,16 @@ Teleports everyone to you. Only impostors can get this item.<br>
 | --------------------- |
 | Enable multi teleport |
 
+##### Bomb
+You sacrifice yourself in order to kill everyone nearby. Only impostors can get this item.<br>
+
+###### Game Options
+| Name               |
+| ------------------ |
+| Enable bomb        |
+| Bomb radius        |
+| Can kill impostors |
+
 ##### Teleport
 Teleports you to random vent. Everyone can get this item.<br>
 
@@ -241,6 +259,9 @@ Type /stop to end meeting immediately with skip result. Impostors can get this i
 | Enable stop              |
 | Can be given to crewmate |
 
+##### Newsletter
+Gives you info about how many people died and how they died, how many roles are alive. Everyone can get this item.<br>
+
 ### Battle royale
 Everyone is impostors. Clik kill button to attack. If you get hit, you lose 1 live. When your lives drop down to 0, you die and lose.<br>
 Last one alive wins! No reporting, emergiencies, venting and sabotaging. Depending on options you see arrow to nearst player.<br>
@@ -251,6 +272,15 @@ Last one alive wins! No reporting, emergiencies, venting and sabotaging. Dependi
 | Lives                   |
 | Lives visible to others |
 | Arrow to nearest player |
+
+### Speedrun
+Everyone is crewmate. Finish tasks first to win. You can play alone - finish tasks as fast as you can!<br>
+
+#### Game options
+| Name                    |
+| ----------------------- |
+| Body type               |
+| Tasks visible to others |
 
 ### Additional gamemodes
 Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.<br>
