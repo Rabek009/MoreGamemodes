@@ -2,7 +2,7 @@
 
 ## About the mod
 
-More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.
+More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
 Among Us version: 2023.7.12
 
 ## Hotkeys
