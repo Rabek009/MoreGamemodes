@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.4.33110.190
+VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoreGamemodes", "MoreGamemodes\MoreGamemodes.csproj", "{11FBC798-BAF5-4EE5-9511-BE6DB0592F99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoreGamemodes", "MoreGamemodes.csproj", "{7D57363A-A890-4448-B6F0-A77FCF4B9AE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{11FBC798-BAF5-4EE5-9511-BE6DB0592F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11FBC798-BAF5-4EE5-9511-BE6DB0592F99}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11FBC798-BAF5-4EE5-9511-BE6DB0592F99}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11FBC798-BAF5-4EE5-9511-BE6DB0592F99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D57363A-A890-4448-B6F0-A77FCF4B9AE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D57363A-A890-4448-B6F0-A77FCF4B9AE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D57363A-A890-4448-B6F0-A77FCF4B9AE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D57363A-A890-4448-B6F0-A77FCF4B9AE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E5FBD3D0-8869-43DD-A2CB-41F09897DD1C}
+		SolutionGuid = {D775989E-B8E2-4CCB-8350-CB3CB2FC55FC}
 	EndGlobalSection
 EndGlobal

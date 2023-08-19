@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "restore": {
+    "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj": {}
+  },
+  "projects": {
+    "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj",
+        "projectName": "MoreGamemodes",
+        "projectPath": "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj",
+        "packagesPath": "C:\\Users\\cypri\\.nuget\\packages\\",
+        "outputPath": "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\cypri\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "BepInEx.AutoPlugin": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.1.0, )"
+            },
+            "Costura.Fody": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[5.7.0, )"
+            },
+            "csv": {
+              "target": "Package",
+              "version": "[2.0.87, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.408\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
