@@ -62,7 +62,7 @@ public partial class Main : BasePlugin
     public static List<(Vector2, float)> Traps;
     public static Dictionary<byte, float> CompassTimer;
 
-    public const string CurrentVersion = "0.2.0";
+    public const string CurrentVersion = "0.2.1";
 
     public override void Load()
     {

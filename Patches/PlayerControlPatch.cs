@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -65,10 +66,17 @@ namespace MoreGamemodes
                 if (Main.Timer < Options.GracePeriod.GetFloat())
                     return false;         
                 if (target.Lives() > 1)
+                {
                     --Main.Lives[target.PlayerId];
+                    killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
+                }
                 else
+                {
                     Main.Lives[target.PlayerId] = 0;
-                killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
+                    killer.RpcMurderPlayer(target);
+                    new LateTask(() => killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown)), 0.01f, "Set Cooldown");
+                }
+                return false;
             }
             target.RpcSetColor((byte)Main.StandardColors[target.PlayerId]);
             return true;
@@ -448,11 +456,24 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoEnterVent))]
     class CoEnterVentPatch
     {
-        public static void Postfix(PlayerPhysics __instance, [HarmonyArgument(0)] int id)
+        public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] int id)
         {
-            if (!AmongUsClient.Instance.AmHost) return;
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (!__instance.myPlayer.CanVent())
-                __instance.RpcBootFromVent(id);
+            {
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, -1);
+                writer.WritePacked(127);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                new LateTask(() =>
+                {
+                    int clientId = __instance.myPlayer.GetClientId();
+                    MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, clientId);
+                    writer2.Write(id);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer2);
+                }, 0.5f, "Fix DesyncImpostor Stuck");
+                return false;
+            }
+            return true;
         }
     }
 
