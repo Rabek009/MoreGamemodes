@@ -9,6 +9,9 @@ The mod belongs to Rabek009. This is just their enhanced version with new additi
 "More Gamemodes" - это модификация для игры Among Us, которая добавляет новые игровые режимы. Для работы мода его должен иметь только хост.
 
 Версия Among Us: 2023.7.12.
+## Где скачать мод?
+Мод можно скачать [тут](https://loot77.github.io/SusPack/sus.html)
+Пока мод не вливается в открытый код хочу доделать его нормально без багов и потом выложить.
 
 ## Упоминание
 1. Репозиторий основан на [MoreGamemodes](https://github.com/Rabek009/MoreGamemodes) 
