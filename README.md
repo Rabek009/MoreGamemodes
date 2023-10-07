@@ -1,5 +1,10 @@
-# More Gamemodes
+# More Gamemodes +
 
+## Авторство
+
+Мод принадлежит Rabek009. Это лишь его улучшенная версия с новыми дополнениями и режимами игры, а также переведенная только на русский.
+
+The mod belongs to Rabek009. This is just their enhanced version with new additions and game modes, also translated into Only Russian.
 ## About the mod
 
 More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
