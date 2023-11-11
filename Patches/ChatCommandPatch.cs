@@ -1,11 +1,11 @@
 ﻿using HarmonyLib;
 using System.Linq;
-using System;
-using Assets.CoreScripts;
-using System.Text;
 using AmongUs.GameOptions;
 using Hazel;
 using UnityEngine;
+using System;
+using Assets.CoreScripts;
+using System.Text;
 
 namespace MoreGamemodes
 {
@@ -15,12 +15,69 @@ namespace MoreGamemodes
         public static bool Prefix(ChatController __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (__instance.freeChatField.Text == "") return false;
+            if (__instance.quickChatField.Visible)
+            {
+                return true;
+            }
+            if (__instance.freeChatField.textArea.text == "")
+            {
+                return false;
+            }
             __instance.timeSinceLastMessage = 3f;
             var text = __instance.freeChatField.Text;
             string[] args = text.Split(' ');
             string subArgs = "";
             var canceled = false;
+            if (Options.MidGameChat.GetBool() && Main.GameStarted && !Main.IsMeeting)
+            {
+                if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
+                {
+                    Utils.SendSpam("Someone tried to send message during comms sabotage");
+                    __instance.freeChatField.textArea.Clear();
+                    __instance.freeChatField.textArea.SetText("");
+                    return false;
+                }
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor  && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems))
+                {
+                    var message = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        message += subArgs;
+                    }
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (PlayerControl.LocalPlayer != pc && pc.Data.Role.IsImpostor)
+                            Main.ProximityMessages[pc.PlayerId].Add(("[Radio] " + Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + ": " + message, 0f));
+                    }
+                    Utils.SendSpam("Someone sent proximity message");
+                    __instance.freeChatField.textArea.Clear();
+                    __instance.freeChatField.textArea.SetText("");
+                    return false;
+                }
+                if (Options.ProximityChat.GetBool())
+                {
+                    var message = "";
+                    for (int i = 0; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        message += subArgs;
+                    }
+                    string appearance = Main.StandardNames[PlayerControl.LocalPlayer.PlayerId];
+                    if (Options.FakeShapeshiftAppearance.GetBool()) appearance = Main.StandardNames[Main.AllShapeshifts[PlayerControl.LocalPlayer.PlayerId]];
+                    if (Options.CurrentGamemode == Gamemodes.RandomItems)
+                    {
+                        if (RandomItemsGamemode.instance.CamouflageTimer > 0f) 
+                            appearance = "???";
+                    }
+                    PlayerControl.LocalPlayer.SendProximityMessage(appearance, message);
+                    Utils.SendSpam("Someone sent proximity message");
+                    __instance.freeChatField.textArea.Clear();
+                    __instance.freeChatField.textArea.SetText("");
+                    return false;
+                }
+                return true;
+            }
             switch (args[0])
             {
                 case "/cs":
@@ -49,6 +106,9 @@ namespace MoreGamemodes
                                 case "airship":
                                     GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 4);
                                     break;
+                                case "thefungle":
+                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 4);
+                                    break;
                                 case "custom":
                                     subArgs = args.Length < 4 ? "" : args[3];
                                     GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, byte.Parse(subArgs));
@@ -57,31 +117,10 @@ namespace MoreGamemodes
                             break;
                         case "impostors":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            if (int.Parse(subArgs) < 1)
-                            {
-                                var players = GameOptionsManager.Instance.currentGameOptions.MaxPlayers;
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, -1);
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, players);
-                                PlayerControl.LocalPlayer.RpcSendMessage("Number of impostors is lower than 1. If you want to change other settings set impostors to more than 0!", "Warning");
-                            }
-                            if (int.Parse(subArgs) > 3)
-                            {
-                                var players = GameOptionsManager.Instance.currentGameOptions.MaxPlayers;
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, -1);
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, players);
-                                    PlayerControl.LocalPlayer.RpcSendMessage("Number of impostors is greater than 3. If you want to change other settings set impostors to 3 or less!", "Warning");
-                            }
                             GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumImpostors, int.Parse(subArgs));
                             break;
                         case "players":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            if (int.Parse(subArgs) > 15)
-                            {
-                                var players = GameOptionsManager.Instance.currentGameOptions.MaxPlayers;
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, -1);
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, players);
-                                PlayerControl.LocalPlayer.RpcSendMessage("Max players are greater than 15. If you want to change other settings set maximum players to 15 or lower!", "Warning");
-                            }
                             GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, int.Parse(subArgs));
                             break;
                         case "recommended":
@@ -138,20 +177,6 @@ namespace MoreGamemodes
                             break;
                         case "playerspeed":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            if (float.Parse(subArgs) <= 0)
-                            {
-                                var players = GameOptionsManager.Instance.currentGameOptions.MaxPlayers;
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, -1);
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, players);
-                                PlayerControl.LocalPlayer.RpcSendMessage("Player speed is lower or equals 0. If you want to change other settings set player speed to more than 0!", "Warning");
-                            }
-                            if (float.Parse(subArgs) > 3)
-                            {
-                                var players = GameOptionsManager.Instance.currentGameOptions.MaxPlayers;
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, -1);
-                                GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, players);
-                                PlayerControl.LocalPlayer.RpcSendMessage("Player speed is greater than 3. If you want to change other settings set player speed to 3 or less!", "Warning");
-                            }
                             GameOptionsManager.Instance.currentNormalGameOptions.SetFloat(FloatOptionNames.PlayerSpeedMod, float.Parse(subArgs));
                             break;
                         case "crewmatevision":
@@ -181,20 +206,6 @@ namespace MoreGamemodes
                                     break;
                                 case "custom":
                                     subArgs = args.Length < 4 ? "" : args[3];
-                                    if (int.Parse(subArgs) < 0)
-                                    {
-                                        var players = GameOptionsManager.Instance.currentGameOptions.MaxPlayers;
-                                        GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, -1);
-                                        GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, players);
-                                        PlayerControl.LocalPlayer.RpcSendMessage("Kill distance is lower than 0. If you want to change other settings set kill distance to short, medium or long!", "Warning");
-                                    }
-                                    if (int.Parse(subArgs) > 2)
-                                    {
-                                        var players = GameOptionsManager.Instance.currentGameOptions.MaxPlayers;
-                                        GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, -1);
-                                        GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, players);
-                                        PlayerControl.LocalPlayer.RpcSendMessage("Kill distance is greater than 2. If you want to change other settings set kill distance to short, medium or long!", "Warning");
-                                    }
                                     GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.KillDistance, int.Parse(subArgs));
                                     break;
                             }
@@ -437,9 +448,8 @@ namespace MoreGamemodes
                             subArgs = args.Length < 3 ? "" : args[2];
                             GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.ImpostorPlayerID, int.Parse(subArgs));
                             break;
-
                     }
-                    GameManager.Instance.LogicOptions.SyncOptions();
+                    Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
                     break;
                 case "/gm":
                 case "/gamemode":
@@ -480,6 +490,10 @@ namespace MoreGamemodes
                             Options.Gamemode.SetValue(7);
                             PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is paint battle", "GamemodesChanger");
                             break;
+                        case "killordie":
+                            Options.Gamemode.SetValue(8);
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is kill or die", "GamemodesChanger");
+                            break;
                     }
                     break;
                 case "/color":
@@ -488,7 +502,6 @@ namespace MoreGamemodes
                     if (Main.GameStarted && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
                     subArgs = args.Length < 2 ? "" : args[1];           
                     PlayerControl.LocalPlayer.RpcSetColor(byte.Parse(subArgs));
-                    Main.StandardColors[PlayerControl.LocalPlayer.PlayerId] = PlayerControl.LocalPlayer.Data.DefaultOutfit.ColorId;
                     break;
                 case "/name":
                     canceled = true;
@@ -500,7 +513,6 @@ namespace MoreGamemodes
                         name += subArgs;
                     }
                     PlayerControl.LocalPlayer.RpcSetName(name);
-                    Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] = PlayerControl.LocalPlayer.Data.PlayerName;
                     break;
                 case "/h":
                 case "/help":
@@ -537,6 +549,21 @@ namespace MoreGamemodes
                                 case "paintbattle":
                                     Utils.SendChat("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
+                                case "killordie":
+                                    Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                    break;
+                                case "randomspawn":
+                                    Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
+                                    break;
+                                case "randommap":
+                                    Utils.SendChat("Random Map: Map is randomly chosen before game starts.", "Gamemodes");
+                                    break;
+                                case "disablegapplatform":
+                                    Utils.SendChat("Disable Gap Platform: Players can't use gap platform on airship.", "Gamemodes");
+                                    break;
+                                case "midgamechat":
+                                    Utils.SendChat("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
+                                    break;
                                 default:
                                     switch (Options.CurrentGamemode)
                                     {
@@ -564,7 +591,18 @@ namespace MoreGamemodes
                                         case Gamemodes.PaintBattle:
                                             Utils.SendChat("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
+                                        case Gamemodes.KillOrDie:
+                                            Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                            break;
                                     }
+                                    if (Options.RandomSpawn.GetBool())
+                                        Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
+                                    if (Options.RandomMap.GetBool())
+                                        Utils.SendChat("Random Map: Map is randomly chosen before game starts.", "Gamemodes");
+                                    if (Options.DisableGapPlatform.GetBool())
+                                        Utils.SendChat("Disable Gap Platform: Players can't use gap platform on airship.", "Gamemodes");
+                                    if (Options.MidGameChat.GetBool())
+                                        Utils.SendChat("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
                                     break;
                             }
                             break;
@@ -654,6 +692,7 @@ namespace MoreGamemodes
                     if (PlayerControl.LocalPlayer.GetItem() == Items.Stop)
                     {
                         MeetingHud.Instance.RpcClose();
+                        VotingCompletePatch.Postfix();  
                         PlayerControl.LocalPlayer.RpcSetItem(Items.None);
                         Utils.SendSpam("Someone used /stop command!");
                     }
@@ -664,7 +703,16 @@ namespace MoreGamemodes
                     var message = "";
                     message += "No game end: "; message += Options.NoGameEnd.GetBool() ? "ON\n" : "OFF\n";
                     message += "Can use /color command: "; message += Options.CanUseColorCommand.GetBool() ? "ON\n" : "OFF\n";
-                    message += "Can use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON\n" : "OFF\n";
+                    if (Options.CanUseColorCommand.GetBool())
+                    {
+                        message += "\nEnable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON" : "OFF";
+                    }   
+                    message += "\nCan use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON" : "OFF";
+                    if (Options.CanUseNameCommand.GetBool())
+                    {
+                        message += "\nEnable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON" : "OFF";
+                        message += "\nMaximum name length: " + Options.MaximumNameLength.GetInt();
+                    }  
                     Utils.SendChat(message, "Options");
 
                     message = "";
@@ -801,6 +849,12 @@ namespace MoreGamemodes
                             message += "Painting Time: " + Options.PaintingTime.GetInt() + "s\n";
                             message += "Voting Time: " + Options.VotingTime.GetInt() + "s\n";
                             break;
+                        case Gamemodes.KillOrDie:
+                            message = "Gamemode: Kill or die\n\n";
+                            message += "Teleport after round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
+                            message += "Time to kill: " + Options.TimeToKill.GetInt() + "%\n";
+                            break;
                     }
                     Utils.SendChat(message, "Options");
 
@@ -809,6 +863,29 @@ namespace MoreGamemodes
                     {
                         message += "\nRandom Spawn\n";
                         message += "Teleport After Meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
+                    }
+                    if (Options.RandomMap.GetBool())
+                    {
+                        message += "\nRandom Map\n";
+                        message += "Add The Skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add Mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add Polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add The Airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add The Fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
+                    }
+                    if (Options.DisableGapPlatform.GetBool())
+                        message += "\nDisable Gap Platform\n";
+                    if (Options.MidGameChat.GetBool())
+                    {
+                        message += "\nMid Game Chat\n";
+                        message += "Proximity Chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
+                        if (Options.ProximityChat.GetBool())
+                        {
+                            message += "Messages Radius: " + Options.MessagesRadius.GetFloat() + "x\n";
+                            message += "Impostor Radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Fake Shapeshift Appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
+                        }
+                        message += "Disable During Comms Sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
                     }
                     if (message != "Additional Gamemodes:\n")
                         Utils.SendChat(message, "Options");
@@ -840,7 +917,7 @@ namespace MoreGamemodes
                     canceled = true;
                     PlayerControl.LocalPlayer.RpcSendMessage("Commands:\n/color COLOR_ID - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n" +
                         "/now - show active settings\n/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/changesetting SETTING VALUE - changes setting value\n" +
-                        "/gamemode GAMEMODE - changes gamemode\n/kick PLAYER_ID - kick player\n/ban PLAYER_ID - ban player\n/announce MESSAGE - send message", "Command");
+                        "/gamemode GAMEMODE - changes gamemode\n/kick PLAYER_ID - kick player\n/ban PLAYER_ID - ban player\n/announce MESSAGE - send message\n/lastresult - show last game result", "Command");
                     break;
                 case "/kick":
                     canceled = true;
@@ -863,55 +940,142 @@ namespace MoreGamemodes
                     }
                     Utils.SendChat(announce, "HostMessage");
                     break;
+                case "/lastresult":
+                case "/l":
+                    canceled = true;
+                    if (Main.LastResult != "")
+                        PlayerControl.LocalPlayer.RpcSendMessage(Main.LastResult, "LastResult");
+                    break;
+                case "/info":
+                    if (Options.CurrentGamemode != Gamemodes.RandomItems || !Main.GameStarted || PlayerControl.LocalPlayer.Data.IsDead) break;
+                    canceled = true;
+                    if (PlayerControl.LocalPlayer.GetItem() == Items.Newsletter)
+                    {
+                        int crewmates = 0;
+                        int scientists = 0 ;
+                        int engineers = 0;       
+                        int impostors = 0;
+                        int shapeshifters = 0;
+                        int alivePlayers = 0;
+                        int deadPlayers = 0;
+                        int killedPlayers = 0;
+                        int exiledPlayers = 0;
+                        int disconnectedPlayers = 0;
+                        int misfiredPlayers = 0;
+                        int bombedPlayers = 0;
+                        int suicidePlayers = 0;
+                        int trappedPlayers = 0;
+                        string msg = "Roles in game:\n";
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            switch (pc.Data.Role.Role)
+                            {
+                                case RoleTypes.Crewmate: ++crewmates; break;
+                                case RoleTypes.Scientist: ++scientists; break;
+                                case RoleTypes.Engineer: ++engineers; break;
+                                case RoleTypes.Impostor: ++impostors; break;
+                                case RoleTypes.Shapeshifter: ++shapeshifters; break;
+                            }
+                        }
+                        for (byte i = 0; i <= 14; ++i)
+                        {
+                            if (Main.AllPlayersDeathReason.ContainsKey(i))
+                            {
+                                if (Main.AllPlayersDeathReason[i] == DeathReasons.Alive)
+                                    ++alivePlayers;
+                                else
+                                {
+                                    ++deadPlayers;
+                                    switch (Main.AllPlayersDeathReason[i])
+                                    {
+                                        case DeathReasons.Killed: ++killedPlayers; break;
+                                        case DeathReasons.Exiled: ++exiledPlayers; break;
+                                        case DeathReasons.Disconnected: ++disconnectedPlayers; break;
+                                        case DeathReasons.Misfire: ++misfiredPlayers; break;
+                                        case DeathReasons.Bombed: ++bombedPlayers; break;
+                                        case DeathReasons.Suicide: ++suicidePlayers; break;
+                                        case DeathReasons.Trapped: ++trappedPlayers; break;
+                                    }
+                                }
+                            }
+                        }
+                        msg += crewmates + " crewamtes\n";
+                        msg += scientists + " scientists\n";
+                        msg += engineers + " engineers\n";
+                        msg += impostors + " impostors\n";
+                        msg += shapeshifters + " shapeshifters\n\n";
+                        msg += alivePlayers + " players are alive\n";
+                        msg += deadPlayers + " players died:\n";
+                        msg += killedPlayers + " by getting killed\n";
+                        msg += exiledPlayers + " by voting\n";
+                        msg += disconnectedPlayers + " players disconnected\n";
+                        msg += misfiredPlayers + " misfired on crewmate\n";
+                        msg += bombedPlayers + " players got bombed\n";
+                        msg += suicidePlayers + " commited suicide\n";  
+                        msg += trappedPlayers + " players trapped\n";      
+                        PlayerControl.LocalPlayer.RpcSendMessage(msg, "Newsletter");
+                        PlayerControl.LocalPlayer.RpcSetItem(Items.None);
+                    }
+                    break;
                 case "1":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 1, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 1, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "2":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 2, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 2, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "3":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 3, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 3, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "4":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 4, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 4, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "5":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 5, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 5, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "6":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 6, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 6, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "7":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 7, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 7, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "8":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 8, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 8, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "9":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 9, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 9, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 case "10":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 10, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 10, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId] = true;
                     break;
                 default:
                     break;
@@ -929,6 +1093,50 @@ namespace MoreGamemodes
             var canceled = false;
             string[] args = text.Split(' ');
             string subArgs = "";   
+            if (Options.MidGameChat.GetBool() && Main.GameStarted && !Main.IsMeeting)
+            {
+                if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
+                {
+                    Utils.SendSpam("Someone tried to send message during comms sabotage");
+                    return false;
+                }
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor  && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems))
+                {
+                    var message = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        message += subArgs;
+                    }
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (player != pc && pc.Data.Role.IsImpostor)
+                            Main.ProximityMessages[pc.PlayerId].Add(("[Radio] " + Main.StandardNames[player.PlayerId] + ": " + message, 0f));
+                    }
+                    Utils.SendSpam("Someone sent proximity message");
+                    return false;
+                }
+                if (Options.ProximityChat.GetBool())
+                {
+                    var message = "";
+                    for (int i = 0; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        message += subArgs;
+                    }
+                    string appearance = Main.StandardNames[player.PlayerId];
+                    if (Options.FakeShapeshiftAppearance.GetBool()) appearance = Main.StandardNames[Main.AllShapeshifts[player.PlayerId]];
+                    if (Options.CurrentGamemode == Gamemodes.RandomItems)
+                    {
+                        if (RandomItemsGamemode.instance.CamouflageTimer > 0f) 
+                            appearance = "???";
+                    }
+                    player.SendProximityMessage(appearance, message);
+                    Utils.SendSpam("Someone sent proximity message");
+                    return false;
+                }
+                return true;
+            }
             switch (args[0])
             {
                 case "/color":
@@ -937,11 +1145,8 @@ namespace MoreGamemodes
                     if (!Options.CanUseColorCommand.GetBool() && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
                     if (Main.GameStarted && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
                     subArgs = args.Length < 2 ? "" : args[1];
-                    if (Options.EnableColorRepeating.GetBool() || (Options.CurrentGamemode == Gamemodes.PaintBattle && Main.GameStarted))
-                        player.RpcSetColor(byte.Parse(subArgs));
-                    else
-                        player.CmdCheckColor(byte.Parse(subArgs));
-                    Main.StandardColors[player.PlayerId] = player.Data.DefaultOutfit.ColorId;                   
+                    if (byte.Parse(subArgs) < 18 || Options.EnableFortegreen.GetBool() || (Options.CurrentGamemode == Gamemodes.PaintBattle && Main.GameStarted))
+                        player.RpcSetColor(byte.Parse(subArgs));           
                     break;
                 case "/name":
                     canceled = true;
@@ -953,11 +1158,11 @@ namespace MoreGamemodes
                         subArgs = args.Length < i + 1 ? "" : " " + args[i];
                         name += subArgs;
                     }
+                    if (name.Length > Options.MaximumNameLength.GetInt()) break;
                     if (Options.EnableNameRepeating.GetBool())
                         player.RpcSetName(name);
                     else
-                        player.CmdCheckName(name);
-                    Main.StandardNames[player.PlayerId] = player.Data.PlayerName;
+                        player.CheckName(name);
                     break;
                 case "/h":
                 case "/help":
@@ -994,6 +1199,21 @@ namespace MoreGamemodes
                                 case "paintbattle":
                                     player.RpcSendMessage("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
+                                case "killordie":
+                                    player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                    break;
+                                case "randomspawn":
+                                    player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
+                                    break;
+                                case "randommap":
+                                    player.RpcSendMessage("Random Map: Map is randomly chosen before game starts.", "Gamemodes");
+                                    break;
+                                case "disablegapplatform":
+                                    player.RpcSendMessage("Disable Gap Platform: Players can't use gap platform on airship.", "Gamemodes");
+                                    break;
+                                case "midgamechat":
+                                    player.RpcSendMessage("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
+                                    break;
                                 default:
                                     switch (Options.CurrentGamemode)
                                     {
@@ -1021,7 +1241,18 @@ namespace MoreGamemodes
                                         case Gamemodes.PaintBattle:
                                             player.RpcSendMessage("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
+                                        case Gamemodes.KillOrDie:
+                                            player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                            break;
                                     }
+                                    if (Options.RandomSpawn.GetBool())
+                                        player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
+                                    if (Options.RandomMap.GetBool())
+                                        player.RpcSendMessage("Random Map: Map is randomly chosen before game starts.", "Gamemodes");
+                                    if (Options.DisableGapPlatform.GetBool())
+                                        player.RpcSendMessage("Disable Gap Platform: Players can't use gap platform on airship.", "Gamemodes");
+                                    if (Options.MidGameChat.GetBool())
+                                        player.RpcSendMessage("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
                                     break;
                             }
                             break;
@@ -1111,6 +1342,7 @@ namespace MoreGamemodes
                     if (player.GetItem() == Items.Stop)
                     {
                         MeetingHud.Instance.RpcClose();
+                        VotingCompletePatch.Postfix();  
                         player.RpcSetItem(Items.None);
                         Utils.SendSpam("Someone used /stop command!");
                     }
@@ -1121,7 +1353,16 @@ namespace MoreGamemodes
                     var message = "";
                     message += "No game end: "; message += Options.NoGameEnd.GetBool() ? "ON" : "OFF";
                     message += "\nCan use /color command: "; message += Options.CanUseColorCommand.GetBool() ? "ON" : "OFF";
+                    if (Options.CanUseColorCommand.GetBool())
+                    {
+                        message += "\nEnable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON" : "OFF";
+                    }   
                     message += "\nCan use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON" : "OFF";
+                    if (Options.CanUseNameCommand.GetBool())
+                    {
+                        message += "\nEnable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON" : "OFF";
+                        message += "\nMaximum name length:" + Options.MaximumNameLength.GetInt();
+                    }   
                     player.RpcSendMessage(message, "Options");
 
                     message = "";
@@ -1258,6 +1499,12 @@ namespace MoreGamemodes
                             message += "Painting Time: " + Options.PaintingTime.GetInt() + "s\n";
                             message += "Voting Time: " + Options.VotingTime.GetInt() + "s\n";
                             break;
+                        case Gamemodes.KillOrDie:
+                            message = "Gamemode: Kill or die\n\n";
+                            message += "Teleport after round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
+                            message += "Time to kill: " + Options.TimeToKill.GetInt() + "%\n";
+                            break;
                     }
                     player.RpcSendMessage(message, "Options");
 
@@ -1266,6 +1513,29 @@ namespace MoreGamemodes
                     {
                         message += "\nRandom Spawn\n";
                         message += "Teleport After Meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
+                    }
+                    if (Options.RandomMap.GetBool())
+                    {
+                        message += "\nRandom Map\n";
+                        message += "Add The Skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add Mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add Polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add The Airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add The Fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
+                    }
+                    if (Options.DisableGapPlatform.GetBool())
+                        message += "\nDisable Gap Platform\n";
+                    if (Options.MidGameChat.GetBool())
+                    {
+                        message += "\nMid Game Chat\n";
+                        message += "Proximity Chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
+                        if (Options.ProximityChat.GetBool())
+                        {
+                            message += "Messages Radius: " + Options.MessagesRadius.GetFloat() + "x\n";
+                            message += "Impostor Radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Fake Shapeshift Appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
+                        }
+                        message += "Disable During Comms Sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
                     }
                     if (message != "Additional Gamemodes:\n")
                         player.RpcSendMessage(message, "Options");
@@ -1296,57 +1566,144 @@ namespace MoreGamemodes
                 case "/cm":
                     canceled = true;
                     player.RpcSendMessage("Commands:\n/color COLOR_ID - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n/now - show active settings\n" +
-                        "/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands", "Commands");
+                        "/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/lastresult - show last game result", "Commands");
+                    break;
+                case "/lastresult":
+                case "/l":
+                    canceled = true;
+                    if (Main.LastResult != "")
+                        player.RpcSendMessage(Main.LastResult, "LastResult");
+                    break;
+                case "/info":
+                    if (Options.CurrentGamemode != Gamemodes.RandomItems || !Main.GameStarted || player.Data.IsDead) break;
+                    canceled = true;
+                    if (player.GetItem() == Items.Newsletter)
+                    {
+                        int crewmates = 0;
+                        int scientists = 0 ;
+                        int engineers = 0;       
+                        int impostors = 0;
+                        int shapeshifters = 0;
+                        int alivePlayers = 0;
+                        int deadPlayers = 0;
+                        int killedPlayers = 0;
+                        int exiledPlayers = 0;
+                        int disconnectedPlayers = 0;
+                        int misfiredPlayers = 0;
+                        int bombedPlayers = 0;
+                        int suicidePlayers = 0;
+                        int trappedPlayers = 0;
+                        string msg = "Roles in game:\n";
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            switch (pc.Data.Role.Role)
+                            {
+                                case RoleTypes.Crewmate: ++crewmates; break;
+                                case RoleTypes.Scientist: ++scientists; break;
+                                case RoleTypes.Engineer: ++engineers; break;
+                                case RoleTypes.Impostor: ++impostors; break;
+                                case RoleTypes.Shapeshifter: ++shapeshifters; break;
+                            }
+                        }
+                        for (byte i = 0; i <= 14; ++i)
+                        {
+                            if (Main.AllPlayersDeathReason.ContainsKey(i))
+                            {
+                                if (Main.AllPlayersDeathReason[i] == DeathReasons.Alive)
+                                    ++alivePlayers;
+                                else
+                                {
+                                    ++deadPlayers;
+                                    switch (Main.AllPlayersDeathReason[i])
+                                    {
+                                        case DeathReasons.Killed: ++killedPlayers; break;
+                                        case DeathReasons.Exiled: ++exiledPlayers; break;
+                                        case DeathReasons.Disconnected: ++disconnectedPlayers; break;
+                                        case DeathReasons.Misfire: ++misfiredPlayers; break;
+                                        case DeathReasons.Bombed: ++bombedPlayers; break;
+                                        case DeathReasons.Suicide: ++suicidePlayers; break;
+                                        case DeathReasons.Trapped: ++trappedPlayers; break;
+                                    }
+                                }
+                            }
+                        }
+                        msg += crewmates + " crewamtes\n";
+                        msg += scientists + " scientists\n";
+                        msg += engineers + " engineers\n";
+                        msg += impostors + " impostors\n";
+                        msg += shapeshifters + " shapeshifters\n\n";
+                        msg += alivePlayers + " players are alive\n";
+                        msg += deadPlayers + " players died:\n";
+                        msg += killedPlayers + " by getting killed\n";
+                        msg += exiledPlayers + " by voting\n";
+                        msg += disconnectedPlayers + " players disconnected\n";
+                        msg += misfiredPlayers + " misfired on crewmate\n";
+                        msg += bombedPlayers + " players got bombed\n";
+                        msg += suicidePlayers + " commited suicide\n";  
+                        msg += trappedPlayers + " players trapped\n";      
+                        player.RpcSendMessage(msg, "Newsletter");
+                        player.RpcSetItem(Items.None);
+                    }
                     break;
                 case "1":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 1, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 1, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "2":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 2, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 2, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "3":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 3, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 3, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "4":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 4, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 4, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "5":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 5, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 5, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "6":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 6, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 6, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "7":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 7, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 7, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "8":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 8, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 8, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "9":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 9, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 9, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 case "10":
-                    if (Options.CurrentGamemode != Gamemodes.PaintBattle || Main.HasVoted[player.PlayerId]) break;
-                    Main.PlayerVotes[Main.VotingPlayerId] = (Main.PlayerVotes[Main.VotingPlayerId].Item1 + 10, Main.PlayerVotes[Main.VotingPlayerId].Item2 + 1);
-                    Main.HasVoted[player.PlayerId] = true;
+                    if (PaintBattleGamemode.instance == null) break;
+                    if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
+                    PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId] = (PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item1 + 10, PaintBattleGamemode.instance.PlayerVotes[PaintBattleGamemode.instance.VotingPlayerId].Item2 + 1);
+                    PaintBattleGamemode.instance.HasVoted[player.PlayerId] = true;
                     break;
                 default:
                     break;
@@ -1368,26 +1725,40 @@ namespace MoreGamemodes
             Main.MessagesToSend.RemoveAt(0);
             int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo).GetClientId();
             var name = player.Data.PlayerName;
-            if (clientId == -1)
+            foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                player.SetName(Utils.ColorString(Color.blue, "MG.SystemMessage." + title));
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
-                player.SetName(name);
+                var clientId2 = pc.GetClientId();
+                if (clientId == clientId2 || clientId == -1)
+                {
+                    if (pc.AmOwner)
+                    {
+                        player.SetName(Utils.ColorString(Color.blue, "MG.SystemMessage." + title));
+                        DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
+                        player.SetName(name);
+                        if (Main.GameStarted)
+                            player.RpcSetNamePrivate(Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)], pc, true);
+                    }
+                    else
+                    {
+                        new LateTask(() =>
+                        {
+                            var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                            writer.StartMessage(clientId2);
+                            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + title))
+                                .EndRpc();
+                            writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+                                .Write(msg)
+                                .EndRpc();
+                            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name)
+                                .EndRpc();
+                            writer.EndMessage();
+                            writer.SendMessage();
+                        }, 0.01f, "Send Message");
+                    }
+                }
             }
-            var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
-            writer.StartMessage(clientId);
-            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                .Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + title))
-                .EndRpc();
-            writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
-                .Write(msg)
-                .EndRpc();
-            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                .Write(player.Data.PlayerName)
-                .EndRpc();
-            writer.EndMessage();
-            writer.SendMessage();
-            __instance.timeSinceLastMessage = 0f;
         }
     }
 
@@ -1406,7 +1777,7 @@ namespace MoreGamemodes
             if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
             if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
-                DestroyableSingleton<Telemetry>.Instance.SendWho();
+                DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
             MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
             messageWriter.Write(chatText);
             messageWriter.EndMessage();

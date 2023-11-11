@@ -4698,11 +4698,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj",
+      "projectUniqueName": "C:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj",
       "projectName": "MoreGamemodes",
-      "projectPath": "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj",
+      "projectPath": "C:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\MoreGamemodes.csproj",
       "packagesPath": "C:\\Users\\cypri\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\obj\\",
+      "outputPath": "C:\\Users\\cypri\\OneDrive\\Pulpit\\MoreGamemodes\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\cypri\\AppData\\Roaming\\NuGet\\NuGet.Config"

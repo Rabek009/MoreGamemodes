@@ -24,19 +24,9 @@ namespace MoreGamemodes
 
         static void WrapUpPostfix(GameData.PlayerInfo exiled)
         {
-            if (Options.CurrentGamemode == Gamemodes.RandomItems)
-            {
-                Main.NoItemTimer = 10f;
-                if (exiled != null)
-                    exiled.Object.RpcSetItem(Items.None);     
-            }
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                pc.RpcResetAbilityCooldown();
-                foreach (var ar in PlayerControl.AllPlayerControls)
-                    pc.RpcSetNamePrivate(Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)], ar, true);
-            }
-            if (exiled == null) return;
+            if (!AmongUsClient.Instance.AmHost) return;
+            CustomGamemode.Instance.OnExile(exiled);
+            if (exiled == null || exiled.Object == null) return;
             if (exiled.Object.GetDeathReason() == DeathReasons.Alive)
                 exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
         }

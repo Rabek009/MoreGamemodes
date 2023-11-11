@@ -3,7 +3,8 @@
 ## About the mod
 
 More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
-Among Us version: 2023.7.12
+Among Us version: 2023.10.24
+Join to discord server: https://discord.gg/jJe5kPpbFJ
 
 ## Hotkeys
 
@@ -11,7 +12,7 @@ Among Us version: 2023.7.12
 | HotKey              | Function                       | Usable Scene |
 | ------------------- | ------------------------------ | ------------ |
 | `Shift`+`L`+`Enter` | End the game immediatly        | In Game      |
-| `Shift`+`L`+`Enter` | Skip meeting to end            | In Meeting   |
+| `Shift`+`M`+`Enter` | Skip meeting to end            | In Meeting   |
 | `Shift`+`Z`+`Enter` | Make yourself dead             | In Game      |
 | `C`                 | Cancel game start              | In Countdown |
 | `Shift`             | Start the game immediately     | In Countdown |
@@ -34,24 +35,31 @@ Among Us version: 2023.7.12
 | /announce MESSAGE<br>/ac MESSAGE                | Send message even if you're dead |
 
 ### All clients
-| Command                                         | Function                            |
-| ----------------------------------------------- | ----------------------------------- |
-| /color COLOR_ID<br>/colour COLOR_ID             | Changes your color                  |
-| /name NAME                                      | Changes your name                   |
-| /h gm, /h gamemode<br>/help gm, /help gamemode  | Show gamemode description           |
-| /h i, /h item<br>/help i, /help item            | Show item description(Random Items) |
-| /stop                                           | Use stop item(Random Items)         |
-| /now<br>/n                                      | Show current options                |
-| /id colors<br>/id colours                       | Show color ids                      |
-| /id players                                     | Show player ids                     |
-| /commands<br>/cm                                | Show commands list                  |
+| Command                                         | Function                                                |
+| ----------------------------------------------- | ------------------------------------------------------- |
+| /color COLOR_ID<br>/colour COLOR_ID             | Changes your color                                      |
+| /name NAME                                      | Changes your name                                       |
+| /h gm, /h gamemode<br>/help gm, /help gamemode  | Show gamemode description                               |
+| /h i, /h item<br>/help i, /help item            | Show item description(Random Items)                     |
+| /stop                                           | Use stop item(Random Items)                             |
+| /now<br>/n                                      | Show current options                                    |
+| /id colors<br>/id colours                       | Show color ids                                          |
+| /id players                                     | Show player ids                                         |
+| /commands<br>/cm                                | Show commands list                                      |
+| /radio<br>/rd                                   | Send private message to other impostors (Mid Game Chat) |
+| /lastresult<br>/l                               | Show last game result                                   |
+| /info                                           | Use newsletter item(Random Items)                       |
 
 ## Game options
 | Name                   |
 | ---------------------- |
 | Gamemode               |
+| No game end            |
 | Can use /color command |
+| Enable fortegreen      |
 | can use /name command  |
+| Enable name repeating  |
+| Maximum name length    |
 
 ## Gamemodes
 
@@ -79,6 +87,7 @@ Everyone is engineer or shapeshifter. Impostors need to kill every single crewma
 | Impostors can vent              |
 | Impostors can close doors       |
 | Impostors are visible           |
+| Instant shapeshift              |
 
 ### Bomb tag
 Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports,
@@ -110,7 +119,7 @@ Increases discussion and voting time. Only crewmates can get this item.
 
 
 ##### Knowledge
-You can investigate nearest player. If this player is good, he has green name. If this player is bad, he has red name. Depending on options target can see your name in black after this. Only crewmates can get this item.
+You can investigate nearby player. If this player is good, he has green name. If this player is bad, he has red name. Depending on options target can see your name in gray after this. Only crewmates can get this item.
 
 ###### Game options
 | Name                 |
@@ -140,7 +149,7 @@ You can kill impostors. Depending on options you can kill crewmates. Only crewma
 | Misfire kills crewmate |
 
 ##### Illusion
-If nearest player is impostor, he kills you. Otherwise you see that player's name in green. Only crewmates can get this item.
+If nearby player is impostor, he kills you. Otherwise you see that player's name in green. Only crewmates can get this item.
 
 ###### Game options
 | Name            |
@@ -157,7 +166,7 @@ Do reactor flash if impostor is nearby. Only crewmates can get this item.
 | Radar range  |
 
 ##### Swap
-Swap your tasks with nearest player tasks. Only crewmates can get this item.
+Swap your tasks with nearby player tasks. Only crewmates can get this item.
 
 ###### Game options
 | Name        |
@@ -274,7 +283,7 @@ Type /stop to end meeting immediately with skip result. Impostors can get this i
 | Can be given to crewmate |
 
 ##### Newsletter
-Gives you info about how many people died and how they died, how many roles are alive. Everyone can get this item.
+Gives you info about how many people died and how they died, how many roles are alive. Use this item by typing /info. Everyone can get this item.
 
 ###### Game options
 | Name              |
@@ -312,10 +321,21 @@ Everyone is crewmate. Finish tasks first to win. You can play alone - finish tas
 ### Paint battle
 Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.
 
+#### Game options
 | Name          |
 | ------------- |
 | Painting time |
 | Voting time   |
+
+### Kill or die
+Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!
+
+#### Game options
+| Name                 |
+| -------------------- |
+| Teleport after round |
+| Killer blind time    |
+| Time to kill         |
 
 ### Additional gamemodes
 Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.
@@ -327,6 +347,33 @@ At start teleports everyone to random vent. Depending on options it teleports af
 | Name                   |
 | ---------------------- |
 | Teleport after meeting |
+
+#### Random map
+Map is randomly chosen before game starts.
+
+##### Game options
+| Name            |
+| --------------- |
+| Add the skeld   |
+| Add mira hq     |
+| Add polus       |
+| Add the airship |
+| Add the fungle  |
+
+#### Disable gap platform
+Players can't use gap platform on airship.
+
+#### Mid game chat
+You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.
+
+##### Game options
+| Name                          |
+| ----------------------------- |
+| Proximity chat                |
+| Messages radius               |
+| Impostor radio                |
+| Fake shapeshift appearance    |
+| Disable during comms sabotage |
 
 ## Other functions
 
@@ -344,15 +391,16 @@ When you join to non modded lobby mod is disabled and you can play normally. You
 
 ## Others
 
-### People not joining lobby
-Only people with code or mod installed can join your lobby. Unmodded players won't join even if game is public.
-
 ### Max 15 players lobby
 When you set players to 16 or higher, still max 15 players can join.
 
 ### Bugged cooldown
 If you set cooldown to 0 or lower, you disable this function. 0 second cooldown don't working. Set this value to 0,001 seconds, if you want no kill cooldown.
 
+### People not joining lobby
+Due to au sever changes people can't find your lobby with find game option. Players can only join to your lobby using code. (PLEASE INNERSLOTH FIX IT)
+
 ## Credits
 1. Using some code from Town of Host
 2. Some code from Town Of Host: The Other Roles
+3. Changing server version from TOHRE/TOHE

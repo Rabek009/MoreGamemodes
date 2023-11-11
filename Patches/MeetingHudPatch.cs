@@ -5,24 +5,6 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
     class MeetingHudStartPatch
     {
-        public static void Prefix(MeetingHud __instance)
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            
-            if (Options.CurrentGamemode == Gamemodes.RandomItems) 
-            {
-                if (Main.CamouflageTimer > 0f)
-                {
-                    Utils.RevertCamouflage();
-                    Main.CamouflageTimer = 0f;
-                }  
-            }
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                foreach (var ar in PlayerControl.AllPlayerControls)
-                    pc.RpcSetNamePrivate(Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)], ar, true);  
-            }
-        }
         public static void Postfix(MeetingHud __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -35,8 +17,7 @@ namespace MoreGamemodes
                 if (target == null) continue;
 
                 pva.NameText.text = Main.LastNotifyNames[(target.PlayerId, seer.PlayerId)];
-            }      
-            Main.IsMeeting = true;
+            }
         }
     }
 
@@ -46,19 +27,26 @@ namespace MoreGamemodes
         public static void Postfix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            Main.SkipMeeting = !Main.SkipMeeting;
-            if (Main.SkipMeeting)
-            {
-                PlayerControl.LocalPlayer.ReportDeadBody(PlayerControl.LocalPlayer.Data);
-                MeetingHud.Instance.RpcClose();
-            }
-            Main.CamouflageTimer = 0f;
+
+            if (RandomItemsGamemode.instance != null)
+                RandomItemsGamemode.instance.CamouflageTimer = 0f;
             if (Options.RandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.RpcRandomVentTeleport();
             }
             Main.IsMeeting = false;
+        }
+    }
+
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.VotingComplete))]
+    class VotingCompletePatch
+    {
+        public static void Postfix()
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            if (Options.MidGameChat.GetBool())
+                new LateTask(() => Utils.SetChatVisible(), 8f, "Set Chat Visible");
         }
     }
 }

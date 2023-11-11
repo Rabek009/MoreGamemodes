@@ -1,22 +1,41 @@
 ﻿using HarmonyLib;
 using Hazel;
+using InnerNet;
 
 namespace MoreGamemodes
 {
     enum CustomRPC
     {
-        VersionCheck = 52,
+        VersionCheck = 70,
         SyncCustomOptions,
-        AddImpostor,
         SetBomb,
         SetItem,
         SetHackTimer,
         SetPaintTime,
         SetTheme,
+        SetIsKiller,
+    }
+
+    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
+    class ShipStatusHandleRpc
+    {
+        public static bool Prefix(ShipStatus __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            var rpcType = (RpcCalls)callId;
+            MessageReader subReader = MessageReader.Get(reader);
+            switch (rpcType)
+            {
+                case RpcCalls.UpdateSystem:
+                    __instance.UpdateSystem((SystemTypes)subReader.ReadByte(), subReader.ReadNetObject<PlayerControl>(), subReader.ReadByte());
+                    return false;
+            }
+            return true;
+        }
     }
 
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.HandleRpc))]
-    class RPCHandlerPatch
+    class PlayerControlHandleRpc
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
         {
@@ -25,13 +44,12 @@ namespace MoreGamemodes
             MessageReader subReader = MessageReader.Get(reader);
             switch (rpcType)
             {
-                case RpcCalls.SetName:
-                    string name = subReader.ReadString();
-                    if (subReader.BytesRemaining > 0 && subReader.ReadBoolean()) return false;
-                    break;
                 case RpcCalls.SendChat:
                     var text = subReader.ReadString();
                     if (!SendChatPatch.OnReceiveChat(__instance, text)) return false;
+                    break;
+                case RpcCalls.UsePlatform:
+                    if (Options.DisableGapPlatform.GetBool()) return false;
                     break;
             }
             return true;
@@ -39,47 +57,51 @@ namespace MoreGamemodes
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
         {
             var rpcType = (CustomRPC)callId;
-            byte playerId = 255;
             switch (rpcType)
             {
                 case CustomRPC.VersionCheck:
                     if (!AmongUsClient.Instance.AmHost) break;
-                    playerId = reader.ReadByte();
                     if (reader.ReadString() != Main.CurrentVersion)
                     {
-                        Utils.SendChat(Utils.GetPlayerById(playerId).Data.PlayerName + " was kicked for having other version of More Gamemodes.", "AutoKick");
-                        AmongUsClient.Instance.KickPlayer(Utils.GetPlayerById(playerId).GetClientId(), false);
+                        Utils.SendChat(__instance.Data.PlayerName + " was kicked for having other version of More Gamemodes.", "AutoKick");
+                        AmongUsClient.Instance.KickPlayer(__instance.GetClientId(), false);
                     }
                     break;
+                case CustomRPC.SetBomb:
+                    __instance.SetBomb(reader.ReadBoolean());
+                    break;
+                case CustomRPC.SetItem:
+                    __instance.SetItem((Items)reader.ReadPackedUInt32());
+                    break;
+                case CustomRPC.SetIsKiller:
+                    __instance.SetIsKiller(reader.ReadBoolean());
+                    break;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.HandleRpc))]
+    class GameManagerHandleRpc
+    {
+        public static void Postfix(GameManager __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
+        {
+            var rpcType = (CustomRPC)callId;
+            switch (rpcType)
+            {
                 case CustomRPC.SyncCustomOptions:
                     foreach (var co in OptionItem.AllOptions)
                         co.CurrentValue = reader.ReadInt32();
                     break;
-                case CustomRPC.AddImpostor:
-                    playerId = reader.ReadByte();
-                    if (Utils.GetPlayerById(playerId) == null) break;
-                    Utils.GetPlayerById(playerId).AddImpostor();
-                    break;
-                case CustomRPC.SetBomb:
-                    playerId = reader.ReadByte();
-                    if (Utils.GetPlayerById(playerId) == null) break;
-                    Utils.GetPlayerById(playerId).SetBomb(reader.ReadBoolean());
-                    HudManager.Instance.TaskPanel.SetTaskText("");
-                    break;
-                case CustomRPC.SetItem:
-                    playerId = reader.ReadByte();
-                    if (Utils.GetPlayerById(playerId) == null) break;
-                    Utils.GetPlayerById(playerId).SetItem((Items)reader.ReadPackedUInt32());
-                    break; 
                 case CustomRPC.SetHackTimer:
-                    Main.HackTimer = reader.ReadInt32();
+                    if (RandomItemsGamemode.instance == null) break;
+                    RandomItemsGamemode.instance.HackTimer = reader.ReadInt32();
                     break;
                 case CustomRPC.SetPaintTime:
-                    Main.PaintTime = reader.ReadInt32();
+                    if (PaintBattleGamemode.instance == null) break;
+                    PaintBattleGamemode.instance.PaintTime = reader.ReadInt32();
                     break;
                 case CustomRPC.SetTheme:
-                    Main.Theme = reader.ReadString();
-                    HudManager.Instance.TaskPanel.SetTaskText("");
+                    __instance.SetTheme(reader.ReadString());
                     break;
             }
         }
@@ -87,40 +109,44 @@ namespace MoreGamemodes
 
     static class RPC
     {
-        public static void AddImpostor(this PlayerControl player)
-        {
-            Main.Impostors.Add(player.PlayerId);
-        }
-
         public static void SetBomb(this PlayerControl player, bool hasBomb)
         {
-            Main.HasBomb[player.PlayerId] = hasBomb;
+            if (BombTagGamemode.instance == null) return;
+            BombTagGamemode.instance.HasBomb[player.PlayerId] = hasBomb;
             HudManager.Instance.TaskPanel.SetTaskText("");
         }
         
         public static void SetItem(this PlayerControl player, Items item)
         {
-            Main.AllPlayersItems[player.PlayerId] = item;
+            if (RandomItemsGamemode.instance == null) return;
+            RandomItemsGamemode.instance.AllPlayersItems[player.PlayerId] = item;
         }
 
-        public static void SetTheme(string theme)
+        public static void SetTheme(this GameManager manager, string theme)
         {
-            Main.Theme = theme;
+            if (PaintBattleGamemode.instance == null)
+            PaintBattleGamemode.instance.Theme = theme;
             HudManager.Instance.TaskPanel.SetTaskText("");
         }
 
-        public static void RpcVersionCheck(PlayerControl player, string version)
+        public static void SetIsKiller(this PlayerControl player, bool isKiller)
         {
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
-            writer.Write(player.PlayerId);
+            if (KillOrDieGamemode.instance == null) return;
+            KillOrDieGamemode.instance.IsKiller[player.PlayerId] = isKiller;
+            HudManager.Instance.TaskPanel.SetTaskText("");
+        }
+
+        public static void RpcVersionCheck(this PlayerControl player, string version)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
             writer.Write(version);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
-        public static void RpcSyncCustomOptions()
+        public static void RpcSyncCustomOptions(this GameManager manager)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SyncCustomOptions, SendOption.Reliable, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SyncCustomOptions, SendOption.Reliable, -1);
             foreach (var co in OptionItem.AllOptions)
             {
                 writer.Write(co.CurrentValue);
@@ -128,21 +154,11 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
-        public static void RpcAddImpostor(this PlayerControl player)
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            player.AddImpostor();
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.AddImpostor, SendOption.Reliable, -1);
-            writer.Write(player.PlayerId);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-        }
-
         public static void RpcSetBomb(this PlayerControl player, bool hasBomb)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             player.SetBomb(hasBomb);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetBomb, SendOption.Reliable, -1);
-            writer.Write(player.PlayerId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetBomb, SendOption.Reliable, -1);
             writer.Write(hasBomb);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
@@ -151,36 +167,47 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             player.SetItem(item);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetItem, SendOption.Reliable, -1);
-            writer.Write(player.PlayerId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetItem, SendOption.Reliable, -1);
             writer.Write((uint)item);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
-        public static void RpcSetHackTimer(int time)
+        public static void RpcSetHackTimer(this GameManager manager, int time)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetHackTimer, SendOption.Reliable, -1);
+            if (RandomItemsGamemode.instance == null) return;
+            RandomItemsGamemode.instance.HackTimer = time;
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SetHackTimer, SendOption.Reliable, -1);
             writer.Write(time);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
-            Main.HackTimer = time;
         }
 
-        public static void RpcSetPaintTime(int time)
+        public static void RpcSetPaintTime(this GameManager manager, int time)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetPaintTime, SendOption.Reliable, -1);
+            if (PaintBattleGamemode.instance == null) return;
+            PaintBattleGamemode.instance.PaintTime = time;
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SetPaintTime, SendOption.Reliable, -1);
             writer.Write(time);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
-            Main.PaintTime = time;
         }
 
-        public static void RpcSetTheme(string theme)
+        public static void RpcSetTheme(this GameManager manager, string theme)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            SetTheme(theme);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetTheme, SendOption.Reliable, -1);
+            if (PaintBattleGamemode.instance == null) return;
+            manager.SetTheme(theme);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SetTheme, SendOption.Reliable, -1);
             writer.Write(theme);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetIsKiller(this PlayerControl player, bool isKiller)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            player.SetIsKiller(isKiller);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetIsKiller, SendOption.Reliable, -1);
+            writer.Write(isKiller);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

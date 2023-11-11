@@ -191,7 +191,7 @@ namespace MoreGamemodes
                 PlayerControl.LocalPlayer == null
             ) return;
 
-            RPC.RpcSyncCustomOptions();
+            GameManager.Instance.RpcSyncCustomOptions();
         }
 
 
@@ -219,6 +219,7 @@ namespace MoreGamemodes
         GamemodeSettings,
         AdditionalGamemodes,
     }
+    
     public enum OptionFormat
     {
         None,

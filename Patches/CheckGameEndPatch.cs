@@ -46,6 +46,11 @@ namespace MoreGamemodes
             {
                 if (CheckAndEndGameForSpeedrun()) return false;
             }
+            else if (Options.CurrentGamemode == Gamemodes.KillOrDie)
+            {
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForBattleRoyale()) return false;          
+            }
             return false;
         }
         private static bool CheckAndEndGameForTaskWin()
@@ -55,7 +60,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (!Main.Impostors.Contains(pc.PlayerId))
+                    if (!pc.Data.Role.IsImpostor)
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.HumansByTask, winners);
@@ -69,7 +74,7 @@ namespace MoreGamemodes
             List<PlayerControl> AllAlivePlayers = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (Main.Impostors.Contains(pc.PlayerId) && !pc.Data.IsDead) ++numImpostorAlive;
+                if (pc.Data.Role.IsImpostor && !pc.Data.IsDead) ++numImpostorAlive;
                 if (!pc.Data.IsDead) AllAlivePlayers.Add(pc);
             }
             if (numImpostorAlive == 0)
@@ -77,7 +82,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (!Main.Impostors.Contains(pc.PlayerId))
+                    if (!pc.Data.Role.IsImpostor)
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.HumansByVote;
@@ -95,7 +100,7 @@ namespace MoreGamemodes
             List<PlayerControl> AllAlivePlayers = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (Main.Impostors.Contains(pc.PlayerId) && !pc.Data.IsDead) ++numImpostorAlive;
+                if (pc.Data.Role.IsImpostor && !pc.Data.IsDead) ++numImpostorAlive;
                 if (!pc.Data.IsDead) AllAlivePlayers.Add(pc);
             }
             if (AllAlivePlayers.Count - numImpostorAlive == 0)
@@ -103,7 +108,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Main.Impostors.Contains(pc.PlayerId))
+                    if (pc.Data.Role.IsImpostor)
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.ImpostorByKill, winners);
@@ -197,16 +202,16 @@ namespace MoreGamemodes
                 if (winners.Contains(pc.PlayerId))
                 {
                     if (ImpostorWin)
-                        pc.RpcSetRole(RoleTypes.ImpostorGhost);
+                        pc.SetRole(RoleTypes.ImpostorGhost);
                     else
-                        pc.RpcSetRole(RoleTypes.CrewmateGhost);
+                        pc.SetRole(RoleTypes.CrewmateGhost);
                 }
                 else
                 {
                     if (ImpostorWin)
-                        pc.RpcSetRole(RoleTypes.CrewmateGhost);
+                        pc.SetRole(RoleTypes.CrewmateGhost);
                     else
-                        pc.RpcSetRole(RoleTypes.ImpostorGhost);
+                        pc.SetRole(RoleTypes.ImpostorGhost);
                 }
             }
             foreach (var pc in PlayerControl.AllPlayerControls)

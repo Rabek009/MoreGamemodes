@@ -242,10 +242,11 @@ namespace MoreGamemodes
                 .Write((ushort)role)
                 .EndRpc();
         }
-        public static void RpcMurderPlayer(this CustomRpcSender sender, PlayerControl player, PlayerControl target, int targetClientId = -1)
+        public static void RpcMurderPlayer(this CustomRpcSender sender, PlayerControl player, PlayerControl target, MurderResultFlags resultFlags, int targetClientId = -1)
         {
             sender.AutoStartRpc(player.NetId, (byte)RpcCalls.MurderPlayer, targetClientId)
                 .WriteNetObject(target)
+                .Write((int)resultFlags)
                 .EndRpc();
         }
         public static void RpcSetOutfit(this CustomRpcSender sender, PlayerControl player, int colorId = -1, string hatId = null, string skinId = null, string petId = null, string visorId = null) 

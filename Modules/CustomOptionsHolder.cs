@@ -30,7 +30,7 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die"
         };
 
         public static readonly string[] speedrunBodyTypes =
@@ -44,9 +44,10 @@ namespace MoreGamemodes
         public static SpeedrunBodyTypes CurrentBodyType => (SpeedrunBodyTypes)BodyType.GetValue();
         public static OptionItem NoGameEnd;
         public static OptionItem CanUseColorCommand;
-        public static OptionItem EnableColorRepeating;
+        public static OptionItem EnableFortegreen;
         public static OptionItem CanUseNameCommand;
         public static OptionItem EnableNameRepeating;
+        public static OptionItem MaximumNameLength;
 
         //Hide And Seek
         public static OptionItem HnSImpostorsBlindTime;
@@ -60,6 +61,7 @@ namespace MoreGamemodes
         public static OptionItem SnSImpostorsCanVent;
         public static OptionItem SnSImpostorsCanCloseDoors;
         public static OptionItem ImpostorsAreVisible;
+        public static OptionItem InstantShapeshift;
 
         //Bomb Tag
         public static OptionItem TeleportAfterExplosion;
@@ -133,9 +135,28 @@ namespace MoreGamemodes
         public static OptionItem PaintingTime;
         public static OptionItem VotingTime;
 
+        //Kill Or Die
+        public static OptionItem TeleportAfterRound;
+        public static OptionItem KillerBlindTime;
+        public static OptionItem TimeToKill;
+
         //Additional Gamemodes
         public static OptionItem RandomSpawn;
         public static OptionItem TeleportAfterMeeting;
+        public static OptionItem RandomMap;
+        public static OptionItem AddTheSkeld;
+        public static OptionItem AddMiraHQ;
+        public static OptionItem AddPolus;
+        public static OptionItem AddTheAirship;
+        public static OptionItem AddTheFungle;
+        public static OptionItem DisableGapPlatform;
+        public static OptionItem MidGameChat;
+        public static OptionItem ProximityChat;
+        public static OptionItem MessagesRadius;
+        public static OptionItem ImpostorRadio;
+        public static OptionItem FakeShapeshiftAppearance;
+        public static OptionItem DisableDuringCommsSabotage;
+        public static OptionItem DisableZipline;
 
         public static bool IsLoaded = false;
 
@@ -154,12 +175,15 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.All);
             CanUseColorCommand = BooleanOptionItem.Create(3, "Can Use /color Command", false, TabGroup.MainSettings, false)
                 .SetGamemode(Gamemodes.All);
-            EnableColorRepeating = BooleanOptionItem.Create(4, "Enable Color Repeating", false, TabGroup.MainSettings, false)
+            EnableFortegreen = BooleanOptionItem.Create(4, "Enable Fortegreen", false, TabGroup.MainSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseColorCommand);
             CanUseNameCommand = BooleanOptionItem.Create(5, "Can Use /name Command", false, TabGroup.MainSettings, false)
                 .SetGamemode(Gamemodes.All);
             EnableNameRepeating = BooleanOptionItem.Create(6, "Enable Name Repeating", false, TabGroup.MainSettings, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(CanUseNameCommand);
+            MaximumNameLength = IntegerOptionItem.Create(7, "Maximum Name Length", new(10, 94, 1), 25, TabGroup.MainSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseNameCommand);
 
@@ -185,6 +209,8 @@ namespace MoreGamemodes
             SnSImpostorsCanCloseDoors = BooleanOptionItem.Create(2004, "Impostors Can Close Doors", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
             ImpostorsAreVisible = BooleanOptionItem.Create(2005, "Impostors Are Visible", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ShiftAndSeek);
+            InstantShapeshift = BooleanOptionItem.Create(2006, "Instant Shapeshift", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
 
             //Bomb Tag
@@ -349,7 +375,7 @@ namespace MoreGamemodes
             EnableCompass = BooleanOptionItem.Create(6008, "Enable Compass", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetColor(Color.magenta);
-            CompassDuration = FloatOptionItem.Create(6009, "Compass Duration", new(1f, 15f, 0.25f), 5f, TabGroup.GamemodeSettings, false)
+            CompassDuration = FloatOptionItem.Create(6009, "Compass Duration", new(1f, 10f, 0.1f), 3f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetValueFormat(OptionFormat.Seconds)
                 .SetParent(EnableCompass);
@@ -378,6 +404,16 @@ namespace MoreGamemodes
             VotingTime = IntegerOptionItem.Create(9001, "Voting Time", new(5, 30, 1), 10, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.PaintBattle)
                 .SetValueFormat(OptionFormat.Seconds);
+            
+            //Kill Or Die
+            TeleportAfterRound = BooleanOptionItem.Create(10001, "Teleport After Round", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.KillOrDie);
+            KillerBlindTime = FloatOptionItem.Create(10002, "Killer Blind Time", new(1f, 15f, 0.5f), 5f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.KillOrDie)
+                .SetValueFormat(OptionFormat.Seconds);
+            TimeToKill = IntegerOptionItem.Create(10003, "Time To Kill", new(5, 90, 1), 20, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.KillOrDie)
+                .SetValueFormat(OptionFormat.Seconds);
 
             //Additional Gamemodes
             RandomSpawn = BooleanOptionItem.Create(100000, "Random Spawn", false, TabGroup.AdditionalGamemodes, false)
@@ -385,7 +421,44 @@ namespace MoreGamemodes
             TeleportAfterMeeting = BooleanOptionItem.Create(100001, "Teleport After Meeting", true, TabGroup.AdditionalGamemodes, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(RandomSpawn);
-
+            RandomMap = BooleanOptionItem.Create(100100, "Random Map", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All);
+            AddTheSkeld = BooleanOptionItem.Create(100101, "Add The Skeld", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(RandomMap);
+            AddMiraHQ = BooleanOptionItem.Create(100102, "Add Mira HQ", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(RandomMap);
+            AddPolus = BooleanOptionItem.Create(100103, "Add Polus", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(RandomMap);
+            AddTheAirship = BooleanOptionItem.Create(100104, "Add The Airship", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(RandomMap);
+            AddTheFungle = BooleanOptionItem.Create(100105, "Add The Fungle", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(RandomMap);
+            DisableGapPlatform = BooleanOptionItem.Create(100200, "Disable Gap Platform", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All);
+            MidGameChat = BooleanOptionItem.Create(100300, "Mid Game Chat", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All);
+            ProximityChat = BooleanOptionItem.Create(100301, "Proximity Chat", true, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(MidGameChat);
+            MessagesRadius = FloatOptionItem.Create(100302, "Messages Radius", new(0.5f, 5f, 0.1f), 1f, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(ProximityChat);
+            ImpostorRadio = BooleanOptionItem.Create(100303, "Impostor Radio", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(ProximityChat);
+            FakeShapeshiftAppearance = BooleanOptionItem.Create(100304, "Fake Shapeshift Appearance", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(ProximityChat);
+            DisableDuringCommsSabotage = BooleanOptionItem.Create(100305, "Disable During Comms Sabotage", true, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(MidGameChat);
+            DisableZipline = BooleanOptionItem.Create(100400, "Disable Zipline", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All);
             IsLoaded = true;
         }
     }

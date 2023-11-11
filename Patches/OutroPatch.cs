@@ -1,43 +1,198 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
+using AmongUs.Data;
+using Assets.CoreScripts;
+using Il2CppSystem;
+using AmongUs.GameOptions;
 
 namespace MoreGamemodes
 {
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]
+    class EndGamePatch
+    {
+        public static bool Prefix(AmongUsClient __instance, [HarmonyArgument(0)] EndGameResult endGameResult)
+        {
+            if (!__instance.AmHost) return true;
+            List<byte> winners = new();
+            StatsManager.Instance.BanPoints -= 1.5f;
+		    StatsManager.Instance.LastGameStarted = DateTime.MinValue;
+		    GameOverReason gameOverReason = endGameResult.GameOverReason;
+		    bool showAd = endGameResult.ShowAd;
+		    __instance.DisconnectHandlers.Clear();
+		    if (Minigame.Instance)
+		    {
+				Minigame.Instance.Close();
+				Minigame.Instance.Close();
+		    }
+		    float durationInSeconds = Time.realtimeSinceStartup - TempData.TimeGameStarted;
+		    DestroyableSingleton<DebugAnalytics>.Instance.Analytics.EndGame(durationInSeconds, gameOverReason, GameData.Instance.AllPlayers);
+			DestroyableSingleton<UnityTelemetry>.Instance.EndGame(gameOverReason);
+		    TempData.EndReason = gameOverReason;
+		    TempData.showAd = showAd;
+		    GameManager.Instance.DidHumansWin(gameOverReason);
+		    TempData.OnGameEnd();
+		    ProgressionManager.XpGrantResult xpGrantedResult = endGameResult.XpGrantResult ?? ProgressionManager.XpGrantResult.Default();
+		    ProgressionManager.CurrencyGrantResult currencyGrantResult = endGameResult.BeansGrantResult ?? ProgressionManager.CurrencyGrantResult.Default();
+		    ProgressionManager.CurrencyGrantResult currencyGrantResult2 = endGameResult.PodsGrantResult ?? ProgressionManager.CurrencyGrantResult.Default();
+		    TempData.XpGrantedResult = xpGrantedResult;
+		    TempData.BeansGrantResult = currencyGrantResult;
+		    TempData.PodsGrantResult = currencyGrantResult2;
+		    if (endGameResult.XpGrantResult != null)
+		    {
+			    DataManager.Player.Stats.Xp = endGameResult.XpGrantResult.OldXpAmount + endGameResult.XpGrantResult.GrantedXp;
+			    if (endGameResult.XpGrantResult.LevelledUp)
+			    {
+			    	DataManager.Player.Stats.Xp = endGameResult.XpGrantResult.OldXpAmount + endGameResult.XpGrantResult.GrantedXp - endGameResult.XpGrantResult.XpRequiredToLevelUp;
+			    	DataManager.Player.Stats.Level = endGameResult.XpGrantResult.NewLevel;
+			    	DataManager.Player.Stats.XpForNextLevel = endGameResult.XpGrantResult.XpRequiredToLevelUpNextLevel;
+			    }
+			    else
+			    {
+				    DataManager.Player.Stats.Xp = endGameResult.XpGrantResult.OldXpAmount + endGameResult.XpGrantResult.GrantedXp;
+				    DataManager.Player.Stats.Level = endGameResult.XpGrantResult.OldLevel;
+				    DataManager.Player.Stats.XpForNextLevel = endGameResult.XpGrantResult.XpRequiredToLevelUp;
+			    }
+			    DataManager.Player.Save();
+		    }
+		    DestroyableSingleton<InventoryManager>.Instance.ChangePodCount(currencyGrantResult2.PodId, (int)currencyGrantResult2.GrantedPodsWithMultiplierApplied);
+		    DestroyableSingleton<InventoryManager>.Instance.UnusedBeans += (int)currencyGrantResult.GrantedPodsWithMultiplierApplied;
+		    for (int i = 0; i < GameData.Instance.PlayerCount; i++)
+		    {
+			    GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
+			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
+			    {
+                    if (!((Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun || Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie) && playerInfo.Disconnected))
+                    {
+                        TempData.winners.Add(new WinningPlayerData(playerInfo));
+                        winners.Add(playerInfo.PlayerId);
+                    }    
+			    }
+		    }
+            string lastResult = "";
+            for (int i = 0; i < GameData.Instance.PlayerCount; ++i)
+            {
+                GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
+                if (playerInfo == null) continue;
+                if (!Main.StandardRoles.ContainsKey(playerInfo.PlayerId)) continue;
+                if (!winners.Contains(playerInfo.PlayerId)) continue;
+                if (Main.StandardColors[playerInfo.PlayerId] < 0 || Main.StandardColors[playerInfo.PlayerId] >= 18) Main.StandardColors[playerInfo.PlayerId] = 0;
+                switch (Options.CurrentGamemode)
+                {
+                    case Gamemodes.Classic:
+                    case Gamemodes.HideAndSeek:
+                    case Gamemodes.ShiftAndSeek:
+                    case Gamemodes.RandomItems:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], Options.CurrentGamemode)) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
+                    case Gamemodes.BombTag:
+                    case Gamemodes.KillOrDie:
+                        lastResult += "★" + Main.StandardNames[playerInfo.PlayerId] + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
+                    case Gamemodes.BattleRoyale:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
+                    case Gamemodes.Speedrun:
+                        int completedTasks = 0;
+                        int totalTasks = 0;
+                        foreach (var task in playerInfo.Tasks)
+                        {
+                            ++totalTasks;
+                            if (task.Complete)
+                                ++completedTasks;
+                        }
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        lastResult += Utils.ColorString(Color.yellow, completedTasks + "/" + totalTasks) + ")\n";
+                        break;
+                    case Gamemodes.PaintBattle:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + "\n";
+                        break;
+                }
+            }
+            for (int i = 0; i < GameData.Instance.PlayerCount; ++i)
+            {
+                GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
+                if (playerInfo == null) continue;
+                if (!Main.StandardRoles.ContainsKey(playerInfo.PlayerId)) continue;
+                if (winners.Contains(playerInfo.PlayerId)) continue;
+                if (Main.StandardColors[playerInfo.PlayerId] < 0 || Main.StandardColors[playerInfo.PlayerId] >= 18) Main.StandardColors[playerInfo.PlayerId] = 0;
+                switch (Options.CurrentGamemode)
+                {
+                    case Gamemodes.Classic:
+                    case Gamemodes.HideAndSeek:
+                    case Gamemodes.ShiftAndSeek:
+                    case Gamemodes.RandomItems:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(playerInfo.Role.Role)) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
+                    case Gamemodes.BombTag:
+                    case Gamemodes.KillOrDie:
+                        lastResult += Main.StandardNames[playerInfo.PlayerId] + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
+                    case Gamemodes.BattleRoyale:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
+                    case Gamemodes.Speedrun:
+                        int completedTasks = 0;
+                        int totalTasks = 0;
+                        foreach (var task in playerInfo.Tasks)
+                        {
+                            ++totalTasks;
+                            if (task.Complete)
+                                ++completedTasks;
+                        }
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        lastResult += Utils.ColorString(Color.yellow, completedTasks + "/" + totalTasks) + ")\n";
+                        break;
+                    case Gamemodes.PaintBattle:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + "\n";
+                        break;
+                }
+            }
+            Main.LastResult = lastResult;
+            GameDebugCommands.RemoveCommands();
+		    __instance.StartCoroutine(__instance.CoEndGame());
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(EndGameManager), nameof(EndGameManager.SetEverythingUp))]
     class SetEverythingUpPatch
     {
         public static void Postfix(EndGameManager __instance)
         {
             Main.GameStarted = false;
+            CustomGamemode.Instance = null;
+            ClassicGamemode.instance = null;
+            HideAndSeekGamemode.instance = null;
+            ShiftAndSeekGamemode.instance = null;
+            BombTagGamemode.instance = null;
+            RandomItemsGamemode.instance = null;
+            BattleRoyaleGamemode.instance = null;
+            SpeedrunGamemode.instance = null;
+            PaintBattleGamemode.instance = null;
+            KillOrDieGamemode.instance = null;
             if (!AmongUsClient.Instance.AmHost) return;
             Main.AllShapeshifts = new Dictionary<byte, byte>();
-            Main.Impostors = new List<byte>();
-            Main.HasBomb = new Dictionary<byte, bool>();
-            Main.AllPlayersItems = new Dictionary<byte, Items>();
             Main.IsMeeting = false;    
-            Main.FlashTimer = 0f;
-            RPC.RpcSetHackTimer(0);
-            Main.CamouflageTimer = 0f;
-            Main.ShieldTimer = new Dictionary<byte, float>();
-            GameOptionsManager.Instance.CurrentGameOptions = Main.RealOptions;
-            Main.Lives = new Dictionary<byte, int>();
+            GameManager.Instance.RpcSetHackTimer(0);
+            Main.RealOptions.Restore(GameOptionsManager.Instance.currentGameOptions);
+            Main.RealOptions = null;
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
-            Main.NoBombTimer = 0f;
-            Main.NoItemTimer = 0f;
-            Main.SkipMeeting = false;
-            RPC.RpcSetPaintTime(0);
-            Main.VotingPlayerId = 0;
-            Main.PaintBattleVotingTime = 0f;
-            Main.HasVoted = new Dictionary<byte, bool>();
-            Main.PlayerVotes = new Dictionary<byte, (int, int)>();
-            Main.Theme = "";
+            GameManager.Instance.RpcSetPaintTime(0);
             Main.IsCreatingBody = false;
-            Main.CreateBodyCooldown = new Dictionary<byte, float>();
             Main.MessagesToSend = new List<(string, byte, string)>();
-            Main.NoItemGive = false;
-            Main.Traps = new List<(Vector2, float)>();
-            Main.CompassTimer = new Dictionary<byte, float>();
+            Main.StandardRoles = new Dictionary<byte, RoleTypes>();
+            CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
+            Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
+            Main.NameColors = new Dictionary<(byte, byte), Color>();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
                 var hours = (int)Main.Timer / 3600;
@@ -47,7 +202,7 @@ namespace MoreGamemodes
                 var seconds = (int)Main.Timer;
                 Main.Timer -= seconds;
                 var miliseconds = (int)(Main.Timer * 1000);
-                var TimeTextObject = Object.Instantiate(__instance.WinText.gameObject);
+                var TimeTextObject = UnityEngine.Object.Instantiate(__instance.WinText.gameObject);
                 TimeTextObject.transform.position = new(__instance.WinText.transform.position.x, __instance.WinText.transform.position.y - 0.5f, __instance.WinText.transform.position.z);
                 TimeTextObject.transform.localScale = new(0.6f, 0.6f, 0.6f);
                 var TimeText = TimeTextObject.GetComponent<TMPro.TextMeshPro>();

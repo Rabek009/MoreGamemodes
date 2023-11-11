@@ -23,10 +23,16 @@ namespace MoreGamemodes
                 CheckEndCriteriaPatch.StartEndGame(GameOverReason.HumansByVote, winners);
             }
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead)
+            {
+                PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Command);
                 PlayerControl.LocalPlayer.RpcExileV2();
+            }
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.M, KeyCode.LeftShift }) && MeetingHud.Instance)
+            {
                 MeetingHud.Instance.RpcClose();
+                VotingCompletePatch.Postfix();    
+            }
 
             if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)
                 GameStartManager.Instance.ResetStartState();

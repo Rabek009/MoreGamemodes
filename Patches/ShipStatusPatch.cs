@@ -7,24 +7,39 @@ namespace MoreGamemodes
     {
         public static bool Prefix(ShipStatus __instance)
         {
-            return !((Options.CurrentGamemode == Gamemodes.HideAndSeek && !Options.HnSImpostorsCanCloseDoors.GetBool()) || (Options.CurrentGamemode == Gamemodes.ShiftAndSeek && !Options.SnSImpostorsCanCloseDoors.GetBool()) ||
-                Options.CurrentGamemode == Gamemodes.BombTag || (Options.CurrentGamemode == Gamemodes.RandomItems && Main.HackTimer > 0f && Options.HackAffectsImpostors.GetBool()) || Options.CurrentGamemode == Gamemodes.BattleRoyale);
+            if (!AmongUsClient.Instance.AmHost) return true;
+            return CustomGamemode.Instance.OnCloseDoors(__instance);
         }
     }
 
-    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.RepairSystem))]
-    class RepairSystemPatch
+    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.UpdateSystem), typeof(SystemTypes), typeof(PlayerControl), typeof(byte))]
+    class UpdateSystemPatch
     {
-        public static bool Prefix(ShipStatus __instance, [HarmonyArgument(0)] SystemTypes systemType, [HarmonyArgument(1)] PlayerControl player)
+        public static bool Prefix(ShipStatus __instance, [HarmonyArgument(0)] SystemTypes systemType, [HarmonyArgument(1)] PlayerControl player, [HarmonyArgument(2)] byte amount)
         {
-            if (systemType == SystemTypes.Sabotage)
-                return !(Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale);
-            else if (systemType == SystemTypes.MeetingRoom && (Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun))
-                return false;
-            else if (Options.CurrentGamemode == Gamemodes.RandomItems && Main.HackTimer > 0f && (Main.Impostors.Contains(player.PlayerId) == false || Options.HackAffectsImpostors.GetBool()))
-                return false;
-            else
-                return true;
+            if (!AmongUsClient.Instance.AmHost) return true;
+            return CustomGamemode.Instance.OnUpdateSystem(__instance, systemType, player, amount);
         }
     }
+
+    [HarmonyPatch(typeof(MushroomMixupSabotageSystem), nameof(MushroomMixupSabotageSystem.MushroomMixUp))]
+    class MushroomMixUpPatch
+    {
+        public static void Postfix(MushroomMixupSabotageSystem __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            if (MeetingHud.Instance) return;
+            new LateTask(() =>
+            {
+                if (!MeetingHud.Instance)
+                {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, true);
+                    }
+                }
+            }, 1f, "Set MixUp Name");
+        }
+    }    
 }

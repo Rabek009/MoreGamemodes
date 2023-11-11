@@ -4,6 +4,8 @@ using System.Linq;
 using AmongUs.GameOptions;
 using Hazel;
 using UnityEngine;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using InnerNet;
 
 namespace MoreGamemodes
 {
@@ -169,7 +171,7 @@ namespace MoreGamemodes
                 case Items.Stop:
                     return "Type /stop command to end meeting";
                 case Items.Newsletter:
-                    return "Get extra informations";
+                    return "Type /info to get extra informations";
                 case Items.Compass:
                     return "Track other players";
                 default:
@@ -184,17 +186,17 @@ namespace MoreGamemodes
                 case Items.TimeSlower:
                     return "Time Slower(Crewmate only): Increase discussion and voting time by amount in settings.";
                 case Items.Knowledge:
-                    return "Knowledge(Crewmate only): You can investigate nearest player. Green name means that he's crewmate, red name means impostor. Depending on options target can see that you investigated him. Black name means that this person investigated you";
+                    return "Knowledge(Crewmate only): You can investigate nearby player. Green name means that he's crewmate, red name means impostor. Depending on options target can see that you investigated him. Black name means that this person investigated you";
                 case Items.Shield:
                     return "Shield(Crewmate only): You grant yourself a shield for some time. If someone try kill you in this time, he can't. You will see that this person tried to kill you.";
                 case Items.Gun:
-                    return "Gun(Crewmate only): If nearest player is impostor, you kill him. Otherwise you die.";
+                    return "Gun(Crewmate only): If nearby player is impostor, you kill him. Otherwise you die.";
                 case Items.Illusion:
-                    return "Illusion(Crewmate only): If nearest player is impostor, he kills you.";
+                    return "Illusion(Crewmate only): If nearby player is impostor, he kills you.";
                 case Items.Radar:
                     return "Radar(Crewmate only): You see reactor flash if impostor is nearby.";
                 case Items.Swap:
-                    return "Swap(Crewmate only): Swap your tasks with nearest player tasks.";
+                    return "Swap(Crewmate only): Swap your tasks with nearby player tasks.";
                 case Items.TimeSpeeder:
                     return "Time Speeder(Impostor only): Increase discussion and voting time by amount in settings.";
                 case Items.Flash:
@@ -220,7 +222,7 @@ namespace MoreGamemodes
                 case Items.Stop:
                     return "Stop(Both/Impostor only): You can instantly end meeting without anyone ejected by typing /stop command.";
                 case Items.Newsletter:
-                    return "Newsletter(Both): Sends you information about how amny roles are alive, how people died. Informations refers to moment when item was used.";
+                    return "Newsletter(Both): Sends you information about how amny roles are alive, how people died. Use this item by typing /info in chat";
                 case Items.Compass:
                     return "Compass(Both): Show arrow to all players for short period of time.";
                 default:
@@ -235,12 +237,13 @@ namespace MoreGamemodes
             {
                 case SystemTypes.Electrical:
                     {
+                        if (mapId == 5) return false;
                         var SwitchSystem = ShipStatus.Instance.Systems[type].Cast<SwitchSystem>();
                         return SwitchSystem != null && SwitchSystem.IsActive;
                     }
                 case SystemTypes.Reactor:
                     {
-                        if (mapId == 2) return false;
+                        if (mapId == 2 || mapId == 4) return false;
                         else if (mapId == 4)
                         {
                             var HeliSabotageSystem = ShipStatus.Instance.Systems[type].Cast<HeliSabotageSystem>();
@@ -266,7 +269,7 @@ namespace MoreGamemodes
                     }
                 case SystemTypes.Comms:
                     {
-                        if (mapId == 1)
+                        if (mapId is 1 or 5)
                         {
                             var HqHudSystemType = ShipStatus.Instance.Systems[type].Cast<HqHudSystemType>();
                             return HqHudSystemType != null && HqHudSystemType.IsActive;
@@ -277,21 +280,74 @@ namespace MoreGamemodes
                             return HudOverrideSystemType != null && HudOverrideSystemType.IsActive;
                         }
                     }
+                case SystemTypes.MushroomMixupSabotage:
+                    {
+                        if (mapId != 5) return false;
+                        var MushroomMixupSabotageSystemType = ShipStatus.Instance.Systems[type].Cast<MushroomMixupSabotageSystem>();
+                        return MushroomMixupSabotageSystemType != null && MushroomMixupSabotageSystemType.IsActive;
+                    }
+                case SystemTypes.HeliSabotage:
+                    {
+                        if (mapId != 4) return false;
+                        var HeliSabotageSystemType = ShipStatus.Instance.Systems[type].Cast<HeliSabotageSystem>();
+                        return HeliSabotageSystemType != null && HeliSabotageSystemType.IsActive;
+                    }
                 default:
                     return false;
             }
         }
 
+        public static bool IsSabotage()
+        {
+            return IsActive(SystemTypes.LifeSupp) || IsActive(SystemTypes.Reactor) || IsActive(SystemTypes.Laboratory) || IsActive(SystemTypes.Electrical) || IsActive(SystemTypes.Comms) || IsActive(SystemTypes.MushroomMixupSabotage) || IsActive(SystemTypes.HeliSabotage);
+        }
+
+        public static void SyncSettings(IGameOptions opt, int targetClientId = -1)
+        {
+            for (int i = 0; i < GameManager.Instance.LogicComponents.Count; ++i)
+            {
+                if (GameManager.Instance.LogicComponents[i].TryCast<LogicOptions>(out var _))
+                {
+                    Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt);
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+                    writer.StartMessage(targetClientId == -1 ? Tags.GameData : Tags.GameDataTo);
+                    {
+                        writer.Write(AmongUsClient.Instance.GameId);
+                        if (targetClientId != -1) writer.WritePacked(targetClientId);
+                        writer.StartMessage(1);
+                        {
+                            writer.WritePacked(GameManager.Instance.NetId);
+                            writer.StartMessage((byte)i);
+				            writer.WriteBytesAndSize(byteArray);
+				            writer.EndMessage();
+                        }
+                        writer.EndMessage();
+                    }
+                    writer.EndMessage();
+
+                    AmongUsClient.Instance.SendOrDisconnect(writer);
+                    writer.Recycle();
+                }
+            }
+        }
+
+        public static void SyncAllSettings()
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                pc.SyncPlayerSettings();
+        }
+
         public static void Camouflage()
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.Role == RoleTypes.Shapeshifter)
+                    pc.RpcShapeshift(pc, false);
+            }
             CustomRpcSender sender = CustomRpcSender.Create("Camouflage", SendOption.None);
             foreach (var pc in PlayerControl.AllPlayerControls) 
-            {
                 sender.RpcSetOutfit(pc, 15, "", "", "pet_test", "");
-                foreach (var ar in PlayerControl.AllPlayerControls)
-                    pc.RpcSetNamePrivate(Utils.ColorString(Color.clear, "Player"), ar, true);
-            }
             sender.SendMessage();       
         }
         
@@ -300,11 +356,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return;
             CustomRpcSender sender = CustomRpcSender.Create("RevertCamouflage", SendOption.None);
             foreach (var pc in PlayerControl.AllPlayerControls)
-            {
                 sender.RpcSetOutfit(pc, Main.StandardColors[pc.PlayerId], Main.StandardHats[pc.PlayerId], Main.StandardSkins[pc.PlayerId], Main.StandardPets[pc.PlayerId], Main.StandardVisors[pc.PlayerId]);
-                foreach (var ar in PlayerControl.AllPlayerControls)
-                    pc.RpcSetNamePrivate(Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)], ar, true);
-            }
             sender.SendMessage();
         }
 
@@ -340,7 +392,7 @@ namespace MoreGamemodes
                 writer.StartMessage(1);
                 {
                     writer.WritePacked(GameData.Instance.NetId);
-                    GameData.Instance.Serialize(writer, true);
+                    GameData.Instance.Serialize(writer, false);
                 }
                 writer.EndMessage();
             }
@@ -368,9 +420,10 @@ namespace MoreGamemodes
                 .WriteVector2(position)
                 .Write(PlayerControl.LocalPlayer.NetTransform.lastSequenceId)
                 .EndRpc();
-            PlayerControl.LocalPlayer.MurderPlayer(PlayerControl.LocalPlayer);
+            PlayerControl.LocalPlayer.MurderPlayer(PlayerControl.LocalPlayer, MurderResultFlags.Succeeded);
             sender.AutoStartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.MurderPlayer)
                 .WriteNetObject(PlayerControl.LocalPlayer)
+                .Write((int)MurderResultFlags.Succeeded)
                 .EndRpc();
             PlayerControl.LocalPlayer.NetTransform.SnapTo(basePos);
             sender.AutoStartRpc(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo)
@@ -434,25 +487,76 @@ namespace MoreGamemodes
 
         public static void EndPaintBattleGame()
         {
+            if (PaintBattleGamemode.instance == null) return;
             List<byte> winners = new();
             List<byte> bestPlayers = new();
             float bestRate = 0f;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (Main.PlayerVotes[pc.PlayerId].Item2 == 0)
+                if (PaintBattleGamemode.instance.PlayerVotes[pc.PlayerId].Item2 == 0)
                     winners.Add(pc.PlayerId);
-                else if ((float)Main.PlayerVotes[pc.PlayerId].Item1 / (float)Main.PlayerVotes[pc.PlayerId].Item2 > bestRate)
+                else if ((float)PaintBattleGamemode.instance.PlayerVotes[pc.PlayerId].Item1 / (float)PaintBattleGamemode.instance.PlayerVotes[pc.PlayerId].Item2 > bestRate)
                 {
-                    bestRate = (float)Main.PlayerVotes[pc.PlayerId].Item1 / (float)Main.PlayerVotes[pc.PlayerId].Item2;
+                    bestRate = (float)PaintBattleGamemode.instance.PlayerVotes[pc.PlayerId].Item1 / (float)PaintBattleGamemode.instance.PlayerVotes[pc.PlayerId].Item2;
                     bestPlayers.Clear();
                     bestPlayers.Add(pc.PlayerId);
                 }
-                else if ((float)Main.PlayerVotes[pc.PlayerId].Item1 / (float)Main.PlayerVotes[pc.PlayerId].Item2 == bestRate)
+                else if ((float)PaintBattleGamemode.instance.PlayerVotes[pc.PlayerId].Item1 / (float)PaintBattleGamemode.instance.PlayerVotes[pc.PlayerId].Item2 == bestRate)
                     bestPlayers.Add(pc.PlayerId);
             }
             foreach (var id in bestPlayers)
                 winners.Add(id);
             CheckEndCriteriaPatch.StartEndGame(GameOverReason.HumansByTask, winners);
+        }
+
+        public static string RoleToString(RoleTypes role, Gamemodes gamemode = Gamemodes.Classic)
+        {
+            if (role == RoleTypes.Crewmate && gamemode == Gamemodes.HideAndSeek) return "Hider";
+            if (role == RoleTypes.Crewmate) return "Crewmate";
+            if (role == RoleTypes.Scientist) return "Scientist";
+            if (role == RoleTypes.Engineer && gamemode == Gamemodes.ShiftAndSeek) return "Hider";
+            if (role == RoleTypes.Engineer) return "Engineer";
+            if (role == RoleTypes.GuardianAngel) return "Guardian Angel";
+            if (role == RoleTypes.CrewmateGhost && (gamemode == Gamemodes.HideAndSeek || gamemode == Gamemodes.ShiftAndSeek)) return "Hider Ghost";
+            if (role == RoleTypes.CrewmateGhost) return "Crewmate Ghost";
+            if (role == RoleTypes.Impostor && gamemode == Gamemodes.HideAndSeek) return "Seeker";
+            if (role == RoleTypes.Impostor) return "Impostor";
+            if (role == RoleTypes.Shapeshifter && gamemode == Gamemodes.ShiftAndSeek) return "Shifter";
+            if (role == RoleTypes.Shapeshifter) return "Shapeshifter";
+            if (role == RoleTypes.ImpostorGhost && (gamemode == Gamemodes.HideAndSeek || gamemode == Gamemodes.ShiftAndSeek)) return "Seeker Ghost";
+            if (role == RoleTypes.ImpostorGhost) return "Impostor Ghost";
+            return "???";
+        }
+
+        public static string DeathReasonToString(DeathReasons reason)
+        {
+            if (reason == DeathReasons.Alive) return "Alive";
+            if (reason == DeathReasons.Killed) return "Killed";
+            if (reason == DeathReasons.Exiled) return "Exiled";
+            if (reason == DeathReasons.Disconnected) return "Disconnected";
+            if (reason == DeathReasons.Command) return "Command";
+            if (reason == DeathReasons.Bombed) return "Bombed";
+            if (reason == DeathReasons.Misfire) return "Misfire";
+            if (reason == DeathReasons.Suicide) return "Suicide";
+            if (reason == DeathReasons.Trapped) return "Trapped";
+            return "???";
+        }
+
+        public static bool IsImpostor(this RoleTypes role)
+        {
+            if (role == RoleTypes.Impostor) return true;
+            if (role == RoleTypes.Shapeshifter) return true;
+            if (role == RoleTypes.ImpostorGhost) return true;
+            return false;
+        }
+
+        public static void SetChatVisible()
+        {
+            if (AmongUsClient.Instance.GameState != AmongUsClient.GameStates.Started) return;
+            MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
+            MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
+            AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);
+            MeetingHud.Instance.RpcClose();
         }
     }
 }

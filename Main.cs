@@ -1,9 +1,9 @@
-﻿using BepInEx;
+﻿using AmongUs.GameOptions;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using System.Collections.Generic;
-using AmongUs.GameOptions;
 using UnityEngine;
 
 namespace MoreGamemodes;
@@ -33,36 +33,19 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, string> StandardVisors;
     public static Dictionary<byte, string> StandardNamePlates;
     public static Dictionary<byte, byte> AllShapeshifts;
-    public static List<byte> Impostors;
     public static Dictionary<(byte, byte), string> LastNotifyNames;
-    public static Dictionary<byte, bool> HasBomb;
-    public static IGameOptions RealOptions;
-    public static Dictionary<byte, Items> AllPlayersItems;
-    public static float FlashTimer;
-    public static float HackTimer;
-    public static float CamouflageTimer;
-    public static Dictionary<byte, float> ShieldTimer;
+    public static OptionBackupData RealOptions;
     public static bool IsMeeting;
-    public static Dictionary<byte, int> Lives;
     public static Dictionary<byte, DeathReasons> AllPlayersDeathReason;
-    public static float NoBombTimer;
-    public static float NoItemTimer;
-    public static bool SkipMeeting;
-    public static float PaintTime;
-    public static byte VotingPlayerId;
-    public static float PaintBattleVotingTime;
-    public static Dictionary<byte, bool> HasVoted;
-    public static Dictionary<byte, (int, int)> PlayerVotes;
     public static List<string> PaintBattleThemes;
-    public static string Theme;
     public static bool IsCreatingBody;
-    public static Dictionary<byte, float> CreateBodyCooldown;
     public static List<(string, byte, string)> MessagesToSend;
-    public static bool NoItemGive;
-    public static List<(Vector2, float)> Traps;
-    public static Dictionary<byte, float> CompassTimer;
+    public static string LastResult;
+    public static Dictionary<byte, RoleTypes> StandardRoles;
+    public static Dictionary<byte, List<(string, float)>> ProximityMessages;
+    public static Dictionary<(byte, byte), Color> NameColors;
 
-    public const string CurrentVersion = "0.2.1";
+    public const string CurrentVersion = "1.0.0";
 
     public override void Load()
     {
@@ -72,6 +55,17 @@ public partial class Main : BasePlugin
         Preset3 = Config.Bind("Preset Name Options", "Preset3", "Preset 3");
         Preset4 = Config.Bind("Preset Name Options", "Preset4", "Preset 4");
         Preset5 = Config.Bind("Preset Name Options", "Preset5", "Preset 5");
+
+        CustomGamemode.Instance = null;
+        ClassicGamemode.instance = null;
+        HideAndSeekGamemode.instance = null;
+        ShiftAndSeekGamemode.instance = null;
+        BombTagGamemode.instance = null;
+        RandomItemsGamemode.instance = null;
+        BattleRoyaleGamemode.instance = null;
+        SpeedrunGamemode.instance = null;
+        PaintBattleGamemode.instance = null;
+        KillOrDieGamemode.instance = null;
 
         GameStarted = false;
         Timer = 0f;
@@ -83,37 +77,21 @@ public partial class Main : BasePlugin
         StandardVisors = new Dictionary<byte, string>();
         StandardNamePlates = new Dictionary<byte, string>();
         AllShapeshifts = new Dictionary<byte, byte>();
-        Impostors = new List<byte>();
         LastNotifyNames = new Dictionary<(byte, byte), string>();
-        HasBomb= new Dictionary<byte, bool>();
         RealOptions = null;
-        AllPlayersItems = new Dictionary<byte, Items>();
-        FlashTimer = 0f;
-        HackTimer = 0f;
-        CamouflageTimer = 0f;
-        ShieldTimer = new Dictionary<byte, float>();
         IsMeeting = false;
-        Lives = new Dictionary<byte, int>();
         AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
-        NoBombTimer = 0f;
-        NoItemTimer = 0f;
-        SkipMeeting = false;
-        PaintTime = 0f;
-        VotingPlayerId = 0;
-        PaintBattleVotingTime = 0f;
-        HasVoted = new Dictionary<byte, bool>();
-        PlayerVotes = new Dictionary<byte, (int, int)>();
         PaintBattleThemes = new List<string>()
         {
-            "Crewmate", "Impostor", "Dead Body", "Cosmos", "House", "Beach", "Sky", "Love", "Jungle", "Robot", "Fruits", "Vegetables", "Lake", "Rainbow", "Portal", "Planet", "Desert", "Taiga", "Airplane", "Cave", "Island"
+            "Crewmate", "Impostor", "Dead Body", "Cosmos", "House", "Beach", "Sky", "Love", "Jungle", "Robot", "Fruits", "Vegetables", "Lake", "Rainbow", "Portal", "Planet", "Desert", "Taiga", "Airplane", "Cave", "Island", "Animal",
         };
-        Theme = "";
         IsCreatingBody = false;
-        CreateBodyCooldown = new Dictionary<byte, float>();
         MessagesToSend = new List<(string, byte, string)>();
-        NoItemGive = false;
-        Traps = new List<(Vector2, float)>();
-        CompassTimer = new Dictionary<byte, float>();
+        CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
+        LastResult = "";
+        StandardRoles = new Dictionary<byte, RoleTypes>();
+        ProximityMessages = new Dictionary<byte, List<(string, float)>>();
+        NameColors = new Dictionary<(byte, byte), Color>();
 
         Harmony.PatchAll();
     }
@@ -134,32 +112,16 @@ public partial class Main : BasePlugin
                 StandardPets = new Dictionary<byte, string>();
                 StandardVisors = new Dictionary<byte, string>();
                 StandardNamePlates = new Dictionary<byte, string>();
-                Impostors = new List<byte>();
                 LastNotifyNames = new Dictionary<(byte, byte), string>();
-                HasBomb = new Dictionary<byte, bool>();
-                AllPlayersItems = new Dictionary<byte, Items>();
-                FlashTimer = 0f;
-                HackTimer = 0f;
-                CamouflageTimer = 0f;
-                ShieldTimer = new Dictionary<byte, float>();
+                RealOptions = null;
                 IsMeeting = false;
-                Lives = new Dictionary<byte, int>();
                 AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
-                NoBombTimer = 0f;
-                NoItemTimer = 0f;
-                SkipMeeting = false;
-                PaintTime = 0f;
-                VotingPlayerId = 0;
-                PaintBattleVotingTime = 0f;
-                HasVoted = new Dictionary<byte, bool>();
-                PlayerVotes = new Dictionary<byte, (int, int)>();
-                Theme = "";
                 IsCreatingBody = false;
-                CreateBodyCooldown = new Dictionary<byte, float>();
                 MessagesToSend = new List<(string, byte, string)>();
-                NoItemGive = false;
-                Traps = new List<(Vector2, float)>();
-                CompassTimer = new Dictionary<byte, float>();
+                StandardRoles = new Dictionary<byte, RoleTypes>();
+                CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
+                ProximityMessages = new Dictionary<byte, List<(string, float)>>();
+                NameColors = new Dictionary<(byte, byte), Color>();
             } 
         }
     }
@@ -171,7 +133,8 @@ class ModManagerLateUpdatePatch
     public static void Prefix(ModManager __instance)
     {
         __instance.ShowModStamp();
-        LateTask.Update(Time.fixedDeltaTime);
+        LateTask.Update(Time.fixedDeltaTime / 2);
+        CheckMurderPatch.Update();
     }
 }
 
@@ -185,43 +148,10 @@ public enum Gamemodes
     BattleRoyale,
     Speedrun,
     PaintBattle,
+    KillOrDie,
     All = int.MaxValue,
 }
-public enum Items
-{
-    None = 0,
-    //crewmate
-    TimeSlower,
-    Knowledge,
-    Shield,
-    Gun,
-    Illusion,
-    Radar,
-    Swap,
-    //impostor
-    TimeSpeeder,
-    Flash,
-    Hack,
-    Camouflage,
-    MultiTeleport,
-    Bomb,
-    Trap,
-    //both
-    Teleport,
-    Button,
-    Finder,
-    Rope,
-    Stop,
-    Newsletter,
-    Compass,
-}
-public enum SpeedrunBodyTypes
-{
-    Crewmate,
-    Engineer,
-    Ghost,
-    All = int.MaxValue,
-}
+
 public enum DeathReasons
 {
     Alive,

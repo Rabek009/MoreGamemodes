@@ -14,6 +14,7 @@ C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\BepInEx.Preloader.Core.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\BepInEx.Unity.Common.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\BepInEx.Unity.IL2CPP.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\Cpp2IL.Core.dll
+C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\CsvHelper.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\Disarm.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\Gee.External.Capstone.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Hazel.dll
@@ -33,6 +34,7 @@ C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Il2CppSystem.Numerics.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Il2CppSystem.Runtime.Serialization.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Il2CppSystem.Xml.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Il2CppSystem.Xml.Linq.dll
+C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\IndexRange.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\io.sentry.unity.runtime.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\LibCpp2IL.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\Mono.Cecil.dll
@@ -61,6 +63,7 @@ C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Sentry.Unity.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\core\StableNameDotNet.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Unity.Addressables.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Unity.Analytics.DataPrivacy.dll
+C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Unity.ProBuilder.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Unity.ResourceManager.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Unity.Services.Analytics.dll
 C:\Users\cypri\OneDrive\Pulpit\Sus Mod\BepInEx\interop\Unity.Services.Core.Configuration.dll

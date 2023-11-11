@@ -33,8 +33,8 @@ namespace MoreGamemodes
         public static void Postfix(EmergencyMinigame __instance)
         {
             if (Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.BombTag ||
-                (Options.CurrentGamemode == Gamemodes.RandomItems && Main.HackTimer > 0f) || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun ||
-                Options.CurrentGamemode == Gamemodes.PaintBattle)
+                (Options.CurrentGamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.HackTimer > 0f) || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun ||
+                Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie)
                 __instance.Close();
         }
     }
@@ -44,7 +44,7 @@ namespace MoreGamemodes
     {
         public static void Postfix(VitalsMinigame __instance)
         {
-            if (Options.CurrentGamemode == Gamemodes.RandomItems && Main.HackTimer > 0f)
+            if (Options.CurrentGamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.HackTimer > 0f)
                 __instance.Close();
         }
     }
@@ -55,11 +55,11 @@ namespace MoreGamemodes
         public static bool Prefix(ref float __result, Console __instance, [HarmonyArgument(0)] GameData.PlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
-            if (Options.CurrentGamemode == Gamemodes.RandomItems && (!Main.Impostors.Contains(pc.PlayerId) || Options.HackAffectsImpostors.GetBool()) && Main.HackTimer > 0f)
+            if (Options.CurrentGamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.HackTimer > 0f)
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.PaintBattle)
+            if (Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie)
                 return false;
-            return !Main.Impostors.Contains(pc.PlayerId) || __instance.AllowImpostor;
+            return !pc.Role.IsImpostor || __instance.AllowImpostor;
         }
     }
 }

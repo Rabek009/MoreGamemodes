@@ -27,6 +27,7 @@
           "BepInEx.Unity.Common": "6.0.0.0",
           "BepInEx.Unity.IL2CPP": "6.0.0.0",
           "Cpp2IL.Core": "2022.1.0.0",
+          "CsvHelper": "2.0.0.0",
           "Disarm": "2022.1.0.0",
           "Gee.External.Capstone": "2.1.0.0",
           "Hazel": "1.0.0.0",
@@ -46,6 +47,7 @@
           "Il2CppSystem.Runtime.Serialization": "4.0.0.0",
           "Il2CppSystem.Xml": "4.0.0.0",
           "Il2CppSystem.Xml.Linq": "4.0.0.0",
+          "IndexRange": "1.0.0.0",
           "io.sentry.unity.runtime": "0.0.0.0",
           "LibCpp2IL": "2022.1.0.0",
           "Mono.Cecil": "0.11.4.0",
@@ -74,6 +76,7 @@
           "StableNameDotNet": "0.1.0.0",
           "Unity.Addressables": "0.0.0.0",
           "Unity.Analytics.DataPrivacy": "0.0.0.0",
+          "Unity.ProBuilder": "0.0.0.0",
           "Unity.ResourceManager": "0.0.0.0",
           "Unity.Services.Analytics": "0.0.0.0",
           "Unity.Services.Core.Configuration": "0.0.0.0",
@@ -976,6 +979,14 @@
           }
         }
       },
+      "CsvHelper/2.0.0.0": {
+        "runtime": {
+          "CsvHelper.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
       "Disarm/2022.1.0.0": {
         "runtime": {
           "Disarm.dll": {
@@ -1125,6 +1136,14 @@
           "Il2CppSystem.Xml.Linq.dll": {
             "assemblyVersion": "4.0.0.0",
             "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "IndexRange/1.0.0.0": {
+        "runtime": {
+          "IndexRange.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       },
@@ -1347,6 +1366,14 @@
       "Unity.Analytics.DataPrivacy/0.0.0.0": {
         "runtime": {
           "Unity.Analytics.DataPrivacy.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Unity.ProBuilder/0.0.0.0": {
+        "runtime": {
+          "Unity.ProBuilder.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
           }
@@ -2627,6 +2654,11 @@
       "serviceable": false,
       "sha512": ""
     },
+    "CsvHelper/2.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
     "Disarm/2022.1.0.0": {
       "type": "reference",
       "serviceable": false,
@@ -2718,6 +2750,11 @@
       "sha512": ""
     },
     "Il2CppSystem.Xml.Linq/4.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "IndexRange/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -2858,6 +2895,11 @@
       "sha512": ""
     },
     "Unity.Analytics.DataPrivacy/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Unity.ProBuilder/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
