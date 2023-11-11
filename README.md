@@ -375,6 +375,9 @@ You can chat during rounds. If proximity chat is on only nearby players see you 
 | Fake shapeshift appearance    |
 | Disable during comms sabotage |
 
+#### Disable zipline
+Players can't use zipline on the fungle.
+
 ## Other functions
 
 ### Playing with fewer than 4 players
