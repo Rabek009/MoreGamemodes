@@ -22,10 +22,15 @@ public partial class Main : BasePlugin
     public static ConfigEntry<string> Preset3 { get; private set; }
     public static ConfigEntry<string> Preset4 { get; private set; }
     public static ConfigEntry<string> Preset5 { get; private set; }
+    public static ConfigEntry<string> Preset6 { get; private set; }
+    public static ConfigEntry<string> Preset7 { get; private set; }
+    public static ConfigEntry<string> Preset8 { get; private set; }
+    public static ConfigEntry<string> Preset9 { get; private set; }
+    public static ConfigEntry<string> Preset10 { get; private set; }
     public static bool GameStarted;
     public static float Timer;
 
-    public static Dictionary<byte, int> StandardColors;
+    public static Dictionary<byte, byte> StandardColors;
     public static Dictionary<byte, string> StandardNames;
     public static Dictionary<byte, string> StandardHats;
     public static Dictionary<byte, string> StandardSkins;
@@ -38,14 +43,14 @@ public partial class Main : BasePlugin
     public static bool IsMeeting;
     public static Dictionary<byte, DeathReasons> AllPlayersDeathReason;
     public static List<string> PaintBattleThemes;
-    public static bool IsCreatingBody;
     public static List<(string, byte, string)> MessagesToSend;
     public static string LastResult;
     public static Dictionary<byte, RoleTypes> StandardRoles;
     public static Dictionary<byte, List<(string, float)>> ProximityMessages;
     public static Dictionary<(byte, byte), Color> NameColors;
+    public static Dictionary<byte, bool> IsModded;
 
-    public const string CurrentVersion = "1.0.0";
+    public const string CurrentVersion = "1.1.0";
 
     public override void Load()
     {
@@ -55,6 +60,11 @@ public partial class Main : BasePlugin
         Preset3 = Config.Bind("Preset Name Options", "Preset3", "Preset 3");
         Preset4 = Config.Bind("Preset Name Options", "Preset4", "Preset 4");
         Preset5 = Config.Bind("Preset Name Options", "Preset5", "Preset 5");
+        Preset6 = Config.Bind("Preset Name Options", "Preset6", "Preset 6");
+        Preset7 = Config.Bind("Preset Name Options", "Preset7", "Preset 7");
+        Preset8 = Config.Bind("Preset Name Options", "Preset8", "Preset 8");
+        Preset9 = Config.Bind("Preset Name Options", "Preset9", "Preset 9");
+        Preset10 = Config.Bind("Preset Name Options", "Preset10", "Preset 10");
 
         CustomGamemode.Instance = null;
         ClassicGamemode.instance = null;
@@ -66,10 +76,11 @@ public partial class Main : BasePlugin
         SpeedrunGamemode.instance = null;
         PaintBattleGamemode.instance = null;
         KillOrDieGamemode.instance = null;
+        ZombiesGamemode.instance = null;
 
         GameStarted = false;
         Timer = 0f;
-        StandardColors = new Dictionary<byte, int>();
+        StandardColors = new Dictionary<byte, byte>();
         StandardNames = new Dictionary<byte, string>();
         StandardHats = new Dictionary<byte, string>();
         StandardSkins = new Dictionary<byte, string>();
@@ -85,13 +96,13 @@ public partial class Main : BasePlugin
         {
             "Crewmate", "Impostor", "Dead Body", "Cosmos", "House", "Beach", "Sky", "Love", "Jungle", "Robot", "Fruits", "Vegetables", "Lake", "Rainbow", "Portal", "Planet", "Desert", "Taiga", "Airplane", "Cave", "Island", "Animal",
         };
-        IsCreatingBody = false;
         MessagesToSend = new List<(string, byte, string)>();
         CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
         LastResult = "";
         StandardRoles = new Dictionary<byte, RoleTypes>();
         ProximityMessages = new Dictionary<byte, List<(string, float)>>();
         NameColors = new Dictionary<(byte, byte), Color>();
+        IsModded = new Dictionary<byte, bool>();
 
         Harmony.PatchAll();
     }
@@ -102,10 +113,10 @@ public partial class Main : BasePlugin
         public static void Postfix(PlayerControl __instance)
         {
             GameStarted = false;
-            if (__instance.AmOwner && __instance.PlayerId < 15)
+            if (__instance.AmOwner)
             {
                 Timer = 0f;
-                StandardColors = new Dictionary<byte, int>();
+                StandardColors = new Dictionary<byte, byte>();
                 StandardNames = new Dictionary<byte, string>();
                 StandardHats = new Dictionary<byte, string>();
                 StandardSkins = new Dictionary<byte, string>();
@@ -116,13 +127,16 @@ public partial class Main : BasePlugin
                 RealOptions = null;
                 IsMeeting = false;
                 AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
-                IsCreatingBody = false;
                 MessagesToSend = new List<(string, byte, string)>();
                 StandardRoles = new Dictionary<byte, RoleTypes>();
                 CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
                 ProximityMessages = new Dictionary<byte, List<(string, float)>>();
                 NameColors = new Dictionary<(byte, byte), Color>();
-            } 
+                IsModded = new Dictionary<byte, bool>();
+                IsModded[__instance.PlayerId] = true;
+            }
+            else
+                IsModded[__instance.PlayerId] = false;
         }
     }
 }
@@ -149,6 +163,7 @@ public enum Gamemodes
     Speedrun,
     PaintBattle,
     KillOrDie,
+    Zombies,
     All = int.MaxValue,
 }
 

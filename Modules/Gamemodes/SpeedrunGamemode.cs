@@ -88,6 +88,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.Speedrun;
             PetAction = false;
+            DisableTasks = false;
         }
 
         public static SpeedrunGamemode instance;

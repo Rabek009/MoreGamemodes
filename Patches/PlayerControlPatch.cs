@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
+using InnerNet;
 
 namespace MoreGamemodes
 {
@@ -40,7 +41,10 @@ namespace MoreGamemodes
                 return false;
             
             if (CustomGamemode.Instance.OnCheckMurder(killer, target))
+            {
+                killer.SyncPlayerSettings();
                 killer.RpcMurderPlayer(target, true);
+            }     
 
             return false;
         }
@@ -126,8 +130,9 @@ namespace MoreGamemodes
             }
             new LateTask(() =>
             {
+                if (MeetingHud.Instance) return;
                 foreach (var pc in PlayerControl.AllPlayerControls)
-                    shapeshifter.RpcSetNamePrivate(Main.LastNotifyNames[(shapeshifter.PlayerId, pc.PlayerId)], pc, true);
+                    shapeshifter.RpcSetNamePrivate(shapeshifter.BuildPlayerName(pc, false), pc, true);
             }, 1.32f, "Set Shapeshift Appearance");
             CustomGamemode.Instance.OnShapeshift(shapeshifter, target);
         }
@@ -252,27 +257,54 @@ namespace MoreGamemodes
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            Main.StandardRoles[__instance.PlayerId] = roleType;
+            if (!RoleManager.IsGhostRole(roleType))
+                Main.StandardRoles[__instance.PlayerId] = roleType;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcSetRole))]
+    class RpcSetRolePatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (Main.StandardRoles.ContainsKey(__instance.PlayerId) && !RoleManager.IsGhostRole(roleType))
+                return false;
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcMurderPlayer))]
+    class RpcMurderPlayerPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] bool didSucceed)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            MurderResultFlags murderResultFlags = didSucceed ? MurderResultFlags.Succeeded : MurderResultFlags.FailedError;
+            if (murderResultFlags == MurderResultFlags.Succeeded && target.protectedByGuardianId > -1)
+                murderResultFlags= MurderResultFlags.FailedProtected;
+            if (murderResultFlags != MurderResultFlags.FailedError)
+                __instance.SyncPlayerSettings();
+            if (AmongUsClient.Instance.AmClient)
+		    {
+		    	__instance.MurderPlayer(target, murderResultFlags);
+		    }
+		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, 12, SendOption.Reliable, -1);
+		    messageWriter.WriteNetObject(target);
+		    messageWriter.Write((int)murderResultFlags);
+		    AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+            return false;
         }
     }
 
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Die))]
     class PlayerDiePatch
     {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] DeathReason reason, [HarmonyArgument(1)] bool assignGhostRole)
+        public static void Prefix(PlayerControl __instance, [HarmonyArgument(0)] DeathReason reason, [HarmonyArgument(1)] bool assignGhostRole)
         {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            return !Main.IsCreatingBody;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerAnimations), nameof(PlayerAnimations.CoPlayCustomAnimation))]
-    class CoPlayCustomAnimationPatch
-    {
-        public static bool Prefix(PlayerAnimations __instance, AnimationClip customAnim)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            return !Main.IsCreatingBody;
+            if (!AmongUsClient.Instance.AmHost) return;
+            if (Options.CurrentGamemode != Gamemodes.PaintBattle)
+                __instance.RpcSetPet("");
         }
     }
 

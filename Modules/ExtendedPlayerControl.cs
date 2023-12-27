@@ -14,8 +14,16 @@ namespace MoreGamemodes
     {
         public static void RpcTeleport(this PlayerControl player, Vector2 location)
         {
-            if (AmongUsClient.Instance.AmHost) player.NetTransform.SnapTo(location);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.None);
+            if (player.inVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation())
+                player.MyPhysics.RpcBootFromVent(0);
+            if (player.onLadder || player.MyPhysics.Animations.IsPlayingAnyLadderAnimation())
+            {
+                new LateTask(() => player.RpcTeleport(location), 0.01f, "Retry Teleport");
+                return;
+            }
+            var sId = player.NetTransform.lastSequenceId + 5;
+            player.NetTransform.SnapTo(location, (ushort)sId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable);
             NetHelpers.WriteVector2(location, writer);
             writer.Write(player.NetTransform.lastSequenceId);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -128,6 +136,8 @@ namespace MoreGamemodes
                 return false;
             if (Options.CurrentGamemode == Gamemodes.KillOrDie)
                 return false;
+            if (Options.CurrentGamemode == Gamemodes.Zombies)
+                return false;
             if (Options.CurrentGamemode == Gamemodes.Classic && GameOptionsManager.Instance.currentGameOptions.GameMode == GameModes.HideNSeek && !player.Data.Role.IsImpostor)
                 return int.Parse(HudManager.Instance.AbilityButton.usesRemainingText.text) > 0;
             return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
@@ -178,8 +188,6 @@ namespace MoreGamemodes
             var opt = player.BuildGameOptions(time * 2);
             Utils.SyncSettings(opt, player.GetClientId());
             player.RpcGuardAndKill(player);
-            var opt2 = player.BuildGameOptions();
-            Utils.SyncSettings(opt2, player.GetClientId());
         }
 
         public static void RpcExileV2(this PlayerControl player)
@@ -199,26 +207,9 @@ namespace MoreGamemodes
             }, 0.01f, "Late Murder");
         }
 
-        public static void RpcReactorFlash(this PlayerControl pc, float duration, Color color)
+        public static void RpcUnmoddedReactorFlash(this PlayerControl pc, float duration)
         {
             if (pc == null) return;
-            if (pc.PlayerId == 0)
-            {
-                var hud = DestroyableSingleton<HudManager>.Instance;
-                if (hud.FullScreen == null) return;
-                var obj = hud.transform.FindChild("FlashColor_FullScreen")?.gameObject;
-                if (obj == null)
-                {
-                    obj = GameObject.Instantiate(hud.FullScreen.gameObject, hud.transform);
-                    obj.name = "FlashColor_FullScreen";
-                }
-                hud.StartCoroutine(Effects.Lerp(duration, new Action<float>((t) =>
-                {
-                    obj.SetActive(t != 1f);
-                    obj.GetComponent<SpriteRenderer>().color = new(color.r, color.g, color.b, Mathf.Clamp01((-2f * Mathf.Abs(t - 0.5f) + 1) * color.a));
-                })));
-                return;
-            }
             int clientId = pc.GetClientId();
             byte reactorId = 3;
             if (GameOptionsManager.Instance.currentNormalGameOptions.MapId == 2) reactorId = 21;
@@ -299,7 +290,10 @@ namespace MoreGamemodes
                 case Gamemodes.HideAndSeek:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
                     if (Main.Timer < Options.HnSImpostorsBlindTime.GetFloat())
+                    {
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+                    }
                     break;
                 case Gamemodes.ShiftAndSeek:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
@@ -307,7 +301,10 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 15, 100);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 15, 100);
                     if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat())
+                    {
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+                    } 
                     break;
                 case Gamemodes.BombTag:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
@@ -349,6 +346,7 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
                     opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
+                    opt.SetFloat(FloatOptionNames.KillCooldown, Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
                     break;
                 case Gamemodes.Speedrun:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
@@ -372,7 +370,29 @@ namespace MoreGamemodes
                     if (!player.IsKiller())
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
                     else if (Main.Timer < Options.KillerBlindTime.GetFloat())
+                    {
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+                    }
+                    break;
+                case Gamemodes.Zombies:
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                    if (player.IsZombie())
+                    {
+                        if (Main.Timer >= Options.ZombieBlindTime.GetFloat() && player.GetZombieType() != ZombieTypes.JustTurned)
+                        {
+                            opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Options.ZombieSpeed.GetFloat());
+                            opt.SetFloat(FloatOptionNames.CrewLightMod, Options.ZombieVision.GetFloat());
+                        }
+                        else
+                        {
+                            opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+                            opt.SetFloat(FloatOptionNames.CrewLightMod, 0f);
+                        }
+                    }
                     break;
             }
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
@@ -435,6 +455,28 @@ namespace MoreGamemodes
                     if (player == seer || Options.TasksVisibleToOthers.GetBool())
                         name += Utils.ColorString(Color.yellow, "(" + tasksCompleted + "/" + totalTasks + ")");
                     break;
+                case Gamemodes.Zombies:
+                    if (player == seer && !player.IsZombie() && !player.Data.IsDead)
+                    {
+                        if (Options.CurrentTrackingZombiesMode == TrackingZombiesModes.Nearest)
+                        {
+                            var nearest = player.GetClosestZombie();
+                            if (nearest != null)
+                                name += "\n" + Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.transform.position, nearest.transform.position)); 
+                        }
+                        else if (Options.CurrentTrackingZombiesMode == TrackingZombiesModes.Every && player.GetClosestZombie() != null)
+                        {
+                            name += "\n";
+                            foreach (var pc in PlayerControl.AllPlayerControls)
+                            {
+                                if (pc.GetZombieType() == ZombieTypes.FullZombie && !pc.Data.IsDead)
+                                    name += Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.transform.position, pc.transform.position));
+                            }
+                        }
+                        if (player.KillsRemain() > 0)
+                            name += "\n" + Utils.ColorString(Color.cyan, "YOU CAN KILL " + player.KillsRemain() + " " + (player.KillsRemain() == 1 ? "ZOMBIE" : "ZOMBIES") + "!");
+                    }
+                    break;
             }
             if (Options.MidGameChat.GetBool() && Options.ProximityChat.GetBool() && player == seer)
             {
@@ -473,6 +515,54 @@ namespace MoreGamemodes
             }
             else
                 Utils.SyncSettings(opt, player.GetClientId());
+        }
+
+        public static void RpcSetOutfit(this PlayerControl player, byte colorId, string hatId, string skinId, string petId, string visorId)
+        {
+            player.RpcSetColor(colorId);
+            player.RpcSetHat(hatId);
+            player.RpcSetSkin(skinId);
+            player.RpcSetVisor(visorId);
+            player.RpcSetPet(player.Data.IsDead ? "" : petId);
+        }
+
+        public static ZombieTypes GetZombieType(this PlayerControl player)
+        {
+            if (ZombiesGamemode.instance == null) return ZombieTypes.None;
+            if (player == null) return ZombieTypes.None;
+            if (!ZombiesGamemode.instance.ZombieType.ContainsKey(player.PlayerId)) return ZombieTypes.None;
+            return ZombiesGamemode.instance.ZombieType[player.PlayerId];
+        }
+
+        public static bool IsZombie(this PlayerControl player)
+        {
+            return player.GetZombieType() != ZombieTypes.None;
+        }
+
+        public static int KillsRemain(this PlayerControl player)
+        {
+            if (ZombiesGamemode.instance == null) return 0;
+            if (player == null) return 0;
+            if (!ZombiesGamemode.instance.KillsRemain.ContainsKey(player.PlayerId)) return 0;
+            return ZombiesGamemode.instance.KillsRemain[player.PlayerId];
+        }
+
+        public static PlayerControl GetClosestZombie(this PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            Dictionary<PlayerControl, float> pcdistance = new();
+            float dis;
+            foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+            {
+                if (!p.Data.IsDead && p != player && p.GetZombieType() == ZombieTypes.FullZombie)
+                {
+                    dis = Vector2.Distance(playerpos, p.transform.position);
+                    pcdistance.Add(p, dis);
+                }
+            }
+            var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
+            PlayerControl target = min.Key;
+            return target;
         }
     }
 }

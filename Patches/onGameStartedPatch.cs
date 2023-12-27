@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using AmongUs.GameOptions;
 using UnityEngine;
-using Hazel;
 
 namespace MoreGamemodes
 {
@@ -49,6 +48,10 @@ namespace MoreGamemodes
                     KillOrDieGamemode.instance = new KillOrDieGamemode();
                     CustomGamemode.Instance = KillOrDieGamemode.instance;
                     break;
+                case Gamemodes.Zombies:
+                    ZombiesGamemode.instance = new ZombiesGamemode();
+                    CustomGamemode.Instance = ZombiesGamemode.instance;
+                    break;
             }
             if (!__instance.AmHost) return;
             Main.RealOptions = new OptionBackupData(GameOptionsManager.Instance.currentGameOptions);
@@ -56,7 +59,6 @@ namespace MoreGamemodes
             Main.LastNotifyNames = new Dictionary<(byte, byte), string>();
             Main.IsMeeting = false;
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
-            Main.IsCreatingBody = false;
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
@@ -65,7 +67,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
-                Main.StandardColors[pc.PlayerId] = pc.Data.DefaultOutfit.ColorId;
+                Main.StandardColors[pc.PlayerId] = (byte)pc.Data.DefaultOutfit.ColorId;
                 Main.StandardHats[pc.PlayerId] = pc.Data.DefaultOutfit.HatId;
                 Main.StandardSkins[pc.PlayerId] = pc.Data.DefaultOutfit.SkinId;
                 Main.StandardPets[pc.PlayerId] = pc.Data.DefaultOutfit.PetId;
@@ -81,7 +83,7 @@ namespace MoreGamemodes
                     Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.clear;
                 }
             }
-            GameManager.Instance.RpcSyncCustomOptions();
+            OptionItem.SyncAllOptions();
         }
     }
 
@@ -117,21 +119,24 @@ namespace MoreGamemodes
                     pc.RpcRandomVentTeleport();
             }
             CustomGamemode.Instance.OnIntroDestroy();
-            if (Options.MidGameChat.GetBool() && Options.CurrentGamemode != Gamemodes.PaintBattle)
+            if (Options.MidGameChat.GetBool())
                 Utils.SetChatVisible();
             Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)
             {
-                CustomRpcSender sender = CustomRpcSender.Create("SetPetAtSStart", SendOption.None);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.GetPet().Data.IsEmpty)
                     {
-                        sender.RpcSetOutfit(pc, petId: "pet_clank");
+                        pc.RpcSetPet("pet_clank");
                         Main.StandardPets[pc.PlayerId] = "pet_clank";
                     }  
                 }
-                sender.SendMessage();
+            }
+            if (CustomGamemode.Instance.DisableTasks)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
             }
         }
     }

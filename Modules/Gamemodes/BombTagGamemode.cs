@@ -15,7 +15,9 @@ namespace MoreGamemodes
 
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
-            if (__instance.HauntTarget.HasBomb())
+            if (__instance.HauntTarget.Data.IsDead)
+                __instance.FilterText.text = "Ghost";
+            else if (__instance.HauntTarget.HasBomb())
                 __instance.FilterText.text = "Has Bomb";
             else
                __instance.FilterText.text = "Hasn't Bomb"; 
@@ -61,11 +63,6 @@ namespace MoreGamemodes
         {
             __instance.Close();
             __instance.ShowNormalMap();
-        }
-
-        public override void OnShowNormalMap(MapBehaviour __instance)
-        {
-            __instance.taskOverlay.Hide();
         }
 
         public override void OnToggleHighlight(PlayerControl __instance)
@@ -262,6 +259,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.BombTag;
             PetAction = false;
+            DisableTasks = true;
             HasBomb = new Dictionary<byte, bool>();
             foreach (var pc in PlayerControl.AllPlayerControls)
                 HasBomb[pc.PlayerId] = false;

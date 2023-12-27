@@ -186,11 +186,11 @@ namespace MoreGamemodes
                         bool showReactorFlash = false;
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if (player.Data.Role.IsImpostor && Vector3.Distance(pc.transform.position, player.transform.position) <= Options.RadarRange.GetFloat() * 9 && !player.Data.IsDead)
+                            if (player.Data.Role.IsImpostor && Vector2.Distance(pc.transform.position, player.transform.position) <= Options.RadarRange.GetFloat() * 9 && !player.Data.IsDead)
                                 showReactorFlash = true;
                         }
                         if (showReactorFlash)
-                            pc.RpcReactorFlash(0.5f, Color.red);
+                            pc.RpcReactorFlash(0.5f, Palette.Orange);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Swap:
@@ -267,7 +267,7 @@ namespace MoreGamemodes
                         if (NoBombTimer > 0f) return;
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if ((!player.Data.Role.IsImpostor || Options.CanKillImpostors.GetBool()) && Vector3.Distance(pc.transform.position, player.transform.position) <= Options.BombRadius.GetFloat() * 2 && !player.Data.IsDead && player != pc && ShieldTimer[player.PlayerId] <= 0f)
+                            if ((!player.Data.Role.IsImpostor || Options.CanKillImpostors.GetBool()) && Vector2.Distance(pc.transform.position, player.transform.position) <= Options.BombRadius.GetFloat() * 2 && !player.Data.IsDead && player != pc && ShieldTimer[player.PlayerId] <= 0f)
                             {
                                 player.RpcSetDeathReason(DeathReasons.Bombed);
                                 player.RpcMurderPlayer(player, true);
@@ -308,12 +308,10 @@ namespace MoreGamemodes
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Finder:
-                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
                         pc.RpcTeleport(target.transform.position);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Rope:
-                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
                         target.RpcTeleport(pc.transform.position);
                         pc.RpcSetItem(Items.None);
                         break;
@@ -343,7 +341,7 @@ namespace MoreGamemodes
                 return false;
             }
             if (CamouflageTimer > 0f)
-                target.RpcSetColor((byte)Main.StandardColors[target.PlayerId]);
+                target.RpcSetColor(Main.StandardColors[target.PlayerId]);
             return true;
         }
 
@@ -500,6 +498,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.RandomItems;
             PetAction = true;
+            DisableTasks = false;
             AllPlayersItems = new System.Collections.Generic.Dictionary<byte, Items>();
             FlashTimer = 0f;
             HackTimer = 0f;

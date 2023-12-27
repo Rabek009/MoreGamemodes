@@ -49,24 +49,4 @@ namespace MoreGamemodes
             CustomGamemode.Instance.OnToggleHighlight(__instance);
         }
     }
-
-    [HarmonyPatch(typeof(KillOverlay), nameof(KillOverlay.CoShowOne))]
-    class ShowKillAnimationPatch
-    {
-        public static bool Prefix(KillOverlay __instance, [HarmonyArgument(0)] OverlayAnimation anim)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            return !Main.IsCreatingBody;
-        }
-    }
-
-    [HarmonyPatch(typeof(KillAnimation), nameof(KillAnimation.SetMovement))]
-    class SetMovementPatch
-    {
-        public static bool Prefix(KillAnimation __instance, [HarmonyArgument(0)] GameData.PlayerInfo killer, [HarmonyArgument(1)] GameData.PlayerInfo victim)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            return !Main.IsCreatingBody;
-        }
-    }
 }

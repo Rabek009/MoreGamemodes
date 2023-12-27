@@ -25,12 +25,14 @@ namespace MoreGamemodes
         private static readonly string[] presets =
         {
             Main.Preset1.Value, Main.Preset2.Value, Main.Preset3.Value,
-            Main.Preset4.Value, Main.Preset5.Value
+            Main.Preset4.Value, Main.Preset5.Value, Main.Preset6.Value,
+            Main.Preset7.Value, Main.Preset8.Value, Main.Preset9.Value,
+            Main.Preset10.Value
         };
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies"
         };
 
         public static readonly string[] speedrunBodyTypes =
@@ -38,10 +40,16 @@ namespace MoreGamemodes
             "Crewmate", "Engineer", "Ghost"
         };
 
+        public static readonly string[] trackingZombiesModes =
+        {
+            "None", "Nearest", "Every"
+        };
+
         //Main Settings
         public static OptionItem Gamemode;
         public static Gamemodes CurrentGamemode => (Gamemodes)Gamemode.GetValue();
         public static SpeedrunBodyTypes CurrentBodyType => (SpeedrunBodyTypes)BodyType.GetValue();
+        public static TrackingZombiesModes CurrentTrackingZombiesMode => (TrackingZombiesModes)TrackingZombiesMode.GetValue();
         public static OptionItem NoGameEnd;
         public static OptionItem CanUseColorCommand;
         public static OptionItem EnableFortegreen;
@@ -139,6 +147,15 @@ namespace MoreGamemodes
         public static OptionItem TeleportAfterRound;
         public static OptionItem KillerBlindTime;
         public static OptionItem TimeToKill;
+
+        //Zombies
+        public static OptionItem ZombieKillsTurnIntoZombie;
+        public static OptionItem ZombieSpeed;
+        public static OptionItem ZombieVision;
+        public static OptionItem CanKillZombiesAfterTasks;
+        public static OptionItem NumberOfKills;
+        public static OptionItem ZombieBlindTime;
+        public static OptionItem TrackingZombiesMode;
 
         //Additional Gamemodes
         public static OptionItem RandomSpawn;
@@ -406,14 +423,34 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             
             //Kill Or Die
-            TeleportAfterRound = BooleanOptionItem.Create(10001, "Teleport After Round", false, TabGroup.GamemodeSettings, false)
+            TeleportAfterRound = BooleanOptionItem.Create(10000, "Teleport After Round", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.KillOrDie);
-            KillerBlindTime = FloatOptionItem.Create(10002, "Killer Blind Time", new(1f, 15f, 0.5f), 5f, TabGroup.GamemodeSettings, false)
+            KillerBlindTime = FloatOptionItem.Create(10001, "Killer Blind Time", new(1f, 15f, 0.5f), 5f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.KillOrDie)
                 .SetValueFormat(OptionFormat.Seconds);
-            TimeToKill = IntegerOptionItem.Create(10003, "Time To Kill", new(5, 90, 1), 20, TabGroup.GamemodeSettings, false)
+            TimeToKill = IntegerOptionItem.Create(10002, "Time To Kill", new(5, 90, 1), 20, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.KillOrDie)
                 .SetValueFormat(OptionFormat.Seconds);
+
+            //Zombies
+            ZombieKillsTurnIntoZombie = BooleanOptionItem.Create(11000, "Zombie Kills Turn Into Zombie", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies);
+            ZombieSpeed = FloatOptionItem.Create(11001, "Zombie Speed", new(0.1f, 3f, 0.05f), 0.5f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies)
+                .SetValueFormat(OptionFormat.Multiplier);
+            ZombieVision = FloatOptionItem.Create(11002, "Zombie Vision", new(0.05f, 5f, 0.05f), 0.25f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies)
+                .SetValueFormat(OptionFormat.Multiplier);
+            CanKillZombiesAfterTasks = BooleanOptionItem.Create(11003, "Can Kill Zombies After Tasks", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies);
+            NumberOfKills = IntegerOptionItem.Create(11004, "Number Of Kills", new(1, 15, 1), 1, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies)
+                .SetParent(CanKillZombiesAfterTasks);
+            ZombieBlindTime = FloatOptionItem.Create(11005, "Zombie Blind Time", new(3f, 15f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies)
+                .SetValueFormat(OptionFormat.Seconds);
+            TrackingZombiesMode = StringOptionItem.Create(11006, "Tracking Zombie Mode", trackingZombiesModes, 1, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies);
 
             //Additional Gamemodes
             RandomSpawn = BooleanOptionItem.Create(100000, "Random Spawn", false, TabGroup.AdditionalGamemodes, false)

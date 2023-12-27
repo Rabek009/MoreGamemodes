@@ -28,7 +28,7 @@ namespace MoreGamemodes
             string[] args = text.Split(' ');
             string subArgs = "";
             var canceled = false;
-            if (Options.MidGameChat.GetBool() && Main.GameStarted && !Main.IsMeeting)
+            if (Options.MidGameChat.GetBool() && Main.GameStarted && !Main.IsMeeting && Options.CurrentGamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
@@ -37,7 +37,7 @@ namespace MoreGamemodes
                     __instance.freeChatField.textArea.SetText("");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor  && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems))
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems) && !PlayerControl.LocalPlayer.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -494,14 +494,81 @@ namespace MoreGamemodes
                             Options.Gamemode.SetValue(8);
                             PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is kill or die", "GamemodesChanger");
                             break;
+                        case "zombies":
+                            Options.Gamemode.SetValue(9);
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is zombies", "GamemodesChanger");
+                            break;
                     }
-                    break;
+                    break;       
                 case "/color":
                 case "/colour":
                     canceled = true;
                     if (Main.GameStarted && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
-                    subArgs = args.Length < 2 ? "" : args[1];           
-                    PlayerControl.LocalPlayer.RpcSetColor(byte.Parse(subArgs));
+                    subArgs = args.Length < 2 ? "" : args[1];
+                    switch (subArgs)
+                    {
+                        case "red":
+                            PlayerControl.LocalPlayer.RpcSetColor(0);
+                            break;
+                        case "blue":
+                            PlayerControl.LocalPlayer.RpcSetColor(1);
+                            break;
+                        case "green":
+                            PlayerControl.LocalPlayer.RpcSetColor(2);
+                            break;
+                        case "pink":
+                            PlayerControl.LocalPlayer.RpcSetColor(3);
+                            break;
+                        case "orange":
+                            PlayerControl.LocalPlayer.RpcSetColor(4);
+                            break;
+                        case "yellow":
+                            PlayerControl.LocalPlayer.RpcSetColor(5);
+                            break;
+                        case "black":
+                            PlayerControl.LocalPlayer.RpcSetColor(6);
+                            break;
+                        case "white":
+                            PlayerControl.LocalPlayer.RpcSetColor(7);
+                            break;
+                        case "purple":
+                            PlayerControl.LocalPlayer.RpcSetColor(8);
+                            break;
+                        case "brown":
+                            PlayerControl.LocalPlayer.RpcSetColor(9);
+                            break;
+                        case "cyan":
+                            PlayerControl.LocalPlayer.RpcSetColor(10);
+                            break;
+                        case "lime":
+                            PlayerControl.LocalPlayer.RpcSetColor(11);
+                            break;
+                        case "maroon":
+                            PlayerControl.LocalPlayer.RpcSetColor(12);
+                            break;
+                        case "rose":
+                            PlayerControl.LocalPlayer.RpcSetColor(13);
+                            break;
+                        case "banana":
+                            PlayerControl.LocalPlayer.RpcSetColor(14);
+                            break;
+                        case "gray":
+                        case "grey":
+                            PlayerControl.LocalPlayer.RpcSetColor(15);
+                            break;
+                        case "tan":
+                            PlayerControl.LocalPlayer.RpcSetColor(16);
+                            break;
+                        case "coral":
+                            PlayerControl.LocalPlayer.RpcSetColor(17);
+                            break;
+                        case "fortegreen":
+                            PlayerControl.LocalPlayer.RpcSetColor(18);
+                            break;
+                        default:
+                            PlayerControl.LocalPlayer.RpcSetColor(byte.Parse(subArgs));  
+                            break;
+                    }        
                     break;
                 case "/name":
                     canceled = true;
@@ -547,10 +614,13 @@ namespace MoreGamemodes
                                     Utils.SendChat("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                     break;
                                 case "paintbattle":
-                                    Utils.SendChat("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                    Utils.SendChat("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
                                     Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                    break;
+                                case "zombies":
+                                    Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -589,10 +659,13 @@ namespace MoreGamemodes
                                             Utils.SendChat("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                             break;
                                         case Gamemodes.PaintBattle:
-                                            Utils.SendChat("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                            Utils.SendChat("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
                                             Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                            break;
+                                        case Gamemodes.Zombies:
+                                            Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                             break;
                                     }
                                     if (Options.RandomSpawn.GetBool())
@@ -855,6 +928,19 @@ namespace MoreGamemodes
                             message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
                             message += "Time to kill: " + Options.TimeToKill.GetInt() + "%\n";
                             break;
+                        case Gamemodes.Zombies:
+                            message = "Gamemode: Zombies\n\n";
+                            message += "Zombie Kills Turn Into Zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombie Speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
+                            message += "Zombie Vision: " + Options.ZombieVision.GetFloat() + "x\n";
+                            message += "Can Kill Zombies After Tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
+                            if (Options.CanKillZombiesAfterTasks.GetBool())
+                            {
+                                message += "Number Of Kills: " + Options.NumberOfKills.GetInt() + "\n";
+                            }
+                            message += "Zombie Blind Time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
+                            message += "Tracking Zombies Mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
+                            break;
                     }
                     Utils.SendChat(message, "Options");
 
@@ -915,7 +1001,7 @@ namespace MoreGamemodes
                 case "/commands":
                 case "/cm":
                     canceled = true;
-                    PlayerControl.LocalPlayer.RpcSendMessage("Commands:\n/color COLOR_ID - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n" +
+                    PlayerControl.LocalPlayer.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n" +
                         "/now - show active settings\n/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/changesetting SETTING VALUE - changes setting value\n" +
                         "/gamemode GAMEMODE - changes gamemode\n/kick PLAYER_ID - kick player\n/ban PLAYER_ID - ban player\n/announce MESSAGE - send message\n/lastresult - show last game result", "Command");
                     break;
@@ -1093,14 +1179,14 @@ namespace MoreGamemodes
             var canceled = false;
             string[] args = text.Split(' ');
             string subArgs = "";   
-            if (Options.MidGameChat.GetBool() && Main.GameStarted && !Main.IsMeeting)
+            if (Options.MidGameChat.GetBool() && Main.GameStarted && !Main.IsMeeting && Options.CurrentGamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
                     Utils.SendSpam("Someone tried to send message during comms sabotage");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor  && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems))
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems) && !player.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -1145,8 +1231,72 @@ namespace MoreGamemodes
                     if (!Options.CanUseColorCommand.GetBool() && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
                     if (Main.GameStarted && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
                     subArgs = args.Length < 2 ? "" : args[1];
-                    if (byte.Parse(subArgs) < 18 || Options.EnableFortegreen.GetBool() || (Options.CurrentGamemode == Gamemodes.PaintBattle && Main.GameStarted))
-                        player.RpcSetColor(byte.Parse(subArgs));           
+                    switch (subArgs)
+                    {
+                        case "red":
+                            player.RpcSetColor(0);
+                            break;
+                        case "blue":
+                            player.RpcSetColor(1);
+                            break;
+                        case "green":
+                            player.RpcSetColor(2);
+                            break;
+                        case "pink":
+                            player.RpcSetColor(3);
+                            break;
+                        case "orange":
+                            player.RpcSetColor(4);
+                            break;
+                        case "yellow":
+                            player.RpcSetColor(5);
+                            break;
+                        case "black":
+                            player.RpcSetColor(6);
+                            break;
+                        case "white":
+                            player.RpcSetColor(7);
+                            break;
+                        case "purple":
+                            player.RpcSetColor(8);
+                            break;
+                        case "brown":
+                            player.RpcSetColor(9);
+                            break;
+                        case "cyan":
+                            player.RpcSetColor(10);
+                            break;
+                        case "lime":
+                            player.RpcSetColor(11);
+                            break;
+                        case "maroon":
+                            player.RpcSetColor(12);
+                            break;
+                        case "rose":
+                            player.RpcSetColor(13);
+                            break;
+                        case "banana":
+                            player.RpcSetColor(14);
+                            break;
+                        case "gray":
+                        case "grey":
+                            player.RpcSetColor(15);
+                            break;
+                        case "tan":
+                            player.RpcSetColor(16);
+                            break;
+                        case "coral":
+                            player.RpcSetColor(17);
+                            break;
+                        case "fortegreen":
+                            if (Options.EnableFortegreen.GetBool() || (Options.CurrentGamemode == Gamemodes.PaintBattle && Main.GameStarted))
+                                player.RpcSetColor(18);
+                            break;
+                        default:
+                            if (byte.Parse(subArgs) < 18 || Options.EnableFortegreen.GetBool() || (Options.CurrentGamemode == Gamemodes.PaintBattle && Main.GameStarted))
+                                player.RpcSetColor(byte.Parse(subArgs));  
+                            break;
+                    }        
                     break;
                 case "/name":
                     canceled = true;
@@ -1197,10 +1347,13 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                     break;
                                 case "paintbattle":
-                                    player.RpcSendMessage("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                    player.RpcSendMessage("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
                                     player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                    break;
+                                case "zombies":
+                                    player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -1239,10 +1392,13 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                             break;
                                         case Gamemodes.PaintBattle:
-                                            player.RpcSendMessage("Paint Battle: Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                            player.RpcSendMessage("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
                                             player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                            break;
+                                        case Gamemodes.Zombies:
+                                            player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                             break;
                                     }
                                     if (Options.RandomSpawn.GetBool())
@@ -1501,9 +1657,22 @@ namespace MoreGamemodes
                             break;
                         case Gamemodes.KillOrDie:
                             message = "Gamemode: Kill or die\n\n";
-                            message += "Teleport after round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
-                            message += "Time to kill: " + Options.TimeToKill.GetInt() + "%\n";
+                            message += "Teleport After Round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Killer Blind Time: " + Options.KillerBlindTime.GetFloat() + "s\n";
+                            message += "Time To Kill: " + Options.TimeToKill.GetInt() + "%\n";
+                            break;
+                        case Gamemodes.Zombies:
+                            message = "Gamemode: Zombies\n\n";
+                            message += "Zombie Kills Turn Into Zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombie Speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
+                            message += "Zombie Vision: " + Options.ZombieVision.GetFloat() + "x\n";
+                            message += "Can Kill Zombies After Tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
+                            if (Options.CanKillZombiesAfterTasks.GetBool())
+                            {
+                                message += "Number Of Kills: " + Options.NumberOfKills.GetInt() + "\n";
+                            }
+                            message += "Zombie Blind Time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
+                            message += "Tracking Zombies Mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
                             break;
                     }
                     player.RpcSendMessage(message, "Options");
@@ -1565,7 +1734,7 @@ namespace MoreGamemodes
                 case "/commands":
                 case "/cm":
                     canceled = true;
-                    player.RpcSendMessage("Commands:\n/color COLOR_ID - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n/now - show active settings\n" +
+                    player.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n/now - show active settings\n" +
                         "/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/lastresult - show last game result", "Commands");
                     break;
                 case "/lastresult":
@@ -1719,7 +1888,6 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost || Main.MessagesToSend.Count < 1 || (Main.MessagesToSend[0].Item2 == byte.MaxValue && 1f > __instance.timeSinceLastMessage)) return;
             var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
-            if (player.AmOwner) 
             if (player == null) return;
             (string msg, byte sendTo, string title) = Main.MessagesToSend[0];
             Main.MessagesToSend.RemoveAt(0);
@@ -1755,7 +1923,7 @@ namespace MoreGamemodes
                                 .EndRpc();
                             writer.EndMessage();
                             writer.SendMessage();
-                        }, 0.01f, "Send Message");
+                        }, 0f, "Send Message");
                     }
                 }
             }

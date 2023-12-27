@@ -84,10 +84,14 @@ namespace MoreGamemodes
                 {
                     pc.Data.IsDead = false;
                     pc.RpcResetAbilityCooldown();
-                    pc.RpcShapeshift(pc, false);
                 }
                 Utils.SendGameData();
             }, 6f, "Alive Dead Role");
+            new LateTask(() =>
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    pc.RpcShapeshift(pc, false);
+            }, 7f, "Fix Pets");
             GameManager.Instance.RpcSetPaintTime(Options.PaintingTime.GetInt() + 5);
             var rand = new System.Random();
             GameManager.Instance.RpcSetTheme(Main.PaintBattleThemes[rand.Next(0, Main.PaintBattleThemes.Count)]);
@@ -96,10 +100,10 @@ namespace MoreGamemodes
 
         public override void OnPet(PlayerControl pc)
         {
-            if (PaintTime > 0f && Vector3.Distance(pc.transform.position, pc.GetPaintBattleLocation()) < 5f && Main.Timer >= 6f && CreateBodyCooldown[pc.PlayerId] <= 0f)
+            if (PaintTime > 0f && Vector2.Distance(pc.transform.position, pc.GetPaintBattleLocation()) < 5f && Main.Timer >= 6f && CreateBodyCooldown[pc.PlayerId] <= 0f)
             {
                 CreateBodyCooldown[pc.PlayerId] = 0.5f;
-                Utils.CreateDeadBody(pc.transform.position, (byte)pc.CurrentOutfit.ColorId);
+                Utils.RpcCreateDeadBody(pc.transform.position, (byte)pc.CurrentOutfit.ColorId, PlayerControl.LocalPlayer);
             }
         }
 
@@ -128,7 +132,7 @@ namespace MoreGamemodes
                     {
                         CreateBodyCooldown[pc.PlayerId] = 0f;
                     }
-                    if (Vector3.Distance(pc.transform.position, pc.GetPaintBattleLocation()) > 5f)
+                    if (Vector2.Distance(pc.transform.position, pc.GetPaintBattleLocation()) > 5f)
                         pc.RpcTeleport(pc.GetPaintBattleLocation());
                 }
                 if (PaintTime < 0f)
@@ -145,7 +149,7 @@ namespace MoreGamemodes
                 }
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Vector3.Distance(pc.transform.position, Utils.GetPlayerById(VotingPlayerId).GetPaintBattleLocation()) > 5f)
+                    if (Vector2.Distance(pc.transform.position, Utils.GetPlayerById(VotingPlayerId).GetPaintBattleLocation()) > 5f)
                         pc.RpcTeleport(Utils.GetPlayerById(VotingPlayerId).GetPaintBattleLocation());
                 }
                 PaintBattleVotingTime -= Time.fixedDeltaTime;
@@ -175,6 +179,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.PaintBattle;
             PetAction = true;
+            DisableTasks = true;
             PaintTime = 0f;
             VotingPlayerId = 0;
             PaintBattleVotingTime = 0f;

@@ -56,7 +56,7 @@ namespace MoreGamemodes
             }
             if (Options.CurrentGamemode == Gamemodes.PaintBattle)
                 GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-            GameManager.Instance.RpcSyncCustomOptions();
+            OptionItem.SyncAllOptions();
             Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
         }
     }

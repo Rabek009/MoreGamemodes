@@ -6,6 +6,10 @@ using Hazel;
 using UnityEngine;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
+using System;
+using System.IO;
+using System.Reflection;
+using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
@@ -344,20 +348,15 @@ namespace MoreGamemodes
             {
                 if (pc.Data.Role.Role == RoleTypes.Shapeshifter)
                     pc.RpcShapeshift(pc, false);
+                pc.RpcSetOutfit(15, "", "", "pet_test", "");
             }
-            CustomRpcSender sender = CustomRpcSender.Create("Camouflage", SendOption.None);
-            foreach (var pc in PlayerControl.AllPlayerControls) 
-                sender.RpcSetOutfit(pc, 15, "", "", "pet_test", "");
-            sender.SendMessage();       
         }
         
         public static void RevertCamouflage()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            CustomRpcSender sender = CustomRpcSender.Create("RevertCamouflage", SendOption.None);
             foreach (var pc in PlayerControl.AllPlayerControls)
-                sender.RpcSetOutfit(pc, Main.StandardColors[pc.PlayerId], Main.StandardHats[pc.PlayerId], Main.StandardSkins[pc.PlayerId], Main.StandardPets[pc.PlayerId], Main.StandardVisors[pc.PlayerId]);
-            sender.SendMessage();
+                pc.RpcSetOutfit(Main.StandardColors[pc.PlayerId], Main.StandardHats[pc.PlayerId], Main.StandardSkins[pc.PlayerId], Main.StandardPets[pc.PlayerId], Main.StandardVisors[pc.PlayerId]);
         }
 
         public static void SendChat(string message, string title)
@@ -369,8 +368,19 @@ namespace MoreGamemodes
         public static void SendSpam(string message)
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
+            if (player == null) return;
             for (int i = 1; i <= 20; ++i)
-                SendChat(message, "Spam");
+            {
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, message);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc == PlayerControl.LocalPlayer) continue;
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None, pc.GetClientId());
+                    writer.Write(message);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
+                }
+            }
         }
 
         public static byte[] ToBytes(this IGameOptions gameOptions)
@@ -392,7 +402,7 @@ namespace MoreGamemodes
                 writer.StartMessage(1);
                 {
                     writer.WritePacked(GameData.Instance.NetId);
-                    GameData.Instance.Serialize(writer, false);
+                    GameData.Instance.Serialize(writer, true);
                 }
                 writer.EndMessage();
             }
@@ -402,41 +412,86 @@ namespace MoreGamemodes
             writer.Recycle();
         }
 
-        public static void CreateDeadBody(Vector2 position, byte colorId)
-        {       
-            if (!AmongUsClient.Instance.AmHost) return;
-            var baseColorId = PlayerControl.LocalPlayer.CurrentOutfit.ColorId;
-            var basePos = PlayerControl.LocalPlayer.transform.position;
+        public static void CreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent)
+        {
+            var baseColorId = PlayerControl.LocalPlayer.Data.DefaultOutfit.ColorId;
+            PlayerControl.LocalPlayer.Data.DefaultOutfit.ColorId = colorId;
+            DeadBody deadBody = Object.Instantiate(GameManager.Instance.DeadBodyPrefab);
+		    deadBody.enabled = false;
+		    deadBody.ParentId = deadBodyParent.PlayerId;
+            foreach (SpriteRenderer b in deadBody.bodyRenderers)
+            {
+                PlayerControl.LocalPlayer.SetPlayerMaterialColors(b);
+            }
+		    PlayerControl.LocalPlayer.SetPlayerMaterialColors(deadBody.bloodSplatter);
+		    Vector3 vector = position + PlayerControl.LocalPlayer.KillAnimations[0].BodyOffset;
+		    vector.z = vector.y / 1000f;
+		    deadBody.transform.position = vector;
+            deadBody.enabled = true;
+            PlayerControl.LocalPlayer.Data.DefaultOutfit.ColorId = baseColorId;
+        }
 
-            Main.IsCreatingBody = true;
-            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.None);
-            PlayerControl.LocalPlayer.SetColor(colorId);
+        public static void RpcCreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent)
+        {
+            if (deadBodyParent == null || !Main.GameStarted) return;
+            CreateDeadBody(position, colorId, deadBodyParent);
+            new LateTask(() =>{
+                PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 10;
+                PlayerControl.LocalPlayer.NetTransform.sendQueue.Enqueue(PlayerControl.LocalPlayer.NetTransform.body.position);
+				PlayerControl.LocalPlayer.NetTransform.SetDirtyBit(2U);
+            }, 0.1f);
+            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.Reliable);
+            MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
-            sender.AutoStartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetColor)
+            sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
                 .Write(colorId)
                 .EndRpc();
-            PlayerControl.LocalPlayer.NetTransform.SnapTo(position);
-            sender.AutoStartRpc(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+            var sId = PlayerControl.LocalPlayer.NetTransform.lastSequenceId + 5;
+            PlayerControl.LocalPlayer.NetTransform.lastSequenceId = (ushort)sId;
+            sender.StartRpc(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(position)
-                .Write(PlayerControl.LocalPlayer.NetTransform.lastSequenceId)
+                .Write((ushort)sId)
                 .EndRpc();
-            PlayerControl.LocalPlayer.MurderPlayer(PlayerControl.LocalPlayer, MurderResultFlags.Succeeded);
-            sender.AutoStartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.MurderPlayer)
+            if (deadBodyParent != PlayerControl.LocalPlayer)
+            {
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.NetId);
+                    writer.Write(deadBodyParent.PlayerId);
+                }
+                writer.EndMessage();
+            }
+            sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.MurderPlayer)
                 .WriteNetObject(PlayerControl.LocalPlayer)
                 .Write((int)MurderResultFlags.Succeeded)
                 .EndRpc();
-            PlayerControl.LocalPlayer.NetTransform.SnapTo(basePos);
-            sender.AutoStartRpc(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(basePos)
-                .Write(PlayerControl.LocalPlayer.NetTransform.lastSequenceId)
+            if (deadBodyParent != PlayerControl.LocalPlayer)
+            {
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.NetId);
+                    writer.Write(PlayerControl.LocalPlayer.PlayerId);
+                } 
+                writer.EndMessage();
+            }
+            sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
+                .Write(deadBodyParent.CurrentOutfit.ColorId)
                 .EndRpc();
-            PlayerControl.LocalPlayer.SetColor(baseColorId);
-            sender.AutoStartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetColor)
-                .Write(baseColorId)
+            GameData.PlayerInfo playerInfo = GameData.Instance.GetPlayerById(PlayerControl.LocalPlayer.PlayerId);
+            writer.StartMessage(1);
+            {
+                writer.WritePacked(GameData.Instance.NetId);
+                writer.StartMessage(playerInfo.PlayerId);
+                playerInfo.Serialize(writer);
+                writer.EndMessage();
+            }
+            writer.EndMessage();
+            sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.Shapeshift)
+                .WriteNetObject(GetPlayerById(Main.AllShapeshifts[PlayerControl.LocalPlayer.PlayerId]))
+                .Write(false)
                 .EndRpc();
             sender.EndMessage();
             sender.SendMessage();
-            Main.IsCreatingBody = false;
         }
 
         public static string GetArrow(Vector3 from, Vector3 to)
@@ -475,13 +530,13 @@ namespace MoreGamemodes
             switch (tab)
             {
                 case TabGroup.MainSettings:
-                    return HudManager.Instance.UseButton.graphic.sprite;
+                    return LoadSprite("MoreGamemodes.Resources.TabIcon_MainSettings.png", 100f);
                 case TabGroup.GamemodeSettings:
-                    return HudManager.Instance.KillButton.graphic.sprite;
+                    return LoadSprite("MoreGamemodes.Resources.TabIcon_GamemodeSettings.png", 100f);
                 case TabGroup.AdditionalGamemodes:
-                    return HudManager.Instance.ImpostorVentButton.graphic.sprite;
+                    return LoadSprite("MoreGamemodes.Resources.TabIcon_AdditionalGamemodes.png", 100f);
                 default:
-                    return new Sprite();
+                    return null;
             }
         }
 
@@ -553,10 +608,38 @@ namespace MoreGamemodes
         public static void SetChatVisible()
         {
             if (AmongUsClient.Instance.GameState != AmongUsClient.GameStates.Started) return;
+            if (GameManager.Instance.LogicFlow.IsGameOverDueToDeath()) return;
             MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
             MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
             AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);
             MeetingHud.Instance.RpcClose();
+        }
+
+        public static string TrackingZombiesModeString(TrackingZombiesModes trackingZombiesMode)
+        {
+            switch (trackingZombiesMode)
+            {
+                case TrackingZombiesModes.None:
+                    return "None";
+                case TrackingZombiesModes.Nearest:
+                    return "Nearest";
+                case TrackingZombiesModes.Every:
+                    return "All";
+                default:
+                    return "INVALID TRACKING ZOMBIES MODE";
+            }
+        }
+
+        public static Sprite LoadSprite(string path, float pixelsPerUnit = 1f)
+        {
+            Sprite sprite = null;
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
+            var texture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+            using MemoryStream ms = new();
+            stream.CopyTo(ms);
+            ImageConversion.LoadImage(texture, ms.ToArray());
+            sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), new(0.5f, 0.5f), pixelsPerUnit);
+            return sprite;
         }
     }
 }

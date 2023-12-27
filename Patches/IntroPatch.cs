@@ -8,7 +8,7 @@ namespace MoreGamemodes
         public static void Prefix(IntroCutscene __instance, ref Il2CppSystem.Collections.Generic.List<PlayerControl> teamToDisplay)
         {
             if (Main.GameStarted) return;
-            CustomGamemode.Instance.OnBeginCrewmatePrefix(__instance);
+            teamToDisplay = CustomGamemode.Instance.OnBeginCrewmatePrefix(__instance);
         }
         public static void Postfix(IntroCutscene __instance)
         {

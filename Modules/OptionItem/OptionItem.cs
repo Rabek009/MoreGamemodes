@@ -7,11 +7,9 @@ namespace MoreGamemodes
 {
     public abstract class OptionItem
     {
-        #region static
         public static IReadOnlyList<OptionItem> AllOptions => _allOptions;
         private static List<OptionItem> _allOptions = new();
         public static int CurrentPreset { get; set; }
-        #endregion
 
         public int Id { get; }
         public string Name { get; }
@@ -70,7 +68,7 @@ namespace MoreGamemodes
 
             Children = new();
 
-            AllConfigEntries = new ConfigEntry<int>[5];
+            AllConfigEntries = new ConfigEntry<int>[10];
             if (Id == 0)
             {
                 singleEntry = Main.Instance.Config.Bind("Current Preset", id.ToString(), DefaultValue);
@@ -82,7 +80,7 @@ namespace MoreGamemodes
             }
             else
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     AllConfigEntries[i] = Main.Instance.Config.Bind($"Preset{i + 1}", id.ToString(), DefaultValue);
                 }
@@ -176,7 +174,7 @@ namespace MoreGamemodes
 
         public static void SwitchPreset(int newPreset)
         {
-            CurrentPreset = Math.Clamp(newPreset, 0, 4);
+            CurrentPreset = Math.Clamp(newPreset, 0, 9);
 
             foreach (var op in AllOptions)
                 op.Refresh();

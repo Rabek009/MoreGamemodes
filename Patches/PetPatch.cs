@@ -6,58 +6,42 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.TryPet))]
     class TryPetPatch
     {
-        public static void Prefix(PlayerControl __instance)
+        public static bool Prefix(PlayerControl __instance)
         {
-            if (!(AmongUsClient.Instance.AmHost && AmongUsClient.Instance.AmClient)) return;
-            if (__instance.Data.IsDead || MeetingHud.Instance) return;
-            var cancel = (Options.CurrentGamemode == Gamemodes.RandomItems || Options.CurrentGamemode == Gamemodes.PaintBattle) && Main.GameStarted;
+            if (!AmongUsClient.Instance.AmHost) return true;
+            var cancel = Main.GameStarted && CustomGamemode.Instance != null && CustomGamemode.Instance.PetAction;
+            ExternalRpcPetPatch.Prefix(__instance.MyPhysics, 49, new MessageReader());
             if (cancel)
-                __instance.petting = true;
-            ExternalRpcPetPatch.Prefix(__instance.MyPhysics, 51, new MessageReader());
-        }
-
-        public static void Postfix(PlayerControl __instance)
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            if (__instance.Data.IsDead || MeetingHud.Instance) return;
-            var cancel = (Options.CurrentGamemode == Gamemodes.RandomItems || Options.CurrentGamemode == Gamemodes.PaintBattle) && Main.GameStarted;
-            if (cancel)
-            {
-                __instance.petting = false;
-                if (__instance.AmOwner)
-                    __instance.MyPhysics.RpcCancelPet();
-            }
+                return false;
+            return true;
         }
     }
 
     [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleRpc))]
     class ExternalRpcPetPatch
     {
-        public static void Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
+        public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
         {
-            if (!AmongUsClient.Instance.AmHost) return;
-            if (!Main.GameStarted) return;
-            var rpcType = callId == 51 ? RpcCalls.Pet : (RpcCalls)callId;
-            if (rpcType != RpcCalls.Pet) return;
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (!Main.GameStarted) return true;
+            var rpcType = (RpcCalls)callId;
+            if (rpcType != RpcCalls.Pet) return true;
 
             PlayerControl pc = __instance.myPlayer;
-            if (pc.Data.IsDead || MeetingHud.Instance) return;
+            if (pc.Data.IsDead || MeetingHud.Instance) return true;
             if (PaintBattleGamemode.instance != null)
             {
                 if (PaintBattleGamemode.instance.CreateBodyCooldown[pc.PlayerId] > 0f)
-                    return;
+                    return true;
             }
 
-            if (callId == 51 && CustomGamemode.Instance.PetAction)
-                __instance.CancelPet();
-            if (callId != 51 && CustomGamemode.Instance.PetAction)
+            if (CustomGamemode.Instance.PetAction)
             {
-                __instance.CancelPet();
-                foreach (PlayerControl player in PlayerControl.AllPlayerControls)
-                    AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, 50, SendOption.None, player.GetClientId()));
+                AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, 50, SendOption.None, -1));
+                CustomGamemode.Instance.OnPet(pc);
+                return false;
             }
-
-            CustomGamemode.Instance.OnPet(pc);
+            return true;
         }
     }
 }

@@ -269,6 +269,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.KillOrDie;
             PetAction = false;
+            DisableTasks = true;
             IsKiller = new Dictionary<byte, bool>();
             foreach (var pc in PlayerControl.AllPlayerControls)
                 IsKiller[pc.PlayerId] = false;

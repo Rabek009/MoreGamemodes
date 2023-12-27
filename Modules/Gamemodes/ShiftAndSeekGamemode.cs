@@ -61,7 +61,6 @@ namespace MoreGamemodes
             {
                 __instance.Close();
                 __instance.ShowNormalMap();
-                __instance.taskOverlay.Hide();
             }
         }
 
@@ -118,6 +117,15 @@ namespace MoreGamemodes
             }
         }
 
+        public override void OnIntroDestroy()
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor)
+                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
+            }
+        }
+
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
             if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat() && !Options.SnSImpostorsCanKillDuringBlind.GetBool()) return false;
@@ -166,6 +174,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.ShiftAndSeek;
             PetAction = false;
+            DisableTasks = false;
         }
 
         public static ShiftAndSeekGamemode instance;

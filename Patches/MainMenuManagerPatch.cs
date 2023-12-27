@@ -13,6 +13,20 @@ namespace MoreGamemodes
         private static PassiveButton template;
         private static PassiveButton discordButton;
         private static PassiveButton gitHubButton;
+        public static SpriteRenderer MG_Logo;
+
+        [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.VeryHigh)]
+        public static void StartPriorityPostfix(MainMenuManager __instance)
+        {
+            var rightpanel = __instance.gameModeButtons.transform.parent;
+            var logoObject = new GameObject("titleLogo_TOH");
+            var logoTransform = logoObject.transform;
+            MG_Logo = logoObject.AddComponent<SpriteRenderer>();
+            logoTransform.parent = rightpanel;
+            logoTransform.localPosition = new(0f, 0.15f, 1f);
+            logoTransform.localScale *= 1.2f;
+            MG_Logo.sprite = Utils.LoadSprite("MoreGamemodes.Resources.MoreGamemodes-Logo.png", 400f);
+        }
 
         [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.Normal)]
         public static void StartPostfix(MainMenuManager __instance)
@@ -42,7 +56,6 @@ namespace MoreGamemodes
                     "GitHub");
             }
 
-#if RELEASE
             var howToPlayButton = __instance.howToPlayButton;
             var freeplayButton = howToPlayButton.transform.parent.Find("FreePlayButton");
             if (freeplayButton != null)
@@ -50,7 +63,6 @@ namespace MoreGamemodes
                 freeplayButton.gameObject.SetActive(false);
             }
             howToPlayButton.transform.SetLocalX(0);
-#endif
         }
 
         private static PassiveButton CreateButton(string name, Vector3 localPosition, Color32 normalColor, Color32 hoverColor, Action action, string label, Vector2? scale = null)
@@ -96,6 +108,26 @@ namespace MoreGamemodes
             buttonCollider.offset = new(0f, 0f);
 
             return button;
+        }
+
+        [HarmonyPatch(nameof(MainMenuManager.OpenGameModeMenu))]
+        [HarmonyPatch(nameof(MainMenuManager.OpenAccountMenu))]
+        [HarmonyPatch(nameof(MainMenuManager.OpenCredits))]
+        [HarmonyPostfix]
+        public static void OpenMenuPostfix()
+        {
+            if (MG_Logo != null)
+            {
+                MG_Logo.gameObject.SetActive(false);
+            }
+        }
+        [HarmonyPatch(nameof(MainMenuManager.ResetScreen)), HarmonyPostfix]
+        public static void ResetScreenPostfix()
+        {
+            if (MG_Logo != null)
+            {
+                MG_Logo.gameObject.SetActive(true);
+            }
         }
     }
 }

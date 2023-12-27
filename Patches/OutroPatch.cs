@@ -62,7 +62,7 @@ namespace MoreGamemodes
 			    GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
 			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
 			    {
-                    if (!((Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun || Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie) && playerInfo.Disconnected))
+                    if (!((Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun || Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie || Options.CurrentGamemode == Gamemodes.Zombies) && playerInfo.Disconnected))
                     {
                         TempData.winners.Add(new WinningPlayerData(playerInfo));
                         winners.Add(playerInfo.PlayerId);
@@ -111,6 +111,16 @@ namespace MoreGamemodes
                     case Gamemodes.PaintBattle:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + "\n";
                         break;
+                    case Gamemodes.Zombies:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
+                            lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") +" (";
+                        else if (playerInfo.Role.IsImpostor)
+                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") +" (";
+                        else
+                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") +" (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
                 }
             }
             for (int i = 0; i < GameData.Instance.PlayerCount; ++i)
@@ -154,6 +164,16 @@ namespace MoreGamemodes
                     case Gamemodes.PaintBattle:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + "\n";
                         break;
+                    case Gamemodes.Zombies:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
+                            lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") +" (";
+                        else if (playerInfo.Role.IsImpostor)
+                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") +" (";
+                        else
+                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") +" (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        break;
                 }
             }
             Main.LastResult = lastResult;
@@ -179,20 +199,19 @@ namespace MoreGamemodes
             SpeedrunGamemode.instance = null;
             PaintBattleGamemode.instance = null;
             KillOrDieGamemode.instance = null;
+            ZombiesGamemode.instance = null;
             if (!AmongUsClient.Instance.AmHost) return;
             Main.AllShapeshifts = new Dictionary<byte, byte>();
             Main.IsMeeting = false;    
-            GameManager.Instance.RpcSetHackTimer(0);
             Main.RealOptions.Restore(GameOptionsManager.Instance.currentGameOptions);
             Main.RealOptions = null;
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
-            GameManager.Instance.RpcSetPaintTime(0);
-            Main.IsCreatingBody = false;
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
+            Main.IsModded = new Dictionary<byte, bool>();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
                 var hours = (int)Main.Timer / 3600;

@@ -78,9 +78,14 @@ namespace MoreGamemodes
             
         }
 
-        public virtual void OnGameStarted()
+        public virtual void OnVotingComplete()
         {
+            
+        }
 
+        public virtual bool OnCastVote(MeetingHud __instance, byte srcPlayerId, byte suspectPlayerId)
+        {
+            return true;
         }
 
         public virtual void OnSelectRolesPrefix()
@@ -156,5 +161,6 @@ namespace MoreGamemodes
         public static CustomGamemode Instance;
         public Gamemodes Gamemode;
         public bool PetAction;
+        public bool DisableTasks;
     }
 }

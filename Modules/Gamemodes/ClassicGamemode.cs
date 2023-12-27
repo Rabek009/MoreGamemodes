@@ -6,6 +6,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.Classic;
             PetAction = false;
+            DisableTasks = false;
         }
 
         public static ClassicGamemode instance;

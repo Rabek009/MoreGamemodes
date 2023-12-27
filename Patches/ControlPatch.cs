@@ -8,13 +8,13 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(ControllerManager), nameof(ControllerManager.Update))]
     class ControllerManagerUpdatePatch
     {
-        static readonly System.Random random = new();
         public static void Postfix(ControllerManager __instance)
         {
             if (Input.GetKeyDown(KeyCode.LeftControl) && !Main.GameStarted)
                 PlayerControl.LocalPlayer.GetComponent<CircleCollider2D>().enabled = !PlayerControl.LocalPlayer.gameObject.GetComponent<CircleCollider2D>().enabled;
 
             if (!AmongUsClient.Instance.AmHost) return;
+            
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.L, KeyCode.LeftShift }) && Main.GameStarted)
             {
                 List<byte> winners = new();
@@ -22,6 +22,7 @@ namespace MoreGamemodes
                     winners.Add(pc.PlayerId);
                 CheckEndCriteriaPatch.StartEndGame(GameOverReason.HumansByVote, winners);
             }
+
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead)
             {
                 PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Command);

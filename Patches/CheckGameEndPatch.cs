@@ -51,8 +51,15 @@ namespace MoreGamemodes
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForBattleRoyale()) return false;          
             }
+            else if (Options.CurrentGamemode == Gamemodes.Zombies)
+            {
+                if (CheckAndEndGameForZombiesImpostorWin()) return false;
+                if (CheckAndEndGameForZombiesCrewmateWin()) return false;
+                if (CheckAndEndGameForZombiesTaskWin()) return false;
+            }
             return false;
         }
+
         private static bool CheckAndEndGameForTaskWin()
         {
             if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
@@ -68,6 +75,7 @@ namespace MoreGamemodes
             }
             return false;
         }
+
         private static bool CheckAndEndGameForCrewmateWin()
         {
             var numImpostorAlive = 0;
@@ -179,9 +187,79 @@ namespace MoreGamemodes
             return false;
         }
 
+        private static bool CheckAndEndGameForZombiesImpostorWin()
+        {
+            var numImpostorAlive = 0;
+            List<PlayerControl> AllAlivePlayers = new();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor && !pc.Data.IsDead) ++numImpostorAlive;
+                if (!pc.Data.IsDead && !pc.IsZombie()) AllAlivePlayers.Add(pc);
+            }
+            if (numImpostorAlive * 2 >= AllAlivePlayers.Count)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data.Role.IsImpostor || pc.IsZombie())
+                        winners.Add(pc.PlayerId);
+                }
+                var reason = GameOverReason.ImpostorByKill;
+                if (TempData.LastDeathReason == DeathReason.Exile)
+                    reason = GameOverReason.ImpostorByVote;
+                if (TempData.LastDeathReason == DeathReason.Disconnect)
+                    reason = GameOverReason.HumansDisconnect;
+                StartEndGame(reason, winners);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForZombiesCrewmateWin()
+        {
+            var numImpostorAlive = 0;
+            List<PlayerControl> AllAlivePlayers = new();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor && !pc.Data.IsDead) ++numImpostorAlive;
+                if (!pc.Data.IsDead && !pc.IsZombie()) AllAlivePlayers.Add(pc);
+            }
+            if (numImpostorAlive == 0)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (!pc.Data.Role.IsImpostor && !pc.IsZombie())
+                        winners.Add(pc.PlayerId);
+                }
+                var reason = GameOverReason.HumansByVote;
+                if (TempData.LastDeathReason == DeathReason.Disconnect)
+                    reason = GameOverReason.ImpostorDisconnect;
+                StartEndGame(reason, winners);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForZombiesTaskWin()
+        {
+            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (!pc.Data.Role.IsImpostor && !pc.IsZombie())
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.HumansByTask, winners);
+                return true;
+            }
+            return false;
+        }
+
         public static void StartEndGame(GameOverReason reason, List<byte> winners)
         {
-            var sender = new CustomRpcSender("EndGameSender", SendOption.Reliable, true);
+            var sender = new CustomRpcSender("EndGameSender", SendOption.Reliable);
             sender.StartMessage(-1);
             MessageWriter writer = sender.stream;
 
@@ -230,6 +308,7 @@ namespace MoreGamemodes
                     else
                         SetGhostRole(ToGhostImpostor: true);
                 }
+
                 void SetGhostRole(bool ToGhostImpostor)
                 {
                     if (!pc.Data.IsDead) ReviveReqiredPlayerIds.Add(pc.PlayerId);
@@ -245,7 +324,7 @@ namespace MoreGamemodes
                         sender.StartRpc(pc.NetId, RpcCalls.SetRole)
                             .Write((ushort)RoleTypes.CrewmateGhost)
                             .EndRpc();
-                        pc.SetRole(RoleTypes.Crewmate);
+                        pc.SetRole(RoleTypes.CrewmateGhost);
                     }
                 }
             }

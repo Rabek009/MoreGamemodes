@@ -41,11 +41,6 @@ namespace MoreGamemodes
             __instance.ShowNormalMap();
         }
 
-        public override void OnShowNormalMap(MapBehaviour __instance)
-        {
-            __instance.taskOverlay.Hide();
-        }
-
         public override void OnBeginImpostor(IntroCutscene __instance)
         {
             __instance.TeamTitle.text = "Battle Royale";
@@ -98,14 +93,13 @@ namespace MoreGamemodes
             {
                 --Lives[target.PlayerId];
                 killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
+                return false;
             }
             else
             {
                 Lives[target.PlayerId] = 0;
-                killer.RpcMurderPlayer(target, true);
-                new LateTask(() => killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown)), 0.01f, "Set Cooldown");
+                return true;
             }
-            return false;
         }
 
         public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
@@ -128,6 +122,7 @@ namespace MoreGamemodes
         {
             Gamemode = Gamemodes.BattleRoyale;
             PetAction = false;
+            DisableTasks = true;
             Lives = new Dictionary<byte, int>();
             foreach (var pc in PlayerControl.AllPlayerControls)
                 Lives[pc.PlayerId] = Options.Lives.GetInt();

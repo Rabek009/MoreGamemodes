@@ -1,0 +1,19 @@
+name: Assign self to Pull Request
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign_self_to_pull_request:
+    name: Assign self to Pull Request
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      NUMBER: ${{ github.event.pull_request.number }}
+      ASSIGNEE: ${{ github.event.pull_request.user.login }}
+    steps:
+      - name: Assign self to pull request
+        run: gh pr edit $NUMBER --add-assignee $ASSIGNEE

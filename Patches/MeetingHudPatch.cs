@@ -47,6 +47,17 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return;
             if (Options.MidGameChat.GetBool())
                 new LateTask(() => Utils.SetChatVisible(), 8f, "Set Chat Visible");
+            CustomGamemode.Instance.OnVotingComplete();
+        }
+    }
+
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.CastVote))]
+    class CastVotePatch
+    {
+        public static bool Prefix(MeetingHud __instance, [HarmonyArgument(0)] byte srcPlayerId, [HarmonyArgument(0)] byte suspectPlayerId)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            return CustomGamemode.Instance.OnCastVote(__instance, srcPlayerId, suspectPlayerId);
         }
     }
 }
