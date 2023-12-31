@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -15,21 +16,21 @@ namespace MoreGamemodes
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Crewmate)
-                __instance.FilterText.text = "Hider";
+                __instance.FilterText.text = GetString("Hider");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Scientist)
-                __instance.FilterText.text = "Scientist";
+                __instance.FilterText.text = GetString("Scientist");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Engineer)
-                __instance.FilterText.text = "Engineer";
+                __instance.FilterText.text = GetString("Engineer");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.CrewmateGhost)
-                __instance.FilterText.text = "Hider Ghost";
+                __instance.FilterText.text = GetString("HiderGhost");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.GuardianAngel)
-                __instance.FilterText.text = "Guardian Angel";
+                __instance.FilterText.text = GetString("GuardianAngel");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Impostor)
-                __instance.FilterText.text = "Seeker";
+                __instance.FilterText.text = GetString("Seeker");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Shapeshifter)
-                __instance.FilterText.text = "Shapeshifter";
+                __instance.FilterText.text = GetString("Shapeshifter");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.ImpostorGhost)
-                __instance.FilterText.text = "Seeker Ghost";
+                __instance.FilterText.text = GetString("SeekerGhost");
         }
         
         public override void OnHudUpate(HudManager __instance)
@@ -56,9 +57,9 @@ namespace MoreGamemodes
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.Role.IsImpostor)
-                __instance.taskText.text = Utils.ColorString(Color.red, "Seeker:\nKill all hiders.");
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("SeekerGameplay1"));
             else if (!PlayerControl.LocalPlayer.Data.IsDead)
-                __instance.taskText.text = "Hider:\nDo your tasks and survive.\n\n" + str;
+                __instance.taskText.text = GetString("HiderGameplay1") + str;
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
@@ -84,26 +85,26 @@ namespace MoreGamemodes
 
         public override void OnBeginCrewmatePostfix(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Hider";
+            __instance.TeamTitle.text = GetString("Hider");
             __instance.ImpostorText.text = "";
         }
 
         public override void OnBeginImpostor(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Seeker";
+            __instance.TeamTitle.text = GetString("Seeker");
         }
 
         public override void OnShowRole(IntroCutscene __instance)
         {
             if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Crewmate)
             {
-                __instance.RoleText.text = "Hider";
-                __instance.RoleBlurbText.text = "Do your tasks and survive";
+                __instance.RoleText.text = GetString("Hider");
+                __instance.RoleBlurbText.text = GetString("HiderGameplay2");
             }
             else if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Impostor)
             {
-                __instance.RoleText.text = "Seeker";
-                __instance.RoleBlurbText.text = "Kill all hiders";
+                __instance.RoleText.text = GetString("Seeker");
+                __instance.RoleBlurbText.text = GetString("SeekerGameplay2");
             }
         }
 

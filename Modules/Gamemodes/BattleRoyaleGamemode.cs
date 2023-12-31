@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -21,18 +22,18 @@ namespace MoreGamemodes
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.IsDead)
-                __instance.FilterText.text = "Ghost";
+                __instance.FilterText.text = GetString("Ghost");
             else
-                __instance.FilterText.text = "Player";
+                __instance.FilterText.text = GetString("Player");
         }
 
         public override void OnSetTaskText(TaskPanelBehaviour __instance, string str)
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.IsDead)
-                __instance.taskText.text = Utils.ColorString(Color.red, "You're dead. Enjoy the chaos.");
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("YouDead"));
             else
-                __instance.taskText.text = Utils.ColorString(Color.red, "Player:\nKill everyone and survive.");
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("KillAllPlayers1"));
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
@@ -43,13 +44,13 @@ namespace MoreGamemodes
 
         public override void OnBeginImpostor(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Battle Royale";
+            __instance.TeamTitle.text = GetString("BattleRoyale");
         }
 
         public override void OnShowRole(IntroCutscene __instance)
         {
-            __instance.RoleText.text = "Player";
-            __instance.RoleBlurbText.text = "Kill everyone and survive";
+            __instance.RoleText.text = GetString("Player");
+            __instance.RoleBlurbText.text = GetString("KillAllPlayers2");
             __instance.YouAreText.color = Color.clear;
         }
 

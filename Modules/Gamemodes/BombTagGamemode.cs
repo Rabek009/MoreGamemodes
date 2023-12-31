@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -16,11 +17,11 @@ namespace MoreGamemodes
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.IsDead)
-                __instance.FilterText.text = "Ghost";
+                __instance.FilterText.text = GetString("Ghost");
             else if (__instance.HauntTarget.HasBomb())
-                __instance.FilterText.text = "Has Bomb";
+                __instance.FilterText.text = GetString("HasBomb");
             else
-               __instance.FilterText.text = "Hasn't Bomb"; 
+               __instance.FilterText.text = GetString("HasNotBomb"); 
         }
 
         public override void OnHudUpate(HudManager __instance)
@@ -52,11 +53,11 @@ namespace MoreGamemodes
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.IsDead)
-                __instance.taskText.text = Utils.ColorString(Color.red, "You're dead. Enjoy the chaos.");
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("YouDead"));
             else if (player.HasBomb())
-                __instance.taskText.text = Utils.ColorString(Color.black, "You have bomb!\nGive your bomb away.");
+                __instance.taskText.text = Utils.ColorString(Color.black, GetString("YouHaveBomb"));
             else
-                __instance.taskText.text = Utils.ColorString(Color.green, "You haven't bomb!\nDon't get bomb.");
+                __instance.taskText.text = Utils.ColorString(Color.green, GetString("YouHaveNotBomb"));
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
@@ -75,7 +76,7 @@ namespace MoreGamemodes
 
         public override void OnBeginImpostor(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Bomb Tag";
+            __instance.TeamTitle.text = GetString("BombTag");
             __instance.TeamTitle.color = Color.green;
             __instance.BackgroundBar.material.color = Color.green;
         }
@@ -84,17 +85,17 @@ namespace MoreGamemodes
         {
             if (PlayerControl.LocalPlayer.HasBomb())
             {
-                __instance.RoleText.text = "You have bomb";
+                __instance.RoleText.text = GetString("HaveBomb");
                 __instance.RoleText.color = Color.gray;
-                __instance.RoleBlurbText.text = "Give your bomb away";
+                __instance.RoleBlurbText.text = GetString("GiveBomb");
                 __instance.RoleBlurbText.color = Color.gray;
                 __instance.YouAreText.color = Color.clear;
             }
             else
             {
-                __instance.RoleText.text = "You haven't bomb";
+                __instance.RoleText.text = GetString("HaveNotBomb");
                 __instance.RoleText.color = Color.green;
-                __instance.RoleBlurbText.text = "Don't get bomb";
+                __instance.RoleBlurbText.text = GetString("NotGetBomb");
                 __instance.RoleBlurbText.color = Color.green;
                 __instance.YouAreText.color = Color.clear;
             }

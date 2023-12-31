@@ -1,5 +1,6 @@
 using Il2CppSystem.Collections.Generic;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -13,17 +14,17 @@ namespace MoreGamemodes
         public virtual void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Scientist)
-                __instance.FilterText.text = "Scientist";
+                __instance.FilterText.text = GetString("Scientist");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Engineer)
-                __instance.FilterText.text = "Engineer";
+                __instance.FilterText.text = GetString("Engineer");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.CrewmateGhost)
-                __instance.FilterText.text = "Crewmate Ghost";
+                __instance.FilterText.text = GetString("CrewmateGhost");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.GuardianAngel)
-                __instance.FilterText.text = "Guardian Angel";
+                __instance.FilterText.text = GetString("GuardianAngel");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Shapeshifter)
-                __instance.FilterText.text = "Shapeshifter";
+                __instance.FilterText.text = GetString("Shapeshifter");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.ImpostorGhost)
-                __instance.FilterText.text = "Impostor Ghost";
+                __instance.FilterText.text = GetString("ImpostorGhost");
         }
 
         public virtual void OnHudUpate(HudManager __instance)
