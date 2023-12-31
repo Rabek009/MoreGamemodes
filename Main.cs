@@ -12,11 +12,18 @@ namespace MoreGamemodes;
 [BepInProcess("Among Us.exe")]
 public partial class Main : BasePlugin
 {
+    // Translator
+    public static BepInEx.Logging.ManualLogSource Logger;
+    public const string DebugKeyHash = "c0fd562955ba56af3ae20d7ec9e64c664f0facecef4b3e366e109306adeae29d";
+    public const string DebugKeySalt = "59687b";
+    public static ConfigEntry<string> DebugKeyInput { get; private set; }
+
     public Harmony Harmony { get; } = new(Id);
 
     public ConfigEntry<string> ConfigName { get; private set; }
 
     public static BasePlugin Instance;
+    //Preset Name Options
     public static ConfigEntry<string> Preset1 { get; private set; }
     public static ConfigEntry<string> Preset2 { get; private set; }
     public static ConfigEntry<string> Preset3 { get; private set; }
@@ -27,6 +34,10 @@ public partial class Main : BasePlugin
     public static ConfigEntry<string> Preset8 { get; private set; }
     public static ConfigEntry<string> Preset9 { get; private set; }
     public static ConfigEntry<string> Preset10 { get; private set; }
+    //Other Configs
+    public static ConfigEntry<string> WebhookURL { get; private set; }
+    public static HashAuth DebugKeyAuth { get; private set; }
+    
     public static bool GameStarted;
     public static float Timer;
 
@@ -65,6 +76,13 @@ public partial class Main : BasePlugin
         Preset8 = Config.Bind("Preset Name Options", "Preset8", "Preset 8");
         Preset9 = Config.Bind("Preset Name Options", "Preset9", "Preset 9");
         Preset10 = Config.Bind("Preset Name Options", "Preset10", "Preset 10");
+        WebhookURL = Config.Bind("Other", "WebhookURL", "none");
+
+        // 認証関連-初期化
+        DebugKeyAuth = new HashAuth(DebugKeyHash, DebugKeySalt);
+
+        // 認証関連-認証
+        DebugModeManager.Auth(DebugKeyAuth, DebugKeyInput.Value);
 
         CustomGamemode.Instance = null;
         ClassicGamemode.instance = null;
