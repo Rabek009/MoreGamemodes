@@ -1,5 +1,6 @@
 using UnityEngine;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -11,7 +12,7 @@ namespace MoreGamemodes
             __instance.ReportButton.SetDisabled();
             __instance.ReportButton.ToggleVisible(false);
             __instance.PetButton.OverrideText("Paint");
-            __instance.AbilityButton.OverrideText("Remaining Time");
+            __instance.AbilityButton.OverrideText("RemainingTime");
             if (PaintTime == 0f)
             {
                 __instance.PetButton.SetDisabled();
@@ -23,13 +24,13 @@ namespace MoreGamemodes
 
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
-            __instance.FilterText.text = "Player";
+            __instance.FilterText.text = GetString("Player");
         }
 
         public override void OnSetTaskText(TaskPanelBehaviour __instance, string str)
         {
             var player = PlayerControl.LocalPlayer;
-            __instance.taskText.text = Utils.ColorString(Color.gray, "Painter:\nPaint something in theme.\nThe theme is " + Theme + ".");
+            __instance.taskText.text = Utils.ColorString(Color.gray, GetString("PainterGameplay1" + Theme + "."));
         }
 
         public override void OnShowNormalMap(MapBehaviour __instance)
@@ -46,7 +47,7 @@ namespace MoreGamemodes
 
         public override void OnBeginCrewmatePostfix(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Painter";
+            __instance.TeamTitle.text = GetString("Painter");
             __instance.TeamTitle.color = Color.gray;
             __instance.BackgroundBar.material.color = Color.gray;
             __instance.ImpostorText.text = "";
@@ -54,9 +55,9 @@ namespace MoreGamemodes
 
         public override void OnShowRole(IntroCutscene __instance)
         {
-            __instance.RoleText.text = "Painter";
+            __instance.RoleText.text = GetString("Painter");
             __instance.RoleText.color = Color.gray;
-            __instance.RoleBlurbText.text = "Paint something in theme.";
+            __instance.RoleBlurbText.text = GetString("PainterGameplay2");
             __instance.RoleBlurbText.color = Color.gray;
             __instance.YouAreText.color = Color.gray;
         }

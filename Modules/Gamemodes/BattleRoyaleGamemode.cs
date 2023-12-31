@@ -33,7 +33,7 @@ namespace MoreGamemodes
             if (player.Data.IsDead)
                 __instance.taskText.text = Utils.ColorString(Color.red, GetString("YouDead"));
             else
-                __instance.taskText.text = Utils.ColorString(Color.red, GetString("KillAllPlayers1"));
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("PlayerGameplay1"));
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
@@ -50,7 +50,7 @@ namespace MoreGamemodes
         public override void OnShowRole(IntroCutscene __instance)
         {
             __instance.RoleText.text = GetString("Player");
-            __instance.RoleBlurbText.text = GetString("KillAllPlayers2");
+            __instance.RoleBlurbText.text = GetString("PlayerGameplay2");
             __instance.YouAreText.color = Color.clear;
         }
 

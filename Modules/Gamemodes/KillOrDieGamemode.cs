@@ -50,11 +50,11 @@ namespace MoreGamemodes
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.IsDead)
-                __instance.taskText.text = Utils.ColorString(Color.red, GetString("You're dead. Enjoy the chaos."));
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("YouDead"));
             else if (player.IsKiller())
-                __instance.taskText.text = Utils.ColorString(Color.red, GetString("Killer\nKill someone before timer runs out."));
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("KillerGameplay"));
             else
-                __instance.taskText.text = Utils.ColorString(Color.blue, GetString("Runner\nEscape from the killer."));
+                __instance.taskText.text = Utils.ColorString(Color.blue, GetString("RunnerGameplay"));
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
@@ -70,7 +70,7 @@ namespace MoreGamemodes
 
         public override void OnBeginImpostor(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = GetString("Kill or die");
+            __instance.TeamTitle.text = GetString("KillOrDie");
             __instance.TeamTitle.color = Color.blue;
             __instance.BackgroundBar.material.color = Color.blue;
         }
@@ -89,7 +89,7 @@ namespace MoreGamemodes
             {
                 __instance.RoleText.text = GetString("Survivor");
                 __instance.RoleText.color = Color.blue;
-                __instance.RoleBlurbText.text = GetString("Escape from killer");
+                __instance.RoleBlurbText.text = GetString("EscapeFromKiller");
                 __instance.RoleBlurbText.color = Color.blue;
                 __instance.YouAreText.color = Color.clear;
             }

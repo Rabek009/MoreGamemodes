@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -21,15 +22,15 @@ namespace MoreGamemodes
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.IsDead)
-                __instance.FilterText.text = "Ghost";
+                __instance.FilterText.text = GetString("Ghost");
             else
-                __instance.FilterText.text = "Player";
+                __instance.FilterText.text = GetString("Player");
         }
 
         public override void OnSetTaskText(TaskPanelBehaviour __instance, string str)
         {
             var player = PlayerControl.LocalPlayer;
-            __instance.taskText.text = Utils.ColorString(Color.yellow, "Speedrunner:\nFinish tasks as fast as you can.\n\n") + str;
+            __instance.taskText.text = Utils.ColorString(Color.yellow, GetString("SpeedrunnerGameplay1")) + str;
         }
 
         public override List<PlayerControl> OnBeginCrewmatePrefix(IntroCutscene __instance)
@@ -41,7 +42,7 @@ namespace MoreGamemodes
 
         public override void OnBeginCrewmatePostfix(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Speedrun";
+            __instance.TeamTitle.text = GetString("Speedrun");
             __instance.TeamTitle.color = Color.yellow;
             __instance.BackgroundBar.material.color = Color.yellow;
             __instance.ImpostorText.text = "";
@@ -49,9 +50,9 @@ namespace MoreGamemodes
 
         public override void OnShowRole(IntroCutscene __instance)
         {
-            __instance.RoleText.text = "Speedrunner";
+            __instance.RoleText.text = GetString("Speedrunner");
             __instance.RoleText.color = Color.yellow;
-            __instance.RoleBlurbText.text = "Finish tasks as fast as you can";
+            __instance.RoleBlurbText.text = GetString("SpeedrunnerGameplay2");
             __instance.RoleBlurbText.color = Color.yellow;
             __instance.YouAreText.color = Color.yellow;
         }

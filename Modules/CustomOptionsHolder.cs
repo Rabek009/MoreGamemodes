@@ -32,17 +32,30 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies"
+            "Classic",
+            "HideAndSeek",
+            "ShiftAndSeek",
+            "BombTag",
+            "RandomItems",
+            "BattleRoyale",
+            "Speedrun",
+            "PaintBattle",
+            "KillOrDie",
+            "Zombies"
         };
 
         public static readonly string[] speedrunBodyTypes =
         {
-            "Crewmate", "Engineer", "Ghost"
+            "Crewmate",
+            "Engineer",
+            "Ghost"
         };
 
         public static readonly string[] trackingZombiesModes =
         {
-            "None", "Nearest", "Every"
+            "None",
+            "Nearest",
+            "Every"
         };
 
         //Main Settings

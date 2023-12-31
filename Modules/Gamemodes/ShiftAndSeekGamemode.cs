@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -15,15 +16,15 @@ namespace MoreGamemodes
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Engineer)
-                __instance.FilterText.text = "Hider";
+                __instance.FilterText.text = GetString("Hider");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.CrewmateGhost)
-                __instance.FilterText.text = "Hider Ghost";
+                __instance.FilterText.text = GetString("HiderGhost");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.GuardianAngel)
-                __instance.FilterText.text = "Guardian Angel";
+                __instance.FilterText.text = GetString("GuardianAngel");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Shapeshifter)
-                __instance.FilterText.text = "Shifter";
+                __instance.FilterText.text = GetString("Shifter");
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.ImpostorGhost)
-                __instance.FilterText.text = "Shifter Ghost";
+                __instance.FilterText.text = GetString("ShifterGhost");
         }
 
         public override void OnHudUpate(HudManager __instance)
@@ -50,9 +51,9 @@ namespace MoreGamemodes
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.Role.IsImpostor)
-                __instance.taskText.text = Utils.ColorString(Color.red, "Shifter:\nShift into your victim.");
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("ShifterGameplay1"));
             else if (!PlayerControl.LocalPlayer.Data.IsDead)
-                __instance.taskText.text = "Hider:\nHide in vents and do tasks.\n\n" + str;
+                __instance.taskText.text = GetString("HiderGameplay3") + str;
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
@@ -82,26 +83,26 @@ namespace MoreGamemodes
 
         public override void OnBeginCrewmatePostfix(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Hider";
+            __instance.TeamTitle.text = GetString("Hider");
             __instance.ImpostorText.text = "";
         }
 
         public override void OnBeginImpostor(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Seeker";
+            __instance.TeamTitle.text = GetString("Seeker");
         }
 
         public override void OnShowRole(IntroCutscene __instance)
         {
             if (PlayerControl.LocalPlayer.Data.Role.IsImpostor)
             {
-                __instance.RoleText.text = "Shifter";
-                __instance.RoleBlurbText.text = "Shift into your victim";
+                __instance.RoleText.text = GetString("Shifter");
+                __instance.RoleBlurbText.text = GetString("ShifterGameplay2");
             }
             else
             {
-                __instance.RoleText.text = "Hider";
-                __instance.RoleBlurbText.text = "Hide in vents and do tasks";
+                __instance.RoleText.text = GetString("Hider");
+                __instance.RoleBlurbText.text = GetString("HiderGameplay4");
             }
         }
 

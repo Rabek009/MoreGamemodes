@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -15,17 +16,17 @@ namespace MoreGamemodes
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.IsDead && __instance.HauntTarget.IsZombie())
-                __instance.FilterText.text = "Zombie Ghost";
+                __instance.FilterText.text = GetString("ZombieGhost");
             else if (__instance.HauntTarget.Data.IsDead && __instance.HauntTarget.Data.Role.IsImpostor)
-                __instance.FilterText.text = "Impostor Ghost";
+                __instance.FilterText.text = GetString("ImpostorGhost");
             else if (__instance.HauntTarget.Data.IsDead)
-                __instance.FilterText.text = "Crewmate Ghost";
+                __instance.FilterText.text = GetString("CrewmateGhost");
             else if (__instance.HauntTarget.IsZombie())
-                __instance.FilterText.text = "Zombie";
+                __instance.FilterText.text = GetString("Zombie");
             else if (__instance.HauntTarget.Data.Role.IsImpostor)
-                __instance.FilterText.text = "Impostor";
+                __instance.FilterText.text = GetString("Impostor");
             else
-                __instance.FilterText.text = "Crewmate";
+                __instance.FilterText.text = GetString("Crewmate");
         }
 
         public override void OnHudUpate(HudManager __instance)
@@ -57,7 +58,7 @@ namespace MoreGamemodes
         public override void OnSetTaskText(TaskPanelBehaviour __instance, string str)
         {
             if (PlayerControl.LocalPlayer.IsZombie())
-                __instance.taskText.text = Utils.ColorString(Palette.PlayerColors[2], "Zombie\nHelp impostor by killing crewmates.");
+                __instance.taskText.text = Utils.ColorString(Palette.PlayerColors[2], GetString("ZombieGameplay"));
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)

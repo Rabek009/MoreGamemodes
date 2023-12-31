@@ -32,7 +32,7 @@ namespace MoreGamemodes
                 switch (player.GetItem())
                 {
                     case Items.TimeSlower:
-                        __instance.PetButton.OverrideText("Slow Time");
+                        __instance.PetButton.OverrideText("SlowTime");
                         break;
                     case Items.Knowledge:
                         __instance.PetButton.OverrideText("Reveal");
@@ -53,7 +53,7 @@ namespace MoreGamemodes
                         __instance.PetButton.OverrideText("Swap");
                         break;
                     case Items.TimeSpeeder:
-                        __instance.PetButton.OverrideText("Speed Time");
+                        __instance.PetButton.OverrideText("SpeedTime");
                         break;
                     case Items.Flash:
                         __instance.PetButton.OverrideText("Flash");
@@ -65,7 +65,7 @@ namespace MoreGamemodes
                         __instance.PetButton.OverrideText("Camouflage");
                         break;
                     case Items.MultiTeleport:
-                        __instance.PetButton.OverrideText("Multi TP");
+                        __instance.PetButton.OverrideText("MultiTP");
                         break;
                     case Items.Bomb:
                         __instance.PetButton.OverrideText("Detonated");
