@@ -1,0 +1,69 @@
+"id","0","13",
+"## Translators / 翻译"
+"#0 English: Rabek009"
+"#13 SChinese: LezaiYa"
+
+## Universalstring / 通用字符串
+"Ghost","Ghost","",
+"YouDead","You're dead. Enjoy the chaos.","",
+"Killer","","",
+
+## BattleRoyaleGamemode / 大逃杀
+"Attack","Attack","",
+"Player","Player","",
+"KillAllPlayers1","Player:\nKill everyone and survive.","",
+"BattleRoyale","Battle Royale","",
+"KillAllPlayers2","Kill everyone and survive.","",
+
+## BombTagGamemode / 炸弹狂欢
+"HasBomb","Has Bomb","",
+"HasNotBomb","Hasn't Bomb","",
+"Explosion","Explosion","",
+"Bomb","Bomb","",
+"YouHaveBomb","You have bomb!\nGive your bomb away.","",
+"YouHaveNotBomb","You haven't bomb!\nDon't get bomb.","",
+"HaveBomb","You have bomb","",
+"GiveBomb","Give your bomb away","",
+"HaveNotBomb","You haven't bomb","",
+"NotGetBomb","Don't get bomb","",
+"BombTag","Bomb Tag","",
+
+## Role / 职业
+"Scientist","Scientist","",
+"Engineer","Engineer","",
+"CrewmateGhost","Crewmate Ghost","",
+"GuardianAngel","Guardian Angel","",
+"Shapeshifter","Shapeshifter","",
+"ImpostorGhost","Impostor Ghost","",
+
+## HideAndSeekGamemode / 隐藏与搜查
+"Hider","Hider","隐藏者",
+"HiderGhost","Hider Ghost","",
+"Seeker","Seeker","搜查者",
+"SeekerGhost","Seeker Ghost","",
+"SeekerGameplay1","Seeker:\nKill all hiders.","",
+"HiderGameplay1","Hider:\nDo your tasks and survive.\n\n","",
+"SeekerGameplay2","Kill all hiders.","",
+"HiderGameplay2","Do your tasks and survive","",
+
+## KillOrDieGamemode / 非死即伤
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
+"","","",
