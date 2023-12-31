@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using static MoreGamemodes.Translator;
 
 namespace MoreGamemodes
 {
@@ -16,11 +17,11 @@ namespace MoreGamemodes
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
             if (__instance.HauntTarget.Data.IsDead)
-                __instance.FilterText.text = "Ghost";
+                __instance.FilterText.text = GetString("Ghost");
             else if (__instance.HauntTarget.IsKiller())
-                __instance.FilterText.text = "Killer";
+                __instance.FilterText.text = GetString("Killer");
             else
-                __instance.FilterText.text = "Runner";
+                __instance.FilterText.text = GetString("Runner");
         }
 
         public override void OnHudUpate(HudManager __instance)
@@ -49,11 +50,11 @@ namespace MoreGamemodes
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.IsDead)
-                __instance.taskText.text = Utils.ColorString(Color.red, "You're dead. Enjoy the chaos.");
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("You're dead. Enjoy the chaos."));
             else if (player.IsKiller())
-                __instance.taskText.text = Utils.ColorString(Color.red, "Killer\nKill someone before timer runs out.");
+                __instance.taskText.text = Utils.ColorString(Color.red, GetString("Killer\nKill someone before timer runs out."));
             else
-                __instance.taskText.text = Utils.ColorString(Color.blue, "Runner\nEscape from the killer.");
+                __instance.taskText.text = Utils.ColorString(Color.blue, GetString("Runner\nEscape from the killer."));
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
@@ -69,7 +70,7 @@ namespace MoreGamemodes
 
         public override void OnBeginImpostor(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Kill or die";
+            __instance.TeamTitle.text = GetString("Kill or die");
             __instance.TeamTitle.color = Color.blue;
             __instance.BackgroundBar.material.color = Color.blue;
         }
@@ -78,17 +79,17 @@ namespace MoreGamemodes
         {
             if (PlayerControl.LocalPlayer.IsKiller())
             {
-                __instance.RoleText.text = "Killer";
+                __instance.RoleText.text = GetString("Killer");
                 __instance.RoleText.color = Color.red;
-                __instance.RoleBlurbText.text = "Kill someone";
+                __instance.RoleBlurbText.text = GetString("Kill someone");
                 __instance.RoleBlurbText.color = Color.red;
                 __instance.YouAreText.color = Color.clear;
             }
             else
             {
-                __instance.RoleText.text = "Survivor";
+                __instance.RoleText.text = GetString("Survivor");
                 __instance.RoleText.color = Color.blue;
-                __instance.RoleBlurbText.text = "Escape from killer";
+                __instance.RoleBlurbText.text = GetString("Escape from killer");
                 __instance.RoleBlurbText.color = Color.blue;
                 __instance.YouAreText.color = Color.clear;
             }
