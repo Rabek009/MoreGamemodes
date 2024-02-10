@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using HarmonyLib;
 using UnityEngine;
 
@@ -52,6 +52,7 @@ namespace MoreGamemodes
         public static TrackingZombiesModes CurrentTrackingZombiesMode => (TrackingZombiesModes)TrackingZombiesMode.GetValue();
         public static OptionItem NoGameEnd;
         public static OptionItem CanUseColorCommand;
+        public static OptionItem CanUseTpoutCommand;
         public static OptionItem EnableFortegreen;
         public static OptionItem CanUseNameCommand;
         public static OptionItem EnableNameRepeating;
@@ -197,10 +198,12 @@ namespace MoreGamemodes
                 .SetParent(CanUseColorCommand);
             CanUseNameCommand = BooleanOptionItem.Create(5, "Can Use /name Command", false, TabGroup.MainSettings, false)
                 .SetGamemode(Gamemodes.All);
-            EnableNameRepeating = BooleanOptionItem.Create(6, "Enable Name Repeating", false, TabGroup.MainSettings, false)
+            CanUseTpoutCommand = BooleanOptionItem.Create(6, "Can Use /tpout Command", true, TabGroup.MainSettings, false)
+                .SetGamemode(Gamemodes.All);
+            EnableNameRepeating = BooleanOptionItem.Create(7, "Enable Name Repeating", false, TabGroup.MainSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseNameCommand);
-            MaximumNameLength = IntegerOptionItem.Create(7, "Maximum Name Length", new(10, 94, 1), 25, TabGroup.MainSettings, false)
+            MaximumNameLength = IntegerOptionItem.Create(8, "Maximum Name Length", new(10, 94, 1), 25, TabGroup.MainSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseNameCommand);
 
@@ -229,7 +232,6 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.ShiftAndSeek);
             InstantShapeshift = BooleanOptionItem.Create(2006, "Instant Shapeshift", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
-
             //Bomb Tag
             TeleportAfterExplosion = BooleanOptionItem.Create(3001, "Teleport After Explosion", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BombTag);

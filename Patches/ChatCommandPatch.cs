@@ -499,7 +499,8 @@ namespace MoreGamemodes
                             PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is zombies", "GamemodesChanger");
                             break;
                     }
-                    break;       
+                    break;
+               
                 case "/color":
                 case "/colour":
                     canceled = true;
@@ -580,6 +581,16 @@ namespace MoreGamemodes
                         name += subArgs;
                     }
                     PlayerControl.LocalPlayer.RpcSetName(name);
+                    break;
+                case "/tpout":
+                    canceled = true;
+                    if (Main.GameStarted) break;
+                    PlayerControl.LocalPlayer.RpcTeleport(new Vector2(0.1f, 3.8f));
+                    break;
+                case "/tpin":
+                    canceled = true;
+                    if (Main.GameStarted) break;
+                    PlayerControl.LocalPlayer.RpcTeleport(new Vector2(-0.2f, 1.3f));
                     break;
                 case "/h":
                 case "/help":
@@ -785,7 +796,9 @@ namespace MoreGamemodes
                     {
                         message += "\nEnable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON" : "OFF";
                         message += "\nMaximum name length: " + Options.MaximumNameLength.GetInt();
-                    }  
+                    }
+
+                    message += "\nCan use /tpout command: "; message += Options.CanUseTpoutCommand.GetBool() ? "ON" : "OFF";
                     Utils.SendChat(message, "Options");
 
                     message = "";
@@ -1002,6 +1015,7 @@ namespace MoreGamemodes
                 case "/cm":
                     canceled = true;
                     PlayerControl.LocalPlayer.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n" +
+                        "/tpout - teleport outside the ship\n/tpin - teleport inside the ship\n" +
                         "/now - show active settings\n/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/changesetting SETTING VALUE - changes setting value\n" +
                         "/gamemode GAMEMODE - changes gamemode\n/kick PLAYER_ID - kick player\n/ban PLAYER_ID - ban player\n/announce MESSAGE - send message\n/lastresult - show last game result", "Command");
                     break;
@@ -1314,6 +1328,17 @@ namespace MoreGamemodes
                     else
                         player.CheckName(name);
                     break;
+                case "/tpout":
+                    if (!Options.CanUseTpoutCommand.GetBool()) break;
+                    canceled = true;
+                    if (Main.GameStarted) break;
+                    player.RpcTeleport(new Vector2(0.1f, 3.8f));
+                    break;
+                case "/tpin":
+                    canceled = true;
+                    if (Main.GameStarted) break;
+                    player.RpcTeleport(new Vector2(-0.2f, 1.3f));
+                    break;
                 case "/h":
                 case "/help":
                     canceled = true;
@@ -1518,7 +1543,8 @@ namespace MoreGamemodes
                     {
                         message += "\nEnable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON" : "OFF";
                         message += "\nMaximum name length:" + Options.MaximumNameLength.GetInt();
-                    }   
+                    }
+                    message += "\nCan use /tpout command: "; message += Options.CanUseTpoutCommand.GetBool() ? "ON" : "OFF";
                     player.RpcSendMessage(message, "Options");
 
                     message = "";
@@ -1734,7 +1760,8 @@ namespace MoreGamemodes
                 case "/commands":
                 case "/cm":
                     canceled = true;
-                    player.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n/now - show active settings\n" +
+                    player.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n" +
+                        "/tpout - teleport outside the ship\n/tpin - teleport inside the ship\n/now - show active settings\n" +
                         "/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/lastresult - show last game result", "Commands");
                     break;
                 case "/lastresult":
