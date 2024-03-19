@@ -31,8 +31,7 @@ namespace MoreGamemodes
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.M, KeyCode.LeftShift }) && MeetingHud.Instance)
             {
-                MeetingHud.Instance.RpcClose();
-                VotingCompletePatch.Postfix();    
+                MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);    
             }
 
             if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)

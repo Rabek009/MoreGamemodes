@@ -41,7 +41,7 @@ namespace MoreGamemodes
             __instance.ShowNormalMap();
         }
 
-        public override void OnBeginImpostor(IntroCutscene __instance)
+        public override void OnBeginImpostorPostfix(IntroCutscene __instance)
         {
             __instance.TeamTitle.text = "Battle Royale";
         }

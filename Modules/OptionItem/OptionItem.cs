@@ -145,6 +145,8 @@ namespace MoreGamemodes
             if (ValueFormat == OptionFormat.Seconds) return value + "s";
             if (ValueFormat == OptionFormat.Percent) return value + "%";
             if (ValueFormat == OptionFormat.Multiplier) return value + "x";
+            if (ValueFormat == OptionFormat.PerSecond) return value + "/s";
+            if (ValueFormat == OptionFormat.PerLevel) return value + "/level";
             return value;
         }
 
@@ -225,5 +227,7 @@ namespace MoreGamemodes
         Seconds,
         Percent,
         Multiplier,
+        PerSecond,
+        PerLevel
     }
 }

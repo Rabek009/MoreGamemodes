@@ -393,7 +393,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(pc.PlayerId, pc.PlayerId)] = Color.clear;
             }
-            if (CamouflageTimer > 0f && !Main.IsMeeting)
+            if (CamouflageTimer > 0f && !MeetingHud.Instance)
             {
                 CamouflageTimer -= Time.fixedDeltaTime;
             }
