@@ -57,11 +57,6 @@ namespace MoreGamemodes
                 if (CheckAndEndGameForZombiesCrewmateWin()) return false;
                 if (CheckAndEndGameForZombiesTaskWin()) return false;
             }
-            else if (Options.CurrentGamemode == Gamemodes.Jailbreak)
-            {
-                if (CheckAndEndGameForEveryoneEscape()) return false;
-                if (CheckAndEndGameForTimeEnd()) return false;          
-            }
             return false;
         }
 
@@ -257,54 +252,6 @@ namespace MoreGamemodes
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.HumansByTask, winners);
-                return true;
-            }
-            return false;
-        }
-
-        private static bool CheckAndEndGameForEveryoneEscape()
-        {
-            bool someoneRemain = false;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (!pc.IsGuard() && !pc.HasEscaped())
-                    someoneRemain = true;
-            }
-            if (!someoneRemain)
-            {
-                List<byte> winners = new();
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (!pc.IsGuard())
-                        winners.Add(pc.PlayerId);
-                }
-                StartEndGame(GameOverReason.ImpostorByKill, winners);
-                return true;
-            }
-            return false;
-        }
-
-        private static bool CheckAndEndGameForTimeEnd()
-        {
-            if (Main.Timer >= Options.GameTime.GetFloat())
-            {
-                List<byte> winners = new();
-                int prisoners = 0;
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    ++prisoners;
-                    if (!pc.IsGuard() && pc.HasEscaped())
-                        winners.Add(pc.PlayerId);
-                }
-                if (winners.Count * 2 < prisoners)
-                {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc.IsGuard())
-                            winners.Add(pc.PlayerId);
-                    }
-                }
-                StartEndGame(GameOverReason.ImpostorByKill, winners);
                 return true;
             }
             return false;

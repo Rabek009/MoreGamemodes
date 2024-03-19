@@ -52,22 +52,18 @@ namespace MoreGamemodes
                     ZombiesGamemode.instance = new ZombiesGamemode();
                     CustomGamemode.Instance = ZombiesGamemode.instance;
                     break;
-                case Gamemodes.Jailbreak:
-                    JailbreakGamemode.instance = new JailbreakGamemode();
-                    CustomGamemode.Instance = JailbreakGamemode.instance;
-                    break;
             }
             if (!__instance.AmHost) return;
             Main.RealOptions = new OptionBackupData(GameOptionsManager.Instance.currentGameOptions);
             Main.AllShapeshifts = new Dictionary<byte, byte>();
             Main.LastNotifyNames = new Dictionary<(byte, byte), string>();
+            Main.IsMeeting = false;
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
-            AntiBlackout.Reset();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
@@ -103,11 +99,8 @@ namespace MoreGamemodes
         public static void Postfix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            new LateTask(() =>{
-                CustomGamemode.Instance.OnSelectRolesPostfix();
-                Utils.SyncAllSettings();
-            }, 0.6f);
-            new LateTask(() => ShipStatus.Instance.Begin(), 1.1f);
+            CustomGamemode.Instance.OnSelectRolesPostfix();
+            Utils.SyncAllSettings();
         }
     }
 
@@ -128,8 +121,6 @@ namespace MoreGamemodes
             CustomGamemode.Instance.OnIntroDestroy();
             if (Options.MidGameChat.GetBool())
                 Utils.SetChatVisible();
-            else if (Options.CurrentGamemode == Gamemodes.Zombies)
-                Utils.ShowAndCloseMeeting();
             Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)
             {
@@ -147,39 +138,6 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(AmongUsClient._CoStartGameHost_d__30), nameof(AmongUsClient._CoStartGameHost_d__30.MoveNext))]
-    public static class DleksPatch
-    {
-        private static bool Prefix(AmongUsClient._CoStartGameHost_d__30 __instance, ref bool __result)
-        {
-            if (__instance.__1__state != 0)
-            {
-                return true;
-            }
-
-            __instance.__1__state = -1;
-            if (LobbyBehaviour.Instance)
-            {
-                LobbyBehaviour.Instance.Despawn();
-            }
-
-            if (ShipStatus.Instance)
-            {
-                __instance.__2__current = null;
-                __instance.__1__state = 2;
-                __result = true;
-                return false;
-            }
-
-            var num2 = Mathf.Clamp(GameOptionsManager.Instance.currentGameOptions.MapId, 0, Constants.MapNames.Length - 1);
-            __instance.__2__current = __instance.__4__this.ShipLoadingAsyncHandle = __instance.__4__this.ShipPrefabs[num2].InstantiateAsync();
-            __instance.__1__state = 1;
-
-            __result = true;
-            return false;
         }
     }
 }

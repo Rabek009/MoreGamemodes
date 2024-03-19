@@ -114,19 +114,11 @@ namespace MoreGamemodes
                     case Gamemodes.Zombies:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
-                            lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") + " (";
+                            lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") +" (";
                         else if (playerInfo.Role.IsImpostor)
-                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
+                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") +" (";
                         else
-                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
-                        break;
-                    case Gamemodes.Jailbreak:
-                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
-                        if (JailbreakGamemode.instance.PlayerType[playerInfo.PlayerId] == JailbreakPlayerTypes.Guard)
-                            lastResult += Utils.ColorString(Color.blue, "Guard") + " (";
-                        else
-                            lastResult += Utils.ColorString(Palette.Orange, "Prisoner") + " (";
+                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") +" (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
                         break;
                 }
@@ -175,19 +167,11 @@ namespace MoreGamemodes
                     case Gamemodes.Zombies:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
-                            lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") + " (";
+                            lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") +" (";
                         else if (playerInfo.Role.IsImpostor)
-                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
+                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") +" (";
                         else
-                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
-                        break;
-                    case Gamemodes.Jailbreak:
-                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
-                        if (JailbreakGamemode.instance.PlayerType[playerInfo.PlayerId] == JailbreakPlayerTypes.Guard)
-                            lastResult += Utils.ColorString(Color.blue, "Guard") + " (";
-                        else
-                            lastResult += Utils.ColorString(Palette.Orange, "Prisoner") + " (";
+                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") +" (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
                         break;
                 }
@@ -216,9 +200,9 @@ namespace MoreGamemodes
             PaintBattleGamemode.instance = null;
             KillOrDieGamemode.instance = null;
             ZombiesGamemode.instance = null;
-            JailbreakGamemode.instance = null;
             if (!AmongUsClient.Instance.AmHost) return;
-            Main.AllShapeshifts = new Dictionary<byte, byte>();  
+            Main.AllShapeshifts = new Dictionary<byte, byte>();
+            Main.IsMeeting = false;    
             Main.RealOptions.Restore(GameOptionsManager.Instance.currentGameOptions);
             Main.RealOptions = null;
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
@@ -228,7 +212,6 @@ namespace MoreGamemodes
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.IsModded = new Dictionary<byte, bool>();
-            AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
                 var hours = (int)Main.Timer / 3600;

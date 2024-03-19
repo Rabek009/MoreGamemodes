@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -9,20 +9,6 @@ namespace MoreGamemodes
     {
         public override void OnExile(GameData.PlayerInfo exiled)
         {
-            if (exiled != null && Options.EjectedPlayersAreZombies.GetBool())
-            {
-                exiled.Object.RpcSetZombieType(ZombieTypes.FullZombie);
-                new LateTask(() => exiled.Object.RpcSetDesyncRole(RoleTypes.Impostor, exiled.Object.GetClientId()), 0.5f);
-                new LateTask(() => exiled.Object.RpcSetRoleV2(RoleTypes.Crewmate), 1f);
-                exiled.Object.RpcSetOutfit(18, "", "", Main.StandardPets[exiled.PlayerId], "");
-                GameData.Instance.RpcSetTasks(exiled.PlayerId, new byte[0]);
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (pc.Data.Role.IsImpostor)
-                        Main.NameColors[(pc.PlayerId, exiled.PlayerId)] = Color.red;
-                    Main.NameColors[(exiled.PlayerId, pc.PlayerId)] = Palette.PlayerColors[2];
-                }
-            }
             Main.Timer = 0f;
             Utils.SyncAllSettings();
         }
@@ -44,7 +30,7 @@ namespace MoreGamemodes
 
         public override void OnHudUpate(HudManager __instance)
         {
-            if (!PlayerControl.LocalPlayer.IsZombie() && PlayerControl.LocalPlayer.KillsRemain() > 0)
+            if ((PlayerControl.LocalPlayer.GetZombieType() == ZombieTypes.FullZombie || (!PlayerControl.LocalPlayer.IsZombie() && PlayerControl.LocalPlayer.KillsRemain() > 0)) && GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.PlayerSpeedMod) > 0f)
             {
                 __instance.PetButton.ToggleVisible(true);
                 __instance.PetButton.OverrideText("Kill");
@@ -80,7 +66,7 @@ namespace MoreGamemodes
             __instance.ShowNormalMap();
         }
 
-        public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, GameData.PlayerInfo exiled, bool tie)
+        public override void OnVotingComplete()
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -95,7 +81,7 @@ namespace MoreGamemodes
             new LateTask(() =>{
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if ((pc.IsZombie() && pc.GetZombieType() != ZombieTypes.Dead) || (exiled != null && pc.PlayerId == exiled.PlayerId && Options.EjectedPlayersAreZombies.GetBool()))
+                    if (pc.IsZombie() && pc.GetZombieType() != ZombieTypes.Dead)
                     {
                         var rand = new System.Random();
                         pc.MyPhysics.RpcBootFromVent(rand.Next(0, ShipStatus.Instance.AllVents.Count));
@@ -109,7 +95,6 @@ namespace MoreGamemodes
         {
             var voter = Utils.GetPlayerById(srcPlayerId);
             var target = Utils.GetPlayerById(suspectPlayerId);
-            if (voter == null || target == null) return true;
             if (voter.IsZombie())
             {
                 voter.RpcSendMessage("You can't vote as zombie!", "Warning");
@@ -125,10 +110,42 @@ namespace MoreGamemodes
 
         public override void OnPet(PlayerControl pc)
         {
-            if (!pc.IsZombie() && pc.KillsRemain() > 0)
+            if (pc.GetZombieType() == ZombieTypes.FullZombie && Main.Timer >= Options.ZombieBlindTime.GetFloat())
+            {
+                var nearest = pc.GetClosestPlayer();
+                if (Vector2.Distance(pc.transform.position, nearest.transform.position) <= 2f && !nearest.IsZombie() && !nearest.Data.Role.IsImpostor)
+                {
+                    if (Options.ZombieKillsTurnIntoZombie.GetBool())
+                    {
+                        pc.RpcTeleport(nearest.transform.position);
+                        int alivePlayers = 0;
+                        int impostors = 0;
+                        foreach (var player in PlayerControl.AllPlayerControls)
+                        {
+                            if (!player.Data.IsDead && !player.IsZombie()) ++alivePlayers;
+                            if (!player.Data.IsDead && player.Data.Role.IsImpostor) ++impostors;
+                        }
+                        if (impostors * 2 < alivePlayers - 1 || Options.NoGameEnd.GetBool())
+                            Utils.RpcCreateDeadBody(nearest.transform.position, Main.StandardColors[nearest.PlayerId], nearest);
+                        nearest.RpcSetZombieType(ZombieTypes.JustTurned);
+                        nearest.RpcSetOutfit(18, "", "", Main.StandardPets[nearest.PlayerId], "");
+                        GameData.Instance.RpcSetTasks(nearest.PlayerId, new byte[0]);
+                        foreach (var player in PlayerControl.AllPlayerControls)
+                        {
+                            if (player.Data.Role.IsImpostor)
+                                Main.NameColors[(player.PlayerId, nearest.PlayerId)] = Color.red;
+                            Main.NameColors[(nearest.PlayerId, player.PlayerId)] = Palette.PlayerColors[2];
+                        }
+                        nearest.SyncPlayerSettings();
+                    }
+                    else
+                        pc.RpcFixedMurderPlayer(nearest);
+                }
+            }
+            else if (!pc.IsZombie() && pc.KillsRemain() > 0)
             {
                 var nearest = pc.GetClosestZombie();
-                if (Vector2.Distance(pc.transform.position, nearest.transform.position) <= Main.RealOptions.GetInt(Int32OptionNames.KillDistance) + 1f)
+                if (Vector2.Distance(pc.transform.position, nearest.transform.position) <= 2f)
                 {
                     pc.RpcFixedMurderPlayer(nearest);
                     nearest.RpcSetZombieType(ZombieTypes.Dead);
@@ -139,32 +156,29 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (killer.IsZombie() && killer.GetZombieType() != ZombieTypes.FullZombie)
-                return false;
-            if (target.IsZombie() && (killer.Data.Role.IsImpostor || killer.IsZombie()))
-                return false;
-            if (killer.IsZombie() && Main.Timer < Options.ZombieBlindTime.GetFloat())
-                return false;
-            return true;
-        }
-
-        public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
-        {
-            if (Main.StandardRoles[killer.PlayerId] == RoleTypes.Impostor || (killer.IsZombie() && Options.ZombieKillsTurnIntoZombie.GetBool()))
+            if (target.IsZombie()) return false;
+            killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
+            killer.RpcTeleport(target.transform.position);
+            int alivePlayers = 0;
+            int impostors = 0;
+            foreach (var player in PlayerControl.AllPlayerControls)
             {
-                target.RpcSetZombieType(ZombieTypes.JustTurned);
-                new LateTask(() => target.RpcSetDesyncRole(RoleTypes.Impostor, target.GetClientId()), 0.5f);
-                new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate), 1f);
-                target.RpcSetOutfit(18, "", "", Main.StandardPets[target.PlayerId], "");
-                GameData.Instance.RpcSetTasks(target.PlayerId, new byte[0]);
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (pc.Data.Role.IsImpostor)
-                        Main.NameColors[(pc.PlayerId, target.PlayerId)] = Color.red;
-                    Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.PlayerColors[2];
-                }
-                target.SyncPlayerSettings();
+                if (!player.Data.IsDead && !player.IsZombie()) ++alivePlayers;
+                if (!player.Data.IsDead && player.Data.Role.IsImpostor) ++impostors;
             }
+            if (impostors * 2 < alivePlayers - 1 || Options.NoGameEnd.GetBool())
+                Utils.RpcCreateDeadBody(target.transform.position, Main.StandardColors[target.PlayerId], target);
+            target.RpcSetZombieType(ZombieTypes.JustTurned);
+            target.RpcSetOutfit(18, "", "", Main.StandardPets[target.PlayerId], "");
+            GameData.Instance.RpcSetTasks(target.PlayerId, new byte[0]);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor)
+                    Main.NameColors[(pc.PlayerId, target.PlayerId)] = Color.red;
+                Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.PlayerColors[2];
+            }
+            target.SyncPlayerSettings();
+            return false;
         }
 
         public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)

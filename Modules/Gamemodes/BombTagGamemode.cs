@@ -67,10 +67,13 @@ namespace MoreGamemodes
 
         public override void OnToggleHighlight(PlayerControl __instance)
         {
-            __instance.cosmetics.currentBodySprite.BodySprite.material.SetColor("_OutlineColor", Color.gray);
+            if (PlayerControl.LocalPlayer.HasBomb())
+            {
+                __instance.cosmetics.currentBodySprite.BodySprite.material.SetColor("_OutlineColor", Color.gray);
+            }
         }
 
-        public override void OnBeginImpostorPostfix(IntroCutscene __instance)
+        public override void OnBeginImpostor(IntroCutscene __instance)
         {
             __instance.TeamTitle.text = "Bomb Tag";
             __instance.TeamTitle.color = Color.green;
@@ -137,6 +140,9 @@ namespace MoreGamemodes
             {
                 var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
                 player.RpcSetBomb(true);
+                player.RpcSetColor(6);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.black;
                 AllPlayers.Remove(player);
             }
             foreach (var pc in PlayerControl.AllPlayerControls)

@@ -67,7 +67,7 @@ namespace MoreGamemodes
             __instance.taskOverlay.Hide();
         }
 
-        public override void OnBeginImpostorPostfix(IntroCutscene __instance)
+        public override void OnBeginImpostor(IntroCutscene __instance)
         {
             __instance.TeamTitle.text = "Kill or die";
             __instance.TeamTitle.color = Color.blue;
@@ -128,6 +128,9 @@ namespace MoreGamemodes
             }
             var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
             player.RpcSetIsKiller(true);
+            player.RpcSetColor(0);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.red;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.IsKiller())
@@ -267,12 +270,12 @@ namespace MoreGamemodes
             Gamemode = Gamemodes.KillOrDie;
             PetAction = false;
             DisableTasks = true;
-            IsKiller = new System.Collections.Generic.Dictionary<byte, bool>();
+            IsKiller = new Dictionary<byte, bool>();
             foreach (var pc in PlayerControl.AllPlayerControls)
                 IsKiller[pc.PlayerId] = false;
         }
 
         public static KillOrDieGamemode instance;
-        public System.Collections.Generic.Dictionary<byte, bool> IsKiller;
+        public Dictionary<byte, bool> IsKiller;
     }
 }

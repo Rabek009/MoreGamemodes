@@ -8,8 +8,6 @@ using System.Collections.Generic;
 using System.Data;
 using System;
 
-using Object = UnityEngine.Object;
-
 namespace MoreGamemodes
 {
     static class ExtendedPlayerControl
@@ -127,7 +125,7 @@ namespace MoreGamemodes
 
         public static bool CanVent(this PlayerControl player)
         {
-            if (GameOptionsManager.Instance.currentGameOptions.MapId == 3) return false;
+            if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 3) return false;
             if (((Options.CurrentGamemode == Gamemodes.HideAndSeek && !Options.HnSImpostorsCanVent.GetBool()) || (Options.CurrentGamemode == Gamemodes.ShiftAndSeek && !Options.SnSImpostorsCanVent.GetBool())) && player.Data.Role.IsImpostor)
                 return false;
             if (Options.CurrentGamemode == Gamemodes.BombTag)
@@ -140,8 +138,6 @@ namespace MoreGamemodes
                 return false;
             if (Options.CurrentGamemode == Gamemodes.Zombies)
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.Jailbreak)
-                return player.IsGuard() || player.HasItem(InventoryItems.Screwdriver);
             if (Options.CurrentGamemode == Gamemodes.Classic && GameOptionsManager.Instance.currentGameOptions.GameMode == GameModes.HideNSeek && !player.Data.Role.IsImpostor)
                 return int.Parse(HudManager.Instance.AbilityButton.usesRemainingText.text) > 0;
             return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
@@ -293,7 +289,7 @@ namespace MoreGamemodes
             {
                 case Gamemodes.HideAndSeek:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
-                    if (Main.Timer < Options.HnSImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
+                    if (Main.Timer < Options.HnSImpostorsBlindTime.GetFloat())
                     {
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
                         opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
@@ -304,7 +300,7 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 15, 100);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 15, 100);
-                    if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
+                    if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat())
                     {
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
                         opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
@@ -389,33 +385,14 @@ namespace MoreGamemodes
                         if (Main.Timer >= Options.ZombieBlindTime.GetFloat() && player.GetZombieType() != ZombieTypes.JustTurned)
                         {
                             opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Options.ZombieSpeed.GetFloat());
-                            opt.SetFloat(FloatOptionNames.ImpostorLightMod, Options.ZombieVision.GetFloat());
+                            opt.SetFloat(FloatOptionNames.CrewLightMod, Options.ZombieVision.GetFloat());
                         }
                         else
                         {
                             opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
-                            opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                            opt.SetFloat(FloatOptionNames.CrewLightMod, 0f);
                         }
-                        opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
                     }
-                    break;
-                case Gamemodes.Jailbreak:
-                    opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
-                    opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
-                    opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
-                    opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
-                    opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
-                    opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 1f);
-                    opt.SetFloat(FloatOptionNames.ShapeshifterDuration, 0f);
-                    opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, Options.HelpCooldown.GetFloat());
-                    opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
-                    opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
-                    if (!player.IsGuard())
-                        opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
-                    if (player.IsGuard() && JailbreakGamemode.instance.EnergyDrinkDuration[player.PlayerId] > 0f)
-                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Main.RealOptions.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (Options.EnergyDrinkSpeedIncrease.GetFloat() / 100f)));
-                    if (player.Data.IsDead)
-                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
                     break;
             }
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
@@ -500,98 +477,6 @@ namespace MoreGamemodes
                             name += "\n" + Utils.ColorString(Color.cyan, "YOU CAN KILL " + player.KillsRemain() + " " + (player.KillsRemain() == 1 ? "ZOMBIE" : "ZOMBIES") + "!");
                     }
                     break;
-                case Gamemodes.Jailbreak:
-                    if (player.IsGuard() && player == seer)
-                    {
-                        name += "\nHealth: " + (int)(JailbreakGamemode.instance.PlayerHealth[player.PlayerId] + 0.99f) + "/" + Options.GuardHealth.GetFloat();
-                        name += Utils.ColorString(Color.blue, "\nSearch cooldown: " + (int)(JailbreakGamemode.instance.SearchCooldown[player.PlayerId] + 0.99f) + "s");
-                        if (JailbreakGamemode.instance.EnergyDrinkDuration[player.PlayerId] > 0f)
-                            name += Utils.ColorString(Color.yellow, "\nEnergy drink: " + (int)(JailbreakGamemode.instance.EnergyDrinkDuration[player.PlayerId] + 0.99f) + "s");
-                        name += "<color=" + Utils.ColorToHex(Color.green) + ">";
-                        name += "\nMoney: " + player.GetItemAmount(InventoryItems.Resources) + "$";
-                        name += "\nWeapon lvl." + player.GetItemAmount(InventoryItems.Weapon) + "</color>";
-                        name += Utils.ColorString(Color.white, "\nShop item:\n");
-                        switch ((Recipes)player.GetCurrentRecipe())
-                        {
-                            case Recipes.GuardWeapon:
-                                name += Utils.ColorString(Color.magenta, "Upgrade weapon - " + (Options.GuardWeaponPrice.GetInt() * (player.GetItemAmount(InventoryItems.Weapon) + 1)) + "$");
-                                break;
-                            case Recipes.EnergyDrink:
-                                name += Utils.ColorString(Color.magenta, "Energy drink - " + Options.EnergyDrinkPrice.GetInt() + "$");
-                                break;
-                        }
-                    }
-                    else if (!player.IsGuard() && !player.HasEscaped() && player == seer)
-                    {
-                        name += "\nHealth: " + (int)(JailbreakGamemode.instance.PlayerHealth[player.PlayerId] + 0.99f) + "/" + Options.PrisonerHealth.GetFloat();
-                        name += "<color=" + Utils.ColorToHex(Color.green) + ">";
-                        name += "\nResources: " + player.GetItemAmount(InventoryItems.Resources) + "/" + Options.MaximumPrisonerResources.GetInt();
-                        if (player.HasItem(InventoryItems.BreathingMaskWithoutOxygen))
-                            name += "\nBreathing mask without oxygen" + (player.GetItemAmount(InventoryItems.BreathingMaskWithoutOxygen) > 1 ? " x" + player.GetItemAmount(InventoryItems.BreathingMaskWithoutOxygen) : "");
-                        if (player.HasItem(InventoryItems.BreathingMaskWithOxygen))
-                            name += "\nBreathing mask with oxygen" + (player.GetItemAmount(InventoryItems.BreathingMaskWithOxygen) > 1 ? " x" + player.GetItemAmount(InventoryItems.BreathingMaskWithOxygen) : "");
-                        name += "</color>";
-                        if (player.HasItem(InventoryItems.Screwdriver))
-                            name += "\nScrewdriver";
-                        if (player.HasItem(InventoryItems.Weapon))
-                            name += "\nWeapon lvl." + player.GetItemAmount(InventoryItems.Weapon);
-                        if (player.HasItem(InventoryItems.Pickaxe))
-                            name += "\nPickaxe lvl." + player.GetItemAmount(InventoryItems.Pickaxe);
-                        if (player.HasItem(InventoryItems.SpaceshipParts))
-                            name += "\nSpaceship part" + (player.GetItemAmount(InventoryItems.SpaceshipParts) > 1 ? " x" + player.GetItemAmount(InventoryItems.SpaceshipParts) : "");
-                        if (player.HasItem(InventoryItems.SpaceshipWithoutFuel))
-                            name += "\nSpaceship without fuel" + (player.GetItemAmount(InventoryItems.SpaceshipWithoutFuel) > 1 ? " x" + player.GetItemAmount(InventoryItems.SpaceshipWithoutFuel) : "");
-                        if (player.HasItem(InventoryItems.SpaceshipWithFuel))
-                            name += "\nSpaceship with fuel" + (player.GetItemAmount(InventoryItems.SpaceshipWithFuel) > 1 ? " x" + player.GetItemAmount(InventoryItems.SpaceshipWithFuel) : "");
-                        if (player.HasItem(InventoryItems.GuardOutfit))
-                            name += "\nGuard outfit" + (player.GetItemAmount(InventoryItems.GuardOutfit) > 1 ? " x" + player.GetItemAmount(InventoryItems.GuardOutfit) : "");
-                        name += Utils.ColorString(Color.white, "\nRecipe:\n");
-                        switch ((Recipes)player.GetCurrentRecipe())
-                        {
-                            case Recipes.Screwdriver:
-                                name += Utils.ColorString(Color.magenta, "Screwdriver - " + Options.ScrewdriverPrice.GetInt() + " res");
-                                break;
-                            case Recipes.PrisonerWeapon:
-                                name += Utils.ColorString(Color.magenta, "Upgrade weapon - " + (Options.PrisonerWeaponPrice.GetInt() * (player.GetItemAmount(InventoryItems.Weapon) + 1)) + " res");
-                                break;
-                            case Recipes.Pickaxe:
-                                name += Utils.ColorString(Color.magenta, "Upgrade pickaxe - " + (Options.PickaxePrice.GetInt() * (player.GetItemAmount(InventoryItems.Pickaxe) + 1)) + " res");
-                                break;
-                            case Recipes.SpaceshipPart:
-                                name += Utils.ColorString(Color.magenta, "Spaceship part - " + Options.SpaceshipPartPrice.GetInt() + " res");
-                                break;
-                            case Recipes.Spaceship:
-                                name += Utils.ColorString(Color.magenta, "Spaceship - " + Options.RequiredSpaceshipParts.GetInt() + " parts");
-                                break;
-                            case Recipes.BreathingMask:
-                                name += Utils.ColorString(Color.magenta, "Breathing mask - " + Options.BreathingMaskPrice.GetInt() + " res");
-                                break;
-                            case Recipes.GuardOutfit:
-                                name += Utils.ColorString(Color.magenta, "Guard outfit - " + Options.GuardOutfitPrice.GetInt() + " res");
-                                break;
-                        }
-                    }
-                    if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && player == seer)
-                        name += "WALL [" + JailbreakGamemode.instance.ReactorWallHealth + "%]";
-                    if (JailbreakGamemode.instance.ReactorWallHealth <= 0f && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && player == seer)
-                        name += "\nWALL DESTROYED!";
-                   
-                    if (!player.IsGuard() && player == seer)
-                    {
-                        bool isGuardAlive = false;
-                        foreach (var pc in PlayerControl.AllPlayerControls)
-                        {
-                            if (pc.IsGuard() && !pc.Data.IsDead)
-                                isGuardAlive = true;
-                        }
-                        if (!isGuardAlive)
-                            name += "\nNO GUARDS!";
-                    }
-                    if (JailbreakGamemode.instance.TakeoverTimer > 0f && player == seer)
-                        name += "\nTAKEOVER [" + (int)(JailbreakGamemode.instance.TakeoverTimer / Options.PrisonTakeoverDuration.GetFloat() * 100f + 0.99f) + "%]";
-                    if (player == seer)
-                        name += Utils.ColorString(Color.cyan, "\nTIME: " + (int)((float)Options.GameTime.GetInt() - Main.Timer + 0.99f) + "s");
-                    break;
             }
             if (Options.MidGameChat.GetBool() && Options.ProximityChat.GetBool() && player == seer)
             {
@@ -626,7 +511,7 @@ namespace MoreGamemodes
                     if (com.TryCast<LogicOptions>(out var lo))
                         lo.SetGameOptions(opt);
                 }
-                GameOptionsManager.Instance.currentGameOptions = opt;
+                GameOptionsManager.Instance.CurrentGameOptions = opt;
             }
             else
                 Utils.SyncSettings(opt, player.GetClientId());
@@ -678,111 +563,6 @@ namespace MoreGamemodes
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;
-        }
-
-        public static void RpcSetRoleV2(this PlayerControl player, RoleTypes role)
-        {
-            player.SetRole(role);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
-            writer.Write((ushort)role);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-        }
-
-        public static PlainShipRoom GetPlainShipRoom(this PlayerControl pc)
-        {
-            if (pc.Data.IsDead) return null;
-            var Rooms = ShipStatus.Instance.AllRooms;
-            if (Rooms == null) return null;
-            foreach (var room in Rooms)
-            {
-                if (!room.roomArea) continue;
-                if (pc.Collider.IsTouching(room.roomArea))
-                    return room;
-            }
-            return null;
-        }
-
-        public static JailbreakPlayerTypes GetJailbreakPlayerType(this PlayerControl player)
-        {
-            if (JailbreakGamemode.instance == null) return JailbreakPlayerTypes.None;
-            if (player == null) return JailbreakPlayerTypes.None;
-            if (!JailbreakGamemode.instance.PlayerType.ContainsKey(player.PlayerId)) return JailbreakPlayerTypes.None;
-            return JailbreakGamemode.instance.PlayerType[player.PlayerId];
-        }
-
-        public static bool IsGuard(this PlayerControl player)
-        {
-            return player.GetJailbreakPlayerType() == JailbreakPlayerTypes.Guard;
-        }
-
-        public static bool IsWanted(this PlayerControl player)
-        {
-            return player.GetJailbreakPlayerType() == JailbreakPlayerTypes.Wanted;
-        }
-
-        public static bool HasEscaped(this PlayerControl player)
-        {
-            return player.GetJailbreakPlayerType() == JailbreakPlayerTypes.Escapist;
-        }
-
-        public static int GetItemAmount(this PlayerControl player, InventoryItems itemType)
-        {
-            if (JailbreakGamemode.instance == null) return 0;
-            if (player == null) return 0;
-            if (!JailbreakGamemode.instance.Inventory.ContainsKey((player.PlayerId, itemType))) return 0;
-            return JailbreakGamemode.instance.Inventory[(player.PlayerId, itemType)];
-        }
-
-        public static bool HasItem(this PlayerControl player, InventoryItems itemType)
-        {
-            return player.GetItemAmount(itemType) > 0;
-        }
-
-        public static int GetCurrentRecipe(this PlayerControl player)
-        {
-            if (JailbreakGamemode.instance == null) return -1;
-            if (player == null) return -1;
-            if (!JailbreakGamemode.instance.CurrentRecipe.ContainsKey(player.PlayerId)) return -1;
-            return JailbreakGamemode.instance.CurrentRecipe[player.PlayerId];
-        }
-
-        public static bool IsDoingIllegalThing(this PlayerControl player)
-        {
-            if (JailbreakGamemode.instance == null) return false;
-            if (player.IsGuard()) return false;
-            if (player.GetPlainShipRoom() != null &&(player.GetPlainShipRoom().RoomId == SystemTypes.Reactor || player.GetPlainShipRoom().RoomId == SystemTypes.Security || player.GetPlainShipRoom().RoomId == SystemTypes.Storage ||
-            player.GetPlainShipRoom().RoomId == SystemTypes.Admin || player.GetPlainShipRoom().RoomId == SystemTypes.Nav) && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
-                return true;
-            if (player.walkingToVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation() || (player.MyPhysics.Animations.Animator.GetCurrentAnimation() == player.MyPhysics.Animations.group.ExitVentAnim && player.HasItem(InventoryItems.Screwdriver)))
-                return true;
-            return false;
-        }
-
-        public static bool HasIllegalItem(this PlayerControl player)
-        {
-            if (player.HasItem(InventoryItems.Screwdriver)) return true;
-            if (player.HasItem(InventoryItems.Weapon)) return true;
-            if (player.HasItem(InventoryItems.Pickaxe)) return true;
-            if (player.HasItem(InventoryItems.Screwdriver)) return true;
-            if (player.HasItem(InventoryItems.SpaceshipParts)) return true;
-            if (player.HasItem(InventoryItems.SpaceshipWithoutFuel)) return true;
-            if (player.HasItem(InventoryItems.SpaceshipWithFuel)) return true;
-            if (player.HasItem(InventoryItems.GuardOutfit)) return true;
-            return false;
-        }
-
-        public static void RpcEscape(this PlayerControl player)
-        {
-            player.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Escapist);
-            player.RpcShapeshift(player, false);
-            player.RpcSetDeathReason(DeathReasons.Escaped);
-            player.RpcSetRole(RoleTypes.GuardianAngel);
-            player.RpcResetAbilityCooldown();
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.green;
-                pc.RpcReactorFlash(0.4f, Color.blue);
-            } 
         }
     }
 }

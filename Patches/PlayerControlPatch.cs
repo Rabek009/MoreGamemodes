@@ -91,6 +91,7 @@ namespace MoreGamemodes
                 shapeshifter.RpcRejectShapeshift();
                 return false;
             } 
+            
             if (!shouldAnimate)
                 shapeshifter.RpcShapeshift(target, shouldAnimate);
             else if (CustomGamemode.Instance.OnCheckShapeshift(shapeshifter, target))
@@ -143,6 +144,7 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] GameData.PlayerInfo target)
         {
             if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target)) return false;
+            Main.IsMeeting = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 foreach (var ar in PlayerControl.AllPlayerControls)
@@ -163,19 +165,12 @@ namespace MoreGamemodes
             }
             if (!AmongUsClient.Instance.AmHost) return;
             if (!__instance.AmOwner) return;
-            if (Main.GameStarted && !MeetingHud.Instance)
+            if (Main.GameStarted && !Main.IsMeeting)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Options.CurrentGamemode == Gamemodes.Jailbreak)
-                    {
-                        JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] += Time.fixedDeltaTime;
-                        if (JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] < 2f) continue;
-                    }
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, false);
-                    if (Options.CurrentGamemode == Gamemodes.Jailbreak)
-                        JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] -= 2f;
                 }
             }
             if (Main.GameStarted)
@@ -275,20 +270,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (Main.StandardRoles.ContainsKey(__instance.PlayerId) && !RoleManager.IsGhostRole(roleType))
                 return false;
-            if (Options.CurrentGamemode != Gamemodes.Zombies) return true;
-            if (RoleManager.IsGhostRole(roleType)) return false;
-            if (roleType == RoleTypes.Crewmate)
-            {
-                __instance.Data.Disconnected = true;
-                GameData.Instance.SetDirty();
-                new LateTask(() =>{
-                    __instance.Data.Disconnected = false;
-                    GameData.Instance.SetDirty();
-                }, 1f, "ResetDisconnect_" + __instance.Data.PlayerId);
-                return false;
-            }
-            new LateTask(() => __instance.RpcSetRoleV2(roleType), 0.5f);
-            return false;
+            return true;
         }
     }
 

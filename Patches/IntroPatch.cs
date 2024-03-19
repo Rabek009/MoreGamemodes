@@ -20,15 +20,10 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.BeginImpostor))]
     class BeginImpostorPatch
     {
-        public static void Prefix(IntroCutscene __instance, ref Il2CppSystem.Collections.Generic.List<PlayerControl> yourTeam)
-        {
-            if (Main.GameStarted) return;
-            yourTeam = CustomGamemode.Instance.OnBeginImpostorPrefix(__instance);
-        }
         public static void Postfix(IntroCutscene __instance)
         {
             if (Main.GameStarted) return;
-            CustomGamemode.Instance.OnBeginImpostorPostfix(__instance);
+            CustomGamemode.Instance.OnBeginImpostor(__instance);
         }
     }
 
