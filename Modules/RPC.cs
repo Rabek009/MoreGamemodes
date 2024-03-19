@@ -19,6 +19,9 @@ namespace MoreGamemodes
         SetZombieType,
         SetKillsRemain,
         ReactorFlash,
+        SetJailbreakPlayerType,
+        SetItemAmount,
+        SetCurrentRecipe,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -78,13 +81,13 @@ namespace MoreGamemodes
                     __instance.SetBomb(reader.ReadBoolean());
                     break;
                 case CustomRPC.SetItem:
-                    __instance.SetItem((Items)reader.ReadPackedUInt32());
+                    __instance.SetItem((Items)reader.ReadPackedInt32());
                     break;
                 case CustomRPC.SetIsKiller:
                     __instance.SetIsKiller(reader.ReadBoolean());
                     break;
                 case CustomRPC.SetZombieType:
-                    __instance.SetZombieType((ZombieTypes)reader.ReadPackedUInt32());
+                    __instance.SetZombieType((ZombieTypes)reader.ReadPackedInt32());
                     break;
                 case CustomRPC.SetKillsRemain:
                     __instance.SetKillsRemain(reader.ReadInt32());
@@ -92,6 +95,15 @@ namespace MoreGamemodes
                 case CustomRPC.ReactorFlash:
                     if (!__instance.AmOwner) break;;
                     HudManager.Instance.ReactorFlash(reader.ReadSingle(), reader.ReadColor());
+                    break;
+                case CustomRPC.SetJailbreakPlayerType:
+                    __instance.SetJailbreakPlayerType((JailbreakPlayerTypes)reader.ReadPackedInt32());
+                    break;
+                case CustomRPC.SetItemAmount:
+                    __instance.SetItemAmount((InventoryItems)reader.ReadPackedInt32(), reader.ReadInt32());
+                    break;
+                case CustomRPC.SetCurrentRecipe:
+                    __instance.SetCurrentRecipe(reader.ReadInt32());
                     break;
             }
         }
@@ -187,6 +199,24 @@ namespace MoreGamemodes
             })));
         }
 
+        public static void SetJailbreakPlayerType(this PlayerControl player, JailbreakPlayerTypes playerType)
+        {
+            if (JailbreakGamemode.instance == null) return;
+            JailbreakGamemode.instance.PlayerType[player.PlayerId] = playerType;
+        }
+
+        public static void SetItemAmount(this PlayerControl player, InventoryItems item, int amount)
+        {
+            if (JailbreakGamemode.instance == null) return;
+            JailbreakGamemode.instance.Inventory[(player.PlayerId, item)] = amount;
+        }
+
+        public static void SetCurrentRecipe(this PlayerControl player, int recipeId)
+        {
+            if (JailbreakGamemode.instance == null) return;
+            JailbreakGamemode.instance.CurrentRecipe[player.PlayerId] = recipeId;
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -217,7 +247,7 @@ namespace MoreGamemodes
         {
             player.SetItem(item);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetItem, SendOption.Reliable, -1);
-            writer.Write((uint)item);
+            writer.WritePacked((int)item);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -259,7 +289,7 @@ namespace MoreGamemodes
         {
             player.SetZombieType(zombieType);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetZombieType, SendOption.Reliable, -1);
-            writer.Write((uint)zombieType);
+            writer.WritePacked((int)zombieType);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -287,6 +317,31 @@ namespace MoreGamemodes
                 return;
             }
             player.RpcUnmoddedReactorFlash(duration);
+        }
+
+        public static void RpcSetJailbreakPlayerType(this PlayerControl player, JailbreakPlayerTypes playerType)
+        {
+            player.SetJailbreakPlayerType(playerType);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetJailbreakPlayerType, SendOption.Reliable, -1);
+            writer.WritePacked((int)playerType);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetItemAmount(this PlayerControl player, InventoryItems item, int amount)
+        {
+            player.SetItemAmount(item, amount);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetItemAmount, SendOption.Reliable, -1);
+            writer.WritePacked((int)item);
+            writer.Write(amount);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetCurrentRecipe(this PlayerControl player, int recipeId)
+        {
+            player.SetCurrentRecipe(recipeId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetCurrentRecipe, SendOption.Reliable, -1);
+            writer.Write(recipeId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }
 }

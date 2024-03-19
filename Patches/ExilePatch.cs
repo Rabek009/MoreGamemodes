@@ -25,7 +25,10 @@ namespace MoreGamemodes
         static void WrapUpPostfix(GameData.PlayerInfo exiled)
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            AntiBlackout.RestoreIsDead(doSend: true);
             CustomGamemode.Instance.OnExile(exiled);
+            if (exiled != null)
+                exiled.IsDead = true;
             if (exiled == null || exiled.Object == null) return;
             if (exiled.Object.GetDeathReason() == DeathReasons.Alive)
                 exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);

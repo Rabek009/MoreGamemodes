@@ -1,5 +1,6 @@
 using Il2CppSystem.Collections.Generic;
 using AmongUs.GameOptions;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace MoreGamemodes
 {
@@ -68,7 +69,19 @@ namespace MoreGamemodes
             
         }
 
-        public virtual void OnBeginImpostor(IntroCutscene __instance)
+        public virtual List<PlayerControl> OnBeginImpostorPrefix(IntroCutscene __instance)
+        {
+            var Team = new List<PlayerControl>();
+            Team.Add(PlayerControl.LocalPlayer);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor && pc != PlayerControl.LocalPlayer)
+                    Team.Add(pc);
+            }
+            return Team;
+        }
+
+        public virtual void OnBeginImpostorPostfix(IntroCutscene __instance)
         {
             
         }
@@ -78,7 +91,7 @@ namespace MoreGamemodes
             
         }
 
-        public virtual void OnVotingComplete()
+        public virtual void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, GameData.PlayerInfo exiled, bool tie)
         {
             
         }

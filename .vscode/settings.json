@@ -1,3 +1,4 @@
 {
-    "dotnet.defaultSolution": "MoreGamemodes.sln"
+    "dotnet.defaultSolution": "MoreGamemodes.sln",
+    "workbench.iconTheme": "vs-seti"
 }

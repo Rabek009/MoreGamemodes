@@ -28,6 +28,15 @@ namespace MoreGamemodes
                 if (client.Character.GetDeathReason() == DeathReasons.Alive)
                     client.Character.RpcSetDeathReason(DeathReasons.Disconnected);
             }
+            foreach (var task in LateTask.Tasks)
+            {
+                if (task.name == "ResetDisconnect_" + client.Character.PlayerId)
+                    LateTask.Tasks.Remove(task);
+            }
+            if (AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started)
+            {
+                AntiBlackout.OnDisconnect(client.Character.Data);
+            }
         }
     }
 

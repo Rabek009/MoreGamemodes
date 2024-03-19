@@ -38,6 +38,8 @@ namespace MoreGamemodes
                     maps.Add(1);
                 if (Options.AddPolus.GetBool())
                     maps.Add(2);
+                if (Options.AddDleksEht.GetBool())
+                    maps.Add(3);
                 if (Options.AddTheAirship.GetBool())
                     maps.Add(4);
                 if (Options.AddTheFungle.GetBool())
@@ -47,6 +49,7 @@ namespace MoreGamemodes
                     maps.Add(0);
                     maps.Add(1);
                     maps.Add(2);
+                    maps.Add(3);
                     maps.Add(4);
                     maps.Add(5);
                 }
@@ -56,7 +59,8 @@ namespace MoreGamemodes
             }
             if (Options.CurrentGamemode == Gamemodes.PaintBattle)
                 GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-            OptionItem.SyncAllOptions();
+            if (Options.CurrentGamemode == Gamemodes.Jailbreak && GameOptionsManager.Instance.currentGameOptions.MapId != 0 && GameOptionsManager.Instance.currentGameOptions.MapId != 3)
+                GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
             Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
         }
     }

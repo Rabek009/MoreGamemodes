@@ -32,7 +32,7 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak"
         };
 
         public static readonly string[] speedrunBodyTypes =
@@ -156,6 +156,36 @@ namespace MoreGamemodes
         public static OptionItem NumberOfKills;
         public static OptionItem ZombieBlindTime;
         public static OptionItem TrackingZombiesMode;
+        public static OptionItem EjectedPlayersAreZombies;
+
+        //Jailbreak
+        public static OptionItem PrisonerHealth;
+        public static OptionItem PrisonerRegeneration;
+        public static OptionItem PrisonerDamage;
+        public static OptionItem GuardHealth;
+        public static OptionItem GuardRegeneration;
+        public static OptionItem GuardDamage;
+        public static OptionItem WeaponDamage;
+        public static OptionItem ScrewdriverPrice;
+        public static OptionItem PrisonerWeaponPrice;
+        public static OptionItem GuardWeaponPrice;
+        public static OptionItem GuardOutfitPrice;
+        public static OptionItem RespawnCooldown;
+        public static OptionItem SearchCooldown;
+        public static OptionItem MaximumPrisonerResources;
+        public static OptionItem SpaceshipPartPrice;
+        public static OptionItem RequiredSpaceshipParts;
+        public static OptionItem PickaxePrice;
+        public static OptionItem PickaxeSpeed;
+        public static OptionItem PrisonTakeoverDuration;
+        public static OptionItem BreathingMaskPrice;
+        public static OptionItem EnergyDrinkPrice;
+        public static OptionItem EnergyDrinkDuration;
+        public static OptionItem EnergyDrinkSpeedIncrease;
+        public static OptionItem GameTime;
+        public static OptionItem EscapistsCanHelpOthers;
+        public static OptionItem HelpCooldown;
+        public static OptionItem GivenResources;
 
         //Additional Gamemodes
         public static OptionItem RandomSpawn;
@@ -164,6 +194,7 @@ namespace MoreGamemodes
         public static OptionItem AddTheSkeld;
         public static OptionItem AddMiraHQ;
         public static OptionItem AddPolus;
+        public static OptionItem AddDleksEht;
         public static OptionItem AddTheAirship;
         public static OptionItem AddTheFungle;
         public static OptionItem DisableGapPlatform;
@@ -451,6 +482,80 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             TrackingZombiesMode = StringOptionItem.Create(11006, "Tracking Zombie Mode", trackingZombiesModes, 1, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Zombies);
+            EjectedPlayersAreZombies = BooleanOptionItem.Create(11007, "Ejected Players Are Zombies", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Zombies);
+
+            //Jailbreak
+            PrisonerHealth = FloatOptionItem.Create(12000, "Prisoner Health", new(10f, 250f, 5f), 50f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            PrisonerRegeneration = FloatOptionItem.Create(12001, "Prisoner Regeneration", new(0f, 10f, 0.5f), 1f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.PerSecond);
+            PrisonerDamage = FloatOptionItem.Create(12002, "Prisoner Damage", new(0.5f, 20f, 0.5f), 6f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            GuardHealth = FloatOptionItem.Create(12003, "Guard Health", new(10f, 250f, 5f), 100f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            GuardRegeneration = FloatOptionItem.Create(12004, "Guard Regeneration", new(0f, 10f, 0.5f), 2f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.PerSecond);
+            GuardDamage = FloatOptionItem.Create(12005, "Guard Damage", new(0.5f, 20f, 0.5f), 12f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            WeaponDamage = FloatOptionItem.Create(12006, "Weapon Damage", new(0.5f, 10f, 0.5f), 3f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.PerLevel);
+            ScrewdriverPrice = IntegerOptionItem.Create(12007, "Screwdriver Price", new(5, 150, 5), 45, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            PrisonerWeaponPrice = IntegerOptionItem.Create(12008, "Prisoner Weapon Price", new(1, 50, 1), 10, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.PerLevel);
+            GuardWeaponPrice = IntegerOptionItem.Create(12009, "Guard Weapon Price", new(1, 50, 1), 10, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.PerLevel);
+            GuardOutfitPrice = IntegerOptionItem.Create(12010, "Guard Outfit Price", new(10, 250, 10), 120, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            RespawnCooldown = FloatOptionItem.Create(12011, "Respawn Cooldown", new(5f, 60f, 2.5f), 20f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.Seconds);
+            SearchCooldown = FloatOptionItem.Create(12012, "Search Cooldown", new(10f, 60f, 2.5f), 20f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.Seconds);
+            MaximumPrisonerResources = IntegerOptionItem.Create(12013, "Maximum Prisoner Resources", new(50, 2500, 50), 200, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            SpaceshipPartPrice = IntegerOptionItem.Create(12014, "Spaceship Part Price", new(50, 1000, 50), 100, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            RequiredSpaceshipParts = IntegerOptionItem.Create(12015, "Required Spaceship Parts", new(2, 15, 1), 4, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            PickaxePrice = IntegerOptionItem.Create(12016, "Pickaxe Price", new(1, 50, 1), 10, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.PerLevel);
+            PickaxeSpeed = FloatOptionItem.Create(12017, "Pickaxe Speed", new(0.5f, 10f, 0.1f), 2f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.PerLevel);
+            PrisonTakeoverDuration = FloatOptionItem.Create(12018, "Prison Takeover Duration", new(5f, 60f, 2.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.Seconds);
+            BreathingMaskPrice = IntegerOptionItem.Create(12019, "Breathing Mask Price", new(10, 250, 10), 120, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            EnergyDrinkPrice = IntegerOptionItem.Create(12020, "Energy Drink Price", new(5, 180, 5), 60, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            EnergyDrinkDuration = FloatOptionItem.Create(12021, "Energy Drink Duration", new(3f, 30f, 0.5f), 12f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.Seconds);
+            EnergyDrinkSpeedIncrease = IntegerOptionItem.Create(12022, "Energy Drink Speed Increase", new(10, 200, 10), 50, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.Percent);
+            GameTime = IntegerOptionItem.Create(12023, "Game Time", new(300, 3600, 30), 600, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.Seconds);
+            EscapistsCanHelpOthers = BooleanOptionItem.Create(12024, "Escapists Can Help Others", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak);
+            HelpCooldown = FloatOptionItem.Create(12025, "Help Cooldown", new(10f, 180f, 2.5f), 20f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetValueFormat(OptionFormat.Seconds)
+                .SetParent(EscapistsCanHelpOthers);
+            GivenResources = FloatOptionItem.Create(12026, "Given Resources", new(10, 400, 10), 30, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Jailbreak)
+                .SetParent(EscapistsCanHelpOthers);
 
             //Additional Gamemodes
             RandomSpawn = BooleanOptionItem.Create(100000, "Random Spawn", false, TabGroup.AdditionalGamemodes, false)
@@ -469,10 +574,13 @@ namespace MoreGamemodes
             AddPolus = BooleanOptionItem.Create(100103, "Add Polus", false, TabGroup.AdditionalGamemodes, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(RandomMap);
-            AddTheAirship = BooleanOptionItem.Create(100104, "Add The Airship", false, TabGroup.AdditionalGamemodes, false)
+            AddDleksEht = BooleanOptionItem.Create(100104, "Add dlekS ehT", false, TabGroup.AdditionalGamemodes, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(RandomMap);
-            AddTheFungle = BooleanOptionItem.Create(100105, "Add The Fungle", false, TabGroup.AdditionalGamemodes, false)
+            AddTheAirship = BooleanOptionItem.Create(100105, "Add The Airship", false, TabGroup.AdditionalGamemodes, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(RandomMap);
+            AddTheFungle = BooleanOptionItem.Create(100106, "Add The Fungle", false, TabGroup.AdditionalGamemodes, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(RandomMap);
             DisableGapPlatform = BooleanOptionItem.Create(100200, "Disable Gap Platform", false, TabGroup.AdditionalGamemodes, false)

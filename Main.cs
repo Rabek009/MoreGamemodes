@@ -40,7 +40,6 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, byte> AllShapeshifts;
     public static Dictionary<(byte, byte), string> LastNotifyNames;
     public static OptionBackupData RealOptions;
-    public static bool IsMeeting;
     public static Dictionary<byte, DeathReasons> AllPlayersDeathReason;
     public static List<string> PaintBattleThemes;
     public static List<(string, byte, string)> MessagesToSend;
@@ -50,7 +49,7 @@ public partial class Main : BasePlugin
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
 
-    public const string CurrentVersion = "1.1.0";
+    public const string CurrentVersion = "1.2.0";
 
     public override void Load()
     {
@@ -77,6 +76,7 @@ public partial class Main : BasePlugin
         PaintBattleGamemode.instance = null;
         KillOrDieGamemode.instance = null;
         ZombiesGamemode.instance = null;
+        JailbreakGamemode.instance = null;
 
         GameStarted = false;
         Timer = 0f;
@@ -90,7 +90,6 @@ public partial class Main : BasePlugin
         AllShapeshifts = new Dictionary<byte, byte>();
         LastNotifyNames = new Dictionary<(byte, byte), string>();
         RealOptions = null;
-        IsMeeting = false;
         AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
         PaintBattleThemes = new List<string>()
         {
@@ -103,6 +102,7 @@ public partial class Main : BasePlugin
         ProximityMessages = new Dictionary<byte, List<(string, float)>>();
         NameColors = new Dictionary<(byte, byte), Color>();
         IsModded = new Dictionary<byte, bool>();
+        AntiBlackout.Reset();
 
         Harmony.PatchAll();
     }
@@ -112,6 +112,7 @@ public partial class Main : BasePlugin
     {
         public static void Postfix(PlayerControl __instance)
         {
+            if (AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started) return;
             GameStarted = false;
             if (__instance.AmOwner)
             {
@@ -125,7 +126,6 @@ public partial class Main : BasePlugin
                 StandardNamePlates = new Dictionary<byte, string>();
                 LastNotifyNames = new Dictionary<(byte, byte), string>();
                 RealOptions = null;
-                IsMeeting = false;
                 AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
                 MessagesToSend = new List<(string, byte, string)>();
                 StandardRoles = new Dictionary<byte, RoleTypes>();
@@ -134,6 +134,7 @@ public partial class Main : BasePlugin
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
+                AntiBlackout.Reset();
             }
             else
                 IsModded[__instance.PlayerId] = false;
@@ -164,6 +165,7 @@ public enum Gamemodes
     PaintBattle,
     KillOrDie,
     Zombies,
+    Jailbreak,
     All = int.MaxValue,
 }
 
@@ -178,4 +180,5 @@ public enum DeathReasons
     Misfire,
     Suicide,
     Trapped,
+    Escaped,
 }

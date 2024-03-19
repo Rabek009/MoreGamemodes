@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Object = UnityEngine.Object;
+using UnityEngine.TextCore;
 
 namespace MoreGamemodes
 {
@@ -36,7 +37,8 @@ namespace MoreGamemodes
         }
 
         public static string ColorString(Color32 color, string str) => $"<color=#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
-
+        public static string ColorToHex(Color32 color) => $"#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}";
+        
         public static Items RandomItemCrewmate()
         {
             List<Items> items = new();
@@ -312,7 +314,7 @@ namespace MoreGamemodes
             {
                 if (GameManager.Instance.LogicComponents[i].TryCast<LogicOptions>(out var _))
                 {
-                    Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt);
+                    Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
                     MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(targetClientId == -1 ? Tags.GameData : Tags.GameDataTo);
                     {
@@ -381,16 +383,6 @@ namespace MoreGamemodes
                     AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
             }
-        }
-
-        public static byte[] ToBytes(this IGameOptions gameOptions)
-        {
-            return GameOptionsManager.Instance.gameOptionsFactory.ToBytes(gameOptions);
-        }
-
-        public static IGameOptions DeepCopy(this IGameOptions opt)
-        {
-            return GameOptionsManager.Instance.gameOptionsFactory.FromBytes(opt.ToBytes());
         }
 
         public static void SendGameData()
@@ -594,6 +586,7 @@ namespace MoreGamemodes
             if (reason == DeathReasons.Misfire) return "Misfire";
             if (reason == DeathReasons.Suicide) return "Suicide";
             if (reason == DeathReasons.Trapped) return "Trapped";
+            if (reason == DeathReasons.Escaped) return "Escaped";
             return "???";
         }
 
@@ -640,6 +633,26 @@ namespace MoreGamemodes
             ImageConversion.LoadImage(texture, ms.ToArray());
             sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), new(0.5f, 0.5f), pixelsPerUnit);
             return sprite;
+        }
+
+        public static void ShowAndCloseMeeting()
+        {
+            if (AmongUsClient.Instance.GameState != AmongUsClient.GameStates.Started) return;
+            if (GameManager.Instance.LogicFlow.IsGameOverDueToDeath()) return;
+            MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
+            MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
+            AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);
+            CustomRpcSender sender = CustomRpcSender.Create("ShowAndCloseMeeting", SendOption.Reliable);
+            sender.StartMessage(-1);
+            PlayerControl.LocalPlayer.StartMeeting(PlayerControl.LocalPlayer.Data);
+            sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.StartMeeting)
+                .Write(PlayerControl.LocalPlayer.PlayerId)
+                .EndRpc();
+            MeetingHud.Instance.Close();
+            sender.StartRpc(MeetingHud.Instance.NetId, (byte)RpcCalls.CloseMeeting)
+                .EndRpc();
+            sender.EndMessage();
+            sender.SendMessage();
         }
     }
 }

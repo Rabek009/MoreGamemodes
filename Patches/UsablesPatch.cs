@@ -34,7 +34,7 @@ namespace MoreGamemodes
         {
             if (Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.BombTag ||
                 (Options.CurrentGamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.HackTimer > 0f) || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun ||
-                Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie)
+                Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie || Options.CurrentGamemode == Gamemodes.Jailbreak)
                 __instance.Close();
         }
     }
@@ -57,7 +57,7 @@ namespace MoreGamemodes
             canUse = couldUse = false;
             if (Options.CurrentGamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.HackTimer > 0f)
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie)
+            if (Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie || Options.CurrentGamemode == Gamemodes.Jailbreak)
                 return false;
             return !pc.Role.IsImpostor || __instance.AllowImpostor;
         }
