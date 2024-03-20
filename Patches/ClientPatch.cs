@@ -3,7 +3,6 @@ using InnerNet;
 
 namespace MoreGamemodes
 {
-    // test
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CreatePlayer))]
     class CreatePlayerPatch
     {
