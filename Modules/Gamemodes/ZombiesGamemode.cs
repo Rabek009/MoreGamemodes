@@ -17,7 +17,7 @@ namespace MoreGamemodes
                 GameData.Instance.RpcSetTasks(exiled.PlayerId, new byte[0]);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.Data.Role.IsImpostor)
+                    if (Main.StandardRoles[pc.PlayerId].IsImpostor())
                         Main.NameColors[(pc.PlayerId, exiled.PlayerId)] = Color.red;
                     Main.NameColors[(exiled.PlayerId, pc.PlayerId)] = Palette.PlayerColors[2];
                 }
@@ -29,13 +29,13 @@ namespace MoreGamemodes
         {
             if (__instance.HauntTarget.Data.IsDead && __instance.HauntTarget.IsZombie())
                 __instance.FilterText.text = "Zombie Ghost";
-            else if (__instance.HauntTarget.Data.IsDead && __instance.HauntTarget.Data.Role.IsImpostor)
+            else if (__instance.HauntTarget.Data.IsDead && Main.StandardRoles[__instance.HauntTarget.PlayerId].IsImpostor())
                 __instance.FilterText.text = "Impostor Ghost";
             else if (__instance.HauntTarget.Data.IsDead)
                 __instance.FilterText.text = "Crewmate Ghost";
             else if (__instance.HauntTarget.IsZombie())
                 __instance.FilterText.text = "Zombie";
-            else if (__instance.HauntTarget.Data.Role.IsImpostor)
+            else if (Main.StandardRoles[__instance.HauntTarget.PlayerId].IsImpostor())
                 __instance.FilterText.text = "Impostor";
             else
                 __instance.FilterText.text = "Crewmate";
@@ -55,13 +55,23 @@ namespace MoreGamemodes
             }
             if (PlayerControl.LocalPlayer.IsZombie())
             {
+                if (!Options.ZombiesCanVent.GetBool())
+                {
+                    __instance.ImpostorVentButton.SetDisabled();
+                    __instance.ImpostorVentButton.ToggleVisible(false);
+                }
                 __instance.ReportButton.SetDisabled();
                 __instance.ReportButton.ToggleVisible(false);
+                __instance.SabotageButton.SetDisabled();
+                __instance.SabotageButton.ToggleVisible(false);
             }
-            if (PlayerControl.LocalPlayer.Data.Role.IsImpostor)
+            if (Main.StandardRoles[PlayerControl.LocalPlayer.PlayerId].IsImpostor())
             {
-                __instance.ImpostorVentButton.SetDisabled();
-                __instance.ImpostorVentButton.ToggleVisible(false);
+                if (!Options.ImpostorsCanVent.GetBool())
+                {
+                    __instance.ImpostorVentButton.SetDisabled();
+                    __instance.ImpostorVentButton.ToggleVisible(false);
+                }
                 __instance.SabotageButton.SetDisabled();
                 __instance.SabotageButton.ToggleVisible(false);
             }
@@ -140,7 +150,7 @@ namespace MoreGamemodes
         {
             if (killer.IsZombie() && killer.GetZombieType() != ZombieTypes.FullZombie)
                 return false;
-            if (target.IsZombie() && (killer.Data.Role.IsImpostor || killer.IsZombie()))
+            if (target.IsZombie() && (Main.StandardRoles[killer.PlayerId].IsImpostor() || killer.IsZombie()))
                 return false;
             if (killer.IsZombie() && Main.Timer < Options.ZombieBlindTime.GetFloat())
                 return false;
@@ -149,7 +159,7 @@ namespace MoreGamemodes
 
         public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
         {
-            if (Main.StandardRoles[killer.PlayerId] == RoleTypes.Impostor || (killer.IsZombie() && Options.ZombieKillsTurnIntoZombie.GetBool()))
+            if (Main.StandardRoles[killer.PlayerId].IsImpostor() || (killer.IsZombie() && Options.ZombieKillsTurnIntoZombie.GetBool()))
             {
                 target.RpcSetZombieType(ZombieTypes.JustTurned);
                 new LateTask(() => target.RpcSetDesyncRole(RoleTypes.Impostor, target.GetClientId()), 0.5f);
@@ -158,7 +168,7 @@ namespace MoreGamemodes
                 GameData.Instance.RpcSetTasks(target.PlayerId, new byte[0]);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.Data.Role.IsImpostor)
+                    if (Main.StandardRoles[pc.PlayerId].IsImpostor())
                         Main.NameColors[(pc.PlayerId, target.PlayerId)] = Color.red;
                     Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.PlayerColors[2];
                 }

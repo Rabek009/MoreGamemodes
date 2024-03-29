@@ -49,7 +49,7 @@ public partial class Main : BasePlugin
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
 
-    public const string CurrentVersion = "1.2.0";
+    public const string CurrentVersion = "1.2.1";
 
     public override void Load()
     {
@@ -93,10 +93,13 @@ public partial class Main : BasePlugin
         AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
         PaintBattleThemes = new List<string>()
         {
-            "Crewmate", "Impostor", "Dead Body", "Cosmos", "House", "Beach", "Sky", "Love", "Jungle", "Robot", "Fruits", "Vegetables", "Lake", "Rainbow", "Portal", "Planet", "Desert", "Taiga", "Airplane", "Cave", "Island", "Animal",
+            "Crewmate", "Impostor", "Dead body", "Cosmos", "House", "Beach", "Sky", "Love", "Jungle", "Robot", "Fruits", "Vegetables", "Lake",
+            "Rainbow", "Portal", "Planet", "Desert", "Taiga", "Airplane", "Cave", "Island", "Animal", "Anything", "Flag", "Jewellery", "Scary",
+            "Shapeshifter", "Sword", "Treasure", "Your dream", "Celebrity", "Fungus"
         };
         MessagesToSend = new List<(string, byte, string)>();
         CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
+        CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
         LastResult = "";
         StandardRoles = new Dictionary<byte, RoleTypes>();
         ProximityMessages = new Dictionary<byte, List<(string, float)>>();
@@ -130,11 +133,14 @@ public partial class Main : BasePlugin
                 MessagesToSend = new List<(string, byte, string)>();
                 StandardRoles = new Dictionary<byte, RoleTypes>();
                 CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
+                CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
                 ProximityMessages = new Dictionary<byte, List<(string, float)>>();
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
                 AntiBlackout.Reset();
+                if (RickrollManager.ShouldRickrollMode())
+                    RickrollManager.OnStart();
             }
             else
                 IsModded[__instance.PlayerId] = false;

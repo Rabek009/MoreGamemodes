@@ -247,6 +247,7 @@ namespace MoreGamemodes
     {
         public static void Postfix()
         {
+            Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
             OptionItem.SyncAllOptions();
         }
     }

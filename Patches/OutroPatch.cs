@@ -115,7 +115,7 @@ namespace MoreGamemodes
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
                             lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") + " (";
-                        else if (playerInfo.Role.IsImpostor)
+                        else if (Main.StandardRoles[playerInfo.PlayerId] == RoleTypes.Impostor)
                             lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
                         else
                             lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
@@ -176,7 +176,7 @@ namespace MoreGamemodes
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
                             lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") + " (";
-                        else if (playerInfo.Role.IsImpostor)
+                        else if (Main.StandardRoles[playerInfo.PlayerId] == RoleTypes.Impostor)
                             lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
                         else
                             lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
@@ -225,6 +225,7 @@ namespace MoreGamemodes
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
+            CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.IsModded = new Dictionary<byte, bool>();

@@ -107,7 +107,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnCheckProtect(PlayerControl __instance, PlayerControl target)
+        public override bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
         {
             return false;
         }

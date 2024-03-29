@@ -40,15 +40,15 @@ Join to discord server: https://discord.gg/jJe5kPpbFJ
 | /color COLOR_ID<br>/colour COLOR_ID             | Changes your color                                      |
 | /name NAME                                      | Changes your name                                       |
 | /h gm, /h gamemode<br>/help gm, /help gamemode  | Show gamemode description                               |
-| /h i, /h item<br>/help i, /help item            | Show item description(Random Items)                     |
-| /stop                                           | Use stop item(Random Items)                             |
+| /h i, /h item<br>/help i, /help item            | Show item description(Random items)                     |
+| /stop                                           | Use stop item(Random items)                             |
 | /now<br>/n                                      | Show current options                                    |
 | /id colors<br>/id colours                       | Show color ids                                          |
 | /id players                                     | Show player ids                                         |
 | /commands<br>/cm                                | Show commands list                                      |
-| /radio<br>/rd                                   | Send private message to other impostors (Mid Game Chat) |
+| /radio<br>/rd                                   | Send private message to other impostors (Mid game chat) |
 | /lastresult<br>/l                               | Show last game result                                   |
-| /info                                           | Use newsletter item(Random Items)                       |
+| /info                                           | Use newsletter item(Random items)                       |
 | /h j, /h jailbreak<br>/help j, /help jailbreak  | Show how to play jailbreak gamemode on map              |
 | /tpout                                          | Teleports you outside lobby ship                        |
 | /tpin                                           | Teleports you into lobby ship                           |
@@ -97,13 +97,14 @@ Everyone is impostor. Rounds last for some seconds. After every round players wi
 meetings, sabotages or venting. Click kill button to give bomb away. Last standing alive wins.
 
 #### Game options
-| Name                     |
-| ------------------------ |
-| Teleport on start        |
-| Teleport after explosion |
-| Explosion delay          |
-| Players with bomb        |
-| Max players with bomb    |
+| Name                        |
+| --------------------------- |
+| Teleport on start           |
+| Teleport after explosion    |
+| Explosion delay             |
+| Players with bomb           |
+| Max players with bomb       |
+| Arrow to nearest non bombed |
 
 ### Random items
 Crewmates get items by doing tasks, impostors by killing. Items are given randomly. Pet your pet to use item. Some items (knowledge, gun,illusion, finder and rope) works on nearest player. Other rules are just like in classic game. Random items works with special roles.
@@ -334,14 +335,15 @@ Type (/color ID) command to change paint color. Pet your pet to paint. Paint som
 Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!
 
 #### Game options
-| Name                 |
-| -------------------- |
-| Teleport after round |
-| Killer blind time    |
-| Time to kill         |
+| Name                      |
+| ------------------------- |
+| Teleport after round      |
+| Killer blind time         |
+| Time to kill              |
+| Arrow to nearest survivor |
 
 ### Zombies
-Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).
+Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).
 
 #### Game options
 | Name                          |
@@ -354,12 +356,14 @@ Players killed by impostor are turned into zombies and are on impostors side. Zo
 | Zombie blind time             |
 | Tracking zombie mode          |
 | Ejected players are zombies   |
+| Impostors can vent            |
+| Zombies can vent              |
 
 ### Jailbreak
 Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.
 
 #### Maps
-The skeld, Dleks eht: There are 5 forbidden areas, where is illegal for prisoners to be in. These are:<br>Reactor<br>Security<br>Admin<br>Storage<br>Navigation<br><br>Your health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 1 resource per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:<br>1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!<br>2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!<br>3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!
+The skeld, Dleks eht: There are 5 forbidden areas, where is illegal for prisoners to be in. These are:<br>Reactor<br>Security<br>Admin<br>Storage<br>Navigation<br><br>Your health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:<br>1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!<br>2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!<br>3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!
 
 #### Game options
 | Name                        |

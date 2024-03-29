@@ -14,11 +14,10 @@ namespace MoreGamemodes
     {
         public static bool Prefix(ChatController __instance)
         {
-            __instance.timeSinceLastMessage = 3f;
             var text = __instance.freeChatField.Text;
-            if (!AmongUsClient.Instance.AmHost && text.Contains("<size="))
+            if (!AmongUsClient.Instance.AmHost && (text.Contains("<size=") || text.Contains("<br>")))
             {
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Only host can change size of text! Other text formatting is allowed.");
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Only host can change size of text and use new line! Other text formatting is allowed.");
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
@@ -31,6 +30,7 @@ namespace MoreGamemodes
                 return false;
             }
             if (!AmongUsClient.Instance.AmHost) return true;
+            __instance.timeSinceLastMessage = 3f;
             if (__instance.quickChatField.Visible)
             {
                 return true;
@@ -42,11 +42,16 @@ namespace MoreGamemodes
             string[] args = text.Split(' ');
             string subArgs = "";
             var canceled = false;
+            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle && !PlayerControl.LocalPlayer.Data.IsDead)
+            {
+                __instance.freeChatField.textArea.Clear();
+                __instance.freeChatField.textArea.SetText("");
+                return false;
+            }
             if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
-                    Utils.SendSpam("Someone tried to send message during comms sabotage");
                     __instance.freeChatField.textArea.Clear();
                     __instance.freeChatField.textArea.SetText("");
                     return false;
@@ -644,10 +649,11 @@ namespace MoreGamemodes
                                     Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
                                     break;
                                 case "zombies":
-                                    Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                    Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                     break;
                                 case "jailbreak":
-                                    Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                    Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
+                                    Utils.SendChat("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -692,10 +698,11 @@ namespace MoreGamemodes
                                             Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
                                             break;
                                         case Gamemodes.Zombies:
-                                            Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                            Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                             break;
                                         case Gamemodes.Jailbreak:
-                                            Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                            Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
+                                            Utils.SendChat("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                             break;
                                     }
                                     if (Options.RandomSpawn.GetBool())
@@ -794,7 +801,7 @@ namespace MoreGamemodes
                             {
                                 case "theskeld":
                                 case "dlekseht":
-                                    Utils.SendChat("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 1 resource per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
+                                    Utils.SendChat("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
                                     break;
                                 case "mirahq":
                                 case "polus":
@@ -807,7 +814,7 @@ namespace MoreGamemodes
                                     {
                                         case 0:
                                         case 3:
-                                            Utils.SendChat("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 1 resource per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
+                                            Utils.SendChat("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
                                             break;
                                         case 1:
                                         case 2:
@@ -839,14 +846,15 @@ namespace MoreGamemodes
                     message += "Can use /color command: "; message += Options.CanUseColorCommand.GetBool() ? "ON\n" : "OFF\n";
                     if (Options.CanUseColorCommand.GetBool())
                     {
-                        message += "\nEnable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON" : "OFF";
+                        message += "Enable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON\n" : "OFF\n";
                     }   
-                    message += "\nCan use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON" : "OFF";
+                    message += "Can use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON\n" : "OFF\n";
                     if (Options.CanUseNameCommand.GetBool())
                     {
-                        message += "\nEnable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON" : "OFF";
-                        message += "\nMaximum name length: " + Options.MaximumNameLength.GetInt();
-                    }  
+                        message += "Enable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Maximum name length: " + Options.MaximumNameLength.GetInt() + "\n";
+                    }
+                    message += "Can use /tpout command: "; message += Options.CanUseTpoutCommand.GetBool() ? "ON\n" : "OFF\n";
                     Utils.SendChat(message, "Options");
 
                     message = "";
@@ -869,6 +877,7 @@ namespace MoreGamemodes
                             message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Instant shapeshift: "; message += Options.InstantShapeshift.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.BombTag:
                             message = "Gamemode: Bomb tag\n\n";
@@ -876,6 +885,7 @@ namespace MoreGamemodes
                             message += "Explosion delay: " + Options.ExplosionDelay.GetInt() + "s\n";
                             message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
                             message += "Max players with bomb: " + Options.MaxPlayersWithBomb.GetInt() + " players\n";
+                            message += "Arrow to nearest non bombed: "; message += Options.ArrowToNearestNonBombed.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.RandomItems:
                             message = "Gamemode: Random items\n\n";
@@ -969,72 +979,78 @@ namespace MoreGamemodes
                         case Gamemodes.BattleRoyale:
                             message = "Gamemode: Battle royale\n\n";
                             message += "Lives: " + Options.Lives.GetInt() + "\n";
-                            message += "Lives Visible To Others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Arrow To Nearest Player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Grace Period: " + Options.GracePeriod.GetFloat() + "s\n";
+                            message += "Lives visible to others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Arrow to nearest player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Grace period: " + Options.GracePeriod.GetFloat() + "s\n";
                             break;
                         case Gamemodes.Speedrun:
                             message = "Gamemode: Speedrun\n\n";
-                            message += "Body Type: " + Utils.BodyTypeString(Options.CurrentBodyType) + "\n";
-                            message += "Tasks Visible To Others: "; message += Options.TasksVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Body type: " + Utils.BodyTypeString(Options.CurrentBodyType) + "\n";
+                            message += "Tasks visible to others: "; message += Options.TasksVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.PaintBattle:
-                            message = "Gamemode: Paint Battle\n\n";
-                            message += "Painting Time: " + Options.PaintingTime.GetInt() + "s\n";
-                            message += "Voting Time: " + Options.VotingTime.GetInt() + "s\n";
+                            message = "Gamemode: Paint battle\n\n";
+                            message += "Painting time: " + Options.PaintingTime.GetInt() + "s\n";
+                            message += "Voting time: " + Options.VotingTime.GetInt() + "s\n";
                             break;
                         case Gamemodes.KillOrDie:
                             message = "Gamemode: Kill or die\n\n";
                             message += "Teleport after round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
                             message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
                             message += "Time to kill: " + Options.TimeToKill.GetInt() + "s\n";
+                            message += "Arrow to nearest survivor: "; message += Options.ArrowToNearestSurvivor.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.Zombies:
                             message = "Gamemode: Zombies\n\n";
-                            message += "Zombie Kills Turn Into Zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Zombie Speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
-                            message += "Zombie Vision: " + Options.ZombieVision.GetFloat() + "x\n";
-                            message += "Can Kill Zombies After Tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombie kills turn into zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombie speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
+                            message += "Zombie vision: " + Options.ZombieVision.GetFloat() + "x\n";
+                            message += "Can kill zombies after tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.CanKillZombiesAfterTasks.GetBool())
                             {
-                                message += "Number Of Kills: " + Options.NumberOfKills.GetInt() + "\n";
+                                message += "Number of kills: " + Options.NumberOfKills.GetInt() + "\n";
                             }
-                            message += "Zombie Blind Time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
-                            message += "Tracking Zombies Mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
-                            message += "Ejected Players Are Zombies: "; message += Options.EjectedPlayersAreZombies.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombie blind time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
+                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
+                            message += "Ejected players are zombies: "; message += Options.EjectedPlayersAreZombies.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Impostors can vent: "; message += Options.ImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombies can vent: "; message += Options.ZombiesCanVent.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.Jailbreak:
                             message = "Gamemode: Jailbreak\n\n";
-                            message += "Prisoner Health: " + Options.PrisonerHealth.GetFloat() + "\n";
-                            message += "Prisoner Regeneration: " + Options.PrisonerRegeneration.GetFloat() + "/s\n";
-                            message += "Prisoner Damage: " + Options.PrisonerDamage.GetFloat() + "\n";
-                            message += "Guard Health: " + Options.GuardHealth.GetFloat() + "\n";
-                            message += "Guard Regeneration: " + Options.GuardRegeneration.GetFloat() + "/s\n";
-                            message += "Guard Damage: " + Options.GuardDamage.GetFloat() + "\n";
-                            message += "Weapon Damage: " + Options.WeaponDamage.GetFloat() + "/level\n";
-                            message += "Screwdriver Price: " + Options.ScrewdriverPrice.GetInt() + "\n";
-                            message += "Prisoner Weapon Price: " + Options.PrisonerWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard Weapon Price: " + Options.GuardWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard Outfit Price: " + Options.GuardOutfitPrice.GetInt() + "\n";
-                            message += "Respawn Cooldown: " + Options.RespawnCooldown.GetFloat() + "s\n";
-                            message += "Search Cooldown: " + Options.SearchCooldown.GetFloat() + "s\n";
-                            message += "Maximum Prisoner Resources: " + Options.MaximumPrisonerResources.GetInt() + "\n";
-                            message += "Spaceship Part Price: " + Options.SpaceshipPartPrice.GetInt() + "\n";
-                            message += "Required Spaceship Parts: " + Options.RequiredSpaceshipParts.GetInt() + "\n";
-                            message += "Pickaxe Price: " + Options.PickaxePrice.GetInt() + "/level\n";
-                            message += "Pickaxe Speed" + Options.PickaxeSpeed.GetFloat() + "/level\n";
-                            message += "Prison Takeover Duration" + Options.PrisonTakeoverDuration.GetFloat() + "s\n";
-                            message += "Breathing Mask Price: " + Options.BreathingMaskPrice.GetInt() + "\n";
-                            message += "Energy Drink Price: " + Options.EnergyDrinkPrice.GetInt() + "\n";
-                            message += "Energy Drink Duration: " + Options.EnergyDrinkDuration.GetFloat() + "s\n";
-                            message += "Energy Drink Speed Increase: " + Options.EnergyDrinkSpeedIncrease.GetInt() + "%\n";
-                            message += "Game Time: " + Options.GameTime.GetInt() + "s\n";
-                            message += "Escapists Can Help Others: "; message += Options.EscapistsCanHelpOthers.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Prisoner health: " + Options.PrisonerHealth.GetFloat() + "\n";
+                            message += "Prisoner regeneration: " + Options.PrisonerRegeneration.GetFloat() + "/s\n";
+                            message += "Prisoner damage: " + Options.PrisonerDamage.GetFloat() + "\n";
+                            message += "Guard health: " + Options.GuardHealth.GetFloat() + "\n";
+                            message += "Guard regeneration: " + Options.GuardRegeneration.GetFloat() + "/s\n";
+                            message += "Guard damage: " + Options.GuardDamage.GetFloat() + "\n";
+                            message += "Weapon damage: " + Options.WeaponDamage.GetFloat() + "/level\n";
+                            message += "Screwdriver price: " + Options.ScrewdriverPrice.GetInt() + "\n";
+                            message += "Prisoner weapon price: " + Options.PrisonerWeaponPrice.GetInt() + "/level\n";
+                            message += "Guard weapon price: " + Options.GuardWeaponPrice.GetInt() + "/level\n";
+                            message += "Guard outfit price: " + Options.GuardOutfitPrice.GetInt() + "\n";
+                            message += "Respawn cooldown: " + Options.RespawnCooldown.GetFloat() + "s\n";
+                            message += "Search cooldown: " + Options.SearchCooldown.GetFloat() + "s\n";
+                            message += "Maximum prisoner resources: " + Options.MaximumPrisonerResources.GetInt() + "\n";
+                            message += "Spaceship part price: " + Options.SpaceshipPartPrice.GetInt() + "\n";
+                            message += "Required spaceship parts: " + Options.RequiredSpaceshipParts.GetInt() + "\n";
+                            message += "Pickaxe price: " + Options.PickaxePrice.GetInt() + "/level\n";
+                            message += "Pickaxe speed" + Options.PickaxeSpeed.GetFloat() + "/level\n";
+                            message += "Prison takeover duration" + Options.PrisonTakeoverDuration.GetFloat() + "s\n";
+                            message += "Breathing mask price: " + Options.BreathingMaskPrice.GetInt() + "\n";
+                            message += "Energy drink price: " + Options.EnergyDrinkPrice.GetInt() + "\n";
+                            message += "Energy drink duration: " + Options.EnergyDrinkDuration.GetFloat() + "s\n";
+                            message += "Energy drink speed increase: " + Options.EnergyDrinkSpeedIncrease.GetInt() + "%\n";
+                            message += "Game time: " + Options.GameTime.GetInt() + "s\n";
+                            message += "Escapists can help others: "; message += Options.EscapistsCanHelpOthers.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EscapistsCanHelpOthers.GetBool())
                             {
-                                message += "Help Cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
-                                message += "Given Resources: " + Options.GivenResources.GetInt() + "\n";
+                                message += "Help cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
+                                message += "Given resources: " + Options.GivenResources.GetInt() + "\n";
                             }
+                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt();
+                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt();
+                            message += "Armor protection: " + Options.ArmorProtection.GetFloat();
                             break;
                     }
                     Utils.SendChat(message, "Options");
@@ -1042,33 +1058,35 @@ namespace MoreGamemodes
                     message = "Additional Gamemodes:\n";
                     if (Options.RandomSpawn.GetBool())
                     {
-                        message += "\nRandom Spawn\n";
-                        message += "Teleport After Meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
+                        message += "\nRandom spawn\n";
+                        message += "Teleport after meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
                     }
                     if (Options.RandomMap.GetBool())
                     {
                         message += "\nRandom Map\n";
-                        message += "Add The Skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add Mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add Polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add dlekS ehT: "; message += Options.AddDleksEht.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add The Airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add The Fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add the skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add dleks eht: "; message += Options.AddDleksEht.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add the airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add the fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
                     }
                     if (Options.DisableGapPlatform.GetBool())
-                        message += "\nDisable Gap Platform\n";
+                        message += "\nDisable gap platform\n";
                     if (Options.MidGameChat.GetBool())
                     {
-                        message += "\nMid Game Chat\n";
-                        message += "Proximity Chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
+                        message += "\nMid game chat\n";
+                        message += "Proximity chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
                         if (Options.ProximityChat.GetBool())
                         {
-                            message += "Messages Radius: " + Options.MessagesRadius.GetFloat() + "x\n";
-                            message += "Impostor Radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Fake Shapeshift Appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Messages radius: " + Options.MessagesRadius.GetFloat() + "x\n";
+                            message += "Impostor radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Fake shapeshift appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
                         }
-                        message += "Disable During Comms Sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Disable during comms sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
                     }
+                    if (Options.DisableZipline.GetBool())
+                        message += "\nDisable zipline\n";
                     if (message != "Additional Gamemodes:\n")
                         Utils.SendChat(message, "Options");
                     break;
@@ -1285,7 +1303,12 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             var canceled = false;
             string[] args = text.Split(' ');
-            string subArgs = "";   
+            string subArgs = "";
+            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
+            {
+                Utils.SendSpam("Someone alive tried to send message during round");
+                return false;
+            }
             if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
@@ -1407,7 +1430,7 @@ namespace MoreGamemodes
                     break;
                 case "/name":
                     canceled = true;
-                    if (!Options.CanUseNameCommand.GetBool()) break;
+                    if (!Options.CanUseNameCommand.GetBool() || RickrollManager.ShouldRickrollMode()) break;
                     if (Main.GameStarted) break;
                     var name = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -1460,10 +1483,11 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
                                     break;
                                 case "zombies":
-                                    player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                    player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                     break;
                                 case "jailbreak":
-                                    player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                    player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
+                                    player.RpcSendMessage("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -1508,10 +1532,11 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
                                             break;
                                         case Gamemodes.Zombies:
-                                            player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Impostors can't vent. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                            player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
                                             break;
                                         case Gamemodes.Jailbreak:
-                                            player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                            player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
+                                            player.RpcSendMessage("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                             break;
                                     }
                                     if (Options.RandomSpawn.GetBool())
@@ -1570,7 +1595,7 @@ namespace MoreGamemodes
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Bomb), "Items");
                                     break;
                                 case "trap":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Trap), "Items");
+                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Trap), "Items");
                                     break;
                                 case "teleport":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Teleport), "Items");
@@ -1610,7 +1635,7 @@ namespace MoreGamemodes
                             {
                                 case "theskeld":
                                 case "dlekseht":
-                                    player.RpcSendMessage("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 1 resource per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
+                                    player.RpcSendMessage("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
                                     break;
                                 case "mirahq":
                                 case "polus":
@@ -1623,7 +1648,7 @@ namespace MoreGamemodes
                                     {
                                         case 0:
                                         case 3:
-                                            player.RpcSendMessage("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 1 resource per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
+                                            player.RpcSendMessage("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
                                             break;
                                         case 1:
                                         case 2:
@@ -1651,18 +1676,19 @@ namespace MoreGamemodes
                 case "/now":
                     canceled = true;
                     var message = "";
-                    message += "No game end: "; message += Options.NoGameEnd.GetBool() ? "ON" : "OFF";
-                    message += "\nCan use /color command: "; message += Options.CanUseColorCommand.GetBool() ? "ON" : "OFF";
+                    message += "No game end: "; message += Options.NoGameEnd.GetBool() ? "ON\n" : "OFF\n";
+                    message += "Can use /color command: "; message += Options.CanUseColorCommand.GetBool() ? "ON\n" : "OFF\n";
                     if (Options.CanUseColorCommand.GetBool())
                     {
-                        message += "\nEnable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON" : "OFF";
+                        message += "Enable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON\n" : "OFF\n";
                     }   
-                    message += "\nCan use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON" : "OFF";
+                    message += "Can use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON\n" : "OFF\n";
                     if (Options.CanUseNameCommand.GetBool())
                     {
-                        message += "\nEnable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON" : "OFF";
-                        message += "\nMaximum name length:" + Options.MaximumNameLength.GetInt();
-                    }   
+                        message += "Enable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Maximum name length: " + Options.MaximumNameLength.GetInt() + "\n";
+                    }
+                    message += "Can use /tpout command: "; message += Options.CanUseTpoutCommand.GetBool() ? "ON\n" : "OFF\n";
                     player.RpcSendMessage(message, "Options");
 
                     message = "";
@@ -1685,6 +1711,7 @@ namespace MoreGamemodes
                             message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Instant shapeshift: "; message += Options.InstantShapeshift.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.BombTag:
                             message = "Gamemode: Bomb tag\n\n";
@@ -1692,6 +1719,7 @@ namespace MoreGamemodes
                             message += "Explosion delay: " + Options.ExplosionDelay.GetInt() + "s\n";
                             message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
                             message += "Max players with bomb: " + Options.MaxPlayersWithBomb.GetInt() + " players\n";
+                            message += "Arrow to nearest non bombed: "; message += Options.ArrowToNearestNonBombed.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.RandomItems:
                             message = "Gamemode: Random items\n\n";
@@ -1785,71 +1813,77 @@ namespace MoreGamemodes
                         case Gamemodes.BattleRoyale:
                             message = "Gamemode: Battle royale\n\n";
                             message += "Lives: " + Options.Lives.GetInt() + "\n";
-                            message += "Lives Visible To Others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Arrow To Nearest Player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Grace Period: " + Options.GracePeriod.GetFloat() + "s\n";
+                            message += "Lives visible to others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Arrow to nearest player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Grace period: " + Options.GracePeriod.GetFloat() + "s\n";
                             break;
                         case Gamemodes.Speedrun:
                             message = "Gamemode: Speedrun\n\n";
-                            message += "Body Type: " + Utils.BodyTypeString(Options.CurrentBodyType) + "\n";
-                            message += "Tasks Visible To Others: "; message += Options.TasksVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Body type: " + Utils.BodyTypeString(Options.CurrentBodyType) + "\n";
+                            message += "Tasks visible to others: "; message += Options.TasksVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.PaintBattle:
-                            message = "Gamemode: Paint Battle\n\n";
-                            message += "Painting Time: " + Options.PaintingTime.GetInt() + "s\n";
-                            message += "Voting Time: " + Options.VotingTime.GetInt() + "s\n";
+                            message = "Gamemode: Paint battle\n\n";
+                            message += "Painting time: " + Options.PaintingTime.GetInt() + "s\n";
+                            message += "Voting time: " + Options.VotingTime.GetInt() + "s\n";
                             break;
                         case Gamemodes.KillOrDie:
                             message = "Gamemode: Kill or die\n\n";
-                            message += "Teleport After Round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Killer Blind Time: " + Options.KillerBlindTime.GetFloat() + "s\n";
-                            message += "Time To Kill: " + Options.TimeToKill.GetInt() + "s\n";
+                            message += "Teleport after round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
+                            message += "Time to kill: " + Options.TimeToKill.GetInt() + "s\n";
+                            message += "Arrow to nearest survivor: "; message += Options.ArrowToNearestSurvivor.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.Zombies:
                             message = "Gamemode: Zombies\n\n";
-                            message += "Zombie Kills Turn Into Zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Zombie Speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
-                            message += "Zombie Vision: " + Options.ZombieVision.GetFloat() + "x\n";
-                            message += "Can Kill Zombies After Tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombie kills turn into zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombie speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
+                            message += "Zombie vision: " + Options.ZombieVision.GetFloat() + "x\n";
+                            message += "Can kill zombies after tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.CanKillZombiesAfterTasks.GetBool())
                             {
-                                message += "Number Of Kills: " + Options.NumberOfKills.GetInt() + "\n";
+                                message += "Number of kills: " + Options.NumberOfKills.GetInt() + "\n";
                             }
-                            message += "Zombie Blind Time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
-                            message += "Tracking Zombies Mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
+                            message += "Zombie blind time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
+                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
+                            message += "Impostors can vent: "; message += Options.ImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Zombies can vent: "; message += Options.ZombiesCanVent.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.Jailbreak:
                             message = "Gamemode: Jailbreak\n\n";
-                            message += "Prisoner Health: " + Options.PrisonerHealth.GetFloat() + "\n";
-                            message += "Prisoner Regeneration: " + Options.PrisonerRegeneration.GetFloat() + "/s\n";
-                            message += "Prisoner Damage: " + Options.PrisonerDamage.GetFloat() + "\n";
-                            message += "Guard Health: " + Options.GuardHealth.GetFloat() + "\n";
-                            message += "Guard Regeneration: " + Options.GuardRegeneration.GetFloat() + "/s\n";
-                            message += "Guard Damage: " + Options.GuardDamage.GetFloat() + "\n";
-                            message += "Weapon Damage: " + Options.WeaponDamage.GetFloat() + "/level\n";
-                            message += "Screwdriver Price: " + Options.ScrewdriverPrice.GetInt() + "\n";
-                            message += "Prisoner Weapon Price: " + Options.PrisonerWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard Weapon Price: " + Options.GuardWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard Outfit Price: " + Options.GuardOutfitPrice.GetInt() + "\n";
-                            message += "Respawn Cooldown: " + Options.RespawnCooldown.GetFloat() + "s\n";
-                            message += "Search Cooldown: " + Options.SearchCooldown.GetFloat() + "s\n";
-                            message += "Maximum Prisoner Resources: " + Options.MaximumPrisonerResources.GetInt() + "\n";
-                            message += "Spaceship Part Price: " + Options.SpaceshipPartPrice.GetInt() + "\n";
-                            message += "Required Spaceship Parts: " + Options.RequiredSpaceshipParts.GetInt() + "\n";
-                            message += "Pickaxe Price: " + Options.PickaxePrice.GetInt() + "/level\n";
-                            message += "Pickaxe Speed" + Options.PickaxeSpeed.GetFloat() + "/level\n";
-                            message += "Prison Takeover Duration" + Options.PrisonTakeoverDuration.GetFloat() + "s\n";
-                            message += "Breathing Mask Price: " + Options.BreathingMaskPrice.GetInt() + "\n";
-                            message += "Energy Drink Price: " + Options.EnergyDrinkPrice.GetInt() + "\n";
-                            message += "Energy Drink Duration: " + Options.EnergyDrinkDuration.GetFloat() + "s\n";
-                            message += "Energy Drink Speed Increase: " + Options.EnergyDrinkSpeedIncrease.GetInt() + "%\n";
-                            message += "Game Time: " + Options.GameTime.GetInt() + "s\n";
-                            message += "Escapists Can Help Others: "; message += Options.EscapistsCanHelpOthers.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Prisoner health: " + Options.PrisonerHealth.GetFloat() + "\n";
+                            message += "Prisoner regeneration: " + Options.PrisonerRegeneration.GetFloat() + "/s\n";
+                            message += "Prisoner damage: " + Options.PrisonerDamage.GetFloat() + "\n";
+                            message += "Guard health: " + Options.GuardHealth.GetFloat() + "\n";
+                            message += "Guard regeneration: " + Options.GuardRegeneration.GetFloat() + "/s\n";
+                            message += "Guard damage: " + Options.GuardDamage.GetFloat() + "\n";
+                            message += "Weapon damage: " + Options.WeaponDamage.GetFloat() + "/level\n";
+                            message += "Screwdriver price: " + Options.ScrewdriverPrice.GetInt() + "\n";
+                            message += "Prisoner weapon price: " + Options.PrisonerWeaponPrice.GetInt() + "/level\n";
+                            message += "Guard weapon price: " + Options.GuardWeaponPrice.GetInt() + "/level\n";
+                            message += "Guard outfit price: " + Options.GuardOutfitPrice.GetInt() + "\n";
+                            message += "Respawn cooldown: " + Options.RespawnCooldown.GetFloat() + "s\n";
+                            message += "Search cooldown: " + Options.SearchCooldown.GetFloat() + "s\n";
+                            message += "Maximum prisoner resources: " + Options.MaximumPrisonerResources.GetInt() + "\n";
+                            message += "Spaceship part price: " + Options.SpaceshipPartPrice.GetInt() + "\n";
+                            message += "Required spaceship parts: " + Options.RequiredSpaceshipParts.GetInt() + "\n";
+                            message += "Pickaxe price: " + Options.PickaxePrice.GetInt() + "/level\n";
+                            message += "Pickaxe speed" + Options.PickaxeSpeed.GetFloat() + "/level\n";
+                            message += "Prison takeover duration" + Options.PrisonTakeoverDuration.GetFloat() + "s\n";
+                            message += "Breathing mask price: " + Options.BreathingMaskPrice.GetInt() + "\n";
+                            message += "Energy drink price: " + Options.EnergyDrinkPrice.GetInt() + "\n";
+                            message += "Energy drink duration: " + Options.EnergyDrinkDuration.GetFloat() + "s\n";
+                            message += "Energy drink speed increase: " + Options.EnergyDrinkSpeedIncrease.GetInt() + "%\n";
+                            message += "Game time: " + Options.GameTime.GetInt() + "s\n";
+                            message += "Escapists can help others: "; message += Options.EscapistsCanHelpOthers.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EscapistsCanHelpOthers.GetBool())
                             {
-                                message += "Help Cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
-                                message += "Given Resources: " + Options.GivenResources.GetInt() + "\n";
+                                message += "Help cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
+                                message += "Given resources: " + Options.GivenResources.GetInt() + "\n";
                             }
+                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt();
+                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt();
+                            message += "Armor protection: " + Options.ArmorProtection.GetFloat();
                             break;
                     }
                     player.RpcSendMessage(message, "Options");
@@ -1857,34 +1891,36 @@ namespace MoreGamemodes
                     message = "Additional Gamemodes:\n";
                     if (Options.RandomSpawn.GetBool())
                     {
-                        message += "\nRandom Spawn\n";
-                        message += "Teleport After Meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
+                        message += "\nRandom spawn\n";
+                        message += "Teleport after meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
                     }
                     if (Options.RandomMap.GetBool())
                     {
                         message += "\nRandom Map\n";
-                        message += "Add The Skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add Mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add Polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add dlekS ehT: "; message += Options.AddDleksEht.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add The Airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add The Fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add the skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add dleks eht: "; message += Options.AddDleksEht.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add the airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Add the fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
                     }
                     if (Options.DisableGapPlatform.GetBool())
-                        message += "\nDisable Gap Platform\n";
+                        message += "\nDisable gap platform\n";
                     if (Options.MidGameChat.GetBool())
                     {
-                        message += "\nMid Game Chat\n";
-                        message += "Proximity Chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
+                        message += "\nMid game chat\n";
+                        message += "Proximity chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
                         if (Options.ProximityChat.GetBool())
                         {
-                            message += "Messages Radius: " + Options.MessagesRadius.GetFloat() + "x\n";
-                            message += "Impostor Radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Fake Shapeshift Appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Messages radius: " + Options.MessagesRadius.GetFloat() + "x\n";
+                            message += "Impostor radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Fake shapeshift appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
                         }
-                        message += "Disable During Comms Sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
+                        message += "Disable during comms sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
                     }
-                    if (message != "Additional Gamemodes:\n")
+                    if (Options.DisableZipline.GetBool())
+                        message += "\nDisable zipline\n";
+                    if (message != "Additional gamemodes:\n")
                         player.RpcSendMessage(message, "Options");
                     break;
                 case "/id":
@@ -1995,12 +2031,12 @@ namespace MoreGamemodes
                     break;
                 case "/tpout":
                     canceled = true;
-                    if (Main.GameStarted) break;
+                    if (Main.GameStarted || !Options.CanUseTpoutCommand.GetBool()) break;
                     player.RpcTeleport(new Vector2(0.1f, 3.8f));
                     break;
                 case "/tpin":
                     canceled = true;
-                    if (Main.GameStarted) break;
+                    if (Main.GameStarted || !Options.CanUseTpoutCommand.GetBool()) break;
                     player.RpcTeleport(new Vector2(-0.2f, 1.3f));
                     break;
                 case "1":
@@ -2119,6 +2155,27 @@ namespace MoreGamemodes
         }
     }
 
+    [HarmonyPatch(typeof(FreeChatInputField), nameof(FreeChatInputField.UpdateCharCount))]
+    class UpdateCharCountPatch
+    {
+        public static void Postfix(FreeChatInputField __instance)
+        {
+            int length = __instance.textArea.text.Length;
+		    __instance.charCountText.text = length + "/" + __instance.textArea.characterLimit;
+		    if (length < (AmongUsClient.Instance.AmHost ? 1500 : 375))
+		    {
+		    	__instance.charCountText.color = Color.black;
+		    	return;
+		    }
+		    if (length < (AmongUsClient.Instance.AmHost ? 2000 : 500))
+		    {
+		    	__instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
+		    	return;
+		    }
+		    __instance.charCountText.color = Color.red;
+        }
+    }
+
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcSendChat))]
     class RpcSendChatPatch
     {
@@ -2127,6 +2184,12 @@ namespace MoreGamemodes
             if (string.IsNullOrWhiteSpace(chatText))
             {
                 __result = false;
+                return false;
+            }
+            if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
+            {
+                __instance.RpcSendCommand(chatText);
+                __result = true;
                 return false;
             }
             int return_count = PlayerControl.LocalPlayer.name.Count(x => x == '\n');
@@ -2152,6 +2215,43 @@ namespace MoreGamemodes
                 i == ']' || i == '{' || i == '}' || i == '|' || i == '"' || (i == '<' && __instance.AllowSymbols) || 
                 (i == '>' && __instance.AllowSymbols) || i > 127)
                 __result = true;
+        }
+    }
+
+    [HarmonyPatch(typeof(ChatController), nameof(ChatController.Update))]
+    class ChatControllerUpdatePatch
+    {
+        public static void Postfix(ChatController __instance)
+        {
+            __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 2000 : 500;
+
+            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.C))
+                ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
+
+            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.V))
+            {
+                if (!string.IsNullOrEmpty(GUIUtility.systemCopyBuffer))
+                {
+                    string copiedText = GUIUtility.systemCopyBuffer;
+                    if ((__instance.freeChatField.textArea.text + copiedText).Length < __instance.freeChatField.textArea.characterLimit)
+                        __instance.freeChatField.textArea.SetText(__instance.freeChatField.textArea.text + copiedText);
+                    else
+                    {
+                        int remainingLength = __instance.freeChatField.textArea.characterLimit - __instance.freeChatField.textArea.text.Length;
+                        if (remainingLength > 0)
+                        {
+                            string text = copiedText[..remainingLength];
+                            __instance.freeChatField.textArea.SetText(__instance.freeChatField.textArea.text + text);
+                        }
+                    }
+                }
+            }
+
+            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.X))
+            {
+                ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
+                __instance.freeChatField.textArea.SetText("");
+            }
         }
     }
 }

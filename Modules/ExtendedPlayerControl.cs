@@ -8,8 +8,6 @@ using System.Collections.Generic;
 using System.Data;
 using System;
 
-using Object = UnityEngine.Object;
-
 namespace MoreGamemodes
 {
     static class ExtendedPlayerControl
@@ -139,7 +137,7 @@ namespace MoreGamemodes
             if (Options.CurrentGamemode == Gamemodes.KillOrDie)
                 return false;
             if (Options.CurrentGamemode == Gamemodes.Zombies)
-                return false;
+                return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ImpostorsCanVent.GetBool()) || (player.IsZombie() && Options.ZombiesCanVent.GetBool());
             if (Options.CurrentGamemode == Gamemodes.Jailbreak)
                 return player.IsGuard() || player.HasItem(InventoryItems.Screwdriver);
             if (Options.CurrentGamemode == Gamemodes.Classic && GameOptionsManager.Instance.currentGameOptions.GameMode == GameModes.HideNSeek && !player.Data.Role.IsImpostor)
@@ -181,14 +179,9 @@ namespace MoreGamemodes
             }
         }
 
-        public static void RpcSetKillTimer(this PlayerControl player, float time)
+        public static void RpcUnmoddedSetKillTimer(this PlayerControl player, float time)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (player.AmOwner)
-            {
-                player.SetKillTimer(time);
-                return;
-            }
             var opt = player.BuildGameOptions(time * 2);
             Utils.SyncSettings(opt, player.GetClientId());
             player.RpcGuardAndKill(player);
@@ -432,6 +425,10 @@ namespace MoreGamemodes
             if (isMeeting) return name;
             switch (Options.CurrentGamemode)
             {
+                case Gamemodes.BombTag:
+                    if (player.HasBomb() && Options.ArrowToNearestNonBombed.GetBool() && player == seer && player.GetClosestNonBombed() != null)
+                        name += "\n" + Utils.ColorString(Color.green, Utils.GetArrow(player.transform.position, player.GetClosestNonBombed().transform.position));
+                    break;
                 case Gamemodes.RandomItems:
                     if (player.GetItem() != Items.None && player == seer)
                         name += "\n" + Utils.ColorString(Color.magenta, Utils.ItemString(player.GetItem()) + ": " + Utils.ItemDescription(player.GetItem()));
@@ -459,7 +456,7 @@ namespace MoreGamemodes
                     else
                         livesText = "Lives: " + player.Lives();
                     
-                    if (Options.ArrowToNearestPlayer.GetBool() && player == seer)
+                    if (Options.ArrowToNearestPlayer.GetBool() && player == seer && player.GetClosestPlayer() != null)
                         name += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[player.GetClosestPlayer().PlayerId]], Utils.GetArrow(player.transform.position, player.GetClosestPlayer().transform.position));
                     if (player == seer || Options.LivesVisibleToOthers.GetBool())
                         name += "\n" + livesText;
@@ -477,6 +474,10 @@ namespace MoreGamemodes
                         --totalTasks;
                     if (player == seer || Options.TasksVisibleToOthers.GetBool())
                         name += Utils.ColorString(Color.yellow, "(" + tasksCompleted + "/" + totalTasks + ")");
+                    break;
+                case Gamemodes.KillOrDie:
+                    if (player.IsKiller() && Options.ArrowToNearestSurvivor.GetBool() && player == seer && player.GetClosestSurvivor() != null)
+                        name += "\n" + Utils.ColorString(Color.blue, Utils.GetArrow(player.transform.position, player.GetClosestSurvivor().transform.position));
                     break;
                 case Gamemodes.Zombies:
                     if (player == seer && !player.IsZombie() && !player.Data.IsDead)
@@ -509,7 +510,8 @@ namespace MoreGamemodes
                             name += Utils.ColorString(Color.yellow, "\nEnergy drink: " + (int)(JailbreakGamemode.instance.EnergyDrinkDuration[player.PlayerId] + 0.99f) + "s");
                         name += "<color=" + Utils.ColorToHex(Color.green) + ">";
                         name += "\nMoney: " + player.GetItemAmount(InventoryItems.Resources) + "$";
-                        name += "\nWeapon lvl." + player.GetItemAmount(InventoryItems.Weapon) + "</color>";
+                        name += "\nWeapon lvl." + player.GetItemAmount(InventoryItems.Weapon);
+                        name += "\nArmor lvl." + player.GetItemAmount(InventoryItems.Armor) + "</color>";
                         name += Utils.ColorString(Color.white, "\nShop item:\n");
                         switch ((Recipes)player.GetCurrentRecipe())
                         {
@@ -518,6 +520,9 @@ namespace MoreGamemodes
                                 break;
                             case Recipes.EnergyDrink:
                                 name += Utils.ColorString(Color.magenta, "Energy drink - " + Options.EnergyDrinkPrice.GetInt() + "$");
+                                break;
+                            case Recipes.GuardArmor:
+                                name += Utils.ColorString(Color.magenta, "Upgrade armor - " + (Options.GuardArmorPrice.GetInt() * (player.GetItemAmount(InventoryItems.Armor) + 1)) + "$");
                                 break;
                         }
                     }
@@ -545,6 +550,8 @@ namespace MoreGamemodes
                             name += "\nSpaceship with fuel" + (player.GetItemAmount(InventoryItems.SpaceshipWithFuel) > 1 ? " x" + player.GetItemAmount(InventoryItems.SpaceshipWithFuel) : "");
                         if (player.HasItem(InventoryItems.GuardOutfit))
                             name += "\nGuard outfit" + (player.GetItemAmount(InventoryItems.GuardOutfit) > 1 ? " x" + player.GetItemAmount(InventoryItems.GuardOutfit) : "");
+                        if (player.HasItem(InventoryItems.Armor))
+                            name += "\nArmor lvl." + player.GetItemAmount(InventoryItems.Armor);
                         name += Utils.ColorString(Color.white, "\nRecipe:\n");
                         switch ((Recipes)player.GetCurrentRecipe())
                         {
@@ -569,10 +576,13 @@ namespace MoreGamemodes
                             case Recipes.GuardOutfit:
                                 name += Utils.ColorString(Color.magenta, "Guard outfit - " + Options.GuardOutfitPrice.GetInt() + " res");
                                 break;
+                            case Recipes.PrisonerArmor:
+                                name += Utils.ColorString(Color.magenta, "Upgrade armor - " + (Options.PrisonerArmorPrice.GetInt() * (player.GetItemAmount(InventoryItems.Armor) + 1)) + " res");
+                                break;
                         }
                     }
                     if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && player == seer)
-                        name += "WALL [" + JailbreakGamemode.instance.ReactorWallHealth + "%]";
+                        name += "\nWALL [" + JailbreakGamemode.instance.ReactorWallHealth + "%]";
                     if (JailbreakGamemode.instance.ReactorWallHealth <= 0f && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && player == seer)
                         name += "\nWALL DESTROYED!";
                    
@@ -750,7 +760,7 @@ namespace MoreGamemodes
         {
             if (JailbreakGamemode.instance == null) return false;
             if (player.IsGuard()) return false;
-            if (player.GetPlainShipRoom() != null &&(player.GetPlainShipRoom().RoomId == SystemTypes.Reactor || player.GetPlainShipRoom().RoomId == SystemTypes.Security || player.GetPlainShipRoom().RoomId == SystemTypes.Storage ||
+            if (player.GetPlainShipRoom() != null && (player.GetPlainShipRoom().RoomId == SystemTypes.Reactor || player.GetPlainShipRoom().RoomId == SystemTypes.Security || player.GetPlainShipRoom().RoomId == SystemTypes.Storage ||
             player.GetPlainShipRoom().RoomId == SystemTypes.Admin || player.GetPlainShipRoom().RoomId == SystemTypes.Nav) && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
                 return true;
             if (player.walkingToVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation() || (player.MyPhysics.Animations.Animator.GetCurrentAnimation() == player.MyPhysics.Animations.group.ExitVentAnim && player.HasItem(InventoryItems.Screwdriver)))
@@ -760,6 +770,7 @@ namespace MoreGamemodes
 
         public static bool HasIllegalItem(this PlayerControl player)
         {
+            if (player.IsGuard()) return false;
             if (player.HasItem(InventoryItems.Screwdriver)) return true;
             if (player.HasItem(InventoryItems.Weapon)) return true;
             if (player.HasItem(InventoryItems.Pickaxe)) return true;
@@ -768,6 +779,7 @@ namespace MoreGamemodes
             if (player.HasItem(InventoryItems.SpaceshipWithoutFuel)) return true;
             if (player.HasItem(InventoryItems.SpaceshipWithFuel)) return true;
             if (player.HasItem(InventoryItems.GuardOutfit)) return true;
+            if (player.HasItem(InventoryItems.Armor)) return true;
             return false;
         }
 
@@ -783,6 +795,42 @@ namespace MoreGamemodes
                 Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.green;
                 pc.RpcReactorFlash(0.4f, Color.blue);
             } 
+        }
+
+        public static PlayerControl GetClosestNonBombed(this PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            Dictionary<PlayerControl, float> pcdistance = new();
+            float dis;
+            foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+            {
+                if (!p.Data.IsDead && p != player && !p.HasBomb())
+                {
+                    dis = Vector2.Distance(playerpos, p.transform.position);
+                    pcdistance.Add(p, dis);
+                }
+            }
+            var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
+            PlayerControl target = min.Key;
+            return target;
+        }
+
+        public static PlayerControl GetClosestSurvivor(this PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            Dictionary<PlayerControl, float> pcdistance = new();
+            float dis;
+            foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+            {
+                if (!p.Data.IsDead && p != player && !p.IsKiller())
+                {
+                    dis = Vector2.Distance(playerpos, p.transform.position);
+                    pcdistance.Add(p, dis);
+                }
+            }
+            var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
+            PlayerControl target = min.Key;
+            return target;
         }
     }
 }

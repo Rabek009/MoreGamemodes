@@ -10,7 +10,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using Object = UnityEngine.Object;
-using UnityEngine.TextCore;
 
 namespace MoreGamemodes
 {
@@ -633,26 +632,6 @@ namespace MoreGamemodes
             ImageConversion.LoadImage(texture, ms.ToArray());
             sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), new(0.5f, 0.5f), pixelsPerUnit);
             return sprite;
-        }
-
-        public static void ShowAndCloseMeeting()
-        {
-            if (AmongUsClient.Instance.GameState != AmongUsClient.GameStates.Started) return;
-            if (GameManager.Instance.LogicFlow.IsGameOverDueToDeath()) return;
-            MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
-            MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
-            AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);
-            CustomRpcSender sender = CustomRpcSender.Create("ShowAndCloseMeeting", SendOption.Reliable);
-            sender.StartMessage(-1);
-            PlayerControl.LocalPlayer.StartMeeting(PlayerControl.LocalPlayer.Data);
-            sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.StartMeeting)
-                .Write(PlayerControl.LocalPlayer.PlayerId)
-                .EndRpc();
-            MeetingHud.Instance.Close();
-            sender.StartRpc(MeetingHud.Instance.NetId, (byte)RpcCalls.CloseMeeting)
-                .EndRpc();
-            sender.EndMessage();
-            sender.SendMessage();
         }
     }
 }

@@ -2,7 +2,6 @@ using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using System;
 using AmongUs.GameOptions;
-using System.Runtime.Intrinsics.X86;
 
 namespace MoreGamemodes
 {
@@ -41,9 +40,62 @@ namespace MoreGamemodes
             {
                 __instance.KillButton.OverrideText("Attack");
                 if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (GameOptionsManager.Instance.currentGameOptions.MapId == 0 || GameOptionsManager.Instance.currentGameOptions.MapId == 3) && player.HasItem(InventoryItems.Pickaxe))
+                {
                     __instance.AbilityButton.OverrideText("Destroy");
+                    __instance.AbilityButton.SetEnabled();
+                }
+                else if (player.HasItem(InventoryItems.GuardOutfit))
+                {
+                    __instance.AbilityButton.OverrideText("Craft/Change");
+                    __instance.AbilityButton.SetEnabled();
+                }
                 else
+                {
                     __instance.AbilityButton.OverrideText("Craft");
+                    int price = 0;
+                    InventoryItems requiredItem = InventoryItems.Resources;
+                    switch ((Recipes)player.GetCurrentRecipe())
+                    {
+                        case Recipes.Screwdriver:
+                            price = Options.ScrewdriverPrice.GetInt();
+                            break;
+                        case Recipes.PrisonerWeapon:
+                            price = Options.PrisonerWeaponPrice.GetInt() * (player.GetItemAmount(InventoryItems.Weapon) + 1);
+                            break;
+                        case Recipes.Pickaxe:
+                            price = Options.PickaxePrice.GetInt() * (player.GetItemAmount(InventoryItems.Pickaxe) + 1);
+                            break;
+                        case Recipes.SpaceshipPart:
+                            price = Options.SpaceshipPartPrice.GetInt();
+                            break;
+                        case Recipes.Spaceship:
+                            price = Options.RequiredSpaceshipParts.GetInt();
+                            requiredItem = InventoryItems.SpaceshipParts;
+                            break;
+                        case Recipes.BreathingMask:
+                            price = Options.BreathingMaskPrice.GetInt();
+                            break;
+                        case Recipes.GuardOutfit:
+                            price = Options.GuardOutfitPrice.GetInt();
+                            break;
+                        case Recipes.PrisonerArmor:
+                            price = Options.PrisonerArmorPrice.GetInt() * (player.GetItemAmount(InventoryItems.Armor) + 1);
+                            break;
+                        case Recipes.GuardWeapon:
+                            price = Options.GuardWeaponPrice.GetInt() * (player.GetItemAmount(InventoryItems.Weapon) + 1);
+                            break;
+                        case Recipes.EnergyDrink:
+                            price = Options.EnergyDrinkPrice.GetInt();
+                            break;
+                        case Recipes.GuardArmor:
+                            price = Options.GuardArmorPrice.GetInt() * (player.GetItemAmount(InventoryItems.Armor) + 1);
+                            break;
+                    }
+                    if (player.GetItemAmount(requiredItem) >= price)
+                        __instance.AbilityButton.SetEnabled();
+                    else
+                        __instance.AbilityButton.SetDisabled();
+                }
                 __instance.PetButton.OverrideText("Next Recipe");
             }
             __instance.SabotageButton.SetDisabled();
@@ -196,7 +248,8 @@ namespace MoreGamemodes
                 if (pc.IsGuard())
                 {
                     SearchCooldown[pc.PlayerId] = Options.SearchCooldown.GetFloat();
-                    pc.RpcSetItemAmount(InventoryItems.Weapon, 5);
+                    pc.RpcSetItemAmount(InventoryItems.Weapon, 3);
+                    pc.RpcSetItemAmount(InventoryItems.Armor, 3);
                 }
                 pc.RpcResetAbilityCooldown();
                 PlayerHealth[pc.PlayerId] = pc.IsGuard() ? Options.GuardHealth.GetFloat() : Options.PrisonerHealth.GetFloat();
@@ -205,8 +258,9 @@ namespace MoreGamemodes
 
         public override void OnPet(PlayerControl pc)
         {
+            if (ChangeRecipeCooldown[pc.PlayerId] > 0f) return;
             var recipeId = pc.GetCurrentRecipe() + 1;
-            if (!pc.IsGuard() && recipeId > 6)
+            if (!pc.IsGuard() && recipeId > 7)
                 recipeId = 0;
             if (!pc.IsGuard() && recipeId == 0 && Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3)
                 recipeId = 1;
@@ -214,20 +268,25 @@ namespace MoreGamemodes
                 recipeId = 2;
             if (!pc.IsGuard() && recipeId == 2 && pc.GetItemAmount(InventoryItems.Pickaxe) >= 10)
                 recipeId = 3;
-            if (pc.IsGuard() && recipeId > 1001)
+            if (!pc.IsGuard() && recipeId == 7 && pc.GetItemAmount(InventoryItems.Armor) >= 10)
+                recipeId = 0;
+            if (pc.IsGuard() && recipeId > 1002)
                 recipeId = 1000;
             if (pc.IsGuard() && recipeId == 1000 && pc.GetItemAmount(InventoryItems.Weapon) >= 10)
                 recipeId = 1001;
+            if (pc.IsGuard() && recipeId == 1002 && pc.GetItemAmount(InventoryItems.Armor) >= 10)
+                recipeId = 1000;
             pc.RpcSetCurrentRecipe(recipeId);
             pc.RpcSetNamePrivate(pc.BuildPlayerName(pc, false), pc, true);
+            ChangeRecipeCooldown[pc.PlayerId] = 0.5f;
         }
 
-        public override bool OnCheckProtect(PlayerControl __instance, PlayerControl target)
+        public override bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
         {
-            if (!__instance.HasEscaped()) return false;
+            if (!guardian.HasEscaped()) return false;
             if (target.IsGuard() || target.HasEscaped() || target.Data.IsDead) return false;
             target.RpcSetItemAmount(InventoryItems.Resources, Math.Min(target.GetItemAmount(InventoryItems.Resources) + Options.GivenResources.GetInt(), Options.MaximumPrisonerResources.GetInt()));
-            __instance.RpcResetAbilityCooldown();
+            guardian.RpcResetAbilityCooldown();
             return false;
         } 
 
@@ -254,6 +313,9 @@ namespace MoreGamemodes
                 {
                     var damage = Options.GuardDamage.GetFloat();
                     damage += Options.WeaponDamage.GetFloat() * killer.GetItemAmount(InventoryItems.Weapon);
+                    damage -= Options.ArmorProtection.GetFloat() * target.GetItemAmount(InventoryItems.Armor);
+                    if (damage <= 0.5f)
+                        damage = 0.5f;
                     PlayerHealth[target.PlayerId] -= damage;
                     if (PlayerHealth[target.PlayerId] <= 0f)
                     {
@@ -264,6 +326,7 @@ namespace MoreGamemodes
                         target.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, 0);
                         target.RpcSetItemAmount(InventoryItems.SpaceshipWithFuel, 0);
                         target.RpcSetItemAmount(InventoryItems.GuardOutfit, 0);
+                        target.RpcSetItemAmount(InventoryItems.Armor, 0);
                         killer.RpcSetItemAmount(InventoryItems.Resources, killer.GetItemAmount(InventoryItems.Resources) + 50);
                         target.RpcShapeshift(target, false);
                         target.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Prisoner);
@@ -306,6 +369,9 @@ namespace MoreGamemodes
             }
             var damage2 = Options.PrisonerDamage.GetFloat();
             damage2 += Options.WeaponDamage.GetFloat() * killer.GetItemAmount(InventoryItems.Weapon);
+            damage2 -= Options.ArmorProtection.GetFloat() * target.GetItemAmount(InventoryItems.Armor);
+            if (damage2 <= 0.5f)
+                damage2 = 0.5f;
             PlayerHealth[target.PlayerId] -= damage2;
             if (PlayerHealth[target.PlayerId] <= 0f)
             {
@@ -313,7 +379,10 @@ namespace MoreGamemodes
                 {
                     if (target.GetItemAmount(InventoryItems.Weapon) > killer.GetItemAmount(InventoryItems.Weapon))
                         killer.RpcSetItemAmount(InventoryItems.Weapon, target.GetItemAmount(InventoryItems.Weapon));
-                    target.RpcSetItemAmount(InventoryItems.Weapon, 5);
+                    if (target.GetItemAmount(InventoryItems.Armor) > killer.GetItemAmount(InventoryItems.Armor))
+                        killer.RpcSetItemAmount(InventoryItems.Armor, target.GetItemAmount(InventoryItems.Armor));
+                    target.RpcSetItemAmount(InventoryItems.Weapon, 3);
+                    target.RpcSetItemAmount(InventoryItems.Armor, 3);
                     killer.RpcSetItemAmount(InventoryItems.Resources, Math.Min(killer.GetItemAmount(InventoryItems.Resources) + 100, Options.MaximumPrisonerResources.GetInt()));
                 }
                 else
@@ -330,6 +399,8 @@ namespace MoreGamemodes
                     killer.RpcSetItemAmount(InventoryItems.BreathingMaskWithoutOxygen, killer.GetItemAmount(InventoryItems.BreathingMaskWithoutOxygen) + target.GetItemAmount(InventoryItems.BreathingMaskWithoutOxygen));
                     killer.RpcSetItemAmount(InventoryItems.BreathingMaskWithOxygen, killer.GetItemAmount(InventoryItems.BreathingMaskWithOxygen) + target.GetItemAmount(InventoryItems.BreathingMaskWithOxygen));
                     killer.RpcSetItemAmount(InventoryItems.GuardOutfit, killer.GetItemAmount(InventoryItems.GuardOutfit) + target.GetItemAmount(InventoryItems.GuardOutfit));
+                    if (target.GetItemAmount(InventoryItems.Armor) > killer.GetItemAmount(InventoryItems.Armor))
+                        killer.RpcSetItemAmount(InventoryItems.Armor, target.GetItemAmount(InventoryItems.Armor));
                     target.RpcSetItemAmount(InventoryItems.Resources, 0);
                     target.RpcSetItemAmount(InventoryItems.Screwdriver, 0);
                     target.RpcSetItemAmount(InventoryItems.Weapon, 0);
@@ -338,6 +409,7 @@ namespace MoreGamemodes
                     target.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, 0);
                     target.RpcSetItemAmount(InventoryItems.SpaceshipWithFuel, 0);
                     target.RpcSetItemAmount(InventoryItems.GuardOutfit, 0);
+                    target.RpcSetItemAmount(InventoryItems.Armor, 0);
                     target.RpcShapeshift(target, false);
                     target.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Prisoner);
                     foreach (var pc in PlayerControl.AllPlayerControls)
@@ -431,6 +503,13 @@ namespace MoreGamemodes
                     shapeshifter.RpcSetItemAmount(InventoryItems.Resources, shapeshifter.GetItemAmount(InventoryItems.Resources) - Options.GuardOutfitPrice.GetInt());
                     shapeshifter.RpcSetItemAmount(InventoryItems.GuardOutfit, shapeshifter.GetItemAmount(InventoryItems.GuardOutfit) + 1);
                     break;
+                case Recipes.PrisonerArmor:
+                    if (shapeshifter.GetItemAmount(InventoryItems.Resources) < Options.PrisonerArmorPrice.GetInt() * (shapeshifter.GetItemAmount(InventoryItems.Armor) + 1)) break;
+                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, shapeshifter.GetItemAmount(InventoryItems.Resources) - Options.PrisonerArmorPrice.GetInt() * (shapeshifter.GetItemAmount(InventoryItems.Armor) + 1));
+                    shapeshifter.RpcSetItemAmount(InventoryItems.Armor, shapeshifter.GetItemAmount(InventoryItems.Armor) + 1);
+                    if (shapeshifter.GetItemAmount(InventoryItems.Armor) >= 10)
+                        shapeshifter.RpcSetCurrentRecipe(0);
+                    break;
                 case Recipes.GuardWeapon:
                     if (shapeshifter.GetItemAmount(InventoryItems.Resources) < Options.GuardWeaponPrice.GetInt() * (shapeshifter.GetItemAmount(InventoryItems.Weapon) + 1)) break;
                     shapeshifter.RpcSetItemAmount(InventoryItems.Resources, shapeshifter.GetItemAmount(InventoryItems.Resources) - Options.GuardWeaponPrice.GetInt() * (shapeshifter.GetItemAmount(InventoryItems.Weapon) + 1));
@@ -443,6 +522,13 @@ namespace MoreGamemodes
                     shapeshifter.RpcSetItemAmount(InventoryItems.Resources, shapeshifter.GetItemAmount(InventoryItems.Resources) - Options.EnergyDrinkPrice.GetInt());
                     EnergyDrinkDuration[shapeshifter.PlayerId] = Options.EnergyDrinkDuration.GetFloat();
                     shapeshifter.SyncPlayerSettings();
+                    break;
+                case Recipes.GuardArmor:
+                    if (shapeshifter.GetItemAmount(InventoryItems.Resources) < Options.GuardArmorPrice.GetInt() * (shapeshifter.GetItemAmount(InventoryItems.Armor) + 1)) break;
+                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, shapeshifter.GetItemAmount(InventoryItems.Resources) - Options.GuardArmorPrice.GetInt() * (shapeshifter.GetItemAmount(InventoryItems.Armor) + 1));
+                    shapeshifter.RpcSetItemAmount(InventoryItems.Armor, shapeshifter.GetItemAmount(InventoryItems.Armor) + 1);
+                    if (shapeshifter.GetItemAmount(InventoryItems.Armor) >= 10)
+                        shapeshifter.RpcSetCurrentRecipe(1000);
                     break;
             }
             shapeshifter.RpcResetAbilityCooldown();
@@ -477,6 +563,14 @@ namespace MoreGamemodes
                         RespawnCooldown[pc.PlayerId] = 0f;
                     }   
                     continue;
+                }
+                if (ChangeRecipeCooldown[pc.PlayerId] > 0f)
+                {
+                    ChangeRecipeCooldown[pc.PlayerId] -= Time.fixedDeltaTime;
+                }
+                if (ChangeRecipeCooldown[pc.PlayerId] < 0f)
+                {
+                    ChangeRecipeCooldown[pc.PlayerId] = 0f;
                 }
                 if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && (pc.GetPlainShipRoom().RoomId == SystemTypes.LowerEngine || pc.GetPlainShipRoom().RoomId == SystemTypes.UpperEngine) && pc.HasItem(InventoryItems.SpaceshipWithoutFuel)  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
                 {
@@ -584,7 +678,7 @@ namespace MoreGamemodes
                     if (pc.IsGuard())
                         pc.RpcSetItemAmount(InventoryItems.Resources, pc.GetItemAmount(InventoryItems.Resources) + 2);
                     if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Electrical && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
-                        pc.RpcSetItemAmount(InventoryItems.Resources, Math.Min(pc.GetItemAmount(InventoryItems.Resources) + 1, Options.MaximumPrisonerResources.GetInt()));
+                        pc.RpcSetItemAmount(InventoryItems.Resources, Math.Min(pc.GetItemAmount(InventoryItems.Resources) + 2, Options.MaximumPrisonerResources.GetInt()));
                     if (!pc.IsGuard() && pc.GetPlainShipRoom() && pc.GetPlainShipRoom().RoomId == SystemTypes.Storage && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
                         pc.RpcSetItemAmount(InventoryItems.Resources, Math.Min(pc.GetItemAmount(InventoryItems.Resources) + 5, Options.MaximumPrisonerResources.GetInt()));
                 }
@@ -621,6 +715,7 @@ namespace MoreGamemodes
             EnergyDrinkDuration = new System.Collections.Generic.Dictionary<byte, float>();
             OneSecondTimer = 0f;
             TimeSinceNameUpdate = new System.Collections.Generic.Dictionary<byte, float>();
+            ChangeRecipeCooldown = new System.Collections.Generic.Dictionary<byte, float>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 PlayerType[pc.PlayerId] = JailbreakPlayerTypes.None;
@@ -632,7 +727,8 @@ namespace MoreGamemodes
                 PlayerHealth[pc.PlayerId] = 0;
                 CurrentRecipe[pc.PlayerId] = -1;
                 EnergyDrinkDuration[pc.PlayerId] = 0f;
-                TimeSinceNameUpdate[pc.PlayerId] = 2f / GameData.Instance.PlayerCount * pc.PlayerId;
+                TimeSinceNameUpdate[pc.PlayerId] = 1f / GameData.Instance.PlayerCount * pc.PlayerId;
+                ChangeRecipeCooldown[pc.PlayerId] = 0f;
             }
         }
 
@@ -649,6 +745,7 @@ namespace MoreGamemodes
         public System.Collections.Generic.Dictionary<byte, float> EnergyDrinkDuration;
         public float OneSecondTimer;
         public System.Collections.Generic.Dictionary<byte, float> TimeSinceNameUpdate;
+        public System.Collections.Generic.Dictionary<byte, float> ChangeRecipeCooldown;
     }
 
     public enum JailbreakPlayerTypes
@@ -672,6 +769,7 @@ namespace MoreGamemodes
         BreathingMaskWithoutOxygen,
         BreathingMaskWithOxygen,
         GuardOutfit,
+        Armor,
     }
 
     public enum Recipes
@@ -684,7 +782,9 @@ namespace MoreGamemodes
         Spaceship,
         BreathingMask,
         GuardOutfit,
+        PrisonerArmor,
         GuardWeapon = 1000,
         EnergyDrink,
+        GuardArmor,
     }
 }

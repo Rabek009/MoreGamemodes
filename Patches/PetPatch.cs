@@ -8,9 +8,14 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance)
         {
+            if (!AmongUsClient.Instance.AmHost && CustomGamemode.Instance != null && CustomGamemode.Instance.PetAction)
+            {
+                __instance.RpcPetAction();
+                return false;
+            }
             if (!AmongUsClient.Instance.AmHost) return true;
             var cancel = Main.GameStarted && CustomGamemode.Instance != null && CustomGamemode.Instance.PetAction;
-            ExternalRpcPetPatch.Prefix(__instance.MyPhysics, 49, new MessageReader());
+            ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction, new MessageReader());
             if (cancel)
                 return false;
             return true;
@@ -25,7 +30,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!Main.GameStarted) return true;
             var rpcType = (RpcCalls)callId;
-            if (rpcType != RpcCalls.Pet) return true;
+            if (rpcType != RpcCalls.Pet && callId != 86) return true;
 
             PlayerControl pc = __instance.myPlayer;
             if (pc.Data.IsDead || MeetingHud.Instance) return true;
@@ -34,10 +39,15 @@ namespace MoreGamemodes
                 if (PaintBattleGamemode.instance.CreateBodyCooldown[pc.PlayerId] > 0f)
                     return true;
             }
-
+            if (JailbreakGamemode.instance != null)
+            {
+                if (JailbreakGamemode.instance.ChangeRecipeCooldown[pc.PlayerId] > 0f)
+                    return true;
+            }
             if (CustomGamemode.Instance.PetAction)
             {
-                AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, 50, SendOption.None, -1));
+                if (rpcType == RpcCalls.Pet)
+                    AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.None, -1));
                 CustomGamemode.Instance.OnPet(pc);
                 return false;
             }

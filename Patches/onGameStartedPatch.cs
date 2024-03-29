@@ -10,53 +10,6 @@ namespace MoreGamemodes
     {
         public static void Prefix(AmongUsClient __instance)
         {
-            switch (Options.CurrentGamemode)
-            {
-                case Gamemodes.Classic:
-                    ClassicGamemode.instance = new ClassicGamemode();
-                    CustomGamemode.Instance = ClassicGamemode.instance;
-                    break;
-                case Gamemodes.HideAndSeek:
-                    HideAndSeekGamemode.instance = new HideAndSeekGamemode();
-                    CustomGamemode.Instance = HideAndSeekGamemode.instance;
-                    break;
-                case Gamemodes.ShiftAndSeek:
-                    ShiftAndSeekGamemode.instance = new ShiftAndSeekGamemode();
-                    CustomGamemode.Instance = ShiftAndSeekGamemode.instance;
-                    break;
-                case Gamemodes.BombTag:
-                    BombTagGamemode.instance = new BombTagGamemode();
-                    CustomGamemode.Instance = BombTagGamemode.instance;
-                    break;
-                case Gamemodes.RandomItems:
-                    RandomItemsGamemode.instance = new RandomItemsGamemode();
-                    CustomGamemode.Instance = RandomItemsGamemode.instance;
-                    break;
-                case Gamemodes.BattleRoyale:
-                    BattleRoyaleGamemode.instance = new BattleRoyaleGamemode();
-                    CustomGamemode.Instance = BattleRoyaleGamemode.instance;
-                    break;
-                case Gamemodes.Speedrun:
-                    SpeedrunGamemode.instance = new SpeedrunGamemode();
-                    CustomGamemode.Instance = SpeedrunGamemode.instance;
-                    break;
-                case Gamemodes.PaintBattle:
-                    PaintBattleGamemode.instance = new PaintBattleGamemode();
-                    CustomGamemode.Instance = PaintBattleGamemode.instance;
-                    break;
-                case Gamemodes.KillOrDie:
-                    KillOrDieGamemode.instance = new KillOrDieGamemode();
-                    CustomGamemode.Instance = KillOrDieGamemode.instance;
-                    break;
-                case Gamemodes.Zombies:
-                    ZombiesGamemode.instance = new ZombiesGamemode();
-                    CustomGamemode.Instance = ZombiesGamemode.instance;
-                    break;
-                case Gamemodes.Jailbreak:
-                    JailbreakGamemode.instance = new JailbreakGamemode();
-                    CustomGamemode.Instance = JailbreakGamemode.instance;
-                    break;
-            }
             if (!__instance.AmHost) return;
             Main.RealOptions = new OptionBackupData(GameOptionsManager.Instance.currentGameOptions);
             Main.AllShapeshifts = new Dictionary<byte, byte>();
@@ -65,6 +18,7 @@ namespace MoreGamemodes
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
+            CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             AntiBlackout.Reset();
@@ -80,6 +34,7 @@ namespace MoreGamemodes
                 Main.AllShapeshifts[pc.PlayerId] = pc.PlayerId;
                 pc.RpcSetDeathReason(DeathReasons.Alive);
                 CheckMurderPatch.TimeSinceLastKill[pc.PlayerId] = 0f;
+                CheckProtectPatch.TimeSinceLastProtect[pc.PlayerId] = 0f;
                 Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
@@ -87,7 +42,8 @@ namespace MoreGamemodes
                     Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.clear;
                 }
             }
-            OptionItem.SyncAllOptions();
+            GameManager.Instance.RpcSyncCustomOptions();
+            GameManager.Instance.RpcStartGamemode(Options.CurrentGamemode);
         }
     }
 
@@ -126,10 +82,8 @@ namespace MoreGamemodes
                     pc.RpcRandomVentTeleport();
             }
             CustomGamemode.Instance.OnIntroDestroy();
-            if (Options.MidGameChat.GetBool())
+            if (Options.MidGameChat.GetBool() || Options.CurrentGamemode == Gamemodes.Zombies)
                 Utils.SetChatVisible();
-            else if (Options.CurrentGamemode == Gamemodes.Zombies)
-                Utils.ShowAndCloseMeeting();
             Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)
             {

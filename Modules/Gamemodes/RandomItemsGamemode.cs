@@ -323,7 +323,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnCheckProtect(PlayerControl __instance, PlayerControl target)
+        public override bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
         {
             if (HackTimer > 0f) return false;
             return true;

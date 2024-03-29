@@ -22,6 +22,10 @@ namespace MoreGamemodes
         SetJailbreakPlayerType,
         SetItemAmount,
         SetCurrentRecipe,
+        SetKillTimer,
+        SendCommand,
+        PetAction,
+        StartGamemode,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -93,7 +97,7 @@ namespace MoreGamemodes
                     __instance.SetKillsRemain(reader.ReadInt32());
                     break;
                 case CustomRPC.ReactorFlash:
-                    if (!__instance.AmOwner) break;;
+                    if (!__instance.AmOwner) break;
                     HudManager.Instance.ReactorFlash(reader.ReadSingle(), reader.ReadColor());
                     break;
                 case CustomRPC.SetJailbreakPlayerType:
@@ -104,6 +108,18 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.SetCurrentRecipe:
                     __instance.SetCurrentRecipe(reader.ReadInt32());
+                    break;
+                case CustomRPC.SetKillTimer:
+                    if (!__instance.AmOwner) break;
+                    __instance.SetKillTimer(reader.ReadSingle());
+                    break;
+                case CustomRPC.SendCommand:
+                    if (!AmongUsClient.Instance.AmHost) return;
+                    SendChatPatch.OnReceiveChat(__instance, reader.ReadString());
+                    break;
+                case CustomRPC.PetAction:
+                    if (!AmongUsClient.Instance.AmHost) return;
+                    ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction, new MessageReader());
                     break;
             }
         }
@@ -133,6 +149,9 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.SetTheme:
                     __instance.SetTheme(reader.ReadString());
+                    break;
+                case CustomRPC.StartGamemode:
+                    __instance.StartGamemode((Gamemodes)reader.ReadPackedInt32());
                     break;
             }
         }
@@ -215,6 +234,57 @@ namespace MoreGamemodes
         {
             if (JailbreakGamemode.instance == null) return;
             JailbreakGamemode.instance.CurrentRecipe[player.PlayerId] = recipeId;
+        }
+
+        public static void StartGamemode(this GameManager manager, Gamemodes gamemode)
+        {
+            switch (gamemode)
+            {
+                case Gamemodes.Classic:
+                    ClassicGamemode.instance = new ClassicGamemode();
+                    CustomGamemode.Instance = ClassicGamemode.instance;
+                    break;
+                case Gamemodes.HideAndSeek:
+                    HideAndSeekGamemode.instance = new HideAndSeekGamemode();
+                    CustomGamemode.Instance = HideAndSeekGamemode.instance;
+                    break;
+                case Gamemodes.ShiftAndSeek:
+                    ShiftAndSeekGamemode.instance = new ShiftAndSeekGamemode();
+                    CustomGamemode.Instance = ShiftAndSeekGamemode.instance;
+                    break;
+                case Gamemodes.BombTag:
+                    BombTagGamemode.instance = new BombTagGamemode();
+                    CustomGamemode.Instance = BombTagGamemode.instance;
+                    break;
+                case Gamemodes.RandomItems:
+                    RandomItemsGamemode.instance = new RandomItemsGamemode();
+                    CustomGamemode.Instance = RandomItemsGamemode.instance;
+                    break;
+                case Gamemodes.BattleRoyale:
+                    BattleRoyaleGamemode.instance = new BattleRoyaleGamemode();
+                    CustomGamemode.Instance = BattleRoyaleGamemode.instance;
+                    break;
+                case Gamemodes.Speedrun:
+                    SpeedrunGamemode.instance = new SpeedrunGamemode();
+                    CustomGamemode.Instance = SpeedrunGamemode.instance;
+                    break;
+                case Gamemodes.PaintBattle:
+                    PaintBattleGamemode.instance = new PaintBattleGamemode();
+                    CustomGamemode.Instance = PaintBattleGamemode.instance;
+                    break;
+                case Gamemodes.KillOrDie:
+                    KillOrDieGamemode.instance = new KillOrDieGamemode();
+                    CustomGamemode.Instance = KillOrDieGamemode.instance;
+                    break;
+                case Gamemodes.Zombies:
+                    ZombiesGamemode.instance = new ZombiesGamemode();
+                    CustomGamemode.Instance = ZombiesGamemode.instance;
+                    break;
+                case Gamemodes.Jailbreak:
+                    JailbreakGamemode.instance = new JailbreakGamemode();
+                    CustomGamemode.Instance = JailbreakGamemode.instance;
+                    break;
+            }
         }
 
         public static void RpcVersionCheck(this PlayerControl player, string version)
@@ -341,6 +411,44 @@ namespace MoreGamemodes
             player.SetCurrentRecipe(recipeId);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetCurrentRecipe, SendOption.Reliable, -1);
             writer.Write(recipeId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetKillTimer(this PlayerControl player, float time)
+        {
+            if (player.AmOwner)
+            {
+                player.SetKillTimer(time);
+                return;
+            }
+            if (Main.IsModded[player.PlayerId])
+            {
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetKillTimer, SendOption.Reliable, -1);
+                writer.Write(time);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                return;
+            }
+            player.RpcUnmoddedSetKillTimer(time);
+        }
+
+        public static void RpcSendCommand(this PlayerControl player, string command)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SendCommand, SendOption.Reliable, AmongUsClient.Instance.HostId);
+            writer.Write(command);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcPetAction(this PlayerControl player)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.PetAction, SendOption.Reliable, AmongUsClient.Instance.HostId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcStartGamemode(this GameManager manager, Gamemodes gamemode)
+        {
+            manager.StartGamemode(gamemode);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.StartGamemode, SendOption.Reliable, -1);
+            writer.WritePacked((int)gamemode);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

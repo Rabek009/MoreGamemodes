@@ -120,7 +120,7 @@ namespace MoreGamemodes
 
         }
 
-        public virtual bool OnCheckProtect(PlayerControl __instance, PlayerControl target)
+        public virtual bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
         {
             return true;
         } 

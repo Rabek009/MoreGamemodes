@@ -198,7 +198,7 @@ namespace MoreGamemodes
             List<PlayerControl> AllAlivePlayers = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.Data.Role.IsImpostor && !pc.Data.IsDead) ++numImpostorAlive;
+                if (Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.Data.IsDead) ++numImpostorAlive;
                 if (!pc.Data.IsDead && !pc.IsZombie()) AllAlivePlayers.Add(pc);
             }
             if (numImpostorAlive * 2 >= AllAlivePlayers.Count)
@@ -206,7 +206,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.Data.Role.IsImpostor || pc.IsZombie())
+                    if (Main.StandardRoles[pc.PlayerId].IsImpostor() || pc.IsZombie())
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.ImpostorByKill;
@@ -226,7 +226,7 @@ namespace MoreGamemodes
             List<PlayerControl> AllAlivePlayers = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.Data.Role.IsImpostor && !pc.Data.IsDead) ++numImpostorAlive;
+                if (Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.Data.IsDead) ++numImpostorAlive;
                 if (!pc.Data.IsDead && !pc.IsZombie()) AllAlivePlayers.Add(pc);
             }
             if (numImpostorAlive == 0)
@@ -234,7 +234,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (!pc.Data.Role.IsImpostor && !pc.IsZombie())
+                    if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie())
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.HumansByVote;
@@ -253,7 +253,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (!pc.Data.Role.IsImpostor && !pc.IsZombie())
+                    if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie())
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.HumansByTask, winners);

@@ -10,10 +10,44 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckProtect))]
     class CheckProtectPatch 
     {
+        public static Dictionary<byte, float> TimeSinceLastProtect;
+        public static void Update()
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            for (byte i = 0; i < 15; i++)
+            {
+                if (TimeSinceLastProtect.ContainsKey(i))
+                {
+                    TimeSinceLastProtect[i] += Time.deltaTime;
+                    if (15f < TimeSinceLastProtect[i]) TimeSinceLastProtect.Remove(i);
+                }
+            }
+        }
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            return CustomGamemode.Instance.OnCheckProtect(__instance, target);
+            PlayerControl guardian = __instance;
+            if (!CheckForInvalidProtection(guardian, target))
+                return false;
+            
+            if (CustomGamemode.Instance.OnCheckProtect(guardian, target))
+            {
+                guardian.SyncPlayerSettings();
+                guardian.RpcProtectPlayer(target, guardian.Data.DefaultOutfit.ColorId);
+            }     
+
+            return false;
+        }
+        public static bool CheckForInvalidProtection(PlayerControl guardian, PlayerControl target)
+        {
+		    if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
+		    if (!target || guardian.Data.Disconnected) return false;
+		    GameData.PlayerInfo data = target.Data;
+		    if (data == null || data.IsDead) return false;
+            float minTime = Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f);
+            if (TimeSinceLastProtect.TryGetValue(guardian.PlayerId, out var time) && time < minTime) return false;
+            TimeSinceLastProtect[guardian.PlayerId] = 0f;
+            return true;
         }
     }
 
@@ -163,6 +197,8 @@ namespace MoreGamemodes
             }
             if (!AmongUsClient.Instance.AmHost) return;
             if (!__instance.AmOwner) return;
+            if (RickrollManager.ShouldRickrollMode())
+                RickrollManager.OnUpdate();
             if (Main.GameStarted && !MeetingHud.Instance)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -170,12 +206,12 @@ namespace MoreGamemodes
                     if (Options.CurrentGamemode == Gamemodes.Jailbreak)
                     {
                         JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] += Time.fixedDeltaTime;
-                        if (JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] < 2f) continue;
+                        if (JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] < 1f) continue;
                     }
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, false);
                     if (Options.CurrentGamemode == Gamemodes.Jailbreak)
-                        JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] -= 2f;
+                        JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] -= 1f;
                 }
             }
             if (Main.GameStarted)
@@ -262,7 +298,7 @@ namespace MoreGamemodes
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (!RoleManager.IsGhostRole(roleType))
+            if (!RoleManager.IsGhostRole(roleType) && !Main.StandardRoles.ContainsKey(__instance.PlayerId))
                 Main.StandardRoles[__instance.PlayerId] = roleType;
         }
     }
@@ -284,6 +320,7 @@ namespace MoreGamemodes
                 new LateTask(() =>{
                     __instance.Data.Disconnected = false;
                     GameData.Instance.SetDirty();
+                    Main.StandardRoles[__instance.PlayerId] = RoleTypes.Crewmate;
                 }, 1f, "ResetDisconnect_" + __instance.Data.PlayerId);
                 return false;
             }
@@ -320,6 +357,12 @@ namespace MoreGamemodes
     {
         public static void Prefix(PlayerControl __instance, [HarmonyArgument(0)] DeathReason reason, [HarmonyArgument(1)] bool assignGhostRole)
         {
+            if (__instance == PlayerControl.LocalPlayer && Options.CurrentGamemode != Gamemodes.PaintBattle && Options.CurrentGamemode != Gamemodes.Speedrun &&
+                Options.CurrentGamemode != Gamemodes.Jailbreak && RickrollManager.ShouldRickrollMode())
+            {
+                HudManager.Instance.Chat.AddChat(PlayerControl.LocalPlayer, "YOU GOT RICKROLLED!!!", false);
+                RickrollManager.Rickroll();
+            }
             if (!AmongUsClient.Instance.AmHost) return;
             if (Options.CurrentGamemode != Gamemodes.PaintBattle)
                 __instance.RpcSetPet("");
@@ -341,6 +384,46 @@ namespace MoreGamemodes
                         __instance.RpcSetNamePrivate(__instance.BuildPlayerName(pc, false), pc, true);
                 }
             }, 1f, "Fix After MixUp Name");
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckColor))]
+    class CheckColorPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] byte bodyColor)
+        {
+            if (Options.CanUseColorCommand.GetBool())
+            {
+                __instance.RpcSetColor(bodyColor);
+                return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckName))]
+    class CheckNamePatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string name)
+        {
+            if (RickrollManager.ShouldRickrollMode())
+            {
+                var rand = new System.Random();
+                List<string> AvalidableNames = RickrollManager.RickrollNames;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (AvalidableNames.Contains(pc.Data.PlayerName))
+                        AvalidableNames.Remove(pc.Data.PlayerName);
+                }
+                __instance.RpcSetName(AvalidableNames[rand.Next(0, AvalidableNames.Count)]);
+                return false;
+            }
+            if (Options.CanUseNameCommand.GetBool() && Options.EnableNameRepeating.GetBool())
+            {
+                __instance.RpcSetName(name);
+                return false;
+            }
+            return true;
         }
     }
 }
