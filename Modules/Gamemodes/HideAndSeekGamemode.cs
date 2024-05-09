@@ -72,14 +72,18 @@ namespace MoreGamemodes
 
         public override List<PlayerControl> OnBeginCrewmatePrefix(IntroCutscene __instance)
         {
-            var Team = new List<PlayerControl>();
-            Team.Add(PlayerControl.LocalPlayer);
-            foreach (var pc in PlayerControl.AllPlayerControls)
+            if (Options.HnSImpostorsAreVisible.GetBool())
             {
-                if (pc != PlayerControl.LocalPlayer && !pc.Data.Role.IsImpostor)
-                    Team.Add(pc);
+                var Team = new List<PlayerControl>();
+                Team.Add(PlayerControl.LocalPlayer);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc != PlayerControl.LocalPlayer && !pc.Data.Role.IsImpostor)
+                        Team.Add(pc);
+                }
+                return Team;
             }
-            return Team;
+            return base.OnBeginCrewmatePrefix(__instance);
         }
 
         public override void OnBeginCrewmatePostfix(IntroCutscene __instance)
@@ -109,12 +113,21 @@ namespace MoreGamemodes
 
         public override void OnSelectRolesPostfix()
         {
+            if (Options.HnSImpostorsAreVisible.GetBool()) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.Data.Role.IsImpostor)
+                {
                     pc.RpcSetColor(0);
+                    foreach (var ar in PlayerControl.AllPlayerControls)
+                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
+                }
                 else
-                    pc.RpcSetColor(1);            
+                {
+                    pc.RpcSetColor(1);
+                    foreach (var ar in PlayerControl.AllPlayerControls)
+                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.blue;
+                }
             }
         }
 

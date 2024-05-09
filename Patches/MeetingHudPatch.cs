@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -57,7 +58,40 @@ namespace MoreGamemodes
         public static bool Prefix(MeetingHud __instance, [HarmonyArgument(0)] byte srcPlayerId, [HarmonyArgument(1)] byte suspectPlayerId)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            return CustomGamemode.Instance.OnCastVote(__instance, srcPlayerId, suspectPlayerId);
+            bool canceled = !CustomGamemode.Instance.OnCastVote(__instance, srcPlayerId, suspectPlayerId);
+            if (canceled)
+            {
+                var voter = Utils.GetPlayerById(srcPlayerId);
+                __instance.RpcClearVote(voter.GetClientId());
+            }
+            return !canceled;
+        }
+    }
+
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.RpcVotingComplete))]
+    class RpcVotingCompletePatch
+    {
+        public static bool Prefix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] GameData.PlayerInfo exiled, [HarmonyArgument(2)] bool tie)
+        {
+            if (AntiBlackout.OverrideExiledPlayer)
+            {
+                if (AmongUsClient.Instance.AmClient)
+		        {
+			        __instance.VotingComplete(states, null, true);
+		        }
+		        MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, 23, SendOption.Reliable);
+		        messageWriter.WritePacked(states.Length);
+		        foreach (MeetingHud.VoterState voterState in states)
+		        {
+		        	voterState.Serialize(messageWriter);
+		        }
+		        messageWriter.Write(byte.MaxValue);
+		        messageWriter.Write(true);
+		        messageWriter.EndMessage();
+                ExileControllerWrapUpPatch.AntiBlackout_LastExiled = exiled;
+                return false;
+            }
+            return true;
         }
     }
 }

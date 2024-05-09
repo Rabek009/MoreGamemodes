@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 namespace MoreGamemodes
 {
@@ -267,7 +267,7 @@ namespace MoreGamemodes
                         if (NoBombTimer > 0f) return;
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if ((!player.Data.Role.IsImpostor || Options.CanKillImpostors.GetBool()) && Vector2.Distance(pc.transform.position, player.transform.position) <= Options.BombRadius.GetFloat() * 2 && !player.Data.IsDead && player != pc && ShieldTimer[player.PlayerId] <= 0f)
+                            if ((!player.Data.Role.IsImpostor || Options.CanKillImpostors.GetBool()) && Vector2.Distance(pc.transform.position, player.transform.position) <= Options.BombRadius.GetFloat() * 2f && !player.Data.IsDead && player != pc && ShieldTimer[player.PlayerId] <= 0f)
                             {
                                 player.RpcSetDeathReason(DeathReasons.Bombed);
                                 player.RpcMurderPlayer(player, true);
@@ -275,6 +275,7 @@ namespace MoreGamemodes
                         }
                         pc.RpcSetDeathReason(DeathReasons.Suicide);
                         pc.RpcMurderPlayer(pc, true);
+                        Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, pc.transform.position);
                         pc.RpcSetItem(Items.None);
                         if (Options.NoGameEnd.GetBool()) break;
                         var isSomeoneAlive = false;
@@ -295,7 +296,13 @@ namespace MoreGamemodes
                         }
                         break;
                     case Items.Trap:
-                        Traps.Add((pc.transform.position, Options.TrapWaitTime.GetFloat()));
+                        List<byte> visibleList = new();
+                        foreach (var player in PlayerControl.AllPlayerControls)
+                        {
+                            if ((!player.Data.Role.IsImpostor && Options.CrewmatesSeeTrap.GetBool()) || (player.Data.Role.IsImpostor && Options.ImpostorsSeeTrap.GetBool()) || player.Data.IsDead || player == pc)
+                                visibleList.Add(player.PlayerId);
+                        }
+                        Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.transform.position, visibleList);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Teleport:
@@ -304,7 +311,7 @@ namespace MoreGamemodes
                         break;
                     case Items.Button:
                         if (Utils.IsSabotage() && !Options.CanUseDuringSabotage.GetBool()) break;
-                        pc.ReportDeadBody(null);
+                        pc.ForceReportDeadBody(null);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Finder:
@@ -367,7 +374,6 @@ namespace MoreGamemodes
                 CamouflageTimer = 0f;
                 Utils.RevertCamouflage();
             }
-            Traps.Clear();
             return true;
         }
 
@@ -417,41 +423,6 @@ namespace MoreGamemodes
             if (NoItemTimer < 0f)
             {
                 NoItemTimer = 0f;
-            }
-            for (int i = 0; i < Traps.Count; ++i)
-            {
-                if (Traps[i].Item2 > 0f)
-                {
-                    Traps[i] = (Traps[i].Item1, Traps[i].Item2 - Time.fixedDeltaTime);
-                }
-                if (Traps[i].Item2 < 0f)
-                {
-                    Traps[i] = (Traps[i].Item1, 0f);
-                }
-                if (Traps[i].Item2 > 0f) continue;
-                Vector2 trappos = Traps[i].Item1;
-                System.Collections.Generic.Dictionary<PlayerControl, float> pcdistance = new();
-                float dis;
-                foreach (PlayerControl p in PlayerControl.AllPlayerControls)
-                {
-                    if (!p.Data.IsDead && !p.inVent && !MeetingHud.Instance)
-                    {
-                        dis = Vector2.Distance(trappos, p.transform.position);
-                        pcdistance.Add(p, dis);
-                    }
-                }
-                var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
-                PlayerControl target = min.Key;
-                if (Vector2.Distance(Traps[i].Item1, target.transform.position) <= 1f * Options.TrapRadius.GetFloat())
-                {
-                    if (ShieldTimer[target.PlayerId] <= 0f)
-                    {
-                        target.RpcSetDeathReason(DeathReasons.Trapped);
-                        target.RpcMurderPlayer(target, true);
-                    }
-                    Traps.RemoveAt(i);
-                    --i;
-                }
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -507,7 +478,6 @@ namespace MoreGamemodes
             NoBombTimer = 0f;
             NoItemTimer = 0f;
             NoItemGive = false;
-            Traps = new System.Collections.Generic.List<(Vector2, float)>();
             CompassTimer = new System.Collections.Generic.Dictionary<byte, float>();
             TimeSlowersUsed = 0;
             TimeSpeedersUsed = 0;
@@ -528,7 +498,6 @@ namespace MoreGamemodes
         public float NoBombTimer;
         public float NoItemTimer;
         public bool NoItemGive;
-        public System.Collections.Generic.List<(Vector2, float)> Traps;
         public System.Collections.Generic.Dictionary<byte, float> CompassTimer;
         public int TimeSlowersUsed;
         public int TimeSpeedersUsed;

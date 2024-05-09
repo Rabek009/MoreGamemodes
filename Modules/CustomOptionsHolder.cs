@@ -63,13 +63,14 @@ namespace MoreGamemodes
         public static OptionItem HnSImpostorsCanKillDuringBlind;
         public static OptionItem HnSImpostorsCanVent;
         public static OptionItem HnSImpostorsCanCloseDoors;
+        public static OptionItem HnSImpostorsAreVisible;
 
         //Shift and seek
         public static OptionItem SnSImpostorsBlindTime;
         public static OptionItem SnSImpostorsCanKillDuringBlind;
         public static OptionItem SnSImpostorsCanVent;
         public static OptionItem SnSImpostorsCanCloseDoors;
-        public static OptionItem ImpostorsAreVisible;
+        public static OptionItem SnSImpostorsAreVisible;
         public static OptionItem InstantShapeshift;
 
         //Bomb tag
@@ -118,6 +119,8 @@ namespace MoreGamemodes
         public static OptionItem EnableTrap;
         public static OptionItem TrapWaitTime;
         public static OptionItem TrapRadius;
+        public static OptionItem CrewmatesSeeTrap;
+        public static OptionItem ImpostorsSeeTrap;
 
         //Both
         public static OptionItem EnableTeleport;
@@ -255,6 +258,8 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.HideAndSeek);
             HnSImpostorsCanCloseDoors = BooleanOptionItem.Create(1004, "Impostors can close doors", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.HideAndSeek);
+            HnSImpostorsAreVisible = BooleanOptionItem.Create(1005, "Impostors are visible", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.HideAndSeek);
 
             //Shift and seek
             SnSImpostorsBlindTime = FloatOptionItem.Create(2001, "Impostors blind time", new(0f, 30f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
@@ -266,7 +271,7 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.ShiftAndSeek);
             SnSImpostorsCanCloseDoors = BooleanOptionItem.Create(2004, "Impostors can close doors", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
-            ImpostorsAreVisible = BooleanOptionItem.Create(2005, "Impostors are visible", true, TabGroup.GamemodeSettings, false)
+            SnSImpostorsAreVisible = BooleanOptionItem.Create(2005, "Impostors are visible", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
             InstantShapeshift = BooleanOptionItem.Create(2006, "Instant shapeshift", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
@@ -405,6 +410,12 @@ namespace MoreGamemodes
             TrapRadius = FloatOptionItem.Create(5017, "Trap radius", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetValueFormat(OptionFormat.Multiplier)
+                .SetParent(EnableTrap);
+            CrewmatesSeeTrap = BooleanOptionItem.Create(5018, "Crewmates see trap", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetParent(EnableTrap);
+            ImpostorsSeeTrap = BooleanOptionItem.Create(5019, "Impostors see trap", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
                 .SetParent(EnableTrap);
 
             //Both

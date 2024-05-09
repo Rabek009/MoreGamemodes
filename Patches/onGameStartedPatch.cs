@@ -10,7 +10,15 @@ namespace MoreGamemodes
     {
         public static void Prefix(AmongUsClient __instance)
         {
-            if (!__instance.AmHost) return;
+            if (!__instance.AmHost)
+            {
+                if (CustomGamemode.Instance == null)
+                {
+                    ClassicGamemode.instance = new ClassicGamemode();
+                    CustomGamemode.Instance = ClassicGamemode.instance;
+                }
+                return;
+            }
             Main.RealOptions = new OptionBackupData(GameOptionsManager.Instance.currentGameOptions);
             Main.AllShapeshifts = new Dictionary<byte, byte>();
             Main.LastNotifyNames = new Dictionary<(byte, byte), string>();
@@ -21,6 +29,7 @@ namespace MoreGamemodes
             CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
+            Main.Disconnected = new Dictionary<byte, bool>();
             AntiBlackout.Reset();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -36,6 +45,7 @@ namespace MoreGamemodes
                 CheckMurderPatch.TimeSinceLastKill[pc.PlayerId] = 0f;
                 CheckProtectPatch.TimeSinceLastProtect[pc.PlayerId] = 0f;
                 Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
+                Main.Disconnected[pc.PlayerId] = pc.Data.Disconnected;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
@@ -101,39 +111,6 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(AmongUsClient._CoStartGameHost_d__30), nameof(AmongUsClient._CoStartGameHost_d__30.MoveNext))]
-    public static class DleksPatch
-    {
-        private static bool Prefix(AmongUsClient._CoStartGameHost_d__30 __instance, ref bool __result)
-        {
-            if (__instance.__1__state != 0)
-            {
-                return true;
-            }
-
-            __instance.__1__state = -1;
-            if (LobbyBehaviour.Instance)
-            {
-                LobbyBehaviour.Instance.Despawn();
-            }
-
-            if (ShipStatus.Instance)
-            {
-                __instance.__2__current = null;
-                __instance.__1__state = 2;
-                __result = true;
-                return false;
-            }
-
-            var num2 = Mathf.Clamp(GameOptionsManager.Instance.currentGameOptions.MapId, 0, Constants.MapNames.Length - 1);
-            __instance.__2__current = __instance.__4__this.ShipLoadingAsyncHandle = __instance.__4__this.ShipPrefabs[num2].InstantiateAsync();
-            __instance.__1__state = 1;
-
-            __result = true;
-            return false;
         }
     }
 }

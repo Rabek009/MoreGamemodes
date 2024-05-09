@@ -572,7 +572,7 @@ namespace MoreGamemodes
                 {
                     ChangeRecipeCooldown[pc.PlayerId] = 0f;
                 }
-                if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && (pc.GetPlainShipRoom().RoomId == SystemTypes.LowerEngine || pc.GetPlainShipRoom().RoomId == SystemTypes.UpperEngine) && pc.HasItem(InventoryItems.SpaceshipWithoutFuel)  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
+                if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && (pc.GetPlainShipRoom().RoomId == SystemTypes.LowerEngine || pc.GetPlainShipRoom().RoomId == SystemTypes.UpperEngine) && pc.HasItem(InventoryItems.SpaceshipWithoutFuel)  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
                 {
                     pc.RpcSetItemAmount(InventoryItems.SpaceshipWithFuel, pc.GetItemAmount(InventoryItems.SpaceshipWithFuel) + pc.GetItemAmount(InventoryItems.SpaceshipWithoutFuel));
                     pc.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, 0);
@@ -613,11 +613,11 @@ namespace MoreGamemodes
                     pc.SyncPlayerSettings();
                     EnergyDrinkDuration[pc.PlayerId] = 0f;
                 }
-                if (pc.IsGuard() && TakeoverTimer > 0f && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
+                if (pc.IsGuard() && TakeoverTimer > 0f && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
                     TakeoverTimer = 0f;
                 if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Storage && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && pc.HasItem(InventoryItems.SpaceshipWithFuel))
                     pc.RpcEscape();
-                if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && pc.HasItem(InventoryItems.BreathingMaskWithOxygen) && ReactorWallHealth <= 0f)
+                if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && pc.HasItem(InventoryItems.BreathingMaskWithOxygen) && ReactorWallHealth <= 0f && !pc.inVent)
                     pc.RpcEscape();
             }
             bool isGuardAlive = false;
@@ -626,7 +626,7 @@ namespace MoreGamemodes
             {
                 if (pc.IsGuard() && !pc.Data.IsDead)
                     isGuardAlive = true;
-                if (!pc.IsGuard() && !pc.Data.IsDead && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav)
+                if (!pc.IsGuard() && !pc.Data.IsDead && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav && !pc.inVent)
                     isPrisonerInNav = true;
             }
             if (!isGuardAlive && isPrisonerInNav)
@@ -645,7 +645,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.Data.IsDead) continue;
-                    if (pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.MedBay && TimeSinceLastDamage[pc.PlayerId] >= 5f  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
+                    if (pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.MedBay && TimeSinceLastDamage[pc.PlayerId] >= 5f  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
                     {
                         if (pc.IsGuard())
                         {
@@ -677,7 +677,7 @@ namespace MoreGamemodes
                     }
                     if (pc.IsGuard())
                         pc.RpcSetItemAmount(InventoryItems.Resources, pc.GetItemAmount(InventoryItems.Resources) + 2);
-                    if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Electrical && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
+                    if (!pc.IsGuard() && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Electrical && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
                         pc.RpcSetItemAmount(InventoryItems.Resources, Math.Min(pc.GetItemAmount(InventoryItems.Resources) + 2, Options.MaximumPrisonerResources.GetInt()));
                     if (!pc.IsGuard() && pc.GetPlainShipRoom() && pc.GetPlainShipRoom().RoomId == SystemTypes.Storage && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
                         pc.RpcSetItemAmount(InventoryItems.Resources, Math.Min(pc.GetItemAmount(InventoryItems.Resources) + 5, Options.MaximumPrisonerResources.GetInt()));

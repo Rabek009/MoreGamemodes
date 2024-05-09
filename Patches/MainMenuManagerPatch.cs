@@ -19,7 +19,7 @@ namespace MoreGamemodes
         public static void StartPriorityPostfix(MainMenuManager __instance)
         {
             var rightpanel = __instance.gameModeButtons.transform.parent;
-            var logoObject = new GameObject("titleLogo_TOH");
+            var logoObject = new GameObject("titleLogo_MG");
             var logoTransform = logoObject.transform;
             MG_Logo = logoObject.AddComponent<SpriteRenderer>();
             logoTransform.parent = rightpanel;

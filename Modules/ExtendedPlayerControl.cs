@@ -12,20 +12,27 @@ namespace MoreGamemodes
 {
     static class ExtendedPlayerControl
     {
-        public static void RpcTeleport(this PlayerControl player, Vector2 location)
+        public static void RpcTeleport(this PlayerControl player, Vector2 position)
         {
-            if (player.inVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation())
-                player.MyPhysics.RpcBootFromVent(0);
-            if (player.onLadder || player.MyPhysics.Animations.IsPlayingAnyLadderAnimation())
+            if (MeetingHud.Instance) return;
+            if (player.walkingToVent || player.inVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation())
             {
-                new LateTask(() => player.RpcTeleport(location), 0.01f, "Retry Teleport");
+                player.MyPhysics.RpcBootFromVent(0);
+                new LateTask(() => player.RpcTeleport(position), 0.1f, "Retry Teleport");
+                return;
+            }  
+            if (player.onLadder || player.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || player.inMovingPlat)
+            {
+                new LateTask(() => player.RpcTeleport(position), 0.01f, "Retry Teleport");
                 return;
             }
-            var sId = player.NetTransform.lastSequenceId + 5;
-            player.NetTransform.SnapTo(location, (ushort)sId);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable);
-            NetHelpers.WriteVector2(location, writer);
-            writer.Write(player.NetTransform.lastSequenceId);
+            if (AmongUsClient.Instance.AmClient)
+            {
+                player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 328));
+            }
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.None);
+            NetHelpers.WriteVector2(position, writer);
+            writer.Write((ushort)(player.NetTransform.lastSequenceId + 8));
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -46,7 +53,7 @@ namespace MoreGamemodes
         public static void RpcSetDesyncRole(this PlayerControl player, RoleTypes role, int clientId)
         {
             if (player == null) return;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, clientId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, clientId);
             writer.Write((ushort)role);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
@@ -64,7 +71,7 @@ namespace MoreGamemodes
                 return;
             }
             var clientId = seer.GetClientId();
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, clientId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, clientId);
             writer.Write(name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
@@ -508,7 +515,7 @@ namespace MoreGamemodes
                         name += Utils.ColorString(Color.blue, "\nSearch cooldown: " + (int)(JailbreakGamemode.instance.SearchCooldown[player.PlayerId] + 0.99f) + "s");
                         if (JailbreakGamemode.instance.EnergyDrinkDuration[player.PlayerId] > 0f)
                             name += Utils.ColorString(Color.yellow, "\nEnergy drink: " + (int)(JailbreakGamemode.instance.EnergyDrinkDuration[player.PlayerId] + 0.99f) + "s");
-                        name += "<color=" + Utils.ColorToHex(Color.green) + ">";
+                        name += "<" + Utils.ColorToHex(Color.green) + ">";
                         name += "\nMoney: " + player.GetItemAmount(InventoryItems.Resources) + "$";
                         name += "\nWeapon lvl." + player.GetItemAmount(InventoryItems.Weapon);
                         name += "\nArmor lvl." + player.GetItemAmount(InventoryItems.Armor) + "</color>";
@@ -529,7 +536,7 @@ namespace MoreGamemodes
                     else if (!player.IsGuard() && !player.HasEscaped() && player == seer)
                     {
                         name += "\nHealth: " + (int)(JailbreakGamemode.instance.PlayerHealth[player.PlayerId] + 0.99f) + "/" + Options.PrisonerHealth.GetFloat();
-                        name += "<color=" + Utils.ColorToHex(Color.green) + ">";
+                        name += "<" + Utils.ColorToHex(Color.green) + ">";
                         name += "\nResources: " + player.GetItemAmount(InventoryItems.Resources) + "/" + Options.MaximumPrisonerResources.GetInt();
                         if (player.HasItem(InventoryItems.BreathingMaskWithoutOxygen))
                             name += "\nBreathing mask without oxygen" + (player.GetItemAmount(InventoryItems.BreathingMaskWithoutOxygen) > 1 ? " x" + player.GetItemAmount(InventoryItems.BreathingMaskWithoutOxygen) : "");
@@ -831,6 +838,17 @@ namespace MoreGamemodes
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;
+        }
+
+        public static void ForceReportDeadBody(this PlayerControl player, GameData.PlayerInfo target)
+        {
+            if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost)
+		    {
+			    return;
+		    }
+            MeetingRoomManager.Instance.AssignSelf(player, target);
+            DestroyableSingleton<HudManager>.Instance.OpenMeetingRoom(player);
+		    player.RpcStartMeeting(target);
         }
     }
 }

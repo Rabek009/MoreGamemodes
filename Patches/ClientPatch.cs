@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using InnerNet;
+using UnityEngine;
 
 namespace MoreGamemodes
 {
@@ -9,11 +10,17 @@ namespace MoreGamemodes
         public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return;
-            if (client.Character.AmOwner) return;
+            if (client.Character.AmOwner)
+            {
+                new LateTask(() => new ModLogo(), 1f);
+                return;
+            }
             OptionItem.SyncAllOptions();
             new LateTask(() =>
             {
                 client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
+                foreach (var netObject in CustomNetObject.CustomObjects)
+                (netObject as ModLogo).Reset();
             }, 2f, "Welcome Message");
         }
     }
@@ -23,19 +30,15 @@ namespace MoreGamemodes
     {
         public static void Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client, [HarmonyArgument(1)] DisconnectReasons reason)
         {
-            if (!AmongUsClient.Instance.AmHost) return;
+            if (!__instance.AmHost) return;
             if (Main.AllPlayersDeathReason.ContainsKey(client.Character.PlayerId))
             {
                 if (client.Character.GetDeathReason() == DeathReasons.Alive)
                     client.Character.RpcSetDeathReason(DeathReasons.Disconnected);
             }
-            foreach (var task in LateTask.Tasks)
+            if (__instance.GameState == InnerNetClient.GameStates.Started)
             {
-                if (task.name == "ResetDisconnect_" + client.Character.PlayerId)
-                    LateTask.Tasks.Remove(task);
-            }
-            if (AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started)
-            {
+                Main.Disconnected[client.Character.PlayerId] = true;
                 AntiBlackout.OnDisconnect(client.Character.Data);
             }
         }

@@ -35,7 +35,7 @@ namespace MoreGamemodes
             return null;
         }
 
-        public static string ColorString(Color32 color, string str) => $"<color=#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
+        public static string ColorString(Color32 color, string str) => $"<#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
         public static string ColorToHex(Color32 color) => $"#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}";
         
         public static Items RandomItemCrewmate()
@@ -314,7 +314,7 @@ namespace MoreGamemodes
                 if (GameManager.Instance.LogicComponents[i].TryCast<LogicOptions>(out var _))
                 {
                     Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
-                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+                    MessageWriter writer = MessageWriter.Get(SendOption.None);
                     writer.StartMessage(targetClientId == -1 ? Tags.GameData : Tags.GameDataTo);
                     {
                         writer.Write(AmongUsClient.Instance.GameId);
@@ -426,11 +426,6 @@ namespace MoreGamemodes
         {
             if (deadBodyParent == null || !Main.GameStarted) return;
             CreateDeadBody(position, colorId, deadBodyParent);
-            new LateTask(() =>{
-                PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 10;
-                PlayerControl.LocalPlayer.NetTransform.sendQueue.Enqueue(PlayerControl.LocalPlayer.NetTransform.body.position);
-				PlayerControl.LocalPlayer.NetTransform.SetDirtyBit(2U);
-            }, 0.1f);
             var sender = CustomRpcSender.Create("Create Dead Body", SendOption.Reliable);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
@@ -632,6 +627,16 @@ namespace MoreGamemodes
             ImageConversion.LoadImage(texture, ms.ToArray());
             sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), new(0.5f, 0.5f), pixelsPerUnit);
             return sprite;
+        }
+
+        public static void RpcCreateExplosion(float size, float duration, Vector2 position)
+        {
+            new Explosion(size, duration, position);
+        }
+
+        public static void RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList)
+        {
+            new TrapArea(radius, waitDuration, position, visibleList);
         }
     }
 }

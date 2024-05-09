@@ -15,9 +15,9 @@ namespace MoreGamemodes
         public static bool Prefix(ChatController __instance)
         {
             var text = __instance.freeChatField.Text;
-            if (!AmongUsClient.Instance.AmHost && (text.Contains("<size=") || text.Contains("<br>")))
+            if (!AmongUsClient.Instance.AmHost && (text.Contains("<size=") || text.Contains("<br>") || text.Contains("<line-height=") || text.Contains("<cspace=")))
             {
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Only host can change size of text and use new line! Other text formatting is allowed.");
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Only host can use <noparse><size>, <br>, <line-height> <cspace></noparse>,! Other text formatting is allowed.");
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
@@ -474,6 +474,7 @@ namespace MoreGamemodes
                             GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.ImpostorPlayerID, int.Parse(subArgs));
                             break;
                     }
+                    PlayerControl.LocalPlayer.RpcSyncSettings(GameOptionsManager.Instance.gameOptionsFactory.ToBytes(GameOptionsManager.Instance.currentGameOptions, AprilFoolsMode.IsAprilFoolsModeToggledOn));
                     Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
                     break;
                 case "/gm":
@@ -667,6 +668,9 @@ namespace MoreGamemodes
                                 case "midgamechat":
                                     Utils.SendChat("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
                                     break;
+                                case "disablezipline":
+                                    Utils.SendChat("Disable Zipline: Players can't use zipline on the fungle.", "Gamemodes");
+                                    break;
                                 default:
                                     switch (Options.CurrentGamemode)
                                     {
@@ -705,14 +709,6 @@ namespace MoreGamemodes
                                             Utils.SendChat("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                             break;
                                     }
-                                    if (Options.RandomSpawn.GetBool())
-                                        Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
-                                    if (Options.RandomMap.GetBool())
-                                        Utils.SendChat("Random Map: Map is randomly chosen before game starts.", "Gamemodes");
-                                    if (Options.DisableGapPlatform.GetBool())
-                                        Utils.SendChat("Disable Gap Platform: Players can't use gap platform on airship.", "Gamemodes");
-                                    if (Options.MidGameChat.GetBool())
-                                        Utils.SendChat("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
                                     break;
                             }
                             break;
@@ -869,6 +865,7 @@ namespace MoreGamemodes
                             message += "Impostors can kill during blind: "; message += Options.HnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.HnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Impostors are visible: "; message += Options.HnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.ShiftAndSeek:
                             message = "Gamemode: Shift and seek\n\n";
@@ -876,7 +873,7 @@ namespace MoreGamemodes
                             message += "Impostors can kill during blind: "; message += Options.SnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Impostors are visible: "; message += Options.SnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
                             message += "Instant shapeshift: "; message += Options.InstantShapeshift.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.BombTag:
@@ -955,6 +952,8 @@ namespace MoreGamemodes
                             {
                                 message += "Trap wait time: " + Options.TrapWaitTime.GetFloat() + "s\n";
                                 message += "Trap radius: " + Options.BombRadius.GetFloat() + "x\n";
+                                message += "Crewmates see trap: "; message += Options.CrewmatesSeeTrap.GetBool() ? "ON\n" : "OFF\n";
+                                message += "Impostors see trap: "; message += Options.ImpostorsSeeTrap.GetBool() ? "ON\n" : "OFF\n";
                             }
                             message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
                             message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
@@ -1430,7 +1429,7 @@ namespace MoreGamemodes
                     break;
                 case "/name":
                     canceled = true;
-                    if (!Options.CanUseNameCommand.GetBool() || RickrollManager.ShouldRickrollMode()) break;
+                    if (!Options.CanUseNameCommand.GetBool()) break;
                     if (Main.GameStarted) break;
                     var name = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -1501,6 +1500,9 @@ namespace MoreGamemodes
                                 case "midgamechat":
                                     player.RpcSendMessage("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
                                     break;
+                                case "disablezipline":
+                                    player.RpcSendMessage("Disable Zipline: Players can't use zipline on the fungle.", "Gamemodes");
+                                    break;
                                 default:
                                     switch (Options.CurrentGamemode)
                                     {
@@ -1539,14 +1541,6 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                             break;
                                     }
-                                    if (Options.RandomSpawn.GetBool())
-                                        player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
-                                    if (Options.RandomMap.GetBool())
-                                        player.RpcSendMessage("Random Map: Map is randomly chosen before game starts.", "Gamemodes");
-                                    if (Options.DisableGapPlatform.GetBool())
-                                        player.RpcSendMessage("Disable Gap Platform: Players can't use gap platform on airship.", "Gamemodes");
-                                    if (Options.MidGameChat.GetBool())
-                                        player.RpcSendMessage("Mid Game Chat: You can chat during rounds. If proximity chat is on only nearby players see you messages. Depending on options impostors can communicate via radio by typing /radio MESSAGE.", "Gamemodes");
                                     break;
                             }
                             break;
@@ -1703,6 +1697,7 @@ namespace MoreGamemodes
                             message += "Impostors can kill during blind: "; message += Options.HnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.HnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Impostors are visible: "; message += Options.HnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.ShiftAndSeek:
                             message = "Gamemode: Shift and seek\n\n";
@@ -1710,7 +1705,7 @@ namespace MoreGamemodes
                             message += "Impostors can kill during blind: "; message += Options.SnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors are visible: "; message += Options.ImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Impostors are visible: "; message += Options.SnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
                             message += "Instant shapeshift: "; message += Options.InstantShapeshift.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.BombTag:
@@ -2125,7 +2120,7 @@ namespace MoreGamemodes
                 {
                     if (pc.AmOwner)
                     {
-                        player.SetName(Utils.ColorString(Color.blue, "MG.SystemMessage." + title));
+                        player.SetName(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title));
                         DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
                         player.SetName(name);
                         if (Main.GameStarted)
@@ -2138,7 +2133,7 @@ namespace MoreGamemodes
                             var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
                             writer.StartMessage(clientId2);
                             writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                                .Write(Utils.ColorString(Color.blue, "MG.SystemMessage." + title))
+                                .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
                                 .EndRpc();
                             writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
                                 .Write(msg)
@@ -2186,18 +2181,20 @@ namespace MoreGamemodes
                 __result = false;
                 return false;
             }
-            if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
-            {
-                __instance.RpcSendCommand(chatText);
-                __result = true;
-                return false;
-            }
             int return_count = PlayerControl.LocalPlayer.name.Count(x => x == '\n');
             chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
             if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
             if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
                 DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
+            if (chatText[0] == '/' && chatText[0..5] != "/info " && !AmongUsClient.Instance.AmHost)
+            {
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
+                writer.Write(chatText);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                __result = true;
+                return false;
+            }
             MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
             messageWriter.Write(chatText);
             messageWriter.EndMessage();

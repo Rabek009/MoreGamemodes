@@ -32,7 +32,7 @@ class LogicOptionsSerializePatch
 {
     public static bool Prefix(LogicOptions __instance, ref bool __result, MessageWriter writer, bool initialState)
     {
-        if (!initialState)
+        if (!initialState && AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Joined)
         {
             __result = false;
             return false;

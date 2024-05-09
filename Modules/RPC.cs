@@ -23,7 +23,6 @@ namespace MoreGamemodes
         SetItemAmount,
         SetCurrentRecipe,
         SetKillTimer,
-        SendCommand,
         PetAction,
         StartGamemode,
     }
@@ -112,10 +111,6 @@ namespace MoreGamemodes
                 case CustomRPC.SetKillTimer:
                     if (!__instance.AmOwner) break;
                     __instance.SetKillTimer(reader.ReadSingle());
-                    break;
-                case CustomRPC.SendCommand:
-                    if (!AmongUsClient.Instance.AmHost) return;
-                    SendChatPatch.OnReceiveChat(__instance, reader.ReadString());
                     break;
                 case CustomRPC.PetAction:
                     if (!AmongUsClient.Instance.AmHost) return;
@@ -238,6 +233,18 @@ namespace MoreGamemodes
 
         public static void StartGamemode(this GameManager manager, Gamemodes gamemode)
         {
+            CustomGamemode.Instance = null;
+            ClassicGamemode.instance = null;
+            HideAndSeekGamemode.instance = null;
+            ShiftAndSeekGamemode.instance = null;
+            BombTagGamemode.instance = null;
+            RandomItemsGamemode.instance = null;
+            BattleRoyaleGamemode.instance = null;
+            SpeedrunGamemode.instance = null;
+            PaintBattleGamemode.instance = null;
+            KillOrDieGamemode.instance = null;
+            ZombiesGamemode.instance = null;
+            JailbreakGamemode.instance = null;
             switch (gamemode)
             {
                 case Gamemodes.Classic:
@@ -429,13 +436,6 @@ namespace MoreGamemodes
                 return;
             }
             player.RpcUnmoddedSetKillTimer(time);
-        }
-
-        public static void RpcSendCommand(this PlayerControl player, string command)
-        {
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SendCommand, SendOption.Reliable, AmongUsClient.Instance.HostId);
-            writer.Write(command);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public static void RpcPetAction(this PlayerControl player)

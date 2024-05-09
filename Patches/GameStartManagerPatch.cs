@@ -61,6 +61,7 @@ namespace MoreGamemodes
                 GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
             if (Options.CurrentGamemode == Gamemodes.Jailbreak && GameOptionsManager.Instance.currentGameOptions.MapId != 0 && GameOptionsManager.Instance.currentGameOptions.MapId != 3)
                 GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
+            PlayerControl.LocalPlayer.RpcSyncSettings(GameOptionsManager.Instance.gameOptionsFactory.ToBytes(GameOptionsManager.Instance.currentGameOptions, AprilFoolsMode.IsAprilFoolsModeToggledOn));
             Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
         }
     }

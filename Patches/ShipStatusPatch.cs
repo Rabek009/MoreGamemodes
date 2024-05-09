@@ -41,5 +41,5 @@ namespace MoreGamemodes
                 }
             }, 1f, "Set MixUp Name");
         }
-    }    
+    }
 }

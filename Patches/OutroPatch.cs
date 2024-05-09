@@ -5,6 +5,9 @@ using AmongUs.Data;
 using Assets.CoreScripts;
 using Il2CppSystem;
 using AmongUs.GameOptions;
+using System.Linq;
+
+using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
@@ -229,6 +232,9 @@ namespace MoreGamemodes
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.IsModded = new Dictionary<byte, bool>();
+            Main.Disconnected = new Dictionary<byte, bool>();
+            CustomNetObject.CustomObjects = new List<CustomNetObject>();
+            CustomNetObject.MaxId = -1;
             AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {

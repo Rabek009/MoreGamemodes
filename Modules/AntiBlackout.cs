@@ -1,12 +1,11 @@
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
-using AmongUs.GameOptions;
 
 namespace MoreGamemodes
 {
     public static class AntiBlackout
     {
-        public static bool IsSingleImpostor => Main.RealOptions != null ? Main.RealOptions.GetInt(Int32OptionNames.NumImpostors) == 1 : GameOptionsManager.Instance.currentNormalGameOptions.NumImpostors == 1;
+        public static bool OverrideExiledPlayer => Options.NoGameEnd.GetBool();
         public static bool IsCached { get; private set; } = false;
         private static Dictionary<byte, (bool isDead, bool Disconnected)> isDeadCache = new();
 

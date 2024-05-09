@@ -48,8 +48,9 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, List<(string, float)>> ProximityMessages;
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
+    public static Dictionary<byte, bool> Disconnected;
 
-    public const string CurrentVersion = "1.2.1";
+    public const string CurrentVersion = "1.3.0";
 
     public override void Load()
     {
@@ -105,6 +106,9 @@ public partial class Main : BasePlugin
         ProximityMessages = new Dictionary<byte, List<(string, float)>>();
         NameColors = new Dictionary<(byte, byte), Color>();
         IsModded = new Dictionary<byte, bool>();
+        Disconnected = new Dictionary<byte, bool>();
+        CustomNetObject.CustomObjects = new List<CustomNetObject>();
+        CustomNetObject.MaxId = -1;
         AntiBlackout.Reset();
 
         Harmony.PatchAll();
@@ -113,12 +117,32 @@ public partial class Main : BasePlugin
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Start))]
     static class OnGameCreated
     {
+        public static void Prefix(PlayerControl __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost && __instance.PlayerId == 255)
+            {
+                __instance.cosmetics.currentBodySprite.BodySprite.color = Color.clear;
+                __instance.cosmetics.colorBlindText.color = Color.clear;
+            }
+        }
         public static void Postfix(PlayerControl __instance)
         {
             if (AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started) return;
             GameStarted = false;
             if (__instance.AmOwner)
             {
+                CustomGamemode.Instance = null;
+                ClassicGamemode.instance = null;
+                HideAndSeekGamemode.instance = null;
+                ShiftAndSeekGamemode.instance = null;
+                BombTagGamemode.instance = null;
+                RandomItemsGamemode.instance = null;
+                BattleRoyaleGamemode.instance = null;
+                SpeedrunGamemode.instance = null;
+                PaintBattleGamemode.instance = null;
+                KillOrDieGamemode.instance = null;
+                ZombiesGamemode.instance = null;
+                JailbreakGamemode.instance = null;
                 Timer = 0f;
                 StandardColors = new Dictionary<byte, byte>();
                 StandardNames = new Dictionary<byte, string>();
@@ -138,11 +162,12 @@ public partial class Main : BasePlugin
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
+                Disconnected = new Dictionary<byte, bool>();
+                CustomNetObject.CustomObjects = new List<CustomNetObject>();
+                CustomNetObject.MaxId = -1;
                 AntiBlackout.Reset();
-                if (RickrollManager.ShouldRickrollMode())
-                    RickrollManager.OnStart();
             }
-            else
+            else if (__instance.PlayerId != 255)
                 IsModded[__instance.PlayerId] = false;
         }
     }

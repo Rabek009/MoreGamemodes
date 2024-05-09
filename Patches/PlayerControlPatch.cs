@@ -182,6 +182,8 @@ namespace MoreGamemodes
                 foreach (var ar in PlayerControl.AllPlayerControls)
                     pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true), ar, true);  
             }
+            foreach (var netObject in CustomNetObject.CustomObjects)
+                new LateTask(() => netObject.Despawn(), 0f);
             return true;
         }
     }
@@ -197,8 +199,6 @@ namespace MoreGamemodes
             }
             if (!AmongUsClient.Instance.AmHost) return;
             if (!__instance.AmOwner) return;
-            if (RickrollManager.ShouldRickrollMode())
-                RickrollManager.OnUpdate();
             if (Main.GameStarted && !MeetingHud.Instance)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -216,6 +216,8 @@ namespace MoreGamemodes
             }
             if (Main.GameStarted)
                 CustomGamemode.Instance.OnFixedUpdate();
+            foreach (var netObject in CustomNetObject.CustomObjects)
+                netObject.OnFixedUpdate();
             if (Options.MidGameChat.GetBool() && Options.ProximityChat.GetBool())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -247,7 +249,8 @@ namespace MoreGamemodes
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 new LateTask(() =>
                 {
-                    MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, -1);
+                    int clientId = __instance.myPlayer.GetClientId();
+                    MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, clientId);
                     writer2.Write(id);
                     AmongUsClient.Instance.FinishRpcImmediately(writer2);
                 }, 0.5f, "Fix DesyncImpostor Stuck");
@@ -264,7 +267,6 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             var pc = __instance;
-
             CustomGamemode.Instance.OnCompleteTask(pc);
         }
     }
@@ -318,10 +320,16 @@ namespace MoreGamemodes
                 __instance.Data.Disconnected = true;
                 GameData.Instance.SetDirty();
                 new LateTask(() =>{
-                    __instance.Data.Disconnected = false;
-                    GameData.Instance.SetDirty();
-                    Main.StandardRoles[__instance.PlayerId] = RoleTypes.Crewmate;
-                }, 1f, "ResetDisconnect_" + __instance.Data.PlayerId);
+                    if (__instance != null)
+                    {
+                        if (__instance.Data != null && !Main.Disconnected[__instance.PlayerId])
+                        {
+                            __instance.Data.Disconnected = false;
+                            GameData.Instance.SetDirty();
+                        }
+                        Main.StandardRoles[__instance.PlayerId] = RoleTypes.Crewmate;
+                    }
+                }, 1f, "ResetDisconnect");
                 return false;
             }
             new LateTask(() => __instance.RpcSetRoleV2(roleType), 0.5f);
@@ -357,12 +365,6 @@ namespace MoreGamemodes
     {
         public static void Prefix(PlayerControl __instance, [HarmonyArgument(0)] DeathReason reason, [HarmonyArgument(1)] bool assignGhostRole)
         {
-            if (__instance == PlayerControl.LocalPlayer && Options.CurrentGamemode != Gamemodes.PaintBattle && Options.CurrentGamemode != Gamemodes.Speedrun &&
-                Options.CurrentGamemode != Gamemodes.Jailbreak && RickrollManager.ShouldRickrollMode())
-            {
-                HudManager.Instance.Chat.AddChat(PlayerControl.LocalPlayer, "YOU GOT RICKROLLED!!!", false);
-                RickrollManager.Rickroll();
-            }
             if (!AmongUsClient.Instance.AmHost) return;
             if (Options.CurrentGamemode != Gamemodes.PaintBattle)
                 __instance.RpcSetPet("");
@@ -406,18 +408,6 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string name)
         {
-            if (RickrollManager.ShouldRickrollMode())
-            {
-                var rand = new System.Random();
-                List<string> AvalidableNames = RickrollManager.RickrollNames;
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (AvalidableNames.Contains(pc.Data.PlayerName))
-                        AvalidableNames.Remove(pc.Data.PlayerName);
-                }
-                __instance.RpcSetName(AvalidableNames[rand.Next(0, AvalidableNames.Count)]);
-                return false;
-            }
             if (Options.CanUseNameCommand.GetBool() && Options.EnableNameRepeating.GetBool())
             {
                 __instance.RpcSetName(name);

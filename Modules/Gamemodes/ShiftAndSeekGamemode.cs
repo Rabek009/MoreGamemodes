@@ -66,7 +66,7 @@ namespace MoreGamemodes
 
         public override List<PlayerControl> OnBeginCrewmatePrefix(IntroCutscene __instance)
         {
-            if (Options.ImpostorsAreVisible.GetBool())
+            if (Options.SnSImpostorsAreVisible.GetBool())
             {
                 var Team = new List<PlayerControl>();
                 Team.Add(PlayerControl.LocalPlayer);
@@ -107,6 +107,7 @@ namespace MoreGamemodes
 
         public override void OnSelectRolesPostfix()
         {
+            if (Options.SnSImpostorsAreVisible.GetBool()) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.Data.Role.IsImpostor)

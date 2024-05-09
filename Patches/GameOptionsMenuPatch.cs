@@ -15,6 +15,15 @@ namespace MoreGamemodes
         {
             __instance.HideForOnline = new Il2CppReferenceArray<Transform>(0);
         }
+        public static void Postfix([HarmonyArgument(0)] Il2CppReferenceArray<Transform> items)
+        {
+            items
+                .FirstOrDefault(
+                    i => i.gameObject.activeSelf && i.name.Equals("MapName", StringComparison.OrdinalIgnoreCase))?
+                .GetComponent<KeyValueOption>()?
+                .Values?
+                .System_Collections_IList_Insert((int)MapNames.Dleks, new Il2CppSystem.Collections.Generic.KeyValuePair<string, int>(Constants.MapNames[(int)MapNames.Dleks], (int)MapNames.Dleks));
+        }
     }
 
     [HarmonyPatch(typeof(GameOptionsMenu), nameof(GameOptionsMenu.Start))]
@@ -247,7 +256,6 @@ namespace MoreGamemodes
     {
         public static void Postfix()
         {
-            Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
             OptionItem.SyncAllOptions();
         }
     }

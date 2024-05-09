@@ -30,7 +30,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!Main.GameStarted) return true;
             var rpcType = (RpcCalls)callId;
-            if (rpcType != RpcCalls.Pet && callId != 86) return true;
+            if (rpcType != RpcCalls.Pet && callId != 85) return true;
 
             PlayerControl pc = __instance.myPlayer;
             if (pc.Data.IsDead || MeetingHud.Instance) return true;
