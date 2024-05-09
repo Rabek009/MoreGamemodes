@@ -426,17 +426,16 @@ namespace MoreGamemodes
         {
             if (deadBodyParent == null || !Main.GameStarted) return;
             CreateDeadBody(position, colorId, deadBodyParent);
-            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.Reliable);
+            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.None);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
                 .Write(colorId)
                 .EndRpc();
-            var sId = PlayerControl.LocalPlayer.NetTransform.lastSequenceId + 5;
-            PlayerControl.LocalPlayer.NetTransform.lastSequenceId = (ushort)sId;
+            PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 328;
             sender.StartRpc(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(position)
-                .Write((ushort)sId)
+                .Write((ushort)(PlayerControl.LocalPlayer.NetTransform.lastSequenceId + 8))
                 .EndRpc();
             if (deadBodyParent != PlayerControl.LocalPlayer)
             {

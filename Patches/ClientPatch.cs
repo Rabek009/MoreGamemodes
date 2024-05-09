@@ -12,15 +12,15 @@ namespace MoreGamemodes
             if (!__instance.AmHost) return;
             if (client.Character.AmOwner)
             {
-                new LateTask(() => new ModLogo(), 1f);
+                //new LateTask(() => new ModLogo(), 1f);
                 return;
             }
             OptionItem.SyncAllOptions();
             new LateTask(() =>
             {
                 client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-                foreach (var netObject in CustomNetObject.CustomObjects)
-                (netObject as ModLogo).Reset();
+                /*foreach (var netObject in CustomNetObject.CustomObjects)
+                    (netObject as ModLogo).Reset();*/
             }, 2f, "Welcome Message");
         }
     }
