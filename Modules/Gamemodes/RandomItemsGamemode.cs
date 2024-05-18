@@ -90,7 +90,7 @@ namespace MoreGamemodes
                         break;
                 }
             }
-            if (HackTimer > 0f && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()))
+            if (IsHackActive && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()))
             {
                 __instance.PetButton.SetDisabled();
                 __instance.PetButton.ToggleVisible(false);
@@ -106,12 +106,13 @@ namespace MoreGamemodes
                 __instance.AbilityButton.ToggleVisible(false);
                 __instance.AdminButton.SetDisabled();
                 __instance.AdminButton.ToggleVisible(false);
+                __instance.UseButton.SetDisabled();
             }
         }
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
         {
-            if (HackTimer > 0f && Options.HackAffectsImpostors.GetBool())
+            if (IsHackActive && Options.HackAffectsImpostors.GetBool())
             {
                 __instance.Close();
                 __instance.ShowNormalMap();
@@ -126,7 +127,7 @@ namespace MoreGamemodes
 
         public override void OnPet(PlayerControl pc)
         {
-            if ((HackTimer == 0f || (pc.Data.Role.IsImpostor && Options.HackAffectsImpostors.GetBool() == false)) && NoItemTimer == 0f)
+            if ((!IsHackActive || (pc.Data.Role.IsImpostor && Options.HackAffectsImpostors.GetBool() == false)) && NoItemTimer == 0f)
             {
                 PlayerControl target = pc.GetClosestPlayer(true);
                 switch (pc.GetItem())
@@ -195,10 +196,11 @@ namespace MoreGamemodes
                         break;
                     case Items.Swap:
                         if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
-                        System.Collections.Generic.List<byte> playerTasks = new();
-                        System.Collections.Generic.List<byte> targetTasks = new();
-                        System.Collections.Generic.List<uint> completedTasksPlayer = new();
-                        System.Collections.Generic.List<uint> completedTasksTarget = new();
+                        if (NoItemGive) break;
+                        List<byte> playerTasks = new();
+                        List<byte> targetTasks = new();
+                        List<uint> completedTasksPlayer = new();
+                        List<uint> completedTasksTarget = new();
                         foreach (var task in pc.Data.Tasks)
                         {
                             playerTasks.Add(task.TypeId);
@@ -241,8 +243,8 @@ namespace MoreGamemodes
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Hack:
-                        GameManager.Instance.RpcSetHackTimer((int)Options.HackDuration.GetFloat());
                         HackTimer = Options.HackDuration.GetFloat();
+                        GameManager.Instance.RpcSetHackActive(true);
                         Utils.SyncAllSettings();
                         foreach (var ar in PlayerControl.AllPlayerControls)
                             Main.NameColors[(ar.PlayerId, ar.PlayerId)] = Color.yellow;
@@ -275,7 +277,8 @@ namespace MoreGamemodes
                         }
                         pc.RpcSetDeathReason(DeathReasons.Suicide);
                         pc.RpcMurderPlayer(pc, true);
-                        Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, pc.transform.position);
+                        if (Options.RiShowExplosionAnimation.GetBool())
+                            Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, pc.transform.position);
                         pc.RpcSetItem(Items.None);
                         if (Options.NoGameEnd.GetBool()) break;
                         var isSomeoneAlive = false;
@@ -286,7 +289,7 @@ namespace MoreGamemodes
                         }
                         if (!isSomeoneAlive)
                         {
-                            System.Collections.Generic.List<byte> winners = new();
+                            List<byte> winners = new();
                             foreach (var player in PlayerControl.AllPlayerControls)
                             {
                                 if (player.Data.Role.IsImpostor)
@@ -315,10 +318,14 @@ namespace MoreGamemodes
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Finder:
+                        target = pc.GetClosestPlayer();
+                        if (target.onLadder || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.inMovingPlat)
+                            break;
                         pc.RpcTeleport(target.transform.position);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Rope:
+                        target = pc.GetClosestPlayer();
                         target.RpcTeleport(pc.transform.position);
                         pc.RpcSetItem(Items.None);
                         break;
@@ -332,13 +339,13 @@ namespace MoreGamemodes
 
         public override bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
         {
-            if (HackTimer > 0f) return false;
+            if (IsHackActive) return false;
             return true;
         }
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (HackTimer > 0f && Options.HackAffectsImpostors.GetBool())
+            if (IsHackActive && Options.HackAffectsImpostors.GetBool())
                 return false;
             if (killer.Data.Role.IsImpostor && ShieldTimer[target.PlayerId] > 0f)
             {
@@ -347,7 +354,7 @@ namespace MoreGamemodes
                 Main.NameColors[(target.PlayerId, killer.PlayerId)] = Color.cyan;
                 return false;
             }
-            if (CamouflageTimer > 0f)
+            if (CamouflageTimer > -1f)
                 target.RpcSetColor(Main.StandardColors[target.PlayerId]);
             return true;
         }
@@ -361,17 +368,17 @@ namespace MoreGamemodes
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
-            if (CamouflageTimer > 0f) return false;
-            if (HackTimer > 0f && Options.HackAffectsImpostors.GetBool()) return false;
+            if (CamouflageTimer > -1f) return false;
+            if (IsHackActive && Options.HackAffectsImpostors.GetBool()) return false;
             return true;
         }
 
         public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
         {
-            if (HackTimer > 0f && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
-            if (CamouflageTimer > 0f)
+            if (IsHackActive && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
+            if (CamouflageTimer > -1f)
             {
-                CamouflageTimer = 0f;
+                CamouflageTimer = -1f;
                 Utils.RevertCamouflage();
             }
             return true;
@@ -379,34 +386,35 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
-            if (FlashTimer > 0f)
+            if (FlashTimer > -1f)
             {
                 FlashTimer -= Time.fixedDeltaTime;
             }
-            if (FlashTimer < 0f)
+            if (FlashTimer <= 0f && FlashTimer > -1f)
             {
+                FlashTimer = -1f;
                 Utils.SyncAllSettings();
-                FlashTimer = 0f;
             }
-            if (HackTimer > 0f)
+            if (IsHackActive && HackTimer > 0f)
             {
                 HackTimer -= Time.fixedDeltaTime;
             }
-            if (HackTimer < 0f)
+            if (IsHackActive && HackTimer <= 0f)
             {
+                HackTimer = 0f;
+                GameManager.Instance.RpcSetHackActive(false);
                 Utils.SyncAllSettings();
-                GameManager.Instance.RpcSetHackTimer(0);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(pc.PlayerId, pc.PlayerId)] = Color.clear;
             }
-            if (CamouflageTimer > 0f && !MeetingHud.Instance)
+            if (CamouflageTimer > -1f && !MeetingHud.Instance)
             {
                 CamouflageTimer -= Time.fixedDeltaTime;
             }
-            if (CamouflageTimer < 0f)
+            if (CamouflageTimer <= 0f && CamouflageTimer > -1f)
             {
+                CamouflageTimer = -1f;
                 Utils.RevertCamouflage();
-                CamouflageTimer = 0f;
             }
             if (NoBombTimer > 0f)
             {
@@ -453,15 +461,15 @@ namespace MoreGamemodes
 
         public override bool OnCloseDoors(ShipStatus __instance)
         {
-            if (HackTimer > 0f && Options.HackAffectsImpostors.GetBool()) return false;
+            if (IsHackActive && Options.HackAffectsImpostors.GetBool()) return false;
             return true;
         }
 
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
         {
-            if (HackTimer > 0f && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
+            if (IsHackActive && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
             if (systemType == SystemTypes.MushroomMixupSabotage && amount == 1)
-                CamouflageTimer = 0f;
+                CamouflageTimer = -1f;
             return true;
         }
 
@@ -470,15 +478,16 @@ namespace MoreGamemodes
             Gamemode = Gamemodes.RandomItems;
             PetAction = true;
             DisableTasks = false;
-            AllPlayersItems = new System.Collections.Generic.Dictionary<byte, Items>();
-            FlashTimer = 0f;
+            AllPlayersItems = new Dictionary<byte, Items>();
+            FlashTimer = -1f;
             HackTimer = 0f;
-            CamouflageTimer = 0f;
-            ShieldTimer = new System.Collections.Generic.Dictionary<byte, float>();
+            IsHackActive = false;
+            CamouflageTimer = -1f;
+            ShieldTimer = new Dictionary<byte, float>();
             NoBombTimer = 0f;
             NoItemTimer = 0f;
             NoItemGive = false;
-            CompassTimer = new System.Collections.Generic.Dictionary<byte, float>();
+            CompassTimer = new Dictionary<byte, float>();
             TimeSlowersUsed = 0;
             TimeSpeedersUsed = 0;
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -490,15 +499,16 @@ namespace MoreGamemodes
         }
 
         public static RandomItemsGamemode instance;
-        public System.Collections.Generic.Dictionary<byte, Items> AllPlayersItems;
+        public Dictionary<byte, Items> AllPlayersItems;
         public float FlashTimer;
         public float HackTimer;
+        public bool IsHackActive;
         public float CamouflageTimer;
-        public System.Collections.Generic.Dictionary<byte, float> ShieldTimer;
+        public Dictionary<byte, float> ShieldTimer;
         public float NoBombTimer;
         public float NoItemTimer;
         public bool NoItemGive;
-        public System.Collections.Generic.Dictionary<byte, float> CompassTimer;
+        public Dictionary<byte, float> CompassTimer;
         public int TimeSlowersUsed;
         public int TimeSpeedersUsed;
     }

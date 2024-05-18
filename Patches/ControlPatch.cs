@@ -8,7 +8,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(ControllerManager), nameof(ControllerManager.Update))]
     class ControllerManagerUpdatePatch
     {
-        public static void Postfix(ControllerManager __instance)
+        public static void Postfix()
         {
             if (Input.GetKeyDown(KeyCode.LeftControl) && !Main.GameStarted)
                 PlayerControl.LocalPlayer.GetComponent<CircleCollider2D>().enabled = !PlayerControl.LocalPlayer.gameObject.GetComponent<CircleCollider2D>().enabled;

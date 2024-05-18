@@ -55,23 +55,7 @@ namespace MoreGamemodes
             playerControl.isNew = false;
             playerControl.notRealPlayer = true;
             AmongUsClient.Instance.NetIdCnt += 1U;
-            MessageWriter msg = MessageWriter.Get(SendOption.Reliable);
-			msg.StartMessage(6);
-			msg.Write(AmongUsClient.Instance.GameId);
-			msg.WritePacked(int.MaxValue);
-			for (uint i = 1; i <= 3; ++i)
-			{
-				msg.StartMessage(4);
-				msg.WritePacked(2U);
-				msg.WritePacked(-2);
-				msg.Write((byte)SpawnFlags.None);
-				msg.WritePacked(1);
-				msg.WritePacked(AmongUsClient.Instance.NetIdCnt + i);
-				msg.StartMessage(1);
-				msg.EndMessage();
-				msg.EndMessage();
-			}
-			msg.EndMessage();
+            MessageWriter msg = MessageWriter.Get(SendOption.None);
 			msg.StartMessage(5);
 			msg.Write(AmongUsClient.Instance.GameId);
 			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
@@ -97,13 +81,7 @@ namespace MoreGamemodes
             if (PlayerControl.AllPlayerControls.Contains(playerControl))
                 PlayerControl.AllPlayerControls.Remove(playerControl);
             new LateTask(() => {
-                if (AmongUsClient.Instance.AmClient)
-		        {
-			        playerControl.SetName(sprite, false);
-		        }
-		        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(playerControl.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
-		        writer.Write(sprite);
-		        AmongUsClient.Instance.FinishRpcImmediately(writer);
+                playerControl.RpcSetName(sprite);
                 playerControl.NetTransform.RpcSnapTo(position);
             }, 0.1f);
             Position = position;

@@ -12,8 +12,8 @@ namespace MoreGamemodes
         SyncCustomOptions,
         SetBomb,
         SetItem,
-        SetHackTimer,
-        SetPaintTime,
+        SetHackActive,
+        SetPaintActive,
         SetTheme,
         SetIsKiller,
         SetZombieType,
@@ -114,7 +114,7 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.PetAction:
                     if (!AmongUsClient.Instance.AmHost) return;
-                    ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction, new MessageReader());
+                    ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction);
                     break;
             }
         }
@@ -134,13 +134,11 @@ namespace MoreGamemodes
                         co.CurrentValue = reader.ReadInt32();
                     }
                     break;
-                case CustomRPC.SetHackTimer:
-                    if (RandomItemsGamemode.instance == null) break;
-                    RandomItemsGamemode.instance.HackTimer = reader.ReadInt32();
+                case CustomRPC.SetHackActive:
+                    __instance.SetHackActive(reader.ReadBoolean());
                     break;
-                case CustomRPC.SetPaintTime:
-                    if (PaintBattleGamemode.instance == null) break;
-                    PaintBattleGamemode.instance.PaintTime = reader.ReadInt32();
+                case CustomRPC.SetPaintActive:
+                    __instance.SetPaintActive(reader.ReadBoolean());
                     break;
                 case CustomRPC.SetTheme:
                     __instance.SetTheme(reader.ReadString());
@@ -166,6 +164,30 @@ namespace MoreGamemodes
         {
             if (RandomItemsGamemode.instance == null) return;
             RandomItemsGamemode.instance.AllPlayersItems[player.PlayerId] = item;
+        }
+
+        public static void SetHackActive(this GameManager manager, bool active)
+        {
+            if (RandomItemsGamemode.instance == null) return;
+            RandomItemsGamemode.instance.IsHackActive = active;
+            HudManager.Instance.SetHudActive(!MeetingHud.Instance);
+            if (Minigame.Instance)
+			{
+				try
+				{
+					Minigame.Instance.Close();
+					Minigame.Instance.Close();
+				}
+				catch
+				{
+				}
+			}
+        }
+
+        public static void SetPaintActive(this GameManager manager, bool active)
+        {
+            if (PaintBattleGamemode.instance == null) return;
+            PaintBattleGamemode.instance.IsPaintActive = active;
         }
 
         public static void SetTheme(this GameManager manager, string theme)
@@ -328,21 +350,19 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
-        public static void RpcSetHackTimer(this GameManager manager, int time)
+        public static void RpcSetHackActive(this GameManager manager, bool active)
         {
-            if (RandomItemsGamemode.instance == null) return;
-            RandomItemsGamemode.instance.HackTimer = time;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SetHackTimer, SendOption.Reliable, -1);
-            writer.Write(time);
+            manager.SetHackActive(active);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SetHackActive, SendOption.Reliable, -1);
+            writer.Write(active);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
-        public static void RpcSetPaintTime(this GameManager manager, int time)
+        public static void RpcSetPaintActive(this GameManager manager, bool active)
         {
-            if (PaintBattleGamemode.instance == null) return;
-            PaintBattleGamemode.instance.PaintTime = time;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SetPaintTime, SendOption.Reliable, -1);
-            writer.Write(time);
+            manager.SetPaintActive(active);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SetPaintActive, SendOption.Reliable, -1);
+            writer.Write(active);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 

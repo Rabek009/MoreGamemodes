@@ -19,7 +19,7 @@ namespace MoreGamemodes
     {
         public static bool Prefix(ref int __result)
         {
-            __result = GameOptionsManager.Instance.currentGameOptions.GetInt(Int32OptionNames.NumImpostors);
+            __result = GameOptionsManager.Instance.CurrentGameOptions.GetInt(Int32OptionNames.NumImpostors);
             return false;
         }
     }
@@ -27,8 +27,9 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.BeginGame))]
     class BeginGamePatch
     {
-        public static void Prefix(GameStartManager __instance)
+        public static void Prefix()
         {
+            if (!AmongUsClient.Instance.AmHost) return;
             if (Options.RandomMap.GetBool())
             {
                 List<byte> maps = new();
@@ -55,14 +56,14 @@ namespace MoreGamemodes
                 }
                 var rand = new Random();
                 byte map = maps[rand.Next(0, maps.Count)];
-                GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, map);
+                GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, map);
             }
             if (Options.CurrentGamemode == Gamemodes.PaintBattle)
-                GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-            if (Options.CurrentGamemode == Gamemodes.Jailbreak && GameOptionsManager.Instance.currentGameOptions.MapId != 0 && GameOptionsManager.Instance.currentGameOptions.MapId != 3)
-                GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-            PlayerControl.LocalPlayer.RpcSyncSettings(GameOptionsManager.Instance.gameOptionsFactory.ToBytes(GameOptionsManager.Instance.currentGameOptions, AprilFoolsMode.IsAprilFoolsModeToggledOn));
-            Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
+                GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
+            if (Options.CurrentGamemode == Gamemodes.Jailbreak && GameOptionsManager.Instance.CurrentGameOptions.MapId != 0 && GameOptionsManager.Instance.CurrentGameOptions.MapId != 3)
+                GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
+            GameOptionsManager.Instance.GameHostOptions = GameOptionsManager.Instance.CurrentGameOptions;
+		    GameManager.Instance.LogicOptions.SyncOptions();
         }
     }
 }

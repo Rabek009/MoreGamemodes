@@ -79,6 +79,7 @@ namespace MoreGamemodes
         public static OptionItem PlayersWithBomb;
         public static OptionItem MaxPlayersWithBomb;
         public static OptionItem ArrowToNearestNonBombed;
+        public static OptionItem BtShowExplosionAnimation;
 
         //Random items
 
@@ -116,6 +117,7 @@ namespace MoreGamemodes
         public static OptionItem EnableBomb;
         public static OptionItem BombRadius;
         public static OptionItem CanKillImpostors;
+        public static OptionItem RiShowExplosionAnimation;
         public static OptionItem EnableTrap;
         public static OptionItem TrapWaitTime;
         public static OptionItem TrapRadius;
@@ -290,6 +292,8 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Players);
             ArrowToNearestNonBombed = BooleanOptionItem.Create(3005, "Arrow to nearest non bombed", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BombTag);
+            BtShowExplosionAnimation = BooleanOptionItem.Create(3006, "Show explosion animation", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BombTag);
 
             //Random items
 
@@ -400,21 +404,24 @@ namespace MoreGamemodes
             CanKillImpostors = BooleanOptionItem.Create(5014, "Can kill impostors", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetParent(EnableBomb);
-            EnableTrap = BooleanOptionItem.Create(5015, "Enable trap", false, TabGroup.GamemodeSettings, false)
+            RiShowExplosionAnimation = BooleanOptionItem.Create(5015, "Show explosion animation", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetParent(EnableBomb);
+            EnableTrap = BooleanOptionItem.Create(5016, "Enable trap", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetColor(Color.red);
-            TrapWaitTime = FloatOptionItem.Create(5016, "Trap wait duration", new(3f, 30f, 0.5f), 15f, TabGroup.GamemodeSettings, false)
+            TrapWaitTime = FloatOptionItem.Create(5017, "Trap wait duration", new(3f, 30f, 0.5f), 15f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetValueFormat(OptionFormat.Seconds)
                 .SetParent(EnableTrap);
-            TrapRadius = FloatOptionItem.Create(5017, "Trap radius", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.GamemodeSettings, false)
+            TrapRadius = FloatOptionItem.Create(5018, "Trap radius", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetValueFormat(OptionFormat.Multiplier)
                 .SetParent(EnableTrap);
-            CrewmatesSeeTrap = BooleanOptionItem.Create(5018, "Crewmates see trap", false, TabGroup.GamemodeSettings, false)
+            CrewmatesSeeTrap = BooleanOptionItem.Create(5019, "Crewmates see trap", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetParent(EnableTrap);
-            ImpostorsSeeTrap = BooleanOptionItem.Create(5019, "Impostors see trap", false, TabGroup.GamemodeSettings, false)
+            ImpostorsSeeTrap = BooleanOptionItem.Create(5020, "Impostors see trap", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetParent(EnableTrap);
 

@@ -15,15 +15,15 @@ namespace MoreGamemodes
         public static void RpcTeleport(this PlayerControl player, Vector2 position)
         {
             if (MeetingHud.Instance) return;
-            if (player.walkingToVent || player.inVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation())
+            if ((player.inVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation()) && !player.inMovingPlat)
             {
-                player.MyPhysics.RpcBootFromVent(0);
-                new LateTask(() => player.RpcTeleport(position), 0.1f, "Retry Teleport");
+                player.MyPhysics.RpcExitVent(player.GetClosestVent().Id);
+                new LateTask(() => player.RpcTeleport(position), 0.5f, "Retry Teleport");
                 return;
-            }  
+            }
             if (player.onLadder || player.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || player.inMovingPlat)
             {
-                new LateTask(() => player.RpcTeleport(position), 0.01f, "Retry Teleport");
+                new LateTask(() => player.RpcTeleport(position), 0.1f, "Retry Teleport");
                 return;
             }
             if (AmongUsClient.Instance.AmClient)
@@ -132,22 +132,22 @@ namespace MoreGamemodes
 
         public static bool CanVent(this PlayerControl player)
         {
-            if (GameOptionsManager.Instance.currentGameOptions.MapId == 3) return false;
-            if (((Options.CurrentGamemode == Gamemodes.HideAndSeek && !Options.HnSImpostorsCanVent.GetBool()) || (Options.CurrentGamemode == Gamemodes.ShiftAndSeek && !Options.SnSImpostorsCanVent.GetBool())) && player.Data.Role.IsImpostor)
+            if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 3) return false;
+            if (((CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek && !Options.HnSImpostorsCanVent.GetBool()) || (CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek && !Options.SnSImpostorsCanVent.GetBool())) && player.Data.Role.IsImpostor)
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.BombTag)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.BombTag)
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.HackTimer > 0f && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()))
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.IsHackActive && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()))
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale)
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.KillOrDie)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie)
                 return false;
-            if (Options.CurrentGamemode == Gamemodes.Zombies)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies)
                 return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ImpostorsCanVent.GetBool()) || (player.IsZombie() && Options.ZombiesCanVent.GetBool());
-            if (Options.CurrentGamemode == Gamemodes.Jailbreak)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
                 return player.IsGuard() || player.HasItem(InventoryItems.Screwdriver);
-            if (Options.CurrentGamemode == Gamemodes.Classic && GameOptionsManager.Instance.currentGameOptions.GameMode == GameModes.HideNSeek && !player.Data.Role.IsImpostor)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && GameOptionsManager.Instance.CurrentGameOptions.GameMode == GameModes.HideNSeek && !player.Data.Role.IsImpostor)
                 return int.Parse(HudManager.Instance.AbilityButton.usesRemainingText.text) > 0;
             return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
         }
@@ -159,7 +159,7 @@ namespace MoreGamemodes
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
             {
-                if (!p.Data.IsDead && p != player && (!forTarget || !(p.inVent || p.MyPhysics.Animations.IsPlayingEnterVentAnimation() || p.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || p.inMovingPlat)))
+                if (!p.Data.IsDead && p != player && (!forTarget || !(p.inVent || p.MyPhysics.Animations.IsPlayingEnterVentAnimation() || p.onLadder || p.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || p.inMovingPlat)))
                 {
                     dis = Vector2.Distance(playerpos, p.transform.position);
                     pcdistance.Add(p, dis);
@@ -255,18 +255,18 @@ namespace MoreGamemodes
             return Main.AllPlayersDeathReason[player.PlayerId];
         }
 
-        public static DeadBody GetClosestBody(this PlayerControl player)
+        public static Vent GetClosestVent(this PlayerControl player)
         {
             Vector2 playerpos = player.transform.position;
-            Dictionary<DeadBody, float> bodydistance = new();
+            Dictionary<Vent, float> ventdistance = new();
             float dis;
-            foreach (DeadBody body in UnityEngine.Object.FindObjectsOfType<DeadBody>())
+            foreach (Vent vent in ShipStatus.Instance.AllVents)
             {
-                dis = Vector2.Distance(playerpos, body.transform.position);
-                bodydistance.Add(body, dis);
+                dis = Vector2.Distance(playerpos, vent.transform.position);
+                ventdistance.Add(vent, dis);
             }
-            var min = bodydistance.OrderBy(c => c.Value).FirstOrDefault();
-            DeadBody target = min.Key;
+            var min = ventdistance.OrderBy(c => c.Value).FirstOrDefault();
+            Vent target = min.Key;
             return target;
         }
 
@@ -289,7 +289,7 @@ namespace MoreGamemodes
         public static IGameOptions BuildGameOptions(this PlayerControl player, float killCooldown = -1f)
         {
             IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV07(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
-            switch (Options.CurrentGamemode)
+            switch (CustomGamemode.Instance.Gamemode)
             {
                 case Gamemodes.HideAndSeek:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
@@ -330,12 +330,12 @@ namespace MoreGamemodes
                     int decreasedVotingTime = RandomItemsGamemode.instance.TimeSpeedersUsed * Options.VotingTimeDecrease.GetInt();
                     opt.SetInt(Int32OptionNames.DiscussionTime, Math.Max(Main.RealOptions.GetInt(Int32OptionNames.DiscussionTime) + increasedDiscussionTime - decreasedDiscussionTime, 0));
                     opt.SetInt(Int32OptionNames.VotingTime, Math.Max(Main.RealOptions.GetInt(Int32OptionNames.VotingTime) + increasedVotingTime - decreasedVotingTime, 10));
-                    if (RandomItemsGamemode.instance.FlashTimer > 0f)
+                    if (RandomItemsGamemode.instance.FlashTimer > -1f)
                     {
                         opt.SetFloat(FloatOptionNames.CrewLightMod, 0f);
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, Options.ImpostorVisionInFlash.GetFloat());
                     }
-                    if (RandomItemsGamemode.instance.HackTimer > 0f)
+                    if (RandomItemsGamemode.instance.IsHackActive)
                     {
                         opt.SetFloat(FloatOptionNames.EngineerInVentMaxTime, 1f);
                         opt.SetFloat(FloatOptionNames.EngineerCooldown, 0.001f);
@@ -430,27 +430,27 @@ namespace MoreGamemodes
             if (Main.NameColors[(player.PlayerId, seer.PlayerId)] != Color.clear)
                 name = Utils.ColorString(Main.NameColors[(player.PlayerId, seer.PlayerId)], name);
             if (isMeeting) return name;
-            switch (Options.CurrentGamemode)
+            switch (CustomGamemode.Instance.Gamemode)
             {
                 case Gamemodes.BombTag:
-                    if (player.HasBomb() && Options.ArrowToNearestNonBombed.GetBool() && player == seer && player.GetClosestNonBombed() != null)
+                    if (player.HasBomb() && Options.ArrowToNearestNonBombed.GetBool() && player == seer && player.GetClosestNonBombed() != null && !player.Data.IsDead)
                         name += "\n" + Utils.ColorString(Color.green, Utils.GetArrow(player.transform.position, player.GetClosestNonBombed().transform.position));
                     break;
                 case Gamemodes.RandomItems:
-                    if (player.GetItem() != Items.None && player == seer)
+                    if (player.GetItem() != Items.None && (player == seer || seer.Data.IsDead))
                         name += "\n" + Utils.ColorString(Color.magenta, Utils.ItemString(player.GetItem()) + ": " + Utils.ItemDescription(player.GetItem()));
-                    if (RandomItemsGamemode.instance.ShieldTimer[player.PlayerId] > 0f && player == seer)
+                    if (RandomItemsGamemode.instance.ShieldTimer[player.PlayerId] > 0f && (player == seer || seer.Data.IsDead))
                         name += "\n" + Utils.ColorString(Color.cyan, "Shield: " + (int)(RandomItemsGamemode.instance.ShieldTimer[player.PlayerId] + 0.99f) + "s");
-                    if (RandomItemsGamemode.instance.CompassTimer[player.PlayerId] > 0f && player == seer)
+                    if (RandomItemsGamemode.instance.CompassTimer[player.PlayerId] > 0f && (player == seer || seer.Data.IsDead))
                     {
                         name += "\n" + Utils.ColorString(Color.cyan, "Compass: " + (int)(RandomItemsGamemode.instance.CompassTimer[player.PlayerId] + 0.99f) + "s") + "\n";
                         foreach (var pc in PlayerControl.AllPlayerControls)
                         {
                             if (pc != player && !pc.Data.IsDead)
-                                name += Utils.ColorString(RandomItemsGamemode.instance.CamouflageTimer > 0f ? Palette.PlayerColors[15] : Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId], Utils.GetArrow(player.transform.position, pc.transform.position));
+                                name += Utils.ColorString(RandomItemsGamemode.instance.CamouflageTimer > -1f ? Palette.PlayerColors[15] : Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId], Utils.GetArrow(player.transform.position, pc.transform.position));
                         }
                     }
-                    if (RandomItemsGamemode.instance.CamouflageTimer > 0f && player != seer)
+                    if (RandomItemsGamemode.instance.CamouflageTimer > -1f && player != seer)
                         name = Utils.ColorString(Color.clear, "Player");
                     break;
                 case Gamemodes.BattleRoyale:
@@ -462,10 +462,11 @@ namespace MoreGamemodes
                     }
                     else
                         livesText = "Lives: " + player.Lives();
+                    livesText = Utils.ColorString(Color.red, livesText);
                     
-                    if (Options.ArrowToNearestPlayer.GetBool() && player == seer && player.GetClosestPlayer() != null)
+                    if (Options.ArrowToNearestPlayer.GetBool() && player == seer && player.GetClosestPlayer() != null && !player.Data.IsDead)
                         name += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[player.GetClosestPlayer().PlayerId]], Utils.GetArrow(player.transform.position, player.GetClosestPlayer().transform.position));
-                    if (player == seer || Options.LivesVisibleToOthers.GetBool())
+                    if (player == seer || Options.LivesVisibleToOthers.GetBool() || seer.Data.IsDead)
                         name += "\n" + livesText;
                     break;
                 case Gamemodes.Speedrun:
@@ -483,7 +484,7 @@ namespace MoreGamemodes
                         name += Utils.ColorString(Color.yellow, "(" + tasksCompleted + "/" + totalTasks + ")");
                     break;
                 case Gamemodes.KillOrDie:
-                    if (player.IsKiller() && Options.ArrowToNearestSurvivor.GetBool() && player == seer && player.GetClosestSurvivor() != null)
+                    if (player.IsKiller() && Options.ArrowToNearestSurvivor.GetBool() && player == seer && player.GetClosestSurvivor() != null && !player.Data.IsDead)
                         name += "\n" + Utils.ColorString(Color.blue, Utils.GetArrow(player.transform.position, player.GetClosestSurvivor().transform.position));
                     break;
                 case Gamemodes.Zombies:
@@ -507,6 +508,8 @@ namespace MoreGamemodes
                         if (player.KillsRemain() > 0)
                             name += "\n" + Utils.ColorString(Color.cyan, "YOU CAN KILL " + player.KillsRemain() + " " + (player.KillsRemain() == 1 ? "ZOMBIE" : "ZOMBIES") + "!");
                     }
+                    if (player != seer && seer.Data.IsDead && !player.Data.IsDead && player.KillsRemain() > 0)
+                        name += "\n" + Utils.ColorString(Color.cyan, "CAN KILL " + player.KillsRemain() + " " + (player.KillsRemain() == 1 ? "ZOMBIE" : "ZOMBIES") + "!");
                     break;
                 case Gamemodes.Jailbreak:
                     if (player.IsGuard() && player == seer)
@@ -643,7 +646,7 @@ namespace MoreGamemodes
                     if (com.TryCast<LogicOptions>(out var lo))
                         lo.SetGameOptions(opt);
                 }
-                GameOptionsManager.Instance.currentGameOptions = opt;
+                GameOptionsManager.Instance.CurrentGameOptions = opt;
             }
             else
                 Utils.SyncSettings(opt, player.GetClientId());
@@ -770,7 +773,7 @@ namespace MoreGamemodes
             if (player.GetPlainShipRoom() != null && (player.GetPlainShipRoom().RoomId == SystemTypes.Reactor || player.GetPlainShipRoom().RoomId == SystemTypes.Security || player.GetPlainShipRoom().RoomId == SystemTypes.Storage ||
             player.GetPlainShipRoom().RoomId == SystemTypes.Admin || player.GetPlainShipRoom().RoomId == SystemTypes.Nav) && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
                 return true;
-            if (player.walkingToVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation() || (player.MyPhysics.Animations.Animator.GetCurrentAnimation() == player.MyPhysics.Animations.group.ExitVentAnim && player.HasItem(InventoryItems.Screwdriver)))
+            if (player.walkingToVent || (player.MyPhysics.Animations.IsPlayingEnterVentAnimation() && !player.inMovingPlat) || (player.MyPhysics.Animations.Animator.GetCurrentAnimation() == player.MyPhysics.Animations.group.ExitVentAnim && player.HasItem(InventoryItems.Screwdriver)))
                 return true;
             return false;
         }

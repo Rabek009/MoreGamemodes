@@ -31,7 +31,7 @@ namespace MoreGamemodes
             AntiBlackout.SetIsDead();
             
             if (RandomItemsGamemode.instance != null)
-                RandomItemsGamemode.instance.CamouflageTimer = 0f;
+                RandomItemsGamemode.instance.CamouflageTimer = -1f;
             if (Options.RandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)

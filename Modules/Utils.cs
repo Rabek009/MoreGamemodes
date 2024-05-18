@@ -6,7 +6,6 @@ using Hazel;
 using UnityEngine;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
-using System;
 using System.IO;
 using System.Reflection;
 using Object = UnityEngine.Object;
@@ -386,7 +385,7 @@ namespace MoreGamemodes
 
         public static void SendGameData()
         {
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(5);
             {
                 writer.Write(AmongUsClient.Instance.GameId);
@@ -636,6 +635,17 @@ namespace MoreGamemodes
         public static void RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList)
         {
             new TrapArea(radius, waitDuration, position, visibleList);
+        }
+
+        public static void ChangeGamemode(GameModes gamemode)
+        {
+            if (gamemode != GameModes.None)
+                GameOptionsManager.Instance.SwitchGameMode(gamemode);
+            else
+                GameOptionsManager.Instance.currentGameMode = gamemode;
+            GameManager.Instance.Despawn();
+			GameManager gameManager = GameManagerCreator.CreateGameManager(GameOptionsManager.Instance.CurrentGameOptions.GameMode);
+			AmongUsClient.Instance.Spawn(gameManager, -2, SpawnFlags.None);
         }
     }
 }

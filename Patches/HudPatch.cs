@@ -19,6 +19,7 @@ namespace MoreGamemodes
     {
         public static void Postfix(TaskPanelBehaviour __instance, [HarmonyArgument(0)] string str)
         {
+            if (!Main.GameStarted) return;
             CustomGamemode.Instance.OnSetTaskText(__instance, str);
         }
     }

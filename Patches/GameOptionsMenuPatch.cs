@@ -30,7 +30,7 @@ namespace MoreGamemodes
     [HarmonyPriority(Priority.First)]
     public static class GameOptionsMenuPatch
     {
-        public static void Postfix(GameOptionsMenu __instance)
+        public static void Postfix()
         {
             var template = Object.FindObjectsOfType<StringOption>().FirstOrDefault();
             if (template == null) return;
@@ -256,6 +256,7 @@ namespace MoreGamemodes
     {
         public static void Postfix()
         {
+            if (!AmongUsClient.Instance.AmHost) return;
             OptionItem.SyncAllOptions();
         }
     }

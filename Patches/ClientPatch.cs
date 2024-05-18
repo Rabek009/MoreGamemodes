@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using InnerNet;
-using UnityEngine;
 
 namespace MoreGamemodes
 {
@@ -28,7 +27,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerLeft))]
     class OnPlayerLeftPatch
     {
-        public static void Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client, [HarmonyArgument(1)] DisconnectReasons reason)
+        public static void Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return;
             if (Main.AllPlayersDeathReason.ContainsKey(client.Character.PlayerId))
@@ -47,7 +46,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameJoined))]
     class OnGameJoinedPatch
     {
-        public static void Postfix(AmongUsClient __instance, string gameIdString)
+        public static void Postfix(AmongUsClient __instance)
         {
             if (!__instance.AmHost)
             {

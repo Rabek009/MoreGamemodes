@@ -42,13 +42,13 @@ namespace MoreGamemodes
             string[] args = text.Split(' ');
             string subArgs = "";
             var canceled = false;
-            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle && !PlayerControl.LocalPlayer.Data.IsDead)
+            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !PlayerControl.LocalPlayer.Data.IsDead)
             {
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
             }
-            if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle)
+            if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
@@ -56,7 +56,7 @@ namespace MoreGamemodes
                     __instance.freeChatField.textArea.SetText("");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems) && !PlayerControl.LocalPlayer.Data.IsDead)
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems) && !PlayerControl.LocalPlayer.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -84,9 +84,9 @@ namespace MoreGamemodes
                     }
                     string appearance = Main.StandardNames[PlayerControl.LocalPlayer.PlayerId];
                     if (Options.FakeShapeshiftAppearance.GetBool()) appearance = Main.StandardNames[Main.AllShapeshifts[PlayerControl.LocalPlayer.PlayerId]];
-                    if (Options.CurrentGamemode == Gamemodes.RandomItems)
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems)
                     {
-                        if (RandomItemsGamemode.instance.CamouflageTimer > 0f) 
+                        if (RandomItemsGamemode.instance.CamouflageTimer > -1f) 
                             appearance = "???";
                     }
                     PlayerControl.LocalPlayer.SendProximityMessage(appearance, message);
@@ -111,26 +111,26 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "theskeld":
-                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 0);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
                                     break;
                                 case "mirahq":
-                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 1);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 1);
                                     break;
                                 case "polus":
-                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 2);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 2);
                                     break;
                                 case "dlekseht":
-                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 3);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 3);
                                     break;
                                 case "airship":
-                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 4);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 4);
                                     break;
                                 case "thefungle":
-                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, 4);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 4);
                                     break;
                                 case "custom":
                                     subArgs = args.Length < 4 ? "" : args[3];
-                                    GameOptionsManager.Instance.currentGameOptions.SetByte(ByteOptionNames.MapId, byte.Parse(subArgs));
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, byte.Parse(subArgs));
                                     break;
                             }
                             break;
@@ -140,17 +140,17 @@ namespace MoreGamemodes
                             break;
                         case "players":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.MaxPlayers, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.MaxPlayers, int.Parse(subArgs));
                             break;
                         case "recommended":
                             subArgs = args.Length < 3 ? "" : args[2];
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.IsDefaults, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.IsDefaults, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.IsDefaults, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.IsDefaults, false);
                                     break;
                             }
                             break;
@@ -258,101 +258,101 @@ namespace MoreGamemodes
                             break;
                         case "commontasks":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumCommonTasks, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.NumCommonTasks, int.Parse(subArgs));
                             break;
                         case "longtasks":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumLongTasks, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.NumLongTasks, int.Parse(subArgs));
                             break;
                         case "shorttasks":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.NumShortTasks, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.NumShortTasks, int.Parse(subArgs));
                             break;
                         case "scientistcount":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, int.Parse(subArgs), GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Scientist));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Scientist));
                             break;
                         case "scientistchance":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Scientist), int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Scientist, GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Scientist), int.Parse(subArgs));
                             break;
                         case "vitalsdisplaycooldown":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ScientistCooldown, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ScientistCooldown, float.Parse(subArgs));
                             break;
                         case "batteryduration":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ScientistBatteryCharge, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ScientistBatteryCharge, float.Parse(subArgs));
                             break;
                         case "engineercount":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, int.Parse(subArgs), GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Engineer));
+                            GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Engineer));
                             break;
                         case "engineerchance":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Engineer), int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Engineer), int.Parse(subArgs));
                             break;
                         case "ventusecooldown":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.EngineerCooldown, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.EngineerCooldown, float.Parse(subArgs));
                             break;
                         case "maxtimeinvents":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.EngineerInVentMaxTime, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.EngineerInVentMaxTime, float.Parse(subArgs));
                             break;
                         case "guardianangelcount":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, int.Parse(subArgs), GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.GuardianAngel));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.GuardianAngel));
                             break;
                         case "guardianangelchance":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.GuardianAngel), int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.GuardianAngel), int.Parse(subArgs));
                             break;
                         case "protectcooldown":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.GuardianAngelCooldown, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.GuardianAngelCooldown, float.Parse(subArgs));
                             break;
                         case "protectduration":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ProtectionDurationSeconds, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ProtectionDurationSeconds, float.Parse(subArgs));
                             break;
                         case "protectvisibletoimpostors":
                             subArgs = args.Length < 3 ? "" : args[2];
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, false);
                                     break;
                             }
                             break;
                         case "shapeshiftercount":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, int.Parse(subArgs), GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Shapeshifter));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Shapeshifter));
                             break;
                         case "shapeshifterchance":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, GameOptionsManager.Instance.currentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Shapeshifter), int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Shapeshifter), int.Parse(subArgs));
                             break;
                         case "shapeshiftduration":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ShapeshifterDuration, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ShapeshifterDuration, float.Parse(subArgs));
                             break;
                         case "shapeshiftcooldown":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ShapeshifterCooldown, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ShapeshifterCooldown, float.Parse(subArgs));
                             break;
                         case "leaveshapeshiftevidence":
                             subArgs = args.Length < 3 ? "" : args[2];
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, false);
                                     break;
                             }
                             break;
@@ -361,83 +361,83 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.GhostsDoTasks, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.GhostsDoTasks, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.GhostsDoTasks, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.GhostsDoTasks, false);
                                     break;
                             }
                             break;
-                        case "gamemode":
+                        /*case "gamemode":
                             subArgs = args.Length < 3 ? "" : args[2];
                             switch (subArgs)
                             {
                                 case "none":
-                                    GameOptionsManager.Instance.currentGameMode = GameModes.None;
+                                    Utils.ChangeGamemode(GameModes.None);
                                     break;
                                 case "classic":
-                                    GameOptionsManager.Instance.SwitchGameMode(GameModes.Normal);
+                                    Utils.ChangeGamemode(GameModes.Normal);
                                     break;
                                 case "hidenseek":
-                                    GameOptionsManager.Instance.SwitchGameMode(GameModes.HideNSeek);
+                                    Utils.ChangeGamemode(GameModes.HideNSeek);
                                     break;
                                 case "classicfools":
-                                    GameOptionsManager.Instance.SwitchGameMode(GameModes.NormalFools);
+                                    Utils.ChangeGamemode(GameModes.NormalFools);
                                     break;
                                 case "hidenseekfools":
-                                    GameOptionsManager.Instance.SwitchGameMode(GameModes.SeekFools);
+                                    Utils.ChangeGamemode(GameModes.SeekFools);
                                     break;
                             }
-                            break;
+                            break;*/
                         case "hidingtime":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.EscapeTime, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.EscapeTime, float.Parse(subArgs));
                             break;
                         case "finalhidetime":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.FinalEscapeTime, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.FinalEscapeTime, float.Parse(subArgs));
                             break;
                         case "maxventuses":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.CrewmateVentUses, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.CrewmateVentUses, int.Parse(subArgs));
                             break;
                         case "maxtimeinvent":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.CrewmateTimeInVent, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.CrewmateTimeInVent, float.Parse(subArgs));
                             break;
                         case "flashlightmode":
                             subArgs = args.Length < 3 ? "" : args[2];
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.UseFlashlight, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.UseFlashlight, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.UseFlashlight, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.UseFlashlight, false);
                                     break;
                             }
                             break;
                         case "crewmateflashlightsize":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.CrewmateFlashlightSize, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.CrewmateFlashlightSize, float.Parse(subArgs));
                             break;
                         case "impostorflashlightsize":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.ImpostorFlashlightSize, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ImpostorFlashlightSize, float.Parse(subArgs));
                             break;
                         case "finalhideimpostorspeed":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.SeekerFinalSpeed, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.SeekerFinalSpeed, float.Parse(subArgs));
                             break;
                         case "finalhideseekmap":
                             subArgs = args.Length < 3 ? "" : args[2];
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.SeekerFinalMap, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.SeekerFinalMap, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.SeekerFinalMap, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.SeekerFinalMap, false);
                                     break;
                             }
                             break;
@@ -446,36 +446,36 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.SeekerPings, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.SeekerPings, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.SeekerPings, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.SeekerPings, false);
                                     break;
                             }
                             break;
                         case "pinginterval":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetFloat(FloatOptionNames.MaxPingTime, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.MaxPingTime, float.Parse(subArgs));
                             break;
                         case "shownames":
                             subArgs = args.Length < 3 ? "" : args[2];
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShowCrewmateNames, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ShowCrewmateNames, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentGameOptions.SetBool(BoolOptionNames.ShowCrewmateNames, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ShowCrewmateNames, false);
                                     break;
                             }
                             break;
                         case "impostor":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.ImpostorPlayerID, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.ImpostorPlayerID, int.Parse(subArgs));
                             break;
                     }
-                    PlayerControl.LocalPlayer.RpcSyncSettings(GameOptionsManager.Instance.gameOptionsFactory.ToBytes(GameOptionsManager.Instance.currentGameOptions, AprilFoolsMode.IsAprilFoolsModeToggledOn));
-                    Utils.SyncSettings(GameOptionsManager.Instance.currentGameOptions);
+                    GameOptionsManager.Instance.GameHostOptions = GameOptionsManager.Instance.CurrentGameOptions;
+		            GameManager.Instance.LogicOptions.SyncOptions();
                     break;
                 case "/gm":
                 case "/gamemode":
@@ -533,7 +533,7 @@ namespace MoreGamemodes
                 case "/color":
                 case "/colour":
                     canceled = true;
-                    if (Main.GameStarted && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
+                    if (Main.GameStarted && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle) break;
                     subArgs = args.Length < 2 ? "" : args[1];
                     switch (subArgs)
                     {
@@ -806,7 +806,7 @@ namespace MoreGamemodes
                                     Utils.SendChat("Jailbreak doesn't work in this map for now. Compatibility will be added in next updates.", "Jailbreak");
                                     break;
                                 default:
-                                    switch (GameOptionsManager.Instance.currentGameOptions.MapId)
+                                    switch (GameOptionsManager.Instance.CurrentGameOptions.MapId)
                                     {
                                         case 0:
                                         case 3:
@@ -825,7 +825,7 @@ namespace MoreGamemodes
                     }
                     break;
                 case "/stop":
-                    if (Options.CurrentGamemode != Gamemodes.RandomItems || !Main.GameStarted || PlayerControl.LocalPlayer.Data.IsDead || !MeetingHud.Instance) break;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead || !MeetingHud.Instance) break;
                     canceled = true;
                     if (PlayerControl.LocalPlayer.GetItem() == Items.Stop)
                     {
@@ -883,10 +883,11 @@ namespace MoreGamemodes
                             message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
                             message += "Max players with bomb: " + Options.MaxPlayersWithBomb.GetInt() + " players\n";
                             message += "Arrow to nearest non bombed: "; message += Options.ArrowToNearestNonBombed.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Show explosion animation: "; message += Options.BtShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.RandomItems:
                             message = "Gamemode: Random items\n\n";
-                            message += "\nTime slower: "; message += Options.EnableTimeSlower.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Time slower: "; message += Options.EnableTimeSlower.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EnableTimeSlower.GetBool())
                             {
                                 message += "Discussion time increase: " + Options.DiscussionTimeIncrease.GetInt() + "s\n";
@@ -946,6 +947,7 @@ namespace MoreGamemodes
                             {
                                 message += "Bomb radius: " + Options.BombRadius.GetFloat() + "x\n";
                                 message += "Can kill impostors: "; message += Options.CanKillImpostors.GetBool() ? "ON\n" : "OFF\n";
+                                message += "Show explosion animation: "; message += Options.RiShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
                             }
                             message += "\nTrap: "; message += Options.EnableTrap.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EnableTrap.GetBool())
@@ -1010,7 +1012,7 @@ namespace MoreGamemodes
                                 message += "Number of kills: " + Options.NumberOfKills.GetInt() + "\n";
                             }
                             message += "Zombie blind time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
-                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
+                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode) + "\n";
                             message += "Ejected players are zombies: "; message += Options.EjectedPlayersAreZombies.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.ImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Zombies can vent: "; message += Options.ZombiesCanVent.GetBool() ? "ON\n" : "OFF\n";
@@ -1047,9 +1049,9 @@ namespace MoreGamemodes
                                 message += "Help cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
                                 message += "Given resources: " + Options.GivenResources.GetInt() + "\n";
                             }
-                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt();
-                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt();
-                            message += "Armor protection: " + Options.ArmorProtection.GetFloat();
+                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt() + "\n";
+                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt() + "\n";
+                            message += "Armor protection: " + Options.ArmorProtection.GetFloat() + "\n";
                             break;
                     }
                     Utils.SendChat(message, "Options");
@@ -1147,7 +1149,7 @@ namespace MoreGamemodes
                         PlayerControl.LocalPlayer.RpcSendMessage(Main.LastResult, "LastResult");
                     break;
                 case "/info":
-                    if (Options.CurrentGamemode != Gamemodes.RandomItems || !Main.GameStarted || PlayerControl.LocalPlayer.Data.IsDead) break;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead) break;
                     canceled = true;
                     if (PlayerControl.LocalPlayer.GetItem() == Items.Newsletter)
                     {
@@ -1303,19 +1305,19 @@ namespace MoreGamemodes
             var canceled = false;
             string[] args = text.Split(' ');
             string subArgs = "";
-            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
+            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
             {
                 Utils.SendSpam("Someone alive tried to send message during round");
                 return false;
             }
-            if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && Options.CurrentGamemode != Gamemodes.PaintBattle)
+            if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
                     Utils.SendSpam("Someone tried to send message during comms sabotage");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor && (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.HideAndSeek || Options.CurrentGamemode == Gamemodes.ShiftAndSeek || Options.CurrentGamemode == Gamemodes.RandomItems) && !player.Data.IsDead)
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems) && !player.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -1341,9 +1343,9 @@ namespace MoreGamemodes
                     }
                     string appearance = Main.StandardNames[player.PlayerId];
                     if (Options.FakeShapeshiftAppearance.GetBool()) appearance = Main.StandardNames[Main.AllShapeshifts[player.PlayerId]];
-                    if (Options.CurrentGamemode == Gamemodes.RandomItems)
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems)
                     {
-                        if (RandomItemsGamemode.instance.CamouflageTimer > 0f) 
+                        if (RandomItemsGamemode.instance.CamouflageTimer > -1f) 
                             appearance = "???";
                     }
                     player.SendProximityMessage(appearance, message);
@@ -1357,8 +1359,8 @@ namespace MoreGamemodes
                 case "/color":
                 case "/colour":
                     canceled = true;
-                    if (!Options.CanUseColorCommand.GetBool() && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
-                    if (Main.GameStarted && Options.CurrentGamemode != Gamemodes.PaintBattle) break;
+                    if (!Options.CanUseColorCommand.GetBool() && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle) break;
+                    if (Main.GameStarted && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle) break;
                     subArgs = args.Length < 2 ? "" : args[1];
                     switch (subArgs)
                     {
@@ -1418,11 +1420,11 @@ namespace MoreGamemodes
                             player.RpcSetColor(17);
                             break;
                         case "fortegreen":
-                            if (Options.EnableFortegreen.GetBool() || (Options.CurrentGamemode == Gamemodes.PaintBattle && Main.GameStarted))
+                            if (Options.EnableFortegreen.GetBool() || (Main.GameStarted && CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle))
                                 player.RpcSetColor(18);
                             break;
                         default:
-                            if (byte.Parse(subArgs) < 18 || Options.EnableFortegreen.GetBool() || (Options.CurrentGamemode == Gamemodes.PaintBattle && Main.GameStarted))
+                            if (byte.Parse(subArgs) < 18 || Options.EnableFortegreen.GetBool() || (Main.GameStarted && CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle))
                                 player.RpcSetColor(byte.Parse(subArgs));  
                             break;
                     }        
@@ -1638,7 +1640,7 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Jailbreak doesn't work in this map for now. Compatibility will be added in next updates.", "Jailbreak");
                                     break;
                                 default:
-                                    switch (GameOptionsManager.Instance.currentGameOptions.MapId)
+                                    switch (GameOptionsManager.Instance.CurrentGameOptions.MapId)
                                     {
                                         case 0:
                                         case 3:
@@ -1657,7 +1659,7 @@ namespace MoreGamemodes
                     }
                     break;
                 case "/stop":
-                    if (Options.CurrentGamemode != Gamemodes.RandomItems || !Main.GameStarted || player.Data.IsDead || !MeetingHud.Instance) break;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead || !MeetingHud.Instance) break;
                     canceled = true;
                     if (player.GetItem() == Items.Stop)
                     {
@@ -1715,10 +1717,11 @@ namespace MoreGamemodes
                             message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
                             message += "Max players with bomb: " + Options.MaxPlayersWithBomb.GetInt() + " players\n";
                             message += "Arrow to nearest non bombed: "; message += Options.ArrowToNearestNonBombed.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Show explosion animation: "; message += Options.BtShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
                             break;
                         case Gamemodes.RandomItems:
                             message = "Gamemode: Random items\n\n";
-                            message += "\nTime slower: "; message += Options.EnableTimeSlower.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Time slower: "; message += Options.EnableTimeSlower.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EnableTimeSlower.GetBool())
                             {
                                 message += "Discussion time increase: " + Options.DiscussionTimeIncrease.GetInt() + "s\n";
@@ -1778,12 +1781,15 @@ namespace MoreGamemodes
                             {
                                 message += "Bomb radius: " + Options.BombRadius.GetFloat() + "x\n";
                                 message += "Can kill impostors: "; message += Options.CanKillImpostors.GetBool() ? "ON\n" : "OFF\n";
+                                message += "Show explosion animation: "; message += Options.RiShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
                             }
                             message += "\nTrap: "; message += Options.EnableTrap.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EnableTrap.GetBool())
                             {
                                 message += "Trap wait time: " + Options.TrapWaitTime.GetFloat() + "s\n";
                                 message += "Trap radius: " + Options.BombRadius.GetFloat() + "x\n";
+                                message += "Crewmates see trap: "; message += Options.CrewmatesSeeTrap.GetBool() ? "ON\n" : "OFF\n";
+                                message += "Impostors see trap: "; message += Options.ImpostorsSeeTrap.GetBool() ? "ON\n" : "OFF\n";
                             }
                             message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
                             message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
@@ -1840,7 +1846,8 @@ namespace MoreGamemodes
                                 message += "Number of kills: " + Options.NumberOfKills.GetInt() + "\n";
                             }
                             message += "Zombie blind time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
-                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode);
+                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode) + "\n";
+                            message += "Ejected players are zombies: "; message += Options.EjectedPlayersAreZombies.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.ImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
                             message += "Zombies can vent: "; message += Options.ZombiesCanVent.GetBool() ? "ON\n" : "OFF\n";
                             break;
@@ -1876,9 +1883,9 @@ namespace MoreGamemodes
                                 message += "Help cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
                                 message += "Given resources: " + Options.GivenResources.GetInt() + "\n";
                             }
-                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt();
-                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt();
-                            message += "Armor protection: " + Options.ArmorProtection.GetFloat();
+                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt() + "\n";
+                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt() + "\n";
+                            message += "Armor protection: " + Options.ArmorProtection.GetFloat() + "\n";
                             break;
                     }
                     player.RpcSendMessage(message, "Options");
@@ -1954,7 +1961,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage(Main.LastResult, "LastResult");
                     break;
                 case "/info":
-                    if (Options.CurrentGamemode != Gamemodes.RandomItems || !Main.GameStarted || player.Data.IsDead) break;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead) break;
                     canceled = true;
                     if (player.GetItem() == Items.Newsletter)
                     {
@@ -2183,11 +2190,7 @@ namespace MoreGamemodes
             }
             int return_count = PlayerControl.LocalPlayer.name.Count(x => x == '\n');
             chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
-            if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
-            if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
-                DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-            if (chatText[0] == '/' && chatText[0..5] != "/info " && !AmongUsClient.Instance.AmHost)
+            if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
                 writer.Write(chatText);
@@ -2195,6 +2198,10 @@ namespace MoreGamemodes
                 __result = true;
                 return false;
             }
+            if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
+            if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
+                DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
             MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
             messageWriter.Write(chatText);
             messageWriter.EndMessage();
@@ -2249,6 +2256,16 @@ namespace MoreGamemodes
                 ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
                 __instance.freeChatField.textArea.SetText("");
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(UrlFinder), nameof(UrlFinder.TryFindUrl))]
+    class TryFindUrlPatch
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
         }
     }
 }

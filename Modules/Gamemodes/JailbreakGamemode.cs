@@ -26,7 +26,7 @@ namespace MoreGamemodes
                     __instance.KillButton.OverrideText("Attack");
                 else
                     __instance.KillButton.OverrideText("Search");
-                if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (GameOptionsManager.Instance.currentGameOptions.MapId == 0 || GameOptionsManager.Instance.currentGameOptions.MapId == 3))
+                if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (GameOptionsManager.Instance.CurrentGameOptions.MapId == 0 || GameOptionsManager.Instance.CurrentGameOptions.MapId == 3))
                     __instance.AbilityButton.OverrideText("Repair");
                 else
                     __instance.AbilityButton.OverrideText("Buy");
@@ -39,7 +39,7 @@ namespace MoreGamemodes
             else
             {
                 __instance.KillButton.OverrideText("Attack");
-                if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (GameOptionsManager.Instance.currentGameOptions.MapId == 0 || GameOptionsManager.Instance.currentGameOptions.MapId == 3) && player.HasItem(InventoryItems.Pickaxe))
+                if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (GameOptionsManager.Instance.CurrentGameOptions.MapId == 0 || GameOptionsManager.Instance.CurrentGameOptions.MapId == 3) && player.HasItem(InventoryItems.Pickaxe))
                 {
                     __instance.AbilityButton.OverrideText("Destroy");
                     __instance.AbilityButton.SetEnabled();

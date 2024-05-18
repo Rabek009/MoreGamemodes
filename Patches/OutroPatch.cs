@@ -5,9 +5,6 @@ using AmongUs.Data;
 using Assets.CoreScripts;
 using Il2CppSystem;
 using AmongUs.GameOptions;
-using System.Linq;
-
-using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
@@ -65,7 +62,7 @@ namespace MoreGamemodes
 			    GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
 			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
 			    {
-                    if (!((Options.CurrentGamemode == Gamemodes.BombTag || Options.CurrentGamemode == Gamemodes.BattleRoyale || Options.CurrentGamemode == Gamemodes.Speedrun || Options.CurrentGamemode == Gamemodes.PaintBattle || Options.CurrentGamemode == Gamemodes.KillOrDie || Options.CurrentGamemode == Gamemodes.Zombies) && playerInfo.Disconnected))
+                    if (!((CustomGamemode.Instance.Gamemode == Gamemodes.BombTag || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || CustomGamemode.Instance.Gamemode == Gamemodes.Zombies) && playerInfo.Disconnected))
                     {
                         TempData.winners.Add(new WinningPlayerData(playerInfo));
                         winners.Add(playerInfo.PlayerId);
@@ -80,14 +77,14 @@ namespace MoreGamemodes
                 if (!Main.StandardRoles.ContainsKey(playerInfo.PlayerId)) continue;
                 if (!winners.Contains(playerInfo.PlayerId)) continue;
                 if (Main.StandardColors[playerInfo.PlayerId] < 0 || Main.StandardColors[playerInfo.PlayerId] >= 18) Main.StandardColors[playerInfo.PlayerId] = 0;
-                switch (Options.CurrentGamemode)
+                switch (CustomGamemode.Instance.Gamemode)
                 {
                     case Gamemodes.Classic:
                     case Gamemodes.HideAndSeek:
                     case Gamemodes.ShiftAndSeek:
                     case Gamemodes.RandomItems:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
-                        lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], Options.CurrentGamemode)) + " (";
+                        lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], CustomGamemode.Instance.Gamemode)) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
                         break;
                     case Gamemodes.BombTag:
@@ -141,7 +138,7 @@ namespace MoreGamemodes
                 if (!Main.StandardRoles.ContainsKey(playerInfo.PlayerId)) continue;
                 if (winners.Contains(playerInfo.PlayerId)) continue;
                 if (Main.StandardColors[playerInfo.PlayerId] < 0 || Main.StandardColors[playerInfo.PlayerId] >= 18) Main.StandardColors[playerInfo.PlayerId] = 0;
-                switch (Options.CurrentGamemode)
+                switch (CustomGamemode.Instance.Gamemode)
                 {
                     case Gamemodes.Classic:
                     case Gamemodes.HideAndSeek:
@@ -222,7 +219,7 @@ namespace MoreGamemodes
             JailbreakGamemode.instance = null;
             if (!AmongUsClient.Instance.AmHost) return;
             Main.AllShapeshifts = new Dictionary<byte, byte>();  
-            Main.RealOptions.Restore(GameOptionsManager.Instance.currentGameOptions);
+            Main.RealOptions.Restore(GameOptionsManager.Instance.CurrentGameOptions);
             Main.RealOptions = null;
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
             Main.MessagesToSend = new List<(string, byte, string)>();
@@ -236,7 +233,7 @@ namespace MoreGamemodes
             CustomNetObject.CustomObjects = new List<CustomNetObject>();
             CustomNetObject.MaxId = -1;
             AntiBlackout.Reset();
-            if (Options.CurrentGamemode == Gamemodes.Speedrun)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun)
             {
                 var hours = (int)Main.Timer / 3600;
                 Main.Timer -= hours * 3600;

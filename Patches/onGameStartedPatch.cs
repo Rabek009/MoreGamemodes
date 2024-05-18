@@ -19,7 +19,7 @@ namespace MoreGamemodes
                 }
                 return;
             }
-            Main.RealOptions = new OptionBackupData(GameOptionsManager.Instance.currentGameOptions);
+            Main.RealOptions = new OptionBackupData(GameOptionsManager.Instance.CurrentGameOptions);
             Main.AllShapeshifts = new Dictionary<byte, byte>();
             Main.LastNotifyNames = new Dictionary<(byte, byte), string>();
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
@@ -92,7 +92,7 @@ namespace MoreGamemodes
                     pc.RpcRandomVentTeleport();
             }
             CustomGamemode.Instance.OnIntroDestroy();
-            if (Options.MidGameChat.GetBool() || Options.CurrentGamemode == Gamemodes.Zombies)
+            if (Options.MidGameChat.GetBool() || CustomGamemode.Instance.Gamemode == Gamemodes.Zombies)
                 Utils.SetChatVisible();
             Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)

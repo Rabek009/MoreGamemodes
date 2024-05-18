@@ -25,7 +25,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(MushroomMixupSabotageSystem), nameof(MushroomMixupSabotageSystem.MushroomMixUp))]
     class MushroomMixUpPatch
     {
-        public static void Postfix(MushroomMixupSabotageSystem __instance)
+        public static void Postfix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (MeetingHud.Instance) return;

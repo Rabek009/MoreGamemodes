@@ -8,6 +8,7 @@ namespace MoreGamemodes
     {
         private static bool Prefix(AmongUsClient._CoStartGameHost_d__30 __instance, ref bool __result)
         {
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (__instance.__1__state != 0)
             {
                 return true;
@@ -27,7 +28,7 @@ namespace MoreGamemodes
                 return false;
             }
 
-            var num2 = Mathf.Clamp(GameOptionsManager.Instance.currentGameOptions.MapId, 0, Constants.MapNames.Length - 1);
+            var num2 = Mathf.Clamp(GameOptionsManager.Instance.CurrentGameOptions.MapId, 0, Constants.MapNames.Length - 1);
             __instance.__2__current = __instance.__4__this.ShipLoadingAsyncHandle = __instance.__4__this.ShipPrefabs[num2].InstantiateAsync();
             __instance.__1__state = 1;
 

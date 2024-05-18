@@ -50,7 +50,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, bool> IsModded;
     public static Dictionary<byte, bool> Disconnected;
 
-    public const string CurrentVersion = "1.3.0";
+    public const string CurrentVersion = "1.3.1";
 
     public override void Load()
     {

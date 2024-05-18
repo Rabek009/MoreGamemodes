@@ -8,56 +8,57 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(LogicGameFlowNormal), nameof(LogicGameFlowNormal.CheckEndCriteria))]
     class CheckEndCriteriaPatch
     {
-        public static bool Prefix(ShipStatus __instance)
+        public static bool Prefix()
         {
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (!GameData.Instance) return false;
             if (DestroyableSingleton<TutorialManager>.InstanceExists) return true;
             if (Options.NoGameEnd.GetBool()) return false;
 
-            if (Options.CurrentGamemode == Gamemodes.Classic || Options.CurrentGamemode == Gamemodes.RandomItems)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems)
             {
                 return true;
             }
-            else if (Options.CurrentGamemode == Gamemodes.HideAndSeek)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForHideAndSeek()) return false;
                 if (CheckAndEndGameForTaskWin()) return false;
                 if (CheckAndEndGameForCrewmateWin()) return false;
             }
-            else if (Options.CurrentGamemode == Gamemodes.ShiftAndSeek)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForHideAndSeek()) return false;
                 if (CheckAndEndGameForTaskWin()) return false;
                 if (CheckAndEndGameForCrewmateWin()) return false;
             }
-            else if (Options.CurrentGamemode == Gamemodes.BombTag)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.BombTag)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForBattleRoyale()) return false;          
             }
-            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForBattleRoyale()) return false;
             }
-            else if (Options.CurrentGamemode == Gamemodes.Speedrun)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun)
             {
                 if (CheckAndEndGameForSpeedrun()) return false;
             }
-            else if (Options.CurrentGamemode == Gamemodes.KillOrDie)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForBattleRoyale()) return false;          
             }
-            else if (Options.CurrentGamemode == Gamemodes.Zombies)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies)
             {
                 if (CheckAndEndGameForZombiesImpostorWin()) return false;
                 if (CheckAndEndGameForZombiesCrewmateWin()) return false;
                 if (CheckAndEndGameForZombiesTaskWin()) return false;
             }
-            else if (Options.CurrentGamemode == Gamemodes.Jailbreak)
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
             {
                 if (CheckAndEndGameForEveryoneEscape()) return false;
                 if (CheckAndEndGameForTimeEnd()) return false;          
@@ -312,7 +313,7 @@ namespace MoreGamemodes
 
         public static void StartEndGame(GameOverReason reason, List<byte> winners)
         {
-            var sender = new CustomRpcSender("EndGameSender", SendOption.Reliable);
+            var sender = new CustomRpcSender("EndGameSender", SendOption.None);
             sender.StartMessage(-1);
             MessageWriter writer = sender.stream;
 

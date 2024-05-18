@@ -12,7 +12,9 @@ namespace MoreGamemodes
             __instance.ReportButton.ToggleVisible(false);
             __instance.PetButton.OverrideText("Paint");
             __instance.AbilityButton.OverrideText("Remaining Time");
-            if (PaintTime == 0f)
+            if (IsPaintActive)
+                __instance.AbilityButton.ToggleVisible(true);
+            else
             {
                 __instance.PetButton.SetDisabled();
                 __instance.PetButton.ToggleVisible(false);
@@ -92,7 +94,8 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.RpcShapeshift(pc, false);
             }, 7f, "Fix Pets");
-            GameManager.Instance.RpcSetPaintTime(Options.PaintingTime.GetInt() + 5);
+            PaintTime = Options.PaintingTime.GetInt() + 5;
+            GameManager.Instance.RpcSetPaintActive(true);
             var rand = new System.Random();
             GameManager.Instance.RpcSetTheme(Main.PaintBattleThemes[rand.Next(0, Main.PaintBattleThemes.Count)]);
             Utils.SendChat("Start painting! The theme is " + Theme + "! Remember to evalute less paintings that are not in theme!", "Theme");
@@ -100,7 +103,7 @@ namespace MoreGamemodes
 
         public override void OnPet(PlayerControl pc)
         {
-            if (PaintTime > 0f && Vector2.Distance(pc.transform.position, pc.GetPaintBattleLocation()) < 5f && Main.Timer >= 6f && CreateBodyCooldown[pc.PlayerId] <= 0f)
+            if (IsPaintActive && Vector2.Distance(pc.transform.position, pc.GetPaintBattleLocation()) < 5f && Main.Timer >= 6f && CreateBodyCooldown[pc.PlayerId] <= 0f)
             {
                 CreateBodyCooldown[pc.PlayerId] = 0.5f;
                 Utils.RpcCreateDeadBody(pc.transform.position, (byte)pc.CurrentOutfit.ColorId, PlayerControl.LocalPlayer);
@@ -119,7 +122,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
-            if (PaintTime > 0f)
+            if (IsPaintActive && PaintTime > 0f)
             {
                 PaintTime -= Time.fixedDeltaTime;
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -135,8 +138,11 @@ namespace MoreGamemodes
                     if (Vector2.Distance(pc.transform.position, pc.GetPaintBattleLocation()) > 5f)
                         pc.RpcTeleport(pc.GetPaintBattleLocation());
                 }
-                if (PaintTime < 0f)
-                    GameManager.Instance.RpcSetPaintTime(0);
+                if (PaintTime <= 0f)
+                {
+                    PaintTime = 0f;
+                    GameManager.Instance.RpcSetPaintActive(false);
+                }
             }
             else
             {
@@ -181,6 +187,7 @@ namespace MoreGamemodes
             PetAction = true;
             DisableTasks = true;
             PaintTime = 0f;
+            IsPaintActive = false;
             VotingPlayerId = 0;
             PaintBattleVotingTime = 0f;
             HasVoted = new System.Collections.Generic.Dictionary<byte, bool>();
@@ -197,6 +204,7 @@ namespace MoreGamemodes
 
         public static PaintBattleGamemode instance;
         public float PaintTime;
+        public bool IsPaintActive;
         public byte VotingPlayerId;
         public float PaintBattleVotingTime;
         public System.Collections.Generic.Dictionary<byte, bool> HasVoted;

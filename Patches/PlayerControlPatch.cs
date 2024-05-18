@@ -72,13 +72,18 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             PlayerControl killer = __instance;
             if (!CheckForInvalidMurdering(killer, target))
+            {
+                killer.RpcMurderPlayer(target, false);
                 return false;
+            } 
             
             if (CustomGamemode.Instance.OnCheckMurder(killer, target))
             {
                 killer.SyncPlayerSettings();
                 killer.RpcMurderPlayer(target, true);
-            }     
+            } 
+            else
+                killer.RpcMurderPlayer(target, false);
 
             return false;
         }
@@ -99,7 +104,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
     class MurderPlayerPatch
     {
-        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] MurderResultFlags resultFlags)
+        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             PlayerControl killer = __instance;
@@ -108,7 +113,7 @@ namespace MoreGamemodes
             if (target.GetDeathReason() == DeathReasons.Alive)
                 target.RpcSetDeathReason(DeathReasons.Killed);
             CustomGamemode.Instance.OnMurderPlayer(killer, target);
-            if (target.Data.Role.IsImpostor && Options.CurrentGamemode != Gamemodes.BombTag && Options.CurrentGamemode != Gamemodes.BattleRoyale && Options.CurrentGamemode != Gamemodes.KillOrDie)
+            if (target.Data.Role.IsImpostor && CustomGamemode.Instance.Gamemode != Gamemodes.BombTag && CustomGamemode.Instance.Gamemode != Gamemodes.BattleRoyale && CustomGamemode.Instance.Gamemode != Gamemodes.KillOrDie)
                 target.RpcSetRole(RoleTypes.ImpostorGhost);
         }
     }
@@ -147,7 +152,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Shapeshift))]
     class ShapeshiftPatch
     {
-        public static void Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] bool animate)
+        public static void Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             var shapeshifter = __instance;
@@ -166,7 +171,7 @@ namespace MoreGamemodes
                 if (MeetingHud.Instance) return;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     shapeshifter.RpcSetNamePrivate(shapeshifter.BuildPlayerName(pc, false), pc, true);
-            }, 1.32f, "Set Shapeshift Appearance");
+            }, 1.2f, "Set Shapeshift Appearance");
             CustomGamemode.Instance.OnShapeshift(shapeshifter, target);
         }
     }
@@ -176,6 +181,7 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] GameData.PlayerInfo target)
         {
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target)) return false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -203,14 +209,14 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Options.CurrentGamemode == Gamemodes.Jailbreak)
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
                     {
                         JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] += Time.fixedDeltaTime;
                         if (JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] < 1f) continue;
                     }
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, false);
-                    if (Options.CurrentGamemode == Gamemodes.Jailbreak)
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
                         JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] -= 1f;
                 }
             }
@@ -244,16 +250,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!__instance.myPlayer.CanVent())
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, -1);
-                writer.WritePacked(127);
-                AmongUsClient.Instance.FinishRpcImmediately(writer);
-                new LateTask(() =>
-                {
-                    int clientId = __instance.myPlayer.GetClientId();
-                    MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, clientId);
-                    writer2.Write(id);
-                    AmongUsClient.Instance.FinishRpcImmediately(writer2);
-                }, 0.5f, "Fix DesyncImpostor Stuck");
+                __instance.RpcExitVent(id);
                 return false;
             }
             return true;
@@ -274,7 +271,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcUsePlatform))]
     class RpcUsePlatformPatch
     {
-        public static bool Prefix(PlayerControl __instance)
+        public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (Options.DisableGapPlatform.GetBool()) return false;
@@ -285,7 +282,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckUseZipline))]
     class CheckUseZiplinePatch
     {
-        public static bool Prefix(PlayerControl __instance)
+        public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (Options.DisableZipline.GetBool())
@@ -313,7 +310,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (Main.StandardRoles.ContainsKey(__instance.PlayerId) && !RoleManager.IsGhostRole(roleType))
                 return false;
-            if (Options.CurrentGamemode != Gamemodes.Zombies) return true;
+            if (CustomGamemode.Instance.Gamemode != Gamemodes.Zombies) return true;
             if (RoleManager.IsGhostRole(roleType)) return false;
             if (roleType == RoleTypes.Crewmate)
             {
@@ -352,7 +349,7 @@ namespace MoreGamemodes
 		    {
 		    	__instance.MurderPlayer(target, murderResultFlags);
 		    }
-		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, 12, SendOption.Reliable, -1);
+		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
 		    messageWriter.WriteNetObject(target);
 		    messageWriter.Write((int)murderResultFlags);
 		    AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
@@ -363,10 +360,10 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Die))]
     class PlayerDiePatch
     {
-        public static void Prefix(PlayerControl __instance, [HarmonyArgument(0)] DeathReason reason, [HarmonyArgument(1)] bool assignGhostRole)
+        public static void Prefix(PlayerControl __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (Options.CurrentGamemode != Gamemodes.PaintBattle)
+            if (CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
                 __instance.RpcSetPet("");
         }
     }
@@ -394,6 +391,7 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] byte bodyColor)
         {
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (Options.CanUseColorCommand.GetBool())
             {
                 __instance.RpcSetColor(bodyColor);
@@ -408,12 +406,29 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string name)
         {
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (Options.CanUseNameCommand.GetBool() && Options.EnableNameRepeating.GetBool())
             {
                 __instance.RpcSetName(name);
                 return false;
             }
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcSetName))]
+    class RpcSetNamePatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string name)
+        {
+            if (AmongUsClient.Instance.AmClient)
+		    {
+			    __instance.SetName(name, false);
+		    }
+		    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+		    writer.Write(name);
+		    AmongUsClient.Instance.FinishRpcImmediately(writer);
+            return false;
         }
     }
 }
