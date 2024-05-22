@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace MoreGamemodes
@@ -31,7 +31,14 @@ namespace MoreGamemodes
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.M, KeyCode.LeftShift }) && MeetingHud.Instance)
             {
-                MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);    
+                foreach (var pva in MeetingHud.Instance.playerStates)
+                {
+                    if (pva == null) continue;
+                    if (pva.DidVote)
+                        MeetingHud.Instance.RpcClearVote(pva.TargetPlayerId);
+                }
+                List<MeetingHud.VoterState> statesList = new();
+                MeetingHud.Instance.RpcVotingComplete(statesList.ToArray(), null, true);
             }
 
             if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)

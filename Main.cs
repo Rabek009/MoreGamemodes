@@ -50,7 +50,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, bool> IsModded;
     public static Dictionary<byte, bool> Disconnected;
 
-    public const string CurrentVersion = "1.3.1";
+    public const string CurrentVersion = "1.3.2";
 
     public override void Load()
     {
@@ -78,6 +78,7 @@ public partial class Main : BasePlugin
         KillOrDieGamemode.instance = null;
         ZombiesGamemode.instance = null;
         JailbreakGamemode.instance = null;
+        DeathrunGamemode.instance = null;
 
         GameStarted = false;
         Timer = 0f;
@@ -143,6 +144,8 @@ public partial class Main : BasePlugin
                 KillOrDieGamemode.instance = null;
                 ZombiesGamemode.instance = null;
                 JailbreakGamemode.instance = null;
+                DeathrunGamemode.instance = null;
+
                 Timer = 0f;
                 StandardColors = new Dictionary<byte, byte>();
                 StandardNames = new Dictionary<byte, string>();
@@ -181,6 +184,7 @@ class ModManagerLateUpdatePatch
         __instance.ShowModStamp();
         LateTask.Update(Time.fixedDeltaTime / 2);
         CheckMurderPatch.Update();
+        CheckProtectPatch.Update();
     }
 }
 
@@ -197,6 +201,7 @@ public enum Gamemodes
     KillOrDie,
     Zombies,
     Jailbreak,
+    Deathrun,
     All = int.MaxValue,
 }
 

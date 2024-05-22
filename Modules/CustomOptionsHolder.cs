@@ -32,7 +32,7 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak", "Deathrun"
         };
 
         public static readonly string[] speedrunBodyTypes =
@@ -165,7 +165,7 @@ namespace MoreGamemodes
         public static OptionItem ZombieBlindTime;
         public static OptionItem TrackingZombiesMode;
         public static OptionItem EjectedPlayersAreZombies;
-        public static OptionItem ImpostorsCanVent;
+        public static OptionItem ZoImpostorsCanVent;
         public static OptionItem ZombiesCanVent;
 
         //Jailbreak
@@ -199,6 +199,11 @@ namespace MoreGamemodes
         public static OptionItem PrisonerArmorPrice;
         public static OptionItem GuardArmorPrice;
         public static OptionItem ArmorProtection;
+
+        //Deathrun
+        public static OptionItem RoundCooldown;
+        public static OptionItem DisableMeetings;
+        public static OptionItem DrImpostorsCanVent;
 
         //Additional gamemodes
         public static OptionItem RandomSpawn;
@@ -516,7 +521,7 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.Zombies);
             EjectedPlayersAreZombies = BooleanOptionItem.Create(11007, "Ejected players are zombies", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Zombies);
-            ImpostorsCanVent = BooleanOptionItem.Create(11008, "Impostors can vent", true, TabGroup.GamemodeSettings, false)
+            ZoImpostorsCanVent = BooleanOptionItem.Create(11008, "Impostors can vent", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Zombies);
             ZombiesCanVent = BooleanOptionItem.Create(11009, "Zombies can vent", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Zombies);
@@ -601,6 +606,15 @@ namespace MoreGamemodes
             ArmorProtection = FloatOptionItem.Create(12029, "Armor protection", new(0.5f, 10f, 0.5f), 3f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Jailbreak)
                 .SetValueFormat(OptionFormat.PerLevel);
+            
+            //Deathrun
+            RoundCooldown = FloatOptionItem.Create(13000, "Round cooldown", new(5f, 60f, 2.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Deathrun)
+                .SetValueFormat(OptionFormat.Seconds);
+            DisableMeetings = BooleanOptionItem.Create(13001, "Disable meetings", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Deathrun);
+            DrImpostorsCanVent = BooleanOptionItem.Create(13002, "Impostors can vent", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Deathrun);
 
             //Additional gamemodes
             RandomSpawn = BooleanOptionItem.Create(100000, "Random spawn", false, TabGroup.AdditionalGamemodes, false)

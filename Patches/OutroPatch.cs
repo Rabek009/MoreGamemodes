@@ -83,6 +83,7 @@ namespace MoreGamemodes
                     case Gamemodes.HideAndSeek:
                     case Gamemodes.ShiftAndSeek:
                     case Gamemodes.RandomItems:
+                    case Gamemodes.Deathrun:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], CustomGamemode.Instance.Gamemode)) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
@@ -144,6 +145,7 @@ namespace MoreGamemodes
                     case Gamemodes.HideAndSeek:
                     case Gamemodes.ShiftAndSeek:
                     case Gamemodes.RandomItems:
+                    case Gamemodes.Deathrun:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(playerInfo.Role.Role)) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
@@ -217,6 +219,8 @@ namespace MoreGamemodes
             KillOrDieGamemode.instance = null;
             ZombiesGamemode.instance = null;
             JailbreakGamemode.instance = null;
+            DeathrunGamemode.instance = null;
+            
             if (!AmongUsClient.Instance.AmHost) return;
             Main.AllShapeshifts = new Dictionary<byte, byte>();  
             Main.RealOptions.Restore(GameOptionsManager.Instance.CurrentGameOptions);

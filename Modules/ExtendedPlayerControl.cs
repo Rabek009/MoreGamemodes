@@ -144,9 +144,11 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie)
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies)
-                return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ImpostorsCanVent.GetBool()) || (player.IsZombie() && Options.ZombiesCanVent.GetBool());
+                return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (player.IsZombie() && Options.ZombiesCanVent.GetBool());
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
                 return player.IsGuard() || player.HasItem(InventoryItems.Screwdriver);
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun && !Options.DrImpostorsCanVent.GetBool() && player.Data.Role.IsImpostor)
+                return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && GameOptionsManager.Instance.CurrentGameOptions.GameMode == GameModes.HideNSeek && !player.Data.Role.IsImpostor)
                 return int.Parse(HudManager.Instance.AbilityButton.usesRemainingText.text) > 0;
             return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
@@ -416,6 +418,29 @@ namespace MoreGamemodes
                         opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Main.RealOptions.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (Options.EnergyDrinkSpeedIncrease.GetFloat() / 100f)));
                     if (player.Data.IsDead)
                         opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+                    break;
+                case Gamemodes.Deathrun:
+                    opt.SetInt(Int32OptionNames.NumCommonTasks, 0);
+                    opt.SetInt(Int32OptionNames.NumShortTasks, 1);
+                    opt.SetInt(Int32OptionNames.NumLongTasks, 0);
+                    if (Main.Timer < Options.RoundCooldown.GetFloat())
+                    {
+                        opt.SetFloat(FloatOptionNames.KillCooldown, Options.RoundCooldown.GetFloat());
+                        opt.SetFloat(FloatOptionNames.ScientistCooldown, Options.RoundCooldown.GetFloat() - 2f);
+                        opt.SetFloat(FloatOptionNames.EngineerCooldown, Options.RoundCooldown.GetFloat() - 2f);
+                        opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, Options.RoundCooldown.GetFloat() - 2f);
+                        opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.RoundCooldown.GetFloat() -2f);
+                    }
+                    else
+                    {
+                        opt.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
+                        opt.SetFloat(FloatOptionNames.ScientistCooldown, 0.001f);
+                        opt.SetFloat(FloatOptionNames.EngineerCooldown, 0.001f);
+                        opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, 0.001f);
+                        opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 0.001f);
+                    }
+                    if (Options.DisableMeetings.GetBool())
+                        opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
                     break;
             }
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);

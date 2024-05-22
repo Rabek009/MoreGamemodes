@@ -396,6 +396,16 @@ The skeld, Dleks eht: There are 5 forbidden areas, where is illegal for prisoner
 | Help cooldown               |
 | Given resources             |
 
+### Deathrun
+Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.
+
+#### Game options
+| Name               |
+| ------------------ |
+| Round cooldown     |
+| Disable meetings   |
+| Impostors can vent |
+
 ### Additional gamemodes
 Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.
 

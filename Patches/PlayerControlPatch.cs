@@ -421,6 +421,7 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string name)
         {
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (AmongUsClient.Instance.AmClient)
 		    {
 			    __instance.SetName(name, false);

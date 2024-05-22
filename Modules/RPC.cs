@@ -267,6 +267,7 @@ namespace MoreGamemodes
             KillOrDieGamemode.instance = null;
             ZombiesGamemode.instance = null;
             JailbreakGamemode.instance = null;
+            DeathrunGamemode.instance = null;
             switch (gamemode)
             {
                 case Gamemodes.Classic:
@@ -312,6 +313,10 @@ namespace MoreGamemodes
                 case Gamemodes.Jailbreak:
                     JailbreakGamemode.instance = new JailbreakGamemode();
                     CustomGamemode.Instance = JailbreakGamemode.instance;
+                    break;
+                case Gamemodes.Deathrun:
+                    DeathrunGamemode.instance = new DeathrunGamemode();
+                    CustomGamemode.Instance = DeathrunGamemode.instance;
                     break;
             }
         }

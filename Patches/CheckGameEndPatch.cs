@@ -63,6 +63,15 @@ namespace MoreGamemodes
                 if (CheckAndEndGameForEveryoneEscape()) return false;
                 if (CheckAndEndGameForTimeEnd()) return false;          
             }
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun)
+            {
+                if (Options.DisableMeetings.GetBool())
+                {
+                    if (CheckAndEndGameForHideAndSeek()) return false;
+                    return false;
+                }
+                return true;    
+            }
             return false;
         }
 

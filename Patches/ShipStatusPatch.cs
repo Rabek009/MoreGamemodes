@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System.Collections.Generic;
 
 namespace MoreGamemodes
 {
@@ -19,6 +20,26 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             return CustomGamemode.Instance.OnUpdateSystem(__instance, systemType, player, amount);
+        }
+    }
+
+    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.AddTasksFromList))]
+    class AddTasksFromListPatch
+    {
+        public static void Prefix(ShipStatus __instance,
+            [HarmonyArgument(4)] Il2CppSystem.Collections.Generic.List<NormalPlayerTask> unusedTasks)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            if (CustomGamemode.Instance.Gamemode != Gamemodes.Deathrun) return;
+            List<NormalPlayerTask> disabledTasks = new();
+            for (var i = 0; i < unusedTasks.Count; i++)
+            {
+                var task = unusedTasks[i];
+                if (task.TaskType == TaskTypes.UploadData && CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun) disabledTasks.Add(task);
+            }
+            foreach (var task in disabledTasks)
+                unusedTasks.Remove(task);
         }
     }
 

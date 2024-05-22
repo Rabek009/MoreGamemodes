@@ -67,7 +67,7 @@ namespace MoreGamemodes
             }
             if (Main.StandardRoles[PlayerControl.LocalPlayer.PlayerId].IsImpostor())
             {
-                if (!Options.ImpostorsCanVent.GetBool())
+                if (!Options.ZoImpostorsCanVent.GetBool())
                 {
                     __instance.ImpostorVentButton.SetDisabled();
                     __instance.ImpostorVentButton.ToggleVisible(false);
