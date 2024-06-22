@@ -5,7 +5,7 @@ namespace MoreGamemodes
 {
     public class CustomGamemode
     {
-        public virtual void OnExile(GameData.PlayerInfo exiled)
+        public virtual void OnExile(NetworkedPlayerInfo exiled)
         {
 
         }
@@ -90,7 +90,7 @@ namespace MoreGamemodes
             
         }
 
-        public virtual void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, GameData.PlayerInfo exiled, bool tie)
+        public virtual void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
             
         }
@@ -145,7 +145,7 @@ namespace MoreGamemodes
 
         }
 
-        public virtual bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public virtual bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return true;
         }

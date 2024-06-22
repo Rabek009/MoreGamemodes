@@ -391,8 +391,9 @@ namespace MoreGamemodes
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.StartMessage(1);
                 {
-                    writer.WritePacked(GameData.Instance.NetId);
-                    GameData.Instance.Serialize(writer, true);
+                    NetworkedPlayerInfo data = null;
+                    writer.WritePacked(data.NetId);
+                    data.Serialize(writer, true);
                 }
                 writer.EndMessage();
             }
@@ -461,12 +462,13 @@ namespace MoreGamemodes
             sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
                 .Write(deadBodyParent.CurrentOutfit.ColorId)
                 .EndRpc();
-            GameData.PlayerInfo playerInfo = GameData.Instance.GetPlayerById(PlayerControl.LocalPlayer.PlayerId);
+            NetworkedPlayerInfo playerInfo = GameData.Instance.GetPlayerById(PlayerControl.LocalPlayer.PlayerId);
             writer.StartMessage(1);
             {
-                writer.WritePacked(GameData.Instance.NetId);
+                NetworkedPlayerInfo data = null;
+                writer.WritePacked(data.NetId);
                 writer.StartMessage(playerInfo.PlayerId);
-                playerInfo.Serialize(writer);
+                playerInfo.Serialize(writer, true);
                 writer.EndMessage();
             }
             writer.EndMessage();

@@ -186,9 +186,9 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner)
-                    pc.SetRole(RoleTypes.Shapeshifter);
+                    pc.SetRole(RoleTypes.Shapeshifter, false);
                 else
-                    pc.SetRole(RoleTypes.Crewmate);
+                    pc.SetRole(RoleTypes.Crewmate, false);
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {   
@@ -535,7 +535,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }

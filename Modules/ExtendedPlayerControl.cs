@@ -12,6 +12,10 @@ namespace MoreGamemodes
 {
     static class ExtendedPlayerControl
     {
+        public static void SetRole(this PlayerControl player, AmongUs.GameOptions.RoleTypes role, bool canOverride)
+         {
+            AmongUsClient.Instance.StartCoroutine(player.CoSetRole(role, canOverride));
+         } 
         public static void RpcTeleport(this PlayerControl player, Vector2 position)
         {
             if (MeetingHud.Instance) return;
@@ -725,9 +729,9 @@ namespace MoreGamemodes
             return target;
         }
 
-        public static void RpcSetRoleV2(this PlayerControl player, RoleTypes role)
+        public static void RpcSetRoleV2(this PlayerControl player, RoleTypes role, bool canOverride)
         {
-            player.SetRole(role);
+            player.SetRole(role, canOverride);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -868,7 +872,7 @@ namespace MoreGamemodes
             return target;
         }
 
-        public static void ForceReportDeadBody(this PlayerControl player, GameData.PlayerInfo target)
+        public static void ForceReportDeadBody(this PlayerControl player, NetworkedPlayerInfo target)
         {
             if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost)
 		    {

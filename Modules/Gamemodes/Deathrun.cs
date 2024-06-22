@@ -2,7 +2,7 @@ namespace MoreGamemodes
 {
     public class DeathrunGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
             Utils.SyncAllSettings();
@@ -66,7 +66,7 @@ namespace MoreGamemodes
             }, 2f);
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return !Options.DisableMeetings.GetBool();
         }

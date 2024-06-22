@@ -5,6 +5,7 @@ using AmongUs.Data;
 using Assets.CoreScripts;
 using Il2CppSystem;
 using AmongUs.GameOptions;
+using AmongUs.Data.Legacy;
 
 namespace MoreGamemodes
 {
@@ -25,19 +26,19 @@ namespace MoreGamemodes
 				Minigame.Instance.Close();
 				Minigame.Instance.Close();
 		    }
-		    float durationInSeconds = Time.realtimeSinceStartup - TempData.TimeGameStarted;
+		    float durationInSeconds = Time.realtimeSinceStartup - GameData.TimeGameStarted;
 		    DestroyableSingleton<DebugAnalytics>.Instance.Analytics.EndGame(durationInSeconds, gameOverReason, GameData.Instance.AllPlayers);
 			DestroyableSingleton<UnityTelemetry>.Instance.EndGame(gameOverReason);
-		    TempData.EndReason = gameOverReason;
-		    TempData.showAd = showAd;
+		    EndGameResult.CachedGameOverReason = gameOverReason;
+		    EndGameResult.CachedShowAd = showAd;
 		    GameManager.Instance.DidHumansWin(gameOverReason);
-		    TempData.OnGameEnd();
+		    //TempData.OnGameEnd();
 		    ProgressionManager.XpGrantResult xpGrantedResult = endGameResult.XpGrantResult ?? ProgressionManager.XpGrantResult.Default();
 		    ProgressionManager.CurrencyGrantResult currencyGrantResult = endGameResult.BeansGrantResult ?? ProgressionManager.CurrencyGrantResult.Default();
 		    ProgressionManager.CurrencyGrantResult currencyGrantResult2 = endGameResult.PodsGrantResult ?? ProgressionManager.CurrencyGrantResult.Default();
-		    TempData.XpGrantedResult = xpGrantedResult;
-		    TempData.BeansGrantResult = currencyGrantResult;
-		    TempData.PodsGrantResult = currencyGrantResult2;
+		    EndGameResult.CachedXpGrantResult = xpGrantedResult;
+		    EndGameResult.CachedBeansGrantResult = currencyGrantResult;
+		    EndGameResult.CachedPodsGrantResult = currencyGrantResult2;
 		    if (endGameResult.XpGrantResult != null)
 		    {
 			    DataManager.Player.Stats.Xp = endGameResult.XpGrantResult.OldXpAmount + endGameResult.XpGrantResult.GrantedXp;
@@ -59,12 +60,12 @@ namespace MoreGamemodes
 		    DestroyableSingleton<InventoryManager>.Instance.UnusedBeans += (int)currencyGrantResult.GrantedPodsWithMultiplierApplied;
 		    for (int i = 0; i < GameData.Instance.PlayerCount; i++)
 		    {
-			    GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
+			    NetworkedPlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
 			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
 			    {
                     if (!((CustomGamemode.Instance.Gamemode == Gamemodes.BombTag || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || CustomGamemode.Instance.Gamemode == Gamemodes.Zombies) && playerInfo.Disconnected))
                     {
-                        TempData.winners.Add(new WinningPlayerData(playerInfo));
+                        EndGameResult.CachedWinners.Add(new CachedPlayerData(playerInfo));
                         winners.Add(playerInfo.PlayerId);
                     }    
 			    }
@@ -72,7 +73,7 @@ namespace MoreGamemodes
             string lastResult = "";
             for (int i = 0; i < GameData.Instance.PlayerCount; ++i)
             {
-                GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
+                NetworkedPlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
                 if (playerInfo == null) continue;
                 if (!Main.StandardRoles.ContainsKey(playerInfo.PlayerId)) continue;
                 if (!winners.Contains(playerInfo.PlayerId)) continue;
@@ -134,7 +135,7 @@ namespace MoreGamemodes
             }
             for (int i = 0; i < GameData.Instance.PlayerCount; ++i)
             {
-                GameData.PlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
+                NetworkedPlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
                 if (playerInfo == null) continue;
                 if (!Main.StandardRoles.ContainsKey(playerInfo.PlayerId)) continue;
                 if (winners.Contains(playerInfo.PlayerId)) continue;

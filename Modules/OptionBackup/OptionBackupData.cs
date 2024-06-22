@@ -19,6 +19,8 @@ namespace MoreGamemodes
             }
             foreach (BoolOptionNames name in Enum.GetValues(typeof(BoolOptionNames)))
             {
+                 if (name == BoolOptionNames.GhostsDoTasks) continue;
+
                 if (option.TryGetBool(name, out var value))
                     AllValues.Add(new BoolOptionBackupValue(name, value));
             }
@@ -35,7 +37,7 @@ namespace MoreGamemodes
             AllValues.Add(new IntOptionBackupValue(Int32OptionNames.MaxPlayers, option.MaxPlayers));
             AllValues.Add(new UIntOptionBackupValue(UInt32OptionNames.Keywords, (uint)option.Keywords));
 
-            foreach (RoleTypes role in new RoleTypes[] { RoleTypes.Scientist, RoleTypes.Engineer, RoleTypes.GuardianAngel, RoleTypes.Shapeshifter })
+            foreach (RoleTypes role in new RoleTypes[] { RoleTypes.Scientist, RoleTypes.Engineer, RoleTypes.GuardianAngel, RoleTypes.Shapeshifter, RoleTypes.Noisemaker, RoleTypes.Tracker, RoleTypes.Phantom })
             {
                 AllValues.Add(new RoleRateBackupValue(role, option.RoleOptions.GetNumPerGame(role), option.RoleOptions.GetChancePerGame(role)));
             }

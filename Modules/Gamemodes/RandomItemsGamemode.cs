@@ -5,7 +5,7 @@ namespace MoreGamemodes
 {
     public class RandomItemsGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             NoItemTimer = 10f;
             if (exiled != null)
@@ -213,8 +213,9 @@ namespace MoreGamemodes
                             if (task.Complete)
                                 completedTasksTarget.Add(task.Id);
                         }
-                        GameData.Instance.RpcSetTasks(pc.PlayerId, targetTasks.ToArray());
-                        GameData.Instance.RpcSetTasks(target.PlayerId, playerTasks.ToArray());
+
+                        pc.Data.RpcSetTasks(targetTasks.ToArray());
+                        pc.Data.RpcSetTasks(playerTasks.ToArray());
                         new LateTask(() =>
                         {
                             NoItemGive = true;
@@ -373,7 +374,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             if (IsHackActive && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
             if (CamouflageTimer > -1f)

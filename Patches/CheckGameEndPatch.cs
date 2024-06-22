@@ -109,7 +109,7 @@ namespace MoreGamemodes
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.HumansByVote;
-                if (TempData.LastDeathReason == DeathReason.Disconnect)
+                if (GameData.LastDeathReason == DeathReason.Disconnect)
                     reason = GameOverReason.ImpostorDisconnect;
                 StartEndGame(reason, winners);
                 return true;
@@ -220,9 +220,9 @@ namespace MoreGamemodes
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.ImpostorByKill;
-                if (TempData.LastDeathReason == DeathReason.Exile)
+                if (GameData.LastDeathReason == DeathReason.Exile)
                     reason = GameOverReason.ImpostorByVote;
-                if (TempData.LastDeathReason == DeathReason.Disconnect)
+                if (GameData.LastDeathReason == DeathReason.Disconnect)
                     reason = GameOverReason.HumansDisconnect;
                 StartEndGame(reason, winners);
                 return true;
@@ -248,7 +248,7 @@ namespace MoreGamemodes
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.HumansByVote;
-                if (TempData.LastDeathReason == DeathReason.Disconnect)
+                if (GameData.LastDeathReason == DeathReason.Disconnect)
                     reason = GameOverReason.ImpostorDisconnect;
                 StartEndGame(reason, winners);
                 return true;
@@ -343,16 +343,16 @@ namespace MoreGamemodes
                 if (winners.Contains(pc.PlayerId))
                 {
                     if (ImpostorWin)
-                        pc.SetRole(RoleTypes.ImpostorGhost);
+                        pc.SetRole(RoleTypes.ImpostorGhost, false);
                     else
-                        pc.SetRole(RoleTypes.CrewmateGhost);
+                        pc.SetRole(RoleTypes.CrewmateGhost, false);
                 }
                 else
                 {
                     if (ImpostorWin)
-                        pc.SetRole(RoleTypes.CrewmateGhost);
+                        pc.SetRole(RoleTypes.CrewmateGhost, false);
                     else
-                        pc.SetRole(RoleTypes.ImpostorGhost);
+                        pc.SetRole(RoleTypes.ImpostorGhost, false);
                 }
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -380,27 +380,28 @@ namespace MoreGamemodes
                         sender.StartRpc(pc.NetId, RpcCalls.SetRole)
                             .Write((ushort)RoleTypes.ImpostorGhost)
                             .EndRpc();
-                        pc.SetRole(RoleTypes.ImpostorGhost);
+                        pc.SetRole(RoleTypes.ImpostorGhost, false);
                     }
                     else
                     {
                         sender.StartRpc(pc.NetId, RpcCalls.SetRole)
                             .Write((ushort)RoleTypes.CrewmateGhost)
                             .EndRpc();
-                        pc.SetRole(RoleTypes.CrewmateGhost);
+                        pc.SetRole(RoleTypes.CrewmateGhost, false);
                     }
                 }
             }
             writer.StartMessage(1);
             {
-                writer.WritePacked(GameData.Instance.NetId);
+                NetworkedPlayerInfo data = null;
+                writer.WritePacked(data.NetId);
                 foreach (var info in GameData.Instance.AllPlayers)
                 {
                     if (ReviveReqiredPlayerIds.Contains(info.PlayerId))
                     {
                         info.IsDead = false;
                         writer.StartMessage(info.PlayerId);
-                        info.Serialize(writer);
+                        info.Serialize(writer, true);
                         writer.EndMessage();
                     }
                 }

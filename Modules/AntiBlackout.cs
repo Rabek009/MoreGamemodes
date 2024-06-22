@@ -40,7 +40,7 @@ namespace MoreGamemodes
             if (doSend) Utils.SendGameData();
         }
 
-        public static void OnDisconnect(GameData.PlayerInfo player)
+        public static void OnDisconnect(NetworkedPlayerInfo player)
         {
             if (!AmongUsClient.Instance.AmHost || !IsCached || !player.Disconnected) return;
             isDeadCache[player.PlayerId] = (true, true);

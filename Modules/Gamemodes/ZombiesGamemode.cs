@@ -6,15 +6,15 @@ namespace MoreGamemodes
 {
     public class ZombiesGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             if (exiled != null && Options.EjectedPlayersAreZombies.GetBool())
             {
                 exiled.Object.RpcSetZombieType(ZombieTypes.FullZombie);
                 new LateTask(() => exiled.Object.RpcSetDesyncRole(RoleTypes.Impostor, exiled.Object.GetClientId()), 0.5f);
-                new LateTask(() => exiled.Object.RpcSetRoleV2(RoleTypes.Crewmate), 1f);
+                new LateTask(() => exiled.Object.RpcSetRoleV2(RoleTypes.Crewmate, false), 1f);
                 exiled.Object.RpcSetOutfit(18, "", "", "", "");
-                GameData.Instance.RpcSetTasks(exiled.PlayerId, new byte[0]);
+                exiled.RpcSetTasks(new byte[0]);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (Main.StandardRoles[pc.PlayerId].IsImpostor())
@@ -89,7 +89,7 @@ namespace MoreGamemodes
             __instance.ShowNormalMap();
         }
 
-        public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, GameData.PlayerInfo exiled, bool tie)
+        public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -163,9 +163,9 @@ namespace MoreGamemodes
             {
                 target.RpcSetZombieType(ZombieTypes.JustTurned);
                 new LateTask(() => target.RpcSetDesyncRole(RoleTypes.Impostor, target.GetClientId()), 0.5f);
-                new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate), 1f);
+                new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate, false), 1f);
                 target.RpcSetOutfit(18, "", "", "", "");
-                GameData.Instance.RpcSetTasks(target.PlayerId, new byte[0]);
+                target.Data.RpcSetTasks(new byte[0]);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (Main.StandardRoles[pc.PlayerId].IsImpostor())
@@ -176,7 +176,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             if (__instance.IsZombie())
                 return false;

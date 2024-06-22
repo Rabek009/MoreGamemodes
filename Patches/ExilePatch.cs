@@ -4,7 +4,7 @@ namespace MoreGamemodes
 {
     class ExileControllerWrapUpPatch
     {
-        public static GameData.PlayerInfo AntiBlackout_LastExiled;
+        public static NetworkedPlayerInfo AntiBlackout_LastExiled;
 
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.WrapUp))]
         class BaseExileControllerPatch
@@ -38,7 +38,7 @@ namespace MoreGamemodes
             }
         }
 
-        static void WrapUpPostfix(GameData.PlayerInfo exiled)
+        static void WrapUpPostfix(NetworkedPlayerInfo exiled)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (AntiBlackout.OverrideExiledPlayer)
@@ -54,7 +54,7 @@ namespace MoreGamemodes
                 exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
         }
 
-        static void WrapUpFinalizer(GameData.PlayerInfo exiled)
+        static void WrapUpFinalizer(NetworkedPlayerInfo exiled)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             new LateTask(() =>

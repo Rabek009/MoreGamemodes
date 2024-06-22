@@ -9,7 +9,6 @@ using UnityEngine;
 namespace MoreGamemodes;
 
 [BepInAutoPlugin]
-[BepInProcess("Among Us.exe")]
 public partial class Main : BasePlugin
 {
     public Harmony Harmony { get; } = new(Id);
@@ -50,7 +49,9 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, bool> IsModded;
     public static Dictionary<byte, bool> Disconnected;
 
-    public const string CurrentVersion = "1.3.2";
+    public static BepInEx.Logging.ManualLogSource Logger = new("MoreGameModes");
+
+    public const string CurrentVersion = "1.3.3";
 
     public override void Load()
     {

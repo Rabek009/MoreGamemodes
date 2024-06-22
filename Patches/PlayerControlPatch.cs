@@ -42,7 +42,7 @@ namespace MoreGamemodes
         {
 		    if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
 		    if (!target || guardian.Data.Disconnected) return false;
-		    GameData.PlayerInfo data = target.Data;
+		   NetworkedPlayerInfo data = target.Data;
 		    if (data == null || data.IsDead) return false;
             float minTime = Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f);
             if (TimeSinceLastProtect.TryGetValue(guardian.PlayerId, out var time) && time < minTime) return false;
@@ -91,7 +91,7 @@ namespace MoreGamemodes
         {
             if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
 		    if (!target || killer.Data.IsDead || killer.Data.Disconnected) return false;
-		    GameData.PlayerInfo data = target.Data;
+		    NetworkedPlayerInfo data = target.Data;
 		    if (data == null || data.IsDead || target.inVent || target.MyPhysics.Animations.IsPlayingEnterVentAnimation() || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.inMovingPlat) return false;
 		    if (MeetingHud.Instance) return false;
             float minTime = Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f);
@@ -179,7 +179,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.ReportDeadBody))]
     class ReportDeadBodyPatch
     {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] GameData.PlayerInfo target)
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] NetworkedPlayerInfo target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target)) return false;
@@ -291,14 +291,14 @@ namespace MoreGamemodes
         }
     }
 
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetRole))]
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CoSetRole))]
     class SetRolePatch
     {
-        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
+        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes role, [HarmonyArgument(1)] bool CanOverride)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (!RoleManager.IsGhostRole(roleType) && !Main.StandardRoles.ContainsKey(__instance.PlayerId))
-                Main.StandardRoles[__instance.PlayerId] = roleType;
+            if (!RoleManager.IsGhostRole(role) && !Main.StandardRoles.ContainsKey(__instance.PlayerId))
+                Main.StandardRoles[__instance.PlayerId] = role;
         }
     }
 
@@ -315,21 +315,21 @@ namespace MoreGamemodes
             if (roleType == RoleTypes.Crewmate)
             {
                 __instance.Data.Disconnected = true;
-                GameData.Instance.SetDirty();
+                GameData.Instance.DirtyAllData();
                 new LateTask(() =>{
                     if (__instance != null)
                     {
                         if (__instance.Data != null && !Main.Disconnected[__instance.PlayerId])
                         {
                             __instance.Data.Disconnected = false;
-                            GameData.Instance.SetDirty();
+                            GameData.Instance.DirtyAllData();
                         }
                         Main.StandardRoles[__instance.PlayerId] = RoleTypes.Crewmate;
                     }
                 }, 1f, "ResetDisconnect");
                 return false;
             }
-            new LateTask(() => __instance.RpcSetRoleV2(roleType), 0.5f);
+            new LateTask(() => __instance.RpcSetRoleV2(roleType, false), 0.5f);
             return false;
         }
     }
@@ -424,7 +424,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (AmongUsClient.Instance.AmClient)
 		    {
-			    __instance.SetName(name, false);
+			    __instance.SetName(name);
 		    }
 		    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
 		    writer.Write(name);

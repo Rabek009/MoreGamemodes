@@ -1,12 +1,13 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace MoreGamemodes
 {
     public class HideAndSeekGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
             Utils.SyncAllSettings();
@@ -133,10 +134,11 @@ namespace MoreGamemodes
 
         public override void OnIntroDestroy()
         {
+           
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.Data.Role.IsImpostor)
-                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
+                    pc.Data.RpcSetTasks(new Il2CppStructArray<byte>(0));
             }
         }
 
@@ -146,7 +148,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }

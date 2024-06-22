@@ -6,7 +6,7 @@ namespace MoreGamemodes
 {
     public class ShiftAndSeekGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
             Utils.SyncAllSettings();
@@ -123,7 +123,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.Data.Role.IsImpostor)
-                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
+                    pc.Data.RpcSetTasks(new byte[0]);
             }
         }
 
@@ -145,7 +145,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }

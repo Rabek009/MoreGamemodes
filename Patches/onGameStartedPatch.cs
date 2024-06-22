@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AmongUs.GameOptions;
 using UnityEngine;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace MoreGamemodes
 {
@@ -109,7 +110,7 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.DisableTasks)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
-                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
+                      pc.Data.RpcSetTasks(new Il2CppStructArray<byte>(0));
             }
         }
     }
