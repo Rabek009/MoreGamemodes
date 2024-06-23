@@ -1,14 +1,17 @@
-﻿using HarmonyLib;
+﻿using System.Collections;
+using HarmonyLib;
 using InnerNet;
 
 namespace MoreGamemodes
 {
-    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CreatePlayer))]
-    class CreatePlayerPatch
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn))]
+    static class InnerNetClientSpawnPatch
     {
-        public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
+    
+        public static void Postfix(/*AmongUsClient __instance*/ [HarmonyArgument(1)] int ownerId, [HarmonyArgument(2)] SpawnFlags flags)
         {
-            if (!__instance.AmHost) return;
+            if (AmongUsClient.Instance.AmHost  || flags != SpawnFlags.IsClientCharacter) return;
+            ClientData client = Utils.GetClientById(ownerId);
             if (client.Character.AmOwner)
             {
                 //new LateTask(() => new ModLogo(), 1f);
@@ -21,6 +24,7 @@ namespace MoreGamemodes
                 /*foreach (var netObject in CustomNetObject.CustomObjects)
                     (netObject as ModLogo).Reset();*/
             }, 2f, "Welcome Message");
+             Main.Logger.LogMessage($"Spawn player data: ID {ownerId}: {client.PlayerName},[InnerNetClientSpawn]");
         }
     }
 

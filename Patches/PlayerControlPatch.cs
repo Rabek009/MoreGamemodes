@@ -26,7 +26,7 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            PlayerControl guardian = __instance;
+            var guardian = __instance;
             if (!CheckForInvalidProtection(guardian, target))
                 return false;
             
@@ -67,11 +67,11 @@ namespace MoreGamemodes
                 }
             }
         }
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target) 
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, bool __state = false) 
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            PlayerControl killer = __instance;
-            if (!CheckForInvalidMurdering(killer, target))
+            var killer = __instance;
+            if (!CheckForInvalidMurdering(killer, target) == false)
             {
                 killer.RpcMurderPlayer(target, false);
                 return false;

@@ -24,6 +24,18 @@ namespace MoreGamemodes
             var client = AmongUsClient.Instance.allClients.ToArray().Where(cd => cd.Character.PlayerId == player.PlayerId).FirstOrDefault();
             return client;
         }
+        public static ClientData GetClientById(int id)
+        {
+            try 
+            {
+                var client =  AmongUsClient.Instance.allClients.ToArray().FirstOrDefault(cd => cd.Id == id);
+                return client;
+            }
+            catch
+            {
+                return null;
+            }
+        }
         public static PlayerControl GetPlayerById(byte id)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)

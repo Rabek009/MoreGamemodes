@@ -183,9 +183,9 @@ class ModManagerLateUpdatePatch
     public static void Prefix(ModManager __instance)
     {
         __instance.ShowModStamp();
-        LateTask.Update(Time.fixedDeltaTime / 2);
+        LateTask.Update(Time.deltaTime);
         CheckMurderPatch.Update();
-        CheckProtectPatch.Update();
+      //  CheckProtectPatch.Update();
     }
 }
 
