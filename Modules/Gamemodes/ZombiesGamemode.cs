@@ -146,7 +146,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target, bool __state)
         {
             if (killer.IsZombie() && killer.GetZombieType() != ZombieTypes.FullZombie)
                 return false;

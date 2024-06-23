@@ -294,7 +294,7 @@ namespace MoreGamemodes
 
         public static IGameOptions BuildGameOptions(this PlayerControl player, float killCooldown = -1f)
         {
-            IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV07(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
+            IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV08(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
             switch (CustomGamemode.Instance.Gamemode)
             {
                 case Gamemodes.HideAndSeek:

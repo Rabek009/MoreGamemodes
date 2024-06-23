@@ -142,7 +142,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target, bool __state)
         {
             if (Main.Timer < Options.HnSImpostorsBlindTime.GetFloat() && !Options.HnSImpostorsCanKillDuringBlind.GetBool()) return false;
             return true;

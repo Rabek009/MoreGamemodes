@@ -290,7 +290,7 @@ namespace MoreGamemodes
             return false;
         } 
 
-        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target, bool __state)
         {
             if (Main.Timer < 10f) return false;
             if (killer.IsGuard())

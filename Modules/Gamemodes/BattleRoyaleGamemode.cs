@@ -85,7 +85,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target, bool __state)
         {
             if (Main.Timer < Options.GracePeriod.GetFloat())
                 return false;         

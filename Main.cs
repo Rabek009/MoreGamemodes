@@ -26,6 +26,7 @@ public partial class Main : BasePlugin
     public static ConfigEntry<string> Preset8 { get; private set; }
     public static ConfigEntry<string> Preset9 { get; private set; }
     public static ConfigEntry<string> Preset10 { get; private set; }
+    public static ConfigEntry<bool> EnableCustomDecorations {get; set;}
     public static bool GameStarted;
     public static float Timer;
 
@@ -183,6 +184,8 @@ class ModManagerLateUpdatePatch
     public static void Prefix(ModManager __instance)
     {
         __instance.ShowModStamp();
+
+        
         LateTask.Update(Time.deltaTime);
         CheckMurderPatch.Update();
       //  CheckProtectPatch.Update();

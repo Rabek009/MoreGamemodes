@@ -162,7 +162,7 @@ namespace MoreGamemodes
                 pc.RpcResetAbilityCooldown();
         }
 
-        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target,bool __state)
         {
             if (killer.HasBomb() && !target.HasBomb())
             {

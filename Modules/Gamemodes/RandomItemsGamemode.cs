@@ -344,7 +344,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target, bool __state)
         {
             if (IsHackActive && Options.HackAffectsImpostors.GetBool())
                 return false;

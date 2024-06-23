@@ -125,7 +125,7 @@ namespace MoreGamemodes
             return true;
         } 
 
-        public virtual bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public virtual bool OnCheckMurder(PlayerControl killer, PlayerControl target, bool __state = false)
         {
             return true;
         }

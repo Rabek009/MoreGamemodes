@@ -151,7 +151,7 @@ namespace MoreGamemodes
                 pc.RpcResetAbilityCooldown();
         }
 
-        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target, bool __state)
         {
             if (!killer.IsKiller() || Main.Timer < Options.KillerBlindTime.GetFloat()) return false;
             return true;

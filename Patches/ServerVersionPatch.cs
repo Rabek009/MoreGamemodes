@@ -9,7 +9,8 @@ namespace MoreGamemodes
         {
             if (AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
             {
-                __result += 25;
+              //  __result += 25;
+              // In version v2024.6.18 the +25 protocol is broken So, we need to wait for hotfix since fixes require changes on the client side and on the server side
             }
         }
     }

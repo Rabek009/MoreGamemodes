@@ -54,10 +54,9 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))]
     class CheckMurderPatch 
     {
-        public static Dictionary<byte, float> TimeSinceLastKill;
+        public static Dictionary<byte, float> TimeSinceLastKill = [];
         public static void Update()
         {
-            if (!AmongUsClient.Instance.AmHost) return;
             for (byte i = 0; i < 15; i++)
             {
                 if (TimeSinceLastKill.ContainsKey(i))
@@ -77,7 +76,7 @@ namespace MoreGamemodes
                 return false;
             } 
             
-            if (CustomGamemode.Instance.OnCheckMurder(killer, target))
+            if (CustomGamemode.Instance.OnCheckMurder(killer, target, __state) == false)
             {
                 killer.SyncPlayerSettings();
                 killer.RpcMurderPlayer(target, true);
