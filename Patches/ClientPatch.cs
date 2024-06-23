@@ -7,7 +7,6 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn))]
     static class InnerNetClientSpawnPatch
     {
-    
         public static void Postfix(/*AmongUsClient __instance*/ [HarmonyArgument(1)] int ownerId, [HarmonyArgument(2)] SpawnFlags flags)
         {
             if (AmongUsClient.Instance.AmHost  || flags != SpawnFlags.IsClientCharacter) return;
@@ -20,7 +19,8 @@ namespace MoreGamemodes
             OptionItem.SyncAllOptions();
             new LateTask(() =>
             {
-                client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
+                foreach (var player in PlayerControl.AllPlayerControls)
+                player.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
                 /*foreach (var netObject in CustomNetObject.CustomObjects)
                     (netObject as ModLogo).Reset();*/
             }, 2f, "Welcome Message");

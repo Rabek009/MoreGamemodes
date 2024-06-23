@@ -6,6 +6,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(AmongUsClient._CoStartGameHost_d__32), nameof(AmongUsClient._CoStartGameHost_d__32.MoveNext))]
     public static class DleksPatch
     {
+        // This Patch is dosen't let players start wich need to be fixed
         private static bool Prefix(AmongUsClient._CoStartGameHost_d__32 __instance, ref bool __result)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
