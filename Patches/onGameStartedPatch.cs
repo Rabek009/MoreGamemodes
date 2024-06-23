@@ -66,6 +66,7 @@ namespace MoreGamemodes
         public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            Utils.SyncAllSettings();
             if (!CustomGamemode.Instance.OnSelectRolesPrefix())
             {
                 Postfix();

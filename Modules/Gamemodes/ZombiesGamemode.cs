@@ -17,7 +17,7 @@ namespace MoreGamemodes
                 exiled.Object.RpcSetOutfit(18, "", "", "", "");
                 exiled.RpcSetTasks(new byte[0]);
                 if (!AntiCheat.ChangedTasks.Contains(exiled.PlayerId))
-                        AntiCheat.ChangedTasks.Add(exiled.PlayerId);
+                    AntiCheat.ChangedTasks.Add(exiled.PlayerId);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (Main.StandardRoles[pc.PlayerId].IsImpostor())
@@ -197,7 +197,7 @@ namespace MoreGamemodes
                     }
                 }
             }
-            if (!Main.StandardRoles[target.PlayerId].IsImpostor() && target.KillsRemain() > 0)
+            if (!Main.StandardRoles[target.PlayerId].IsImpostor() && target.KillsRemain() <= 0)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {

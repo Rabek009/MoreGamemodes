@@ -349,16 +349,16 @@ namespace MoreGamemodes
                     if (ToImpostor)
                     {
                         if (pc.Data.IsDead)
-                            pc.RpcSetRoleV3(RoleTypes.ImpostorGhost);
+                            pc.RpcSetRoleV3(RoleTypes.ImpostorGhost, true);
                         else
-                            pc.RpcSetRoleV3(RoleTypes.Impostor);
+                            pc.RpcSetRoleV3(RoleTypes.Impostor, true);
                     }
                     else
                     {
                         if (pc.Data.IsDead)
-                            pc.RpcSetRoleV3(RoleTypes.CrewmateGhost);
+                            pc.RpcSetRoleV3(RoleTypes.CrewmateGhost, true);
                         else
-                            pc.RpcSetRoleV3(RoleTypes.Crewmate);
+                            pc.RpcSetRoleV3(RoleTypes.Crewmate, true);
                     }
                 }
             }

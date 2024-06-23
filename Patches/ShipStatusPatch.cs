@@ -87,7 +87,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!HudManager.Instance.IsIntroDisplayed)
             {
-                new LateTask(() => __instance.Begin(), 0.1f, "Delayed Task Assign");
+                new LateTask(() => __instance.Begin(), 2f, "Delayed Task Assign");
                 return false;
             }
             return true;

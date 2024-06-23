@@ -350,7 +350,7 @@ namespace MoreGamemodes
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         pc.Data.Disconnected = Disconnected[pc.PlayerId];
                 }, 0.5f);
-                new LateTask(() => __instance.RpcSetRoleV3(roleType), 1f);
+                new LateTask(() => __instance.RpcSetRoleV3(roleType, false), 1f);
                 new LateTask(() => {
                     foreach (var pc in PlayerControl.AllPlayerControls)
 						PlayerNameColor.Set(pc);

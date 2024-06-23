@@ -426,6 +426,8 @@ namespace MoreGamemodes
                     }
                     break;
                 case Gamemodes.Zombies:
+                    if (Options.CanKillZombiesAfterTasks.GetBool())
+                        opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
                     if (player.IsZombie())
                     {
                         if (Main.Timer >= Options.ZombieBlindTime.GetFloat() && player.GetZombieType() != ZombieTypes.JustTurned)
@@ -793,10 +795,13 @@ namespace MoreGamemodes
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
         }
 
-        public static void RpcSetRoleV3(this PlayerControl player, RoleTypes role)
+        public static void RpcSetRoleV3(this PlayerControl player, RoleTypes role, bool forEndGame)
         {
             if (player == null) return;
-            player.StartCoroutine(player.CoSetRole(role, true));
+            if (forEndGame)
+                RoleManager.Instance.SetRole(player, role);
+            else
+                player.StartCoroutine(player.CoSetRole(role, true));
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);
             writer.Write(true);

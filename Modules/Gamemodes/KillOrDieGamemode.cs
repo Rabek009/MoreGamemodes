@@ -199,7 +199,6 @@ namespace MoreGamemodes
             }
             if (Main.Timer >= Options.TimeToKill.GetInt() + Options.KillerBlindTime.GetFloat() + 1f)
             {
-                Application.ForceCrash(1);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.IsKiller() && !pc.Data.IsDead)
