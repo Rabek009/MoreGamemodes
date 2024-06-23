@@ -1,10 +1,11 @@
 ﻿using HarmonyLib;
+using UnityEngine;
 
 namespace MoreGamemodes
 {
     class ExileControllerWrapUpPatch
     {
-        public static GameData.PlayerInfo AntiBlackout_LastExiled;
+        public static NetworkedPlayerInfo AntiBlackout_LastExiled;
 
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.WrapUp))]
         class BaseExileControllerPatch
@@ -38,7 +39,7 @@ namespace MoreGamemodes
             }
         }
 
-        static void WrapUpPostfix(GameData.PlayerInfo exiled)
+        static void WrapUpPostfix(NetworkedPlayerInfo exiled)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (AntiBlackout.OverrideExiledPlayer)
@@ -48,13 +49,19 @@ namespace MoreGamemodes
             AntiBlackout.RestoreIsDead(doSend: false);
             CustomGamemode.Instance.OnExile(exiled);
             if (exiled != null)
+            {
                 exiled.IsDead = true;
+                new LateTask(() => {
+                    AntiCheat.IsDead[exiled.PlayerId] = true;
+                }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
+            }
+                
             if (exiled == null || exiled.Object == null) return;
             if (exiled.Object.GetDeathReason() == DeathReasons.Alive)
                 exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
         }
 
-        static void WrapUpFinalizer(GameData.PlayerInfo exiled)
+        static void WrapUpFinalizer(NetworkedPlayerInfo exiled)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             new LateTask(() =>

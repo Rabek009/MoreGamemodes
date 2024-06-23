@@ -56,15 +56,16 @@ namespace MoreGamemodes
             __instance.YouAreText.color = Color.yellow;
         }
 
-        public override void OnSelectRolesPrefix()
+        public override bool OnSelectRolesPrefix()
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (Options.CurrentBodyType == SpeedrunBodyTypes.Engineer)
-                    pc.RpcSetRole(RoleTypes.Engineer);
+                    pc.RpcSetRole(RoleTypes.Engineer, true);
                 else
-                    pc.RpcSetRole(RoleTypes.Crewmate);
+                    pc.RpcSetRole(RoleTypes.Crewmate, true);
             }
+            return false;
         }
 
         public override void OnIntroDestroy()
@@ -74,12 +75,12 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     pc.RpcSetDeathReason(DeathReasons.Command);
-                    pc.RpcSetRole(RoleTypes.GuardianAngel);
+                    pc.RpcSetRole(RoleTypes.GuardianAngel, true);
                 }       
             }
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }

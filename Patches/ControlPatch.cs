@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System;
 
 namespace MoreGamemodes
 {
@@ -20,7 +21,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     winners.Add(pc.PlayerId);
-                CheckEndCriteriaPatch.StartEndGame(GameOverReason.HumansByVote, winners);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
             }
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead)
@@ -31,14 +32,8 @@ namespace MoreGamemodes
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.M, KeyCode.LeftShift }) && MeetingHud.Instance)
             {
-                foreach (var pva in MeetingHud.Instance.playerStates)
-                {
-                    if (pva == null) continue;
-                    if (pva.DidVote)
-                        MeetingHud.Instance.RpcClearVote(pva.TargetPlayerId);
-                }
-                List<MeetingHud.VoterState> statesList = new();
-                MeetingHud.Instance.RpcVotingComplete(statesList.ToArray(), null, true);
+                VotingCompletePatch.Postfix(MeetingHud.Instance, Array.Empty<MeetingHud.VoterState>(), null, true);
+                MeetingHud.Instance.RpcClose();
             }
 
             if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)

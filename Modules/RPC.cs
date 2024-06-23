@@ -4,6 +4,8 @@ using InnerNet;
 using UnityEngine;
 using System;
 
+using Object = UnityEngine.Object;
+
 namespace MoreGamemodes
 {
     enum CustomRPC
@@ -25,6 +27,8 @@ namespace MoreGamemodes
         SetKillTimer,
         PetAction,
         StartGamemode,
+        RemoveDeadBody,
+        RequestVersionCheck,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -38,8 +42,11 @@ namespace MoreGamemodes
             switch (rpcType)
             {
                 case RpcCalls.UpdateSystem:
-                    __instance.UpdateSystem((SystemTypes)subReader.ReadByte(), subReader.ReadNetObject<PlayerControl>(), subReader.ReadByte());
-                    return false;
+                    SystemTypes system = (SystemTypes)subReader.ReadByte();
+                    PlayerControl player = subReader.ReadNetObject<PlayerControl>();
+                    byte amount = subReader.ReadByte();
+                    if (AntiCheat.RpcUpdateSystemCheck(player, system, amount, subReader)) return false;
+                    return true;
             }
             return true;
         }
@@ -53,6 +60,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             var rpcType = (RpcCalls)callId;
             MessageReader subReader = MessageReader.Get(reader);
+            if (AntiCheat.PlayerControlReceiveRpc(__instance, callId, reader)) return false;
             switch (rpcType)
             {
                 case RpcCalls.SendChat:
@@ -114,7 +122,15 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.PetAction:
                     if (!AmongUsClient.Instance.AmHost) return;
-                    ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction);
+                    ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction, new MessageReader());
+                    break;
+                case CustomRPC.RemoveDeadBody:
+                    NetworkedPlayerInfo playerById = GameData.Instance.GetPlayerById(reader.ReadByte());
+                    __instance.RemoveDeadBody(playerById);
+                    break;
+                case CustomRPC.RequestVersionCheck:
+                    if (__instance.GetClientId() != AmongUsClient.Instance.HostId) break;
+                    PlayerControl.LocalPlayer.RpcVersionCheck(Main.CurrentVersion);
                     break;
             }
         }
@@ -147,6 +163,19 @@ namespace MoreGamemodes
                     __instance.StartGamemode((Gamemodes)reader.ReadPackedInt32());
                     break;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(CustomNetworkTransform), nameof(CustomNetworkTransform.HandleRpc))]
+    class CustomNetworkTransformHandleRpc
+    {
+        public static bool Prefix(CustomNetworkTransform __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            var rpcType = (RpcCalls)callId;
+            MessageReader subReader = MessageReader.Get(reader);
+            if (AntiCheat.CustomNetworkTransformReceiveRpc(__instance, callId, reader)) return false;
+            return true;
         }
     }
 
@@ -321,6 +350,20 @@ namespace MoreGamemodes
             }
         }
 
+        public static void RemoveDeadBody(this PlayerControl player, NetworkedPlayerInfo target)
+        {
+            if (target == null) return;
+            if (AmongUsClient.Instance.AmHost)
+            {
+                AntiCheat.RemovedBodies.Add(target.PlayerId);
+            }
+            foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
+            {
+                if (deadBody.ParentId == target.PlayerId)
+                    Object.Destroy(deadBody.gameObject);
+            }
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -474,6 +517,20 @@ namespace MoreGamemodes
             manager.StartGamemode(gamemode);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.StartGamemode, SendOption.Reliable, -1);
             writer.WritePacked((int)gamemode);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcRemoveDeadBody(this PlayerControl player, NetworkedPlayerInfo target)
+        {
+            player.RemoveDeadBody(target);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.RemoveDeadBody, SendOption.Reliable, -1);
+            writer.Write((target != null) ? target.PlayerId : byte.MaxValue);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcRequestVersionCheck(this PlayerControl player)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.RequestVersionCheck, SendOption.Reliable, -1);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

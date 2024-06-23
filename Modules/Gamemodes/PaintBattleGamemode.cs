@@ -63,10 +63,11 @@ namespace MoreGamemodes
             __instance.YouAreText.color = Color.gray;
         }
 
-        public override void OnSelectRolesPrefix()
+        public override bool OnSelectRolesPrefix()
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
-                pc.RpcSetRole(RoleTypes.Crewmate);
+                pc.RpcSetRole(RoleTypes.Crewmate, true);
+            return false;
         }
 
         public override void OnIntroDestroy()
@@ -76,7 +77,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     pc.RpcSetDeathReason(DeathReasons.Command);
-                    pc.RpcSetRole(RoleTypes.GuardianAngel);
+                    pc.RpcSetRole(RoleTypes.GuardianAngel, true);
                     pc.RpcTeleport(pc.GetPaintBattleLocation());
                 }
             }, 5f, "Set Dead");
@@ -85,6 +86,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     pc.Data.IsDead = false;
+                    AntiCheat.IsDead[pc.PlayerId] = false;
                     pc.RpcResetAbilityCooldown();
                 }
                 Utils.SendGameData();
@@ -115,7 +117,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }

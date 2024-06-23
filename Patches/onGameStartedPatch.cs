@@ -19,17 +19,19 @@ namespace MoreGamemodes
                 }
                 return;
             }
+            Main.Timer = 0f;
             Main.RealOptions = new OptionBackupData(GameOptionsManager.Instance.CurrentGameOptions);
             Main.AllShapeshifts = new Dictionary<byte, byte>();
             Main.LastNotifyNames = new Dictionary<(byte, byte), string>();
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
+            Main.DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
             CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
             CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
-            Main.Disconnected = new Dictionary<byte, bool>();
+            RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             AntiBlackout.Reset();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -45,7 +47,8 @@ namespace MoreGamemodes
                 CheckMurderPatch.TimeSinceLastKill[pc.PlayerId] = 0f;
                 CheckProtectPatch.TimeSinceLastProtect[pc.PlayerId] = 0f;
                 Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
-                Main.Disconnected[pc.PlayerId] = pc.Data.Disconnected;
+                AntiCheat.IsDead[pc.PlayerId] = false;
+                RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
@@ -60,20 +63,21 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.SelectRoles))]
     class SelectRolesPatch
     {
-        public static void Prefix()
+        public static bool Prefix()
         {
-            if (!AmongUsClient.Instance.AmHost) return;
-            CustomGamemode.Instance.OnSelectRolesPrefix();
-            Utils.SyncAllSettings();
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (!CustomGamemode.Instance.OnSelectRolesPrefix())
+            {
+                Postfix();
+                return false;
+            }
+            return true;
         }
         public static void Postfix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            new LateTask(() =>{
-                CustomGamemode.Instance.OnSelectRolesPostfix();
-                Utils.SyncAllSettings();
-            }, 0.6f);
-            new LateTask(() => ShipStatus.Instance.Begin(), 1.1f);
+            CustomGamemode.Instance.OnSelectRolesPostfix();
+            new LateTask(() => Utils.SyncAllSettings(), 1.5f);
         }
     }
 
@@ -92,7 +96,7 @@ namespace MoreGamemodes
                     pc.RpcRandomVentTeleport();
             }
             CustomGamemode.Instance.OnIntroDestroy();
-            if (Options.MidGameChat.GetBool() || CustomGamemode.Instance.Gamemode == Gamemodes.Zombies)
+            if (Options.MidGameChat.GetBool())
                 Utils.SetChatVisible();
             Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)
@@ -109,7 +113,7 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.DisableTasks)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
-                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
+                    pc.Data.RpcSetTasks(new byte[0]);
             }
         }
     }

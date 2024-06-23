@@ -43,7 +43,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.VotingComplete))]
     class VotingCompletePatch
     {
-        public static void Postfix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] GameData.PlayerInfo exiled, [HarmonyArgument(2)] bool tie)
+        public static void Postfix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] NetworkedPlayerInfo exiled, [HarmonyArgument(2)] bool tie)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (Options.MidGameChat.GetBool())
@@ -71,7 +71,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.RpcVotingComplete))]
     class RpcVotingCompletePatch
     {
-        public static bool Prefix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] GameData.PlayerInfo exiled, [HarmonyArgument(2)] bool tie)
+        public static bool Prefix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] NetworkedPlayerInfo exiled, [HarmonyArgument(2)] bool tie)
         {
             if (AntiBlackout.OverrideExiledPlayer)
             {

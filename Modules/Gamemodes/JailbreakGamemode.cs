@@ -2,6 +2,7 @@ using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using System;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -181,27 +182,10 @@ namespace MoreGamemodes
             }
         }
 
-        public override void OnSelectRolesPrefix()
+        public override bool OnSelectRolesPrefix()
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.AmOwner)
-                    pc.SetRole(RoleTypes.Shapeshifter);
-                else
-                    pc.SetRole(RoleTypes.Crewmate);
-            }
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {   
-                if (!pc.AmOwner)
-                {
-                    pc.RpcSetDesyncRole(RoleTypes.Shapeshifter, pc.GetClientId());
-                    foreach (var ar in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc != ar)
-                            ar.RpcSetDesyncRole(RoleTypes.Crewmate, pc.GetClientId());
-                    }
-                }
-            }
+            Utils.RpcSetDesyncRoles(RoleTypes.Shapeshifter, RoleTypes.Crewmate);
+            return false;
         }
 
         public override void OnSelectRolesPostfix()
@@ -334,6 +318,9 @@ namespace MoreGamemodes
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.Orange;
                         RespawnCooldown[target.PlayerId] = Options.RespawnCooldown.GetFloat();
                         target.Data.IsDead = true;
+                        new LateTask(() => {
+                            AntiCheat.IsDead[target.PlayerId] = true;
+                        }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
                         Utils.SendGameData();
                         target.SyncPlayerSettings();
                         target.RpcTeleport(new Vector2(1000f, 1000f));
@@ -417,6 +404,9 @@ namespace MoreGamemodes
                 }   
                 RespawnCooldown[target.PlayerId] = Options.RespawnCooldown.GetFloat();
                 target.Data.IsDead = true;
+                new LateTask(() => {
+                    AntiCheat.IsDead[target.PlayerId] = true;
+                }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
                 Utils.SendGameData();
                 target.SyncPlayerSettings();
                 target.RpcTeleport(new Vector2(1000f, 1000f));
@@ -535,7 +525,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }
@@ -555,6 +545,7 @@ namespace MoreGamemodes
                     {
                         PlayerHealth[pc.PlayerId] = pc.IsGuard() ? Options.GuardHealth.GetFloat() : Options.PrisonerHealth.GetFloat();
                         pc.Data.IsDead = false;
+                        AntiCheat.IsDead[pc.PlayerId] = false;
                         Utils.SendGameData();
                         if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3)
                             pc.MyPhysics.RpcBootFromVent(6);
@@ -691,7 +682,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (systemType == SystemTypes.Sabotage)
                 return false;

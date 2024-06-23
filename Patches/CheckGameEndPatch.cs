@@ -6,13 +6,13 @@ using Hazel;
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(LogicGameFlowNormal), nameof(LogicGameFlowNormal.CheckEndCriteria))]
-    class CheckEndCriteriaPatch
+    class CheckEndCriteriaNormalPatch
     {
         public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!GameData.Instance) return false;
-            if (DestroyableSingleton<TutorialManager>.InstanceExists) return true;
+            if (TutorialManager.InstanceExists) return true;
             if (Options.NoGameEnd.GetBool()) return false;
 
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems)
@@ -108,10 +108,7 @@ namespace MoreGamemodes
                     if (!pc.Data.Role.IsImpostor)
                         winners.Add(pc.PlayerId);
                 }
-                var reason = GameOverReason.HumansByVote;
-                if (TempData.LastDeathReason == DeathReason.Disconnect)
-                    reason = GameOverReason.ImpostorDisconnect;
-                StartEndGame(reason, winners);
+                StartEndGame(GameOverReason.HumansByVote, winners);
                 return true;
             }
             return false;
@@ -220,9 +217,9 @@ namespace MoreGamemodes
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.ImpostorByKill;
-                if (TempData.LastDeathReason == DeathReason.Exile)
+                if (GameData.LastDeathReason == DeathReason.Exile)
                     reason = GameOverReason.ImpostorByVote;
-                if (TempData.LastDeathReason == DeathReason.Disconnect)
+                if (GameData.LastDeathReason == DeathReason.Disconnect)
                     reason = GameOverReason.HumansDisconnect;
                 StartEndGame(reason, winners);
                 return true;
@@ -247,10 +244,7 @@ namespace MoreGamemodes
                     if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie())
                         winners.Add(pc.PlayerId);
                 }
-                var reason = GameOverReason.HumansByVote;
-                if (TempData.LastDeathReason == DeathReason.Disconnect)
-                    reason = GameOverReason.ImpostorDisconnect;
-                StartEndGame(reason, winners);
+                StartEndGame(GameOverReason.HumansByVote, winners);
                 return true;
             }
             return false;
@@ -322,11 +316,7 @@ namespace MoreGamemodes
 
         public static void StartEndGame(GameOverReason reason, List<byte> winners)
         {
-            var sender = new CustomRpcSender("EndGameSender", SendOption.None);
-            sender.StartMessage(-1);
-            MessageWriter writer = sender.stream;
-
-            List<byte> ReviveReqiredPlayerIds = new();
+            GameManager.Instance.ShouldCheckForGameEnd = false;
             var ImpostorWin = false;
             switch (reason)
             {
@@ -339,84 +329,53 @@ namespace MoreGamemodes
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!pc.Data.IsDead) ReviveReqiredPlayerIds.Add(pc.PlayerId);
                 if (winners.Contains(pc.PlayerId))
                 {
                     if (ImpostorWin)
-                        pc.SetRole(RoleTypes.ImpostorGhost);
+                        SetRole(ToImpostor: true);
                     else
-                        pc.SetRole(RoleTypes.CrewmateGhost);
+                        SetRole(ToImpostor: false);
                 }
                 else
                 {
                     if (ImpostorWin)
-                        pc.SetRole(RoleTypes.CrewmateGhost);
+                        SetRole(ToImpostor: false);
                     else
-                        pc.SetRole(RoleTypes.ImpostorGhost);
-                }
-            }
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (winners.Contains(pc.PlayerId))
-                {
-                    if (ImpostorWin)
-                        SetGhostRole(ToGhostImpostor: true);
-                    else
-                        SetGhostRole(ToGhostImpostor: false);
-                }
-                else
-                {
-                    if (ImpostorWin)
-                        SetGhostRole(ToGhostImpostor: false);
-                    else
-                        SetGhostRole(ToGhostImpostor: true);
+                        SetRole(ToImpostor: true);
                 }
 
-                void SetGhostRole(bool ToGhostImpostor)
+                void SetRole(bool ToImpostor)
                 {
-                    if (!pc.Data.IsDead) ReviveReqiredPlayerIds.Add(pc.PlayerId);
-                    if (ToGhostImpostor)
+                    if (ToImpostor)
                     {
-                        sender.StartRpc(pc.NetId, RpcCalls.SetRole)
-                            .Write((ushort)RoleTypes.ImpostorGhost)
-                            .EndRpc();
-                        pc.SetRole(RoleTypes.ImpostorGhost);
+                        if (pc.Data.IsDead)
+                            pc.RpcSetRoleV3(RoleTypes.ImpostorGhost);
+                        else
+                            pc.RpcSetRoleV3(RoleTypes.Impostor);
                     }
                     else
                     {
-                        sender.StartRpc(pc.NetId, RpcCalls.SetRole)
-                            .Write((ushort)RoleTypes.CrewmateGhost)
-                            .EndRpc();
-                        pc.SetRole(RoleTypes.CrewmateGhost);
+                        if (pc.Data.IsDead)
+                            pc.RpcSetRoleV3(RoleTypes.CrewmateGhost);
+                        else
+                            pc.RpcSetRoleV3(RoleTypes.Crewmate);
                     }
                 }
             }
-            writer.StartMessage(1);
-            {
-                writer.WritePacked(GameData.Instance.NetId);
-                foreach (var info in GameData.Instance.AllPlayers)
-                {
-                    if (ReviveReqiredPlayerIds.Contains(info.PlayerId))
-                    {
-                        info.IsDead = false;
-                        writer.StartMessage(info.PlayerId);
-                        info.Serialize(writer);
-                        writer.EndMessage();
-                    }
-                }
-                writer.EndMessage();
-            }
-            sender.EndMessage();
+            new LateTask(() => GameManager.Instance.RpcEndGame(reason, false), 0.5f, "End Game");
+        }
+    }
 
-            writer.StartMessage(8);
-            {
-                writer.Write(AmongUsClient.Instance.GameId);
-                writer.Write((byte)reason);
-                writer.Write(false);
-            }
-            writer.EndMessage();
-
-            sender.SendMessage();
+    [HarmonyPatch(typeof(LogicGameFlowHnS), nameof(LogicGameFlowHnS.CheckEndCriteria))]
+    class CheckEndCriteriaHnSPatch
+    {
+        public static bool Prefix()
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (!GameData.Instance) return false;
+            if (TutorialManager.InstanceExists) return true;
+            if (Options.NoGameEnd.GetBool()) return false;
+            return true;
         }
     }
 }

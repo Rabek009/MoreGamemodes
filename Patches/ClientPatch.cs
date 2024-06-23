@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using InnerNet;
+using System.Collections.Generic;
 
 namespace MoreGamemodes
 {
@@ -9,17 +10,16 @@ namespace MoreGamemodes
         public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return;
-            if (client.Character.AmOwner)
+            if (client.Id == __instance.ClientId)
             {
-                //new LateTask(() => new ModLogo(), 1f);
+                AntiCheat.Init();
                 return;
             }
             OptionItem.SyncAllOptions();
-            new LateTask(() =>
+            new LateTask(() => 
             {
-                client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-                /*foreach (var netObject in CustomNetObject.CustomObjects)
-                    (netObject as ModLogo).Reset();*/
+                if (client.Character != null)
+                    client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
             }, 2f, "Welcome Message");
         }
     }
@@ -36,10 +36,7 @@ namespace MoreGamemodes
                     client.Character.RpcSetDeathReason(DeathReasons.Disconnected);
             }
             if (__instance.GameState == InnerNetClient.GameStates.Started)
-            {
-                Main.Disconnected[client.Character.PlayerId] = true;
                 AntiBlackout.OnDisconnect(client.Character.Data);
-            }
         }
     }
 
@@ -79,4 +76,30 @@ namespace MoreGamemodes
             return false;
         }
     }
+
+    // [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnBecomeHost))]
+    // class OnBecomeHostPatch
+    // {
+    //     public static void Postfix(AmongUsClient __instance)
+    //     {
+    //         if (__instance.IsGameStarted)
+    //         {
+    //             List<byte> winners = new();
+    //             foreach (var pc in PlayerControl.AllPlayerControls)
+    //                 winners.Add(pc.PlayerId);
+    //             CheckEndCriteriaPatch.StartEndGame(GameOverReason.HumansByVote, winners);
+    //         }
+    //         else
+    //         {
+    //             AntiCheat.Init();
+    //             PlayerControl.LocalPlayer.RpcSendMessage("You are new host! Now this lobby modded with More Gamemodes v" + Main.CurrentVersion + "!", "Host");
+    //             foreach (var pc in PlayerControl.AllPlayerControls)
+    //             {
+    //                 if (!pc.AmOwner)
+    //                     pc.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
+    //             }
+    //             PlayerControl.LocalPlayer.RpcRequestVersionCheck();
+    //         }
+    //     }
+    // }
 }

@@ -215,7 +215,7 @@ namespace MoreGamemodes
 
     public enum TabGroup
     {
-        MainSettings,
+        ModSettings,
         GamemodeSettings,
         AdditionalGamemodes,
     }

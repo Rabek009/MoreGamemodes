@@ -1,8 +1,10 @@
+using Hazel;
+
 namespace MoreGamemodes
 {
     public class DeathrunGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
             Utils.SyncAllSettings();
@@ -66,7 +68,7 @@ namespace MoreGamemodes
             }, 2f);
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return !Options.DisableMeetings.GetBool();
         }
@@ -85,7 +87,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;

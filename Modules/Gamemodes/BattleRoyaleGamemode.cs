@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -53,27 +54,10 @@ namespace MoreGamemodes
             __instance.YouAreText.color = Color.clear;
         }
 
-        public override void OnSelectRolesPrefix()
+        public override bool OnSelectRolesPrefix()
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.AmOwner)
-                    pc.SetRole(RoleTypes.Impostor);
-                 else
-                    pc.SetRole(RoleTypes.Crewmate);
-            }
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (!pc.AmOwner)
-                {
-                    pc.RpcSetDesyncRole(RoleTypes.Impostor, pc.GetClientId());
-                    foreach (var ar in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc != ar)
-                            ar.RpcSetDesyncRole(RoleTypes.Crewmate, pc.GetClientId());
-                    }
-                }
-            }
+            Utils.RpcSetDesyncRoles(RoleTypes.Impostor, RoleTypes.Crewmate);
+            return false;
         }
 
         public override void OnSelectRolesPostfix()
@@ -102,7 +86,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }
@@ -112,7 +96,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;

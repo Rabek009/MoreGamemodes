@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace MoreGamemodes
 {
-    [HarmonyPatch(typeof(AmongUsClient._CoStartGameHost_d__30), nameof(AmongUsClient._CoStartGameHost_d__30.MoveNext))]
+    [HarmonyPatch(typeof(AmongUsClient._CoStartGameHost_d__32), nameof(AmongUsClient._CoStartGameHost_d__32.MoveNext))]
     public static class DleksPatch
     {
-        private static bool Prefix(AmongUsClient._CoStartGameHost_d__30 __instance, ref bool __result)
+        private static bool Prefix(AmongUsClient._CoStartGameHost_d__32 __instance, ref bool __result)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (__instance.__1__state != 0)
@@ -37,14 +37,25 @@ namespace MoreGamemodes
         }
     }
 
-    [HarmonyPatch(typeof(KeyValueOption), nameof(KeyValueOption.OnEnable))]
+    [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Start))]
+    class AllMapIconsPatch
+    {
+        public static void Postfix(GameStartManager __instance)
+        {
+            MapIconByName DleksIncon = Object.Instantiate(__instance, __instance.gameObject.transform).AllMapIcons[0];
+            DleksIncon.Name = MapNames.Dleks;
+            __instance.AllMapIcons.Add(DleksIncon);
+        }
+    }
+
+    [HarmonyPatch(typeof(StringOption), nameof(StringOption.Start))]
     class AutoSelectDleksPatch
     {
-        private static void Postfix(KeyValueOption __instance)
+        public static void Postfix(StringOption __instance)
         {
             if (__instance.Title == StringNames.GameMapName)
             {
-                __instance.Selected = GameOptionsManager.Instance.CurrentGameOptions.MapId;
+                __instance.Value = GameOptionsManager.Instance.CurrentGameOptions.MapId;
             }
         }
     }

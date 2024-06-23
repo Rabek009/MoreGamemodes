@@ -17,7 +17,7 @@ namespace MoreGamemodes
             var text = __instance.freeChatField.Text;
             if (!AmongUsClient.Instance.AmHost && (text.Contains("<size=") || text.Contains("<br>") || text.Contains("<line-height=") || text.Contains("<cspace=")))
             {
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Only host can use <noparse><size>, <br>, <line-height> <cspace></noparse>,! Other text formatting is allowed.");
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Only host can use <noparse><size>, <ㅤbr>, <line-height> <cspace></noparse>,! Other text formatting is allowed.");
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
@@ -234,13 +234,17 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "always":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.TaskBarMode = AmongUs.GameOptions.TaskBarMode.Normal;
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.TaskBarMode, (int)AmongUs.GameOptions.TaskBarMode.Normal);
                                     break;
                                 case "meetings":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.TaskBarMode = AmongUs.GameOptions.TaskBarMode.MeetingOnly;
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.TaskBarMode, (int)AmongUs.GameOptions.TaskBarMode.MeetingOnly);
                                     break;
                                 case "never":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.TaskBarMode = AmongUs.GameOptions.TaskBarMode.Invisible;
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.TaskBarMode, (int)AmongUs.GameOptions.TaskBarMode.Invisible);
+                                    break;
+                                case "custom":
+                                    subArgs = args.Length < 4 ? "" : args[3];
+                                    GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.TaskBarMode, int.Parse(subArgs));
                                     break;
                             }
                             break;
@@ -249,10 +253,10 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetBool(BoolOptionNames.VisualTasks, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.VisualTasks, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetBool(BoolOptionNames.VisualTasks, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.VisualTasks, true);
                                     break;
                             }
                             break;
@@ -355,6 +359,66 @@ namespace MoreGamemodes
                                     GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ShapeshifterLeaveSkin, false);
                                     break;
                             }
+                            break;
+                        case "trackercount":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Tracker, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Shapeshifter));
+                            break;
+                        case "trackerchance":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Tracker, GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Shapeshifter), int.Parse(subArgs));
+                            break;
+                        case "trackingcooldown":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.TrackerCooldown, float.Parse(subArgs));
+                            break;
+                        case "trackingdelay":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.TrackerDelay, float.Parse(subArgs));
+                            break;
+                        case "trackingduration":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.TrackerDuration, float.Parse(subArgs));
+                            break;
+                        case "noisemakercount":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Shapeshifter));
+                            break;
+                        case "noisemakerchance":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Shapeshifter), int.Parse(subArgs));
+                            break;
+                        case "impostorsgetalert":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            switch (subArgs)
+                            {
+                                case "on":
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.NoisemakerImpostorAlert, true);
+                                    break;
+                                case "off":
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.NoisemakerImpostorAlert, false);
+                                    break;
+                            }
+                            break;
+                        case "alertduration":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.NoisemakerAlertDuration, float.Parse(subArgs));
+                            break;
+                        case "phantomcount":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Phantom, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Shapeshifter));
+                            break;
+                        case "phantomchance":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Phantom, GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Shapeshifter), int.Parse(subArgs));
+                            break;
+                        case "vanishduration":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.PhantomDuration, float.Parse(subArgs));
+                            break;
+                        case "vanishcooldown":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.PhantomCooldown, float.Parse(subArgs));
                             break;
                         case "ghostdotasks":
                             subArgs = args.Length < 3 ? "" : args[2];
@@ -472,6 +536,29 @@ namespace MoreGamemodes
                         case "impostor":
                             subArgs = args.Length < 3 ? "" : args[2];
                             GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.ImpostorPlayerID, int.Parse(subArgs));
+                            break;
+                        case "preset":
+                            subArgs = args.Length < 3 ? "" : args[2];
+                            switch (subArgs)
+                            {
+                                case "coresettings":
+                                case "pitchdark":
+                                    GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.RulePreset, (int)RulesPresets.Standard);
+                                    break;
+                                case "rolesgalore":
+                                    GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.RulePreset, (int)RulesPresets.StandardRoles);
+                                    break;
+                                case "flashlights":
+                                    GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.RulePreset, (int)RulesPresets.Flashlight);
+                                    break;
+                                case "custom":
+                                    subArgs = args.Length < 4 ? "" : args[3];
+                                    if (subArgs == "")
+                                        GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.RulePreset, (int)RulesPresets.Custom);
+                                    else
+                                        GameOptionsManager.Instance.currentGameOptions.SetInt(Int32OptionNames.RulePreset, int.Parse(subArgs));
+                                    break;
+                            }
                             break;
                     }
                     GameOptionsManager.Instance.GameHostOptions = GameOptionsManager.Instance.CurrentGameOptions;
@@ -636,7 +723,7 @@ namespace MoreGamemodes
                                     Utils.SendChat("Shift And Seek: Everyone is engineer or shapeshifter. Impostors are visible to other players. Crewmates wins by finishing their tasks, impostors by killing every single crewmate. Impostor must shapeshift into person he want kill.", "Gamemodes");
                                     break;
                                 case "bombtag":
-                                    Utils.SendChat("Bomb Tag: Game lasts for few round. Random player/players gets bomb at start of the round. Player with bomb need to give away a bomb. After the round players with bombs die. Click kill to give bomb away. Black players have bomb. Last standing alive wins!", "Gamemodes");
+                                    Utils.SendChat("Bomb Tag: Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!", "Gamemodes");
                                     break;
                                 case "randomitems":
                                     Utils.SendChat("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
@@ -651,10 +738,10 @@ namespace MoreGamemodes
                                     Utils.SendChat("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
-                                    Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                    Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
                                     break;
                                 case "zombies":
-                                    Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                    Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                     break;
                                 case "jailbreak":
                                     Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
@@ -691,7 +778,7 @@ namespace MoreGamemodes
                                             Utils.SendChat("Shift And Seek: Everyone is engineer or shapeshifter.Impostors are visible to other players.Crewmates wins by finishing their tasks, impostors by killing every single crewmate.Impostor must shapeshift into person he want kill.", "Gamemodes");
                                             break;
                                         case Gamemodes.BombTag:
-                                            Utils.SendChat("Bomb Tag: Game lasts for few round. Random player/players gets bomb at start of the round. Player with bomb need to give away a bomb. After the round players with bombs die. Click kill to give bomb away. Black players have bomb. Last standing alive wins!", "Gamemodes");
+                                            Utils.SendChat("Bomb Tag: Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!", "Gamemodes");
                                             break;
                                         case Gamemodes.RandomItems:
                                             Utils.SendChat("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
@@ -706,10 +793,10 @@ namespace MoreGamemodes
                                             Utils.SendChat("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
-                                            Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                            Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
                                             break;
                                         case Gamemodes.Zombies:
-                                            Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                            Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                             break;
                                         case Gamemodes.Jailbreak:
                                             Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
@@ -748,6 +835,9 @@ namespace MoreGamemodes
                                 case "swap":
                                     PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Swap), "Items");
                                     break;
+                                case "medicine":
+                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Medicine), "Items");
+                                    break;
                                 case "timespeeder":
                                     PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSpeeder), "Items");
                                     break;
@@ -768,6 +858,9 @@ namespace MoreGamemodes
                                     break;
                                 case "trap":
                                     PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Trap), "Items");
+                                    break;
+                                case "teamchanger":
+                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.TeamChanger), "Items");
                                     break;
                                 case "teleport":
                                     PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Teleport), "Items");
@@ -928,6 +1021,11 @@ namespace MoreGamemodes
                                 message += "Radar range: " + Options.RadarRange.GetFloat() + "x\n";
                             }
                             message += "\nSwap: "; message += Options.EnableSwap.GetBool() ? "ON\n" : "OFF\n";
+                            message += "\nMedicine: "; message += Options.EnableMedicine.GetBool() ? "ON\n" : "OFF\n";
+                            if (Options.EnableMedicine.GetBool())
+                            {
+                                message += "Die on revive: "; message += Options.DieOnRevive.GetBool() ? "ON\n" : "OFF\n";
+                            }
                             message += "\nTime speeder: "; message += Options.EnableTimeSpeeder.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EnableTimeSpeeder.GetBool())
                             {
@@ -966,6 +1064,11 @@ namespace MoreGamemodes
                                 message += "Trap radius: " + Options.BombRadius.GetFloat() + "x\n";
                                 message += "Crewmates see trap: "; message += Options.CrewmatesSeeTrap.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors see trap: "; message += Options.ImpostorsSeeTrap.GetBool() ? "ON\n" : "OFF\n";
+                            }
+                            message += "\nTeam changer: "; message += Options.EnableTeamChanger.GetBool() ? "ON\n" : "OFF\n";
+                            if (Options.EnableTeamChanger.GetBool())
+                            {
+                                message += "Target gets your role: "; message += Options.TargetGetsYourRole.GetBool() ? "ON\n" : "OFF\n";
                             }
                             message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
                             message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
@@ -1068,6 +1171,7 @@ namespace MoreGamemodes
                             message += "Round cooldown: " + Options.RoundCooldown.GetFloat() + "s\n";
                             message += "Disable meetings: "; message += Options.DisableMeetings.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.DrImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Amount of tasks: " + Options.AmountOfTasks.GetInt() + "\n";
                             break;
                     }
                     Utils.SendChat(message, "Options");
@@ -1174,6 +1278,9 @@ namespace MoreGamemodes
                         int engineers = 0;       
                         int impostors = 0;
                         int shapeshifters = 0;
+                        int noisemakers = 0;
+                        int phantoms = 0;
+                        int trackers = 0;
                         int alivePlayers = 0;
                         int deadPlayers = 0;
                         int killedPlayers = 0;
@@ -1186,6 +1293,7 @@ namespace MoreGamemodes
                         string msg = "Roles in game:\n";
                         foreach (var pc in PlayerControl.AllPlayerControls)
                         {
+                            if (pc.Data.IsDead) continue;
                             switch (pc.Data.Role.Role)
                             {
                                 case RoleTypes.Crewmate: ++crewmates; break;
@@ -1193,6 +1301,9 @@ namespace MoreGamemodes
                                 case RoleTypes.Engineer: ++engineers; break;
                                 case RoleTypes.Impostor: ++impostors; break;
                                 case RoleTypes.Shapeshifter: ++shapeshifters; break;
+                                case RoleTypes.Noisemaker: ++noisemakers; break;
+                                case RoleTypes.Phantom: ++phantoms; break;
+                                case RoleTypes.Tracker: ++trackers; break;
                             }
                         }
                         for (byte i = 0; i <= 14; ++i)
@@ -1220,8 +1331,11 @@ namespace MoreGamemodes
                         msg += crewmates + " crewamtes\n";
                         msg += scientists + " scientists\n";
                         msg += engineers + " engineers\n";
+                        msg += noisemakers + " noisemakers\n";
+                        msg += trackers + " trackers\n";
                         msg += impostors + " impostors\n";
-                        msg += shapeshifters + " shapeshifters\n\n";
+                        msg += shapeshifters + " shapeshifters\n";
+                        msg += phantoms + " phantoms\n\n";
                         msg += alivePlayers + " players are alive\n";
                         msg += deadPlayers + " players died:\n";
                         msg += killedPlayers + " by getting killed\n";
@@ -1482,7 +1596,7 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Shift And Seek: Everyone is engineer or shapeshifter. Impostors are visible to other players. Crewmates wins by finishing their tasks, impostors by killing every single crewmate. Impostor must shapeshift into person he want kill.", "Gamemodes");
                                     break;
                                 case "bombtag":
-                                    player.RpcSendMessage("Bomb Tag: Game lasts for few round. Random player/players gets bomb at start of the round. Player with bomb need to give away a bomb. After the round players with bombs die. Click kill to give bomb away. Black players have bomb. Last standing alive wins!", "Gamemodes");
+                                    player.RpcSendMessage("Bomb Tag: Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!", "Gamemodes");
                                     break;
                                 case "randomitems":
                                     player.RpcSendMessage("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
@@ -1497,10 +1611,10 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
-                                    player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                    player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
                                     break;
                                 case "zombies":
-                                    player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                    player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                     break;
                                 case "jailbreak":
                                     player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
@@ -1537,7 +1651,7 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("Shift And Seek: Everyone is engineer or shapeshifter. Impostors are visible to other players. Crewmates wins by finishing their tasks, impostors by killing every single crewmate. Impostor must shapeshift into person he want kill.", "Gamemodes");
                                             break;
                                         case Gamemodes.BombTag:
-                                            player.RpcSendMessage("Bomb Tag: Game lasts for few round. Random player/players gets bomb at start of the round. Player with bomb need to give away a bomb. After the round players with bombs die. Click kill to give bomb away. Black players have bomb. Last standing alive wins!", "Gamemodes");
+                                            player.RpcSendMessage("Bomb Tag: Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!", "Gamemodes");
                                             break;
                                         case Gamemodes.RandomItems:
                                             player.RpcSendMessage("Random Items: When you do task or kill someone you get item. Use this item by petting your pet. Every item is single use. If you have item and get new, your old item will be removed! Item and description is under your nick.", "Gamemodes");
@@ -1552,10 +1666,10 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
-                                            player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!", "Gamemodes");
+                                            player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
                                             break;
                                         case Gamemodes.Zombies:
-                                            player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).", "Gamemodes");
+                                            player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                             break;
                                         case Gamemodes.Jailbreak:
                                             player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
@@ -1594,6 +1708,9 @@ namespace MoreGamemodes
                                 case "swap":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Swap), "Items");
                                     break;
+                                case "medicine":
+                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Medicine), "Items");
+                                    break;
                                 case "timespeeder":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSpeeder), "Items");
                                     break;
@@ -1614,6 +1731,9 @@ namespace MoreGamemodes
                                     break;
                                 case "trap":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Trap), "Items");
+                                    break;
+                                case "teamchanger":
+                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.TeamChanger), "Items");
                                     break;
                                 case "teleport":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Teleport), "Items");
@@ -1774,6 +1894,11 @@ namespace MoreGamemodes
                                 message += "Radar range: " + Options.RadarRange.GetFloat() + "x\n";
                             }
                             message += "\nSwap: "; message += Options.EnableSwap.GetBool() ? "ON\n" : "OFF\n";
+                            message += "\nMedicine: "; message += Options.EnableMedicine.GetBool() ? "ON\n" : "OFF\n";
+                            if (Options.EnableMedicine.GetBool())
+                            {
+                                message += "Die on revive: "; message += Options.DieOnRevive.GetBool() ? "ON\n" : "OFF\n";
+                            }
                             message += "\nTime speeder: "; message += Options.EnableTimeSpeeder.GetBool() ? "ON\n" : "OFF\n";
                             if (Options.EnableTimeSpeeder.GetBool())
                             {
@@ -1812,6 +1937,11 @@ namespace MoreGamemodes
                                 message += "Trap radius: " + Options.BombRadius.GetFloat() + "x\n";
                                 message += "Crewmates see trap: "; message += Options.CrewmatesSeeTrap.GetBool() ? "ON\n" : "OFF\n";
                                 message += "Impostors see trap: "; message += Options.ImpostorsSeeTrap.GetBool() ? "ON\n" : "OFF\n";
+                            }
+                            message += "\nTeam changer: "; message += Options.EnableTeamChanger.GetBool() ? "ON\n" : "OFF\n";
+                            if (Options.EnableTeamChanger.GetBool())
+                            {
+                                message += "Target gets your role: "; message += Options.TargetGetsYourRole.GetBool() ? "ON\n" : "OFF\n";
                             }
                             message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
                             message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
@@ -1914,6 +2044,7 @@ namespace MoreGamemodes
                             message += "Round cooldown: " + Options.RoundCooldown.GetFloat() + "s\n";
                             message += "Disable meetings: "; message += Options.DisableMeetings.GetBool() ? "ON\n" : "OFF\n";
                             message += "Impostors can vent: "; message += Options.DrImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
+                            message += "Amount of tasks: " + Options.AmountOfTasks.GetInt() + "\n";
                             break;
                     }
                     player.RpcSendMessage(message, "Options");
@@ -1998,6 +2129,9 @@ namespace MoreGamemodes
                         int engineers = 0;       
                         int impostors = 0;
                         int shapeshifters = 0;
+                        int noisemakers = 0;
+                        int phantoms = 0;
+                        int trackers = 0;
                         int alivePlayers = 0;
                         int deadPlayers = 0;
                         int killedPlayers = 0;
@@ -2010,6 +2144,7 @@ namespace MoreGamemodes
                         string msg = "Roles in game:\n";
                         foreach (var pc in PlayerControl.AllPlayerControls)
                         {
+                            if (pc.Data.IsDead) continue;
                             switch (pc.Data.Role.Role)
                             {
                                 case RoleTypes.Crewmate: ++crewmates; break;
@@ -2017,6 +2152,9 @@ namespace MoreGamemodes
                                 case RoleTypes.Engineer: ++engineers; break;
                                 case RoleTypes.Impostor: ++impostors; break;
                                 case RoleTypes.Shapeshifter: ++shapeshifters; break;
+                                case RoleTypes.Noisemaker: ++noisemakers; break;
+                                case RoleTypes.Phantom: ++phantoms; break;
+                                case RoleTypes.Tracker: ++trackers; break;
                             }
                         }
                         for (byte i = 0; i <= 14; ++i)
@@ -2044,8 +2182,11 @@ namespace MoreGamemodes
                         msg += crewmates + " crewamtes\n";
                         msg += scientists + " scientists\n";
                         msg += engineers + " engineers\n";
+                        msg += noisemakers + " noisemakers\n";
+                        msg += trackers + " trackers\n";
                         msg += impostors + " impostors\n";
-                        msg += shapeshifters + " shapeshifters\n\n";
+                        msg += shapeshifters + " shapeshifters\n";
+                        msg += phantoms + " phantoms\n\n";
                         msg += alivePlayers + " players are alive\n";
                         msg += deadPlayers + " players died:\n";
                         msg += killedPlayers + " by getting killed\n";
@@ -2155,29 +2296,33 @@ namespace MoreGamemodes
                 {
                     if (pc.AmOwner)
                     {
-                        player.SetName(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title));
+                        player.Data.PlayerName = Utils.ColorString(Color.blue, "MGM.SystemMessage." + title);
                         DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
-                        player.SetName(name);
-                        if (Main.GameStarted)
-                            player.RpcSetNamePrivate(Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)], pc, true);
+                        player.Data.PlayerName = name;
                     }
                     else
                     {
                         new LateTask(() =>
                         {
-                            var writer = CustomRpcSender.Create("MessagesToSend", SendOption.None);
-                            writer.StartMessage(clientId2);
-                            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                                .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
-                                .EndRpc();
-                            writer.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                            var writer = sender.stream;
+                            sender.StartMessage(clientId2);
+                            player.Data.PlayerName = Utils.ColorString(Color.blue, "MGM.SystemMessage." + title);
+                            writer.StartMessage(1);
+                            writer.WritePacked(player.Data.NetId);
+                            player.Data.Serialize(writer, false);
+                            writer.EndMessage();
+                            sender.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
                                 .Write(msg)
                                 .EndRpc();
-                            writer.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                                .Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name)
-                                .EndRpc();
+                            player.Data.PlayerName = Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name;
+                            writer.StartMessage(1);
+                            writer.WritePacked(player.Data.NetId);
+                            player.Data.Serialize(writer, false);
                             writer.EndMessage();
-                            writer.SendMessage();
+                            player.Data.PlayerName = name;
+                            sender.EndMessage();
+                            sender.SendMessage();
                         }, 0f, "Send Message");
                     }
                 }

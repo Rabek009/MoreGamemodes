@@ -45,12 +45,12 @@ public partial class Main : BasePlugin
     public static List<(string, byte, string)> MessagesToSend;
     public static string LastResult;
     public static Dictionary<byte, RoleTypes> StandardRoles;
+    public static Dictionary<(byte, byte), RoleTypes> DesyncRoles;
     public static Dictionary<byte, List<(string, float)>> ProximityMessages;
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
-    public static Dictionary<byte, bool> Disconnected;
 
-    public const string CurrentVersion = "1.3.2";
+    public const string CurrentVersion = "2.0.0 dev1";
 
     public override void Load()
     {
@@ -104,12 +104,13 @@ public partial class Main : BasePlugin
         CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
         LastResult = "";
         StandardRoles = new Dictionary<byte, RoleTypes>();
+        DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
         ProximityMessages = new Dictionary<byte, List<(string, float)>>();
         NameColors = new Dictionary<(byte, byte), Color>();
         IsModded = new Dictionary<byte, bool>();
-        Disconnected = new Dictionary<byte, bool>();
         CustomNetObject.CustomObjects = new List<CustomNetObject>();
         CustomNetObject.MaxId = -1;
+        RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
         AntiBlackout.Reset();
 
         Harmony.PatchAll();
@@ -118,13 +119,15 @@ public partial class Main : BasePlugin
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Start))]
     static class OnGameCreated
     {
-        public static void Prefix(PlayerControl __instance)
+        public static bool Prefix(PlayerControl __instance)
         {
             if (!AmongUsClient.Instance.AmHost && __instance.PlayerId == 255)
             {
                 __instance.cosmetics.currentBodySprite.BodySprite.color = Color.clear;
                 __instance.cosmetics.colorBlindText.color = Color.clear;
+                return false;
             }
+            return true;
         }
         public static void Postfix(PlayerControl __instance)
         {
@@ -154,20 +157,22 @@ public partial class Main : BasePlugin
                 StandardPets = new Dictionary<byte, string>();
                 StandardVisors = new Dictionary<byte, string>();
                 StandardNamePlates = new Dictionary<byte, string>();
+                AllShapeshifts = new Dictionary<byte, byte>();
                 LastNotifyNames = new Dictionary<(byte, byte), string>();
                 RealOptions = null;
                 AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
                 MessagesToSend = new List<(string, byte, string)>();
                 StandardRoles = new Dictionary<byte, RoleTypes>();
+                DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
                 CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
                 CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
                 ProximityMessages = new Dictionary<byte, List<(string, float)>>();
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
-                Disconnected = new Dictionary<byte, bool>();
                 CustomNetObject.CustomObjects = new List<CustomNetObject>();
                 CustomNetObject.MaxId = -1;
+                RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
                 AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)

@@ -100,6 +100,8 @@ namespace MoreGamemodes
         public static OptionItem EnableRadar;
         public static OptionItem RadarRange;
         public static OptionItem EnableSwap;
+        public static OptionItem EnableMedicine;
+        public static OptionItem DieOnRevive;
 
         //Impostor
         public static OptionItem EnableTimeSpeeder;
@@ -123,6 +125,8 @@ namespace MoreGamemodes
         public static OptionItem TrapRadius;
         public static OptionItem CrewmatesSeeTrap;
         public static OptionItem ImpostorsSeeTrap;
+        public static OptionItem EnableTeamChanger;
+        public static OptionItem TargetGetsYourRole;
 
         //Both
         public static OptionItem EnableTeleport;
@@ -204,6 +208,7 @@ namespace MoreGamemodes
         public static OptionItem RoundCooldown;
         public static OptionItem DisableMeetings;
         public static OptionItem DrImpostorsCanVent;
+        public static OptionItem AmountOfTasks;
 
         //Additional gamemodes
         public static OptionItem RandomSpawn;
@@ -229,30 +234,30 @@ namespace MoreGamemodes
         public static void Load()
         {
             if (IsLoaded) return;
-            _ = PresetOptionItem.Create(0, TabGroup.MainSettings)
+            _ = PresetOptionItem.Create(0, TabGroup.ModSettings)
                 .SetColor(new Color32(204, 204, 0, 255))
                 .SetHeader(true)
                 .SetGamemode(Gamemodes.All);
 
             //Main settings
-            Gamemode = StringOptionItem.Create(1, "Gamemode", gameModes, 0, TabGroup.MainSettings, false)
+            Gamemode = StringOptionItem.Create(1, "Gamemode", gameModes, 0, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All);
-            NoGameEnd = BooleanOptionItem.Create(2, "No game end", false, TabGroup.MainSettings, false)
+            NoGameEnd = BooleanOptionItem.Create(2, "No game end", false, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All);
-            CanUseColorCommand = BooleanOptionItem.Create(3, "Can use /color command", false, TabGroup.MainSettings, false)
+            CanUseColorCommand = BooleanOptionItem.Create(3, "Can use /color command", false, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All);
-            EnableFortegreen = BooleanOptionItem.Create(4, "Enable fortegreen", false, TabGroup.MainSettings, false)
+            EnableFortegreen = BooleanOptionItem.Create(4, "Enable fortegreen", false, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseColorCommand);
-            CanUseNameCommand = BooleanOptionItem.Create(5, "Can use /name command", false, TabGroup.MainSettings, false)
+            CanUseNameCommand = BooleanOptionItem.Create(5, "Can use /name command", false, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All);
-            EnableNameRepeating = BooleanOptionItem.Create(6, "Enable name repeating", false, TabGroup.MainSettings, false)
+            EnableNameRepeating = BooleanOptionItem.Create(6, "Enable name repeating", false, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseNameCommand);
-            MaximumNameLength = IntegerOptionItem.Create(7, "Maximum name length", new(10, 94, 1), 25, TabGroup.MainSettings, false)
+            MaximumNameLength = IntegerOptionItem.Create(7, "Maximum name length", new(10, 94, 1), 25, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseNameCommand);
-            CanUseTpoutCommand = BooleanOptionItem.Create(8, "Can use /tpout command", true, TabGroup.MainSettings, false)
+            CanUseTpoutCommand = BooleanOptionItem.Create(8, "Can use /tpout command", true, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All);
 
             //Hide and seek
@@ -355,6 +360,12 @@ namespace MoreGamemodes
             EnableSwap = BooleanOptionItem.Create(4015, "Enable swap", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetColor(Color.cyan);
+            EnableMedicine = BooleanOptionItem.Create(4016, "Enable Medicine", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetColor(Color.cyan);
+            DieOnRevive = BooleanOptionItem.Create(4017, "Die on revive", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetParent(EnableMedicine);
 
             //Impostor
             EnableTimeSpeeder = BooleanOptionItem.Create(5000, "Enable time speeder", false, TabGroup.GamemodeSettings, false)
@@ -429,6 +440,12 @@ namespace MoreGamemodes
             ImpostorsSeeTrap = BooleanOptionItem.Create(5020, "Impostors see trap", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetParent(EnableTrap);
+            EnableTeamChanger = BooleanOptionItem.Create(5021, "Enable team changer", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetColor(Color.red);
+            TargetGetsYourRole = BooleanOptionItem.Create(5022, "Target gets your role", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetParent(EnableTeamChanger);
 
             //Both
             EnableTeleport = BooleanOptionItem.Create(6000, "Enable teleport", false, TabGroup.GamemodeSettings, false)
@@ -614,6 +631,8 @@ namespace MoreGamemodes
             DisableMeetings = BooleanOptionItem.Create(13001, "Disable meetings", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Deathrun);
             DrImpostorsCanVent = BooleanOptionItem.Create(13002, "Impostors can vent", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.Deathrun);
+            AmountOfTasks = IntegerOptionItem.Create(13003, "Amount of tasks", new(1, 3, 1), 1, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Deathrun);
 
             //Additional gamemodes

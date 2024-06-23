@@ -1,12 +1,13 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
     public class HideAndSeekGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
             Utils.SyncAllSettings();
@@ -30,6 +31,12 @@ namespace MoreGamemodes
                 __instance.FilterText.text = "Shapeshifter";
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.ImpostorGhost)
                 __instance.FilterText.text = "Seeker Ghost";
+            if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Noisemaker)
+                __instance.FilterText.text = "Noisemaker";
+            if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Phantom)
+                __instance.FilterText.text = "Phantom";
+            if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Tracker)
+                __instance.FilterText.text = "Tracker";
         }
         
         public override void OnHudUpate(HudManager __instance)
@@ -114,21 +121,23 @@ namespace MoreGamemodes
         public override void OnSelectRolesPostfix()
         {
             if (Options.HnSImpostorsAreVisible.GetBool()) return;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.Data.Role.IsImpostor)
+            new LateTask(() => {
+                foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    pc.RpcSetColor(0);
-                    foreach (var ar in PlayerControl.AllPlayerControls)
-                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
+                    if (pc.Data.Role.IsImpostor)
+                    {
+                        pc.RpcSetColor(0);
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
+                    }
+                    else
+                    {
+                        pc.RpcSetColor(1);
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.blue;
+                    }
                 }
-                else
-                {
-                    pc.RpcSetColor(1);
-                    foreach (var ar in PlayerControl.AllPlayerControls)
-                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.blue;
-                }
-            }
+            }, 1.2f);
         }
 
         public override void OnIntroDestroy()
@@ -136,7 +145,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.Data.Role.IsImpostor)
-                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
+                    pc.Data.RpcSetTasks(new byte[0]);
             }
         }
 
@@ -146,7 +155,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }
@@ -166,7 +175,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;

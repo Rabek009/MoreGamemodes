@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Hazel;
 using System.Collections.Generic;
 
 namespace MoreGamemodes
@@ -13,13 +14,27 @@ namespace MoreGamemodes
         }
     }
 
+    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.UpdateSystem), typeof(SystemTypes), typeof(PlayerControl), typeof(MessageReader))]
+    class MessageReaderUpdateSystemPatch
+    {
+        public static bool Prefix(ShipStatus __instance, [HarmonyArgument(0)] SystemTypes systemType, [HarmonyArgument(1)] PlayerControl player, [HarmonyArgument(2)] MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            MessageReader reader2 = MessageReader.Get(reader);
+            return CustomGamemode.Instance.OnUpdateSystem(__instance, systemType, player, reader2);
+        }
+    }
+
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.UpdateSystem), typeof(SystemTypes), typeof(PlayerControl), typeof(byte))]
-    class UpdateSystemPatch
+    class ByteUpdateSystemPatch
     {
         public static bool Prefix(ShipStatus __instance, [HarmonyArgument(0)] SystemTypes systemType, [HarmonyArgument(1)] PlayerControl player, [HarmonyArgument(2)] byte amount)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            return CustomGamemode.Instance.OnUpdateSystem(__instance, systemType, player, amount);
+            MessageWriter writer = MessageWriter.Get(0);
+			writer.Write(amount);
+			MessageReader reader = MessageReader.Get(writer.ToByteArray(false));
+            return CustomGamemode.Instance.OnUpdateSystem(__instance, systemType, player, reader);     
         }
     }
 
@@ -61,6 +76,21 @@ namespace MoreGamemodes
                     }
                 }
             }, 1f, "Set MixUp Name");
+        }
+    }
+
+    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.Begin))]
+    class ShipStatusBeginPatch
+    {
+        public static bool Prefix(ShipStatus __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (!HudManager.Instance.IsIntroDisplayed)
+            {
+                new LateTask(() => __instance.Begin(), 0.1f, "Delayed Task Assign");
+                return false;
+            }
+            return true;
         }
     }
 }

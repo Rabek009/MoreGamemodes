@@ -1,11 +1,12 @@
 using Il2CppSystem.Collections.Generic;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
     public class CustomGamemode
     {
-        public virtual void OnExile(GameData.PlayerInfo exiled)
+        public virtual void OnExile(NetworkedPlayerInfo exiled)
         {
 
         }
@@ -24,6 +25,12 @@ namespace MoreGamemodes
                 __instance.FilterText.text = "Shapeshifter";
             if (__instance.HauntTarget.Data.Role.Role == RoleTypes.ImpostorGhost)
                 __instance.FilterText.text = "Impostor Ghost";
+            if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Noisemaker)
+                __instance.FilterText.text = "Noisemaker";
+            if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Phantom)
+                __instance.FilterText.text = "Phantom";
+            if (__instance.HauntTarget.Data.Role.Role == RoleTypes.Tracker)
+                __instance.FilterText.text = "Tracker";
         }
 
         public virtual void OnHudUpate(HudManager __instance)
@@ -90,7 +97,7 @@ namespace MoreGamemodes
             
         }
 
-        public virtual void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, GameData.PlayerInfo exiled, bool tie)
+        public virtual void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
             
         }
@@ -100,9 +107,9 @@ namespace MoreGamemodes
             return true;
         }
 
-        public virtual void OnSelectRolesPrefix()
+        public virtual bool OnSelectRolesPrefix()
         {
-            
+            return true;
         }
 
         public virtual void OnSelectRolesPostfix()
@@ -145,7 +152,7 @@ namespace MoreGamemodes
 
         }
 
-        public virtual bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public virtual bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return true;
         }
@@ -160,12 +167,17 @@ namespace MoreGamemodes
 
         }
 
+        public virtual bool OnCheckVanish(PlayerControl phantom)
+        {
+            return true;
+        }
+
         public virtual bool OnCloseDoors(ShipStatus __instance)
         {
             return true;
         }
 
-        public virtual bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public virtual bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             return true;
         }

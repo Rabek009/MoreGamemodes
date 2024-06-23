@@ -77,6 +77,7 @@ Impostors need to kill every single crewmate, crewmate need to do every task. No
 | Impostors can kill during blind |
 | Impostors can vent              |
 | Impostors can close doors       |
+| Impostors are visible           |
 
 ### Shift and seek
 Everyone is engineer or shapeshifter. Impostors need to kill every single crewmate, crewmate need to do every task. No reports, emergiences and sabotages. Depending on options impostors can vent and closing doors. Impostors are visible to others or not. Impostors must shapeshift into person they want to kill.
@@ -93,8 +94,7 @@ Everyone is engineer or shapeshifter. Impostors need to kill every single crewma
 | Instant shapeshift              |
 
 ### Bomb tag
-Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports,
-meetings, sabotages or venting. Click kill button to give bomb away. Last standing alive wins.
+Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!
 
 #### Game options
 | Name                        |
@@ -105,6 +105,7 @@ meetings, sabotages or venting. Click kill button to give bomb away. Last standi
 | Players with bomb           |
 | Max players with bomb       |
 | Arrow to nearest non bombed |
+| Show explosion animation    |
 
 ### Random items
 Crewmates get items by doing tasks, impostors by killing. Items are given randomly. Pet your pet to use item. Some items (knowledge, gun,illusion, finder and rope) works on nearest player. Other rules are just like in classic game. Random items works with special roles.
@@ -228,21 +229,24 @@ Teleports everyone to you. Only impostors can get this item.
 You sacrifice yourself in order to kill everyone nearby. Only impostors can get this item.
 
 ###### Game Options
-| Name               |
-| ------------------ |
-| Enable bomb        |
-| Bomb radius        |
-| Can kill impostors |
+| Name                     |
+| ------------------------ |
+| Enable bomb              |
+| Bomb radius              |
+| Can kill impostors       |
+| Show explosion animation |
 
 ##### Trap
 Place trap that kills first player touches it. Trap is completely invisible and works after few seconds from placing. Only impostors can get this item.
 
 ###### Game options
-| Name           |
-| -------------- |
-| Enable trap    |
-| Trap wait time |
-| Trap radius    |
+| Name               |
+| ------------------ |
+| Enable trap        |
+| Trap wait time     |
+| Trap radius        |
+| Crewmates see trap |
+| Impostors see trap |
 
 ##### Teleport
 Teleports you to random vent. Everyone can get this item.
@@ -304,7 +308,7 @@ Show arrow to all players for short period of time. Everyone can get this item.
 | Compass duration |
 
 ### Battle royale
-Everyone is impostors. Clik kill button to attack. If you get hit, you lose 1 live. When your lives drop down to 0, you die and lose. Last one alive wins! No reporting, emergiencies, venting and sabotaging. Depending on options you see arrow to nearst player.
+Everyone is impostor. Click kill button to attack. If you get hit, you lose 1 live. When your lives drop down to 0, you die and lose. Last one alive wins! No reporting, emergiencies, venting and sabotaging. Depending on options you see arrow to nearst player.
 
 #### Game options
 | Name                    |
@@ -312,6 +316,7 @@ Everyone is impostors. Clik kill button to attack. If you get hit, you lose 1 li
 | Lives                   |
 | Lives visible to others |
 | Arrow to nearest player |
+| Grace period            |
 
 ### Speedrun
 Everyone is crewmate. Finish tasks first to win. You can play alone - finish tasks as fast as you can!
@@ -332,7 +337,7 @@ Type (/color ID) command to change paint color. Pet your pet to paint. Paint som
 | Voting time   |
 
 ### Kill or die
-Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Last standing alive wins!
+Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!
 
 #### Game options
 | Name                      |
@@ -343,7 +348,7 @@ Game lasts for few round. Random player become killer every round. Killer need t
 | Arrow to nearest survivor |
 
 ### Zombies
-Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Zombies show up as dead during meetings. Special roles and sabotages are disabled. Depending on options you see arrow pointing to zombie(s).
+Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.
 
 #### Game options
 | Name                          |
@@ -395,6 +400,9 @@ The skeld, Dleks eht: There are 5 forbidden areas, where is illegal for prisoner
 | Escapists can help others   |
 | Help cooldown               |
 | Given resources             |
+| Prisoner armor price        |
+| Guard armor price           |
+| Armor protection            |
 
 ### Deathrun
 Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.
@@ -405,6 +413,7 @@ Deathrun is normal among us, but there are no cooldowns. There is no kill cooldo
 | Round cooldown     |
 | Disable meetings   |
 | Impostors can vent |
+| Amount of tasks    |
 
 ### Additional gamemodes
 Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.
@@ -479,4 +488,4 @@ Due to au sever changes people can't find your lobby with find game option. Play
 ## Credits
 1. Using some code from Town of Host
 2. Some code from Town Of Host: The Other Roles
-3. /tpout and /tpin from TOHE
+3. Many features from TOHE

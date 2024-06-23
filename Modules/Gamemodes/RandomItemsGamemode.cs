@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
     public class RandomItemsGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             NoItemTimer = 10f;
             if (exiled != null)
@@ -22,7 +24,8 @@ namespace MoreGamemodes
         public override void OnHudUpate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
-            if (player.GetItem() == Items.None || player.GetItem() == Items.Stop || player.GetItem() == Items.Newsletter)
+            __instance.ReportButton.OverrideText(player.GetItem() == Items.Medicine ? "Revive" : "Report");
+            if (player.GetItem() == Items.None || player.GetItem() == Items.Stop || player.GetItem() == Items.Newsletter || player.GetItem() == Items.Medicine)
             {
                 __instance.PetButton.SetDisabled();
                 __instance.PetButton.ToggleVisible(false);
@@ -72,6 +75,9 @@ namespace MoreGamemodes
                         break;
                     case Items.Trap:
                         __instance.PetButton.OverrideText("Place");
+                        break;
+                    case Items.TeamChanger:
+                        __instance.PetButton.OverrideText("Change");
                         break;
                     case Items.Teleport:
                         __instance.PetButton.OverrideText("Teleport");
@@ -213,8 +219,12 @@ namespace MoreGamemodes
                             if (task.Complete)
                                 completedTasksTarget.Add(task.Id);
                         }
-                        GameData.Instance.RpcSetTasks(pc.PlayerId, targetTasks.ToArray());
-                        GameData.Instance.RpcSetTasks(target.PlayerId, playerTasks.ToArray());
+                        pc.Data.RpcSetTasks(targetTasks.ToArray());
+                        if (!AntiCheat.ChangedTasks.Contains(pc.PlayerId))
+                            AntiCheat.ChangedTasks.Add(pc.PlayerId);
+                        target.Data.RpcSetTasks(playerTasks.ToArray());
+                        if (!AntiCheat.ChangedTasks.Contains(target.PlayerId))
+                            AntiCheat.ChangedTasks.Add(target.PlayerId);
                         new LateTask(() =>
                         {
                             NoItemGive = true;
@@ -295,17 +305,24 @@ namespace MoreGamemodes
                                 if (player.Data.Role.IsImpostor)
                                     winners.Add(player.PlayerId);
                             }
-                            CheckEndCriteriaPatch.StartEndGame(GameOverReason.ImpostorByKill, winners);            
+                            CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorByKill, winners);            
                         }
                         break;
                     case Items.Trap:
                         List<byte> visibleList = new();
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if ((!player.Data.Role.IsImpostor && Options.CrewmatesSeeTrap.GetBool()) || (player.Data.Role.IsImpostor && Options.ImpostorsSeeTrap.GetBool()) || player.Data.IsDead || player == pc)
+                            if ((!player.Data.Role.IsImpostor && Options.CrewmatesSeeTrap.GetBool()) || (player.Data.Role.IsImpostor && Options.ImpostorsSeeTrap.GetBool()) || player.Data.Role.IsDead || player == pc)
                                 visibleList.Add(player.PlayerId);
                         }
                         Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.transform.position, visibleList);
+                        pc.RpcSetItem(Items.None);
+                        break;
+                    case Items.TeamChanger:
+                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f || target.Data.Role.IsImpostor) break;
+                        var role = Options.TargetGetsYourRole.GetBool() ? pc.Data.Role.Role : RoleTypes.Impostor;
+                        target.RpcSetRoleV2(role);
+                        pc.RpcMurderPlayer(pc, true);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Teleport:
@@ -369,17 +386,39 @@ namespace MoreGamemodes
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
             if (CamouflageTimer > -1f) return false;
-            if (IsHackActive && Options.HackAffectsImpostors.GetBool()) return false;
+            if (IsHackActive && Options.HackAffectsImpostors.GetBool() && shapeshifter != target) return false;
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             if (IsHackActive && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
+            if (__instance.GetItem() == Items.Medicine && target != null && target.Object != null && !target.Disconnected)
+            {
+                var player = target.Object;
+                player.RpcRevive();
+                if (Options.DieOnRevive.GetBool())
+                {
+                    __instance.RpcSetDeathReason(DeathReasons.Suicide);
+                    __instance.RpcExileV2();
+                }
+                __instance.RpcSetItem(Items.None);
+                return false;
+            }
             if (CamouflageTimer > -1f)
             {
                 CamouflageTimer = -1f;
                 Utils.RevertCamouflage();
+            }
+            if (Options.EnableMedicine.GetBool())
+            {
+                foreach (var playerId in PlayersDiedThisRound)
+                {
+                    var player = Utils.GetPlayerById(playerId);
+                    if (player != null && !player.Data.Disconnected && !player.Data.IsDead)
+                        DestroyableSingleton<RoleManager>.Instance.AssignRoleOnDeath(player, true);
+                }
+                PlayersDiedThisRound.Clear();
             }
             return true;
         }
@@ -459,16 +498,22 @@ namespace MoreGamemodes
                 pc.RpcSetItem(Utils.RandomItemCrewmate());
         }
 
+        public override bool OnCheckVanish(PlayerControl phantom)
+        {
+            if (IsHackActive && Options.HackAffectsImpostors.GetBool()) return false;
+            return true;
+        }
+
         public override bool OnCloseDoors(ShipStatus __instance)
         {
             if (IsHackActive && Options.HackAffectsImpostors.GetBool()) return false;
             return true;
         }
 
-        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (IsHackActive && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
-            if (systemType == SystemTypes.MushroomMixupSabotage && amount == 1)
+            if (systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1)
                 CamouflageTimer = -1f;
             return true;
         }
@@ -490,6 +535,7 @@ namespace MoreGamemodes
             CompassTimer = new Dictionary<byte, float>();
             TimeSlowersUsed = 0;
             TimeSpeedersUsed = 0;
+            PlayersDiedThisRound = new List<byte>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 AllPlayersItems[pc.PlayerId] = Items.None;
@@ -511,6 +557,7 @@ namespace MoreGamemodes
         public Dictionary<byte, float> CompassTimer;
         public int TimeSlowersUsed;
         public int TimeSpeedersUsed;
+        public List<byte> PlayersDiedThisRound;
     }
 
     public enum Items
@@ -524,6 +571,7 @@ namespace MoreGamemodes
         Illusion,
         Radar,
         Swap,
+        Medicine,
         //impostor
         TimeSpeeder,
         Flash,
@@ -532,6 +580,7 @@ namespace MoreGamemodes
         MultiTeleport,
         Bomb,
         Trap,
+        TeamChanger,
         //both
         Teleport,
         Button,

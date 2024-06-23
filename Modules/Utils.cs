@@ -48,6 +48,7 @@ namespace MoreGamemodes
             if (Options.EnableIllusion.GetBool()) items.Add(Items.Illusion);
             if (Options.EnableRadar.GetBool()) items.Add(Items.Radar);
             if (Options.EnableSwap.GetBool()) items.Add(Items.Swap);
+            if (Options.EnableMedicine.GetBool()) items.Add(Items.Medicine);
             if (Options.EnableTeleport.GetBool()) items.Add(Items.Teleport);
             if (Options.EnableButton.GetBool()) items.Add(Items.Button);
             if (Options.EnableFinder.GetBool()) items.Add(Items.Finder);
@@ -70,6 +71,7 @@ namespace MoreGamemodes
             if (Options.EnableMultiTeleport.GetBool()) items.Add(Items.MultiTeleport);
             if (Options.EnableBomb.GetBool()) items.Add(Items.Bomb);
             if (Options.EnableTrap.GetBool()) items.Add(Items.Trap);
+            if (Options.EnableTeamChanger.GetBool()) items.Add(Items.TeamChanger);
             if (Options.EnableTeleport.GetBool()) items.Add(Items.Teleport);
             if (Options.EnableButton.GetBool()) items.Add(Items.Button);
             if (Options.EnableFinder.GetBool()) items.Add(Items.Finder);
@@ -99,6 +101,8 @@ namespace MoreGamemodes
                     return "Radar";
                 case Items.Swap:
                     return "Swap";
+                case Items.Medicine:
+                    return "Medicine";
                 case Items.TimeSpeeder:
                     return "Time Speeder";
                 case Items.Flash:
@@ -113,6 +117,8 @@ namespace MoreGamemodes
                     return "Bomb";
                 case Items.Trap:
                     return "Trap";
+                case Items.TeamChanger:
+                    return "Team Changer";
                 case Items.Teleport:
                     return "Teleport";
                 case Items.Button:
@@ -150,6 +156,8 @@ namespace MoreGamemodes
                     return "See if impostors are near";
                 case Items.Swap:
                     return "Swap tasks with someone";
+                case Items.Medicine:
+                    return "Revive a dead player (report)";
                 case Items.TimeSpeeder:
                     return "Decrease voting time";
                 case Items.Flash:
@@ -158,12 +166,14 @@ namespace MoreGamemodes
                     return "Prevent everyone from doing anything";
                 case Items.Camouflage:
                     return "Make everyone look the same";
-                case Items.Trap:
-                    return "Create deadly trap";
                 case Items.MultiTeleport:
                     return "Teleport everyone to you";
                 case Items.Bomb:
                     return "Sacrifice yourself to kill nearby players";
+                case Items.Trap:
+                    return "Create deadly trap";
+                case Items.TeamChanger:
+                    return "Turn someone into impostor";
                 case Items.Teleport:
                     return "Teleport to random vent";
                 case Items.Button:
@@ -201,6 +211,8 @@ namespace MoreGamemodes
                     return "Radar(Crewmate only): You see reactor flash if impostor is nearby.";
                 case Items.Swap:
                     return "Swap(Crewmate only): Swap your tasks with nearby player tasks.";
+                case Items.Medicine:
+                    return "Medicine(Crewmate only): Use report button to bring back dead player. But depending on options you die after using it";
                 case Items.TimeSpeeder:
                     return "Time Speeder(Impostor only): Increase discussion and voting time by amount in settings.";
                 case Items.Flash:
@@ -215,6 +227,8 @@ namespace MoreGamemodes
                     return "Bomb(Impostor only): Everyone near you die, but you sacrifice yourself. Depending on options explosion can kill other impostors. If no one is alive after explosion impostors still win! You can't use bomb 10 seconds after meeting or multi teleport.";
                 case Items.Trap:
                     return "Trap(Impostor only): Place trap that kills first player touches it. Trap is completely invisible and works after few seconds from placing.";
+                case Items.TeamChanger:
+                    return "Team Changer(Impostor only): You can turn nearby crewmate into impostor, but you die after doing it.";
                 case Items.Teleport:
                     return "Teleport(Both): Teleports you to random vents.";
                 case Items.Button:
@@ -387,17 +401,15 @@ namespace MoreGamemodes
         {
             MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(5);
+            writer.Write(AmongUsClient.Instance.GameId);
+            foreach (var playerInfo in GameData.Instance.AllPlayers)
             {
-                writer.Write(AmongUsClient.Instance.GameId);
                 writer.StartMessage(1);
-                {
-                    writer.WritePacked(GameData.Instance.NetId);
-                    GameData.Instance.Serialize(writer, true);
-                }
+                writer.WritePacked(playerInfo.NetId);
+                playerInfo.Serialize(writer, false);
                 writer.EndMessage();
             }
             writer.EndMessage();
-
             AmongUsClient.Instance.SendOrDisconnect(writer);
             writer.Recycle();
         }
@@ -429,6 +441,7 @@ namespace MoreGamemodes
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
+                .Write(deadBodyParent.Data.NetId)
                 .Write(colorId)
                 .EndRpc();
             PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 328;
@@ -459,16 +472,13 @@ namespace MoreGamemodes
                 writer.EndMessage();
             }
             sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
+                .Write(deadBodyParent.Data.NetId)
                 .Write(deadBodyParent.CurrentOutfit.ColorId)
                 .EndRpc();
-            GameData.PlayerInfo playerInfo = GameData.Instance.GetPlayerById(PlayerControl.LocalPlayer.PlayerId);
+            NetworkedPlayerInfo playerInfo = GameData.Instance.GetPlayerById(PlayerControl.LocalPlayer.PlayerId);
             writer.StartMessage(1);
-            {
-                writer.WritePacked(GameData.Instance.NetId);
-                writer.StartMessage(playerInfo.PlayerId);
-                playerInfo.Serialize(writer);
-                writer.EndMessage();
-            }
+            writer.WritePacked(playerInfo.NetId);
+            playerInfo.Serialize(writer, false);
             writer.EndMessage();
             sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.Shapeshift)
                 .WriteNetObject(GetPlayerById(Main.AllShapeshifts[PlayerControl.LocalPlayer.PlayerId]))
@@ -513,14 +523,29 @@ namespace MoreGamemodes
         {
             switch (tab)
             {
-                case TabGroup.MainSettings:
-                    return LoadSprite("MoreGamemodes.Resources.TabIcon_MainSettings.png", 100f);
+                case TabGroup.ModSettings:
+                    return LoadSprite("MoreGamemodes.Resources.TabIcon_ModSettings.png", 100f);
                 case TabGroup.GamemodeSettings:
                     return LoadSprite("MoreGamemodes.Resources.TabIcon_GamemodeSettings.png", 100f);
                 case TabGroup.AdditionalGamemodes:
                     return LoadSprite("MoreGamemodes.Resources.TabIcon_AdditionalGamemodes.png", 100f);
                 default:
                     return null;
+            }
+        }
+
+        public static string GetTabName(TabGroup tab)
+        {
+            switch (tab)
+            {
+                case TabGroup.ModSettings:
+                    return "Mod Settings";
+                case TabGroup.GamemodeSettings:
+                    return "Gamemode Settings";
+                case TabGroup.AdditionalGamemodes:
+                    return "Additional Gamemodes";
+                default:
+                    return "";
             }
         }
 
@@ -545,7 +570,7 @@ namespace MoreGamemodes
             }
             foreach (var id in bestPlayers)
                 winners.Add(id);
-            CheckEndCriteriaPatch.StartEndGame(GameOverReason.HumansByTask, winners);
+            CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByTask, winners);
         }
 
         public static string RoleToString(RoleTypes role, Gamemodes gamemode = Gamemodes.Classic)
@@ -564,6 +589,9 @@ namespace MoreGamemodes
             if (role == RoleTypes.Shapeshifter) return "Shapeshifter";
             if (role == RoleTypes.ImpostorGhost && (gamemode == Gamemodes.HideAndSeek || gamemode == Gamemodes.ShiftAndSeek)) return "Seeker Ghost";
             if (role == RoleTypes.ImpostorGhost) return "Impostor Ghost";
+            if (role == RoleTypes.Noisemaker) return "Noisemaker";
+            if (role == RoleTypes.Phantom) return "Phantom";
+            if (role == RoleTypes.Tracker) return "Tracker";
             return "???";
         }
 
@@ -592,7 +620,6 @@ namespace MoreGamemodes
 
         public static void SetChatVisible()
         {
-            if (AmongUsClient.Instance.GameState != AmongUsClient.GameStates.Started) return;
             if (GameManager.Instance.LogicFlow.IsGameOverDueToDeath()) return;
             MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
             MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
@@ -637,15 +664,73 @@ namespace MoreGamemodes
             new TrapArea(radius, waitDuration, position, visibleList);
         }
 
-        public static void ChangeGamemode(GameModes gamemode)
+        public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)
         {
-            if (gamemode != GameModes.None)
-                GameOptionsManager.Instance.SwitchGameMode(gamemode);
-            else
-                GameOptionsManager.Instance.currentGameMode = gamemode;
-            GameManager.Instance.Despawn();
-			GameManager gameManager = GameManagerCreator.CreateGameManager(GameOptionsManager.Instance.CurrentGameOptions.GameMode);
-			AmongUsClient.Instance.Spawn(gameManager, -2, SpawnFlags.None);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                new LateTask(() => SetDesyncRoleForPlayer(pc, selfRole, othersRole), 0f);
+        }
+
+        public static void SetDesyncRoleForPlayer(PlayerControl player, RoleTypes selfRole, RoleTypes othersRole)
+        {
+            int assignedRoles = 0;
+            int playerCount = 0;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc == player) continue;
+                ++playerCount;
+                if (pc.Data != null && (RpcSetRolePatch.RoleAssigned[pc.PlayerId] || pc.Data.Disconnected))
+                    ++assignedRoles;
+            }
+            if (assignedRoles >= playerCount)
+            {
+                RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
+                new LateTask(() => {
+                    Dictionary<byte, bool> Disconnected = new();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        Disconnected[pc.PlayerId] = pc.Data.Disconnected;
+                        pc.Data.Disconnected = true;
+                    }
+                    SendGameData();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                        pc.Data.Disconnected = Disconnected[pc.PlayerId];
+                }, 0.5f);
+                new LateTask(() => {
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, player.GetClientId());
+                    writer.Write((ushort)selfRole);
+                    writer.Write(true);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc == player) continue;
+                        MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, pc.GetClientId());
+                        writer2.Write((ushort)othersRole);
+                        writer2.Write(true);
+                        AmongUsClient.Instance.FinishRpcImmediately(writer2);
+                    }
+                }, 1f);
+                new LateTask(() => {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+						PlayerNameColor.Set(pc);
+					DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
+					DestroyableSingleton<HudManager>.Instance.HideGameLoader();
+                }, 1.2f);
+                new LateTask(() => SendGameData(), 1.5f);
+                return;
+            }
+            RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, player.GetClientId());
+            writer.Write((ushort)selfRole);
+            writer.Write(true);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc == player) continue;
+                MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, pc.GetClientId());
+                writer2.Write((ushort)othersRole);
+                writer2.Write(true);
+                AmongUsClient.Instance.FinishRpcImmediately(writer2);
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ namespace MoreGamemodes
             }
             if (!AmongUsClient.Instance.AmHost) return true;
             var cancel = Main.GameStarted && CustomGamemode.Instance != null && CustomGamemode.Instance.PetAction;
-            ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction);
+            ExternalRpcPetPatch.Prefix(__instance.MyPhysics, (byte)CustomRPC.PetAction, new MessageReader());
             if (cancel)
                 return false;
             return true;
@@ -25,11 +25,12 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleRpc))]
     class ExternalRpcPetPatch
     {
-        public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] byte callId)
+        public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!Main.GameStarted) return true;
             var rpcType = (RpcCalls)callId;
+            if (AntiCheat.PlayerPhysicsReceiveRpc(__instance, callId, reader)) return false;
             if (rpcType != RpcCalls.Pet && callId != 85) return true;
 
             PlayerControl pc = __instance.myPlayer;

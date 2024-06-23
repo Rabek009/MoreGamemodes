@@ -41,8 +41,9 @@ namespace MoreGamemodes
         public static bool CheckForInvalidProtection(PlayerControl guardian, PlayerControl target)
         {
 		    if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
+            if (!Main.GameStarted) return false;
 		    if (!target || guardian.Data.Disconnected) return false;
-		    GameData.PlayerInfo data = target.Data;
+		    NetworkedPlayerInfo data = target.Data;
 		    if (data == null || data.IsDead) return false;
             float minTime = Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f);
             if (TimeSinceLastProtect.TryGetValue(guardian.PlayerId, out var time) && time < minTime) return false;
@@ -90,8 +91,9 @@ namespace MoreGamemodes
         public static bool CheckForInvalidMurdering(PlayerControl killer, PlayerControl target)
         {
             if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
+            if (!Main.GameStarted) return false;
 		    if (!target || killer.Data.IsDead || killer.Data.Disconnected) return false;
-		    GameData.PlayerInfo data = target.Data;
+		    NetworkedPlayerInfo data = target.Data;
 		    if (data == null || data.IsDead || target.inVent || target.MyPhysics.Animations.IsPlayingEnterVentAnimation() || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.inMovingPlat) return false;
 		    if (MeetingHud.Instance) return false;
             float minTime = Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f);
@@ -113,8 +115,8 @@ namespace MoreGamemodes
             if (target.GetDeathReason() == DeathReasons.Alive)
                 target.RpcSetDeathReason(DeathReasons.Killed);
             CustomGamemode.Instance.OnMurderPlayer(killer, target);
-            if (target.Data.Role.IsImpostor && CustomGamemode.Instance.Gamemode != Gamemodes.BombTag && CustomGamemode.Instance.Gamemode != Gamemodes.BattleRoyale && CustomGamemode.Instance.Gamemode != Gamemodes.KillOrDie)
-                target.RpcSetRole(RoleTypes.ImpostorGhost);
+            if (Main.StandardRoles[target.PlayerId].IsImpostor() && CustomGamemode.Instance.Gamemode != Gamemodes.BombTag && CustomGamemode.Instance.Gamemode != Gamemodes.BattleRoyale && CustomGamemode.Instance.Gamemode != Gamemodes.KillOrDie)
+                target.RpcSetRole(RoleTypes.ImpostorGhost, true);
         }
     }
 
@@ -142,6 +144,7 @@ namespace MoreGamemodes
         public static bool CheckForInvalidShapeshifting(PlayerControl shapeshifter, PlayerControl target, bool shouldAnimate)
         {
             if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
+            if (!Main.GameStarted) return false;
 		    if (!target || target.Data == null || shapeshifter.Data.IsDead || shapeshifter.Data.Disconnected) return false;
 		    if (target.IsMushroomMixupActive() && shouldAnimate) return false;
             if (MeetingHud.Instance && shouldAnimate) return false;
@@ -179,17 +182,19 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.ReportDeadBody))]
     class ReportDeadBodyPatch
     {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] GameData.PlayerInfo target)
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] NetworkedPlayerInfo target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            if (target != null && !target.IsDead) return false;
             if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target)) return false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 foreach (var ar in PlayerControl.AllPlayerControls)
                     pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true), ar, true);  
             }
-            foreach (var netObject in CustomNetObject.CustomObjects)
+            foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
                 new LateTask(() => netObject.Despawn(), 0f);
+            AntiCheat.OnMeeting();
             return true;
         }
     }
@@ -221,9 +226,12 @@ namespace MoreGamemodes
                 }
             }
             if (Main.GameStarted)
+            {
                 CustomGamemode.Instance.OnFixedUpdate();
-            foreach (var netObject in CustomNetObject.CustomObjects)
-                netObject.OnFixedUpdate();
+                foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
+                    netObject.OnFixedUpdate();
+            }
+            AntiCheat.OnUpdate();         
             if (Options.MidGameChat.GetBool() && Options.ProximityChat.GetBool())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -291,13 +299,13 @@ namespace MoreGamemodes
         }
     }
 
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetRole))]
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CoSetRole))]
     class SetRolePatch
     {
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (!RoleManager.IsGhostRole(roleType) && !Main.StandardRoles.ContainsKey(__instance.PlayerId))
+            if (!RoleManager.IsGhostRole(roleType))
                 Main.StandardRoles[__instance.PlayerId] = roleType;
         }
     }
@@ -305,32 +313,55 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcSetRole))]
     class RpcSetRolePatch
     {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
+        public static Dictionary<byte, bool> RoleAssigned;
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType, [HarmonyArgument(1)] bool canOverrideRole)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (Main.StandardRoles.ContainsKey(__instance.PlayerId) && !RoleManager.IsGhostRole(roleType))
+            if (RoleAssigned[__instance.PlayerId] && !RoleManager.IsGhostRole(roleType))
                 return false;
-            if (CustomGamemode.Instance.Gamemode != Gamemodes.Zombies) return true;
-            if (RoleManager.IsGhostRole(roleType)) return false;
-            if (roleType == RoleTypes.Crewmate)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && RoleManager.IsGhostRole(roleType))
+                return false;
+            if (!canOverrideRole)
             {
-                __instance.Data.Disconnected = true;
-                GameData.Instance.SetDirty();
-                new LateTask(() =>{
-                    if (__instance != null)
-                    {
-                        if (__instance.Data != null && !Main.Disconnected[__instance.PlayerId])
-                        {
-                            __instance.Data.Disconnected = false;
-                            GameData.Instance.SetDirty();
-                        }
-                        Main.StandardRoles[__instance.PlayerId] = RoleTypes.Crewmate;
-                    }
-                }, 1f, "ResetDisconnect");
+                __instance.RpcSetRole(roleType, true);
                 return false;
             }
-            new LateTask(() => __instance.RpcSetRoleV2(roleType), 0.5f);
-            return false;
+            if (RoleManager.IsGhostRole(roleType)) return true;
+            int assignedRoles = 0;
+            int playerCount = 0;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc == __instance) continue;
+                ++playerCount;
+                if (pc.Data != null && (RoleAssigned[pc.PlayerId] || pc.Data.Disconnected))
+                    ++assignedRoles;
+            }
+            if (assignedRoles >= playerCount)
+            {
+                RoleAssigned[__instance.PlayerId] = true;
+                new LateTask(() => {
+                    Dictionary<byte, bool> Disconnected = new();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        Disconnected[pc.PlayerId] = pc.Data.Disconnected;
+                        pc.Data.Disconnected = true;
+                    }
+                    Utils.SendGameData();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                        pc.Data.Disconnected = Disconnected[pc.PlayerId];
+                }, 0.5f);
+                new LateTask(() => __instance.RpcSetRoleV3(roleType), 1f);
+                new LateTask(() => {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+						PlayerNameColor.Set(pc);
+					DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
+					DestroyableSingleton<HudManager>.Instance.HideGameLoader();
+                }, 1.2f);
+                new LateTask(() => Utils.SendGameData(), 1.5f);
+                return false;
+            }
+            RoleAssigned[__instance.PlayerId] = true;
+            return true;
         }
     }
 
@@ -360,11 +391,21 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Die))]
     class PlayerDiePatch
     {
-        public static void Prefix(PlayerControl __instance)
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] DeathReason reason, [HarmonyArgument(1)] bool assignGhostRole)
         {
-            if (!AmongUsClient.Instance.AmHost) return;
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && reason == DeathReason.Kill && Options.EnableMedicine.GetBool() && assignGhostRole)
+            {
+                __instance.Die(reason, false);
+                RandomItemsGamemode.instance.PlayersDiedThisRound.Add(__instance.PlayerId);
+                return false;
+            }
             if (CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
                 __instance.RpcSetPet("");
+            new LateTask(() => {
+                AntiCheat.IsDead[__instance.PlayerId] = true;
+            }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
+            return true;
         }
     }
 
@@ -424,11 +465,51 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (AmongUsClient.Instance.AmClient)
 		    {
-			    __instance.SetName(name, false);
+			    __instance.SetName(name);
 		    }
 		    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
-		    writer.Write(name);
+		    writer.Write(__instance.Data.NetId);
+            writer.Write(name);
 		    AmongUsClient.Instance.FinishRpcImmediately(writer);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckVanish))]
+    class CmdCheckVanishPatch
+    {
+        public static bool Prefix(PlayerControl __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            __instance.CheckVanish();
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckAppear))]
+    class CmdCheckAppearPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] bool shouldAnimate)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            __instance.CheckAppear(shouldAnimate);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckVanish))]
+    class CheckVanishPatch
+    {
+        public static bool Prefix(PlayerControl __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            PlayerControl phantom = __instance;
+            if (CustomGamemode.Instance.OnCheckVanish(phantom))
+            {
+                phantom.SyncPlayerSettings();
+                phantom.SetRoleInvisibility(true, true, true);
+                phantom.RpcVanish();
+            }     
             return false;
         }
     }

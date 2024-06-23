@@ -9,7 +9,48 @@ namespace MoreGamemodes
     {
         public void RpcChangeSprite(string sprite)
         {
-            playerControl.RpcSetName(sprite);
+            new LateTask(() => {
+                playerControl.RawSetName("<size=18><br></size>" + sprite);
+                var name = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PlayerName;
+                var colorId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].ColorId;
+                var hatId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].HatId;
+                var skinId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].SkinId;
+                var petId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PetId;
+                var visorId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].VisorId;
+                CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.None);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(-1);
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=18><br></size>" + sprite;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].ColorId = 255;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].HatId = "";
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].SkinId = "";
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PetId = "";
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].VisorId = "";
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.Data.NetId);
+                    PlayerControl.LocalPlayer.Data.Serialize(writer, false);
+                }
+                writer.EndMessage();
+                sender.StartRpc(playerControl.NetId, (byte)RpcCalls.Shapeshift)
+                    .WriteNetObject(PlayerControl.LocalPlayer)
+                    .Write(false)
+                    .EndRpc();
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PlayerName = name;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].ColorId = colorId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].HatId = hatId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].SkinId = skinId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PetId = petId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].VisorId = visorId;
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.Data.NetId);
+                    PlayerControl.LocalPlayer.Data.Serialize(writer, false);
+                }
+                writer.EndMessage();
+                sender.EndMessage();
+                sender.SendMessage();
+            }, 0f);
         }
 
         public void RpcTeleport(Vector2 position)
@@ -81,9 +122,48 @@ namespace MoreGamemodes
             if (PlayerControl.AllPlayerControls.Contains(playerControl))
                 PlayerControl.AllPlayerControls.Remove(playerControl);
             new LateTask(() => {
-                playerControl.RpcSetName(sprite);
                 playerControl.NetTransform.RpcSnapTo(position);
-            }, 0.1f);
+                playerControl.RawSetName("<size=18><br></size>" + sprite);
+                var name = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PlayerName;
+                var colorId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].ColorId;
+                var hatId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].HatId;
+                var skinId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].SkinId;
+                var petId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PetId;
+                var visorId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].VisorId;
+                CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.None);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(-1);
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=18><br></size>" + sprite;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].ColorId = 255;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].HatId = "";
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].SkinId = "";
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PetId = "";
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].VisorId = "";
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.Data.NetId);
+                    PlayerControl.LocalPlayer.Data.Serialize(writer, false);
+                }
+                writer.EndMessage();
+                sender.StartRpc(playerControl.NetId, (byte)RpcCalls.Shapeshift)
+                    .WriteNetObject(PlayerControl.LocalPlayer)
+                    .Write(false)
+                    .EndRpc();
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PlayerName = name;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].ColorId = colorId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].HatId = hatId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].SkinId = skinId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PetId = petId;
+                PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].VisorId = visorId;
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.Data.NetId);
+                    PlayerControl.LocalPlayer.Data.Serialize(writer, false);
+                }
+                writer.EndMessage();
+                sender.EndMessage();
+                sender.SendMessage();
+            }, 0.2f);
             Position = position;
             playerControl.cosmetics.currentBodySprite.BodySprite.color = Color.clear;
             playerControl.cosmetics.colorBlindText.color = Color.clear;

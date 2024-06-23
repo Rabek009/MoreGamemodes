@@ -1,12 +1,13 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
     public class KillOrDieGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -94,27 +95,10 @@ namespace MoreGamemodes
             }
         }
 
-        public override void OnSelectRolesPrefix()
+        public override bool OnSelectRolesPrefix()
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.AmOwner)
-                    pc.SetRole(RoleTypes.Shapeshifter);
-                else
-                    pc.SetRole(RoleTypes.Crewmate);
-            }
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {   
-                if (!pc.AmOwner)
-                {
-                    pc.RpcSetDesyncRole(RoleTypes.Shapeshifter, pc.GetClientId());
-                    foreach (var ar in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc != ar)
-                            ar.RpcSetDesyncRole(RoleTypes.Crewmate, pc.GetClientId());
-                    }
-                }
-            }
+            Utils.RpcSetDesyncRoles(RoleTypes.Shapeshifter, RoleTypes.Crewmate);
+            return false;
         }
 
         public override void OnSelectRolesPostfix()
@@ -197,7 +181,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }
@@ -215,6 +199,7 @@ namespace MoreGamemodes
             }
             if (Main.Timer >= Options.TimeToKill.GetInt() + Options.KillerBlindTime.GetFloat() + 1f)
             {
+                Application.ForceCrash(1);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.IsKiller() && !pc.Data.IsDead)
@@ -256,7 +241,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;

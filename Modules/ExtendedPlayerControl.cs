@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Data;
 using System;
 
+using Object = UnityEngine.Object;
+
 namespace MoreGamemodes
 {
     static class ExtendedPlayerControl
@@ -38,7 +40,7 @@ namespace MoreGamemodes
 
         public static void RpcRandomVentTeleport(this PlayerControl player)
         {
-            var vents = UnityEngine.Object.FindObjectsOfType<Vent>();
+            var vents = Object.FindObjectsOfType<Vent>();
             var rand = new System.Random();
             var vent = vents[rand.Next(0, vents.Count)];
             player.RpcTeleport(new Vector2(vent.transform.position.x, vent.transform.position.y + 0.3636f));
@@ -50,12 +52,23 @@ namespace MoreGamemodes
             Main.MessagesToSend.Add((message, player.PlayerId, title));
         }
 
-        public static void RpcSetDesyncRole(this PlayerControl player, RoleTypes role, int clientId)
+        public static void RpcSetDesyncRole(this PlayerControl player, RoleTypes role, PlayerControl seer)
         {
-            if (player == null) return;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, clientId);
+            if (player == null || seer == null) return;
+            if (player.AmOwner)
+            {
+                player.StartCoroutine(player.CoSetRole(role, true));
+                return;
+            }
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, seer.GetClientId());
             writer.Write((ushort)role);
+            writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
+            if (Main.DesyncRoles.ContainsKey((player.PlayerId, seer.PlayerId)) && role == Main.StandardRoles[player.PlayerId])
+                Main.DesyncRoles.Remove((player.PlayerId, seer.PlayerId));
+            if (!Main.DesyncRoles.ContainsKey((player.PlayerId, seer.PlayerId)) && role != Main.StandardRoles[player.PlayerId])
+                Main.DesyncRoles.Add((player.PlayerId, seer.PlayerId), role);
+            AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
         }
 
         public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
@@ -72,6 +85,7 @@ namespace MoreGamemodes
             }
             var clientId = seer.GetClientId();
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, clientId);
+            writer.Write(player.Data.NetId);
             writer.Write(name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
@@ -144,7 +158,7 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie)
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies)
-                return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (player.IsZombie() && Options.ZombiesCanVent.GetBool());
+                return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (player.IsZombie() && Options.ZombiesCanVent.GetBool()) || (Main.StandardRoles[player.PlayerId] == RoleTypes.Engineer && !player.IsZombie() && player.KillsRemain() <= 0);
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
                 return player.IsGuard() || player.HasItem(InventoryItems.Screwdriver);
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun && !Options.DrImpostorsCanVent.GetBool() && player.Data.Role.IsImpostor)
@@ -161,7 +175,7 @@ namespace MoreGamemodes
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
             {
-                if (!p.Data.IsDead && p != player && (!forTarget || !(p.inVent || p.MyPhysics.Animations.IsPlayingEnterVentAnimation() || p.onLadder || p.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || p.inMovingPlat)))
+                if (!p.Data.IsDead && p != player && (!forTarget || !(p.inVent || p.MyPhysics.Animations.IsPlayingEnterVentAnimation() || p.onLadder || p.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || p.inMovingPlat || (p.Data.Role.Role == RoleTypes.Phantom && (p.Data.Role as PhantomRole).IsInvisible))))
                 {
                     dis = Vector2.Distance(playerpos, p.transform.position);
                     pcdistance.Add(p, dis);
@@ -290,7 +304,7 @@ namespace MoreGamemodes
 
         public static IGameOptions BuildGameOptions(this PlayerControl player, float killCooldown = -1f)
         {
-            IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV07(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
+            IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV08(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
             switch (CustomGamemode.Instance.Gamemode)
             {
                 case Gamemodes.HideAndSeek:
@@ -306,6 +320,9 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 15, 100);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 15, 100);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
                     if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
                     {
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
@@ -318,6 +335,9 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
                     opt.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
                     opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.ExplosionDelay.GetInt() + 0.1f);
                     opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
@@ -343,6 +363,10 @@ namespace MoreGamemodes
                         opt.SetFloat(FloatOptionNames.EngineerCooldown, 0.001f);
                         opt.SetFloat(FloatOptionNames.ScientistBatteryCharge, 1f);
                         opt.SetFloat(FloatOptionNames.ScientistCooldown, 0.001f);
+                        opt.SetFloat(FloatOptionNames.ScientistBatteryCharge, 1f);
+                        opt.SetFloat(FloatOptionNames.TrackerCooldown, 0.001f);
+                        opt.SetFloat(FloatOptionNames.TrackerDuration, 1f);
+                        opt.SetFloat(FloatOptionNames.TrackerDelay, 255f);
                     }
                     break;
                 case Gamemodes.BattleRoyale:
@@ -351,14 +375,31 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
                     opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
                     opt.SetFloat(FloatOptionNames.KillCooldown, Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
                     break;
                 case Gamemodes.Speedrun:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
                     break;
                 case Gamemodes.PaintBattle:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
                     opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, Options.PaintingTime.GetInt() + 1f);
                     opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
                     opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
@@ -369,6 +410,9 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
                     opt.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
                     opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.TimeToKill.GetInt() + Options.KillerBlindTime.GetFloat() + 0.1f);
                     opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
@@ -382,24 +426,27 @@ namespace MoreGamemodes
                     }
                     break;
                 case Gamemodes.Zombies:
-                    opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
-                    opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
-                    opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
-                    opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
                     if (player.IsZombie())
                     {
                         if (Main.Timer >= Options.ZombieBlindTime.GetFloat() && player.GetZombieType() != ZombieTypes.JustTurned)
                         {
                             opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Options.ZombieSpeed.GetFloat());
                             opt.SetFloat(FloatOptionNames.ImpostorLightMod, Options.ZombieVision.GetFloat());
+                            opt.SetFloat(FloatOptionNames.CrewLightMod, Options.ZombieVision.GetFloat());
                         }
                         else
                         {
                             opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
                             opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                            opt.SetFloat(FloatOptionNames.CrewLightMod, 0f);
                         }
                         opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
                     }
+                    if (Main.StandardRoles.ContainsKey(player.PlayerId) && !Main.StandardRoles[player.PlayerId].IsImpostor() && !player.IsZombie())
+                    {
+                        opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
+                        opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
+                    } 
                     break;
                 case Gamemodes.Jailbreak:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
@@ -407,6 +454,9 @@ namespace MoreGamemodes
                     opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
                     opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+                    opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
                     opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 1f);
                     opt.SetFloat(FloatOptionNames.ShapeshifterDuration, 0f);
                     opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, Options.HelpCooldown.GetFloat());
@@ -421,7 +471,7 @@ namespace MoreGamemodes
                     break;
                 case Gamemodes.Deathrun:
                     opt.SetInt(Int32OptionNames.NumCommonTasks, 0);
-                    opt.SetInt(Int32OptionNames.NumShortTasks, 1);
+                    opt.SetInt(Int32OptionNames.NumShortTasks, Options.AmountOfTasks.GetInt());
                     opt.SetInt(Int32OptionNames.NumLongTasks, 0);
                     if (Main.Timer < Options.RoundCooldown.GetFloat())
                     {
@@ -462,7 +512,7 @@ namespace MoreGamemodes
                         name += "\n" + Utils.ColorString(Color.green, Utils.GetArrow(player.transform.position, player.GetClosestNonBombed().transform.position));
                     break;
                 case Gamemodes.RandomItems:
-                    if (player.GetItem() != Items.None && (player == seer || seer.Data.IsDead))
+                    if (player.GetItem() != Items.None && (player == seer || seer.Data.Role.IsDead))
                         name += "\n" + Utils.ColorString(Color.magenta, Utils.ItemString(player.GetItem()) + ": " + Utils.ItemDescription(player.GetItem()));
                     if (RandomItemsGamemode.instance.ShieldTimer[player.PlayerId] > 0f && (player == seer || seer.Data.IsDead))
                         name += "\n" + Utils.ColorString(Color.cyan, "Shield: " + (int)(RandomItemsGamemode.instance.ShieldTimer[player.PlayerId] + 0.99f) + "s");
@@ -727,9 +777,29 @@ namespace MoreGamemodes
 
         public static void RpcSetRoleV2(this PlayerControl player, RoleTypes role)
         {
-            player.SetRole(role);
+            if (player == null) return;
+            Main.StandardRoles[player.PlayerId] = role;
+            AntiCheat.IsDead[player.PlayerId] = role is RoleTypes.GuardianAngel or RoleTypes.CrewmateGhost or RoleTypes.ImpostorGhost;
+            player.StartCoroutine(player.CoSetRole(role, true));
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);
+            writer.Write(true);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)))
+                    Main.DesyncRoles.Remove((player.PlayerId, pc.PlayerId));
+            }
+            AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
+        }
+
+        public static void RpcSetRoleV3(this PlayerControl player, RoleTypes role)
+        {
+            if (player == null) return;
+            player.StartCoroutine(player.CoSetRole(role, true));
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
+            writer.Write((ushort)role);
+            writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -823,7 +893,7 @@ namespace MoreGamemodes
             player.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Escapist);
             player.RpcShapeshift(player, false);
             player.RpcSetDeathReason(DeathReasons.Escaped);
-            player.RpcSetRole(RoleTypes.GuardianAngel);
+            player.RpcSetRole(RoleTypes.GuardianAngel, true);
             player.RpcResetAbilityCooldown();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -868,7 +938,7 @@ namespace MoreGamemodes
             return target;
         }
 
-        public static void ForceReportDeadBody(this PlayerControl player, GameData.PlayerInfo target)
+        public static void ForceReportDeadBody(this PlayerControl player, NetworkedPlayerInfo target)
         {
             if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost)
 		    {
@@ -877,6 +947,41 @@ namespace MoreGamemodes
             MeetingRoomManager.Instance.AssignSelf(player, target);
             DestroyableSingleton<HudManager>.Instance.OpenMeetingRoom(player);
 		    player.RpcStartMeeting(target);
+        }
+
+        public static void RpcRevive(this PlayerControl player)
+        {
+            if (!Main.StandardRoles.ContainsKey(player.PlayerId))
+            {
+                player.RpcSetRoleV2(RoleTypes.Crewmate);
+                PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
+                return;
+            }
+            player.RpcSetRoleV2(Main.StandardRoles[player.PlayerId]);
+            player.SyncPlayerSettings();
+            player.RpcSetKillTimer(10f);
+            player.RpcResetAbilityCooldown();
+            foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
+            {
+                if (deadBody.ParentId == player.PlayerId)
+                {
+                    var position = deadBody.transform.position;
+                    player.RpcTeleport(new Vector2(position.x, position.y + 0.3636f));
+                    break;
+                }
+            }
+            player.RpcSetPet(Main.StandardPets[player.PlayerId]);
+            PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
+        }
+
+        public static bool HasTask(this PlayerControl player, TaskTypes taskType)
+        {
+            foreach (var task in player.myTasks)
+            {
+                if (task.TaskType == taskType)
+                    return true;
+            }
+            return false;
         }
     }
 }

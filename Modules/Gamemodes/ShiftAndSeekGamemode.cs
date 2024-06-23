@@ -1,12 +1,13 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
     public class ShiftAndSeekGamemode : CustomGamemode
     {
-        public override void OnExile(GameData.PlayerInfo exiled)
+        public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
             Utils.SyncAllSettings();
@@ -108,14 +109,17 @@ namespace MoreGamemodes
         public override void OnSelectRolesPostfix()
         {
             if (Options.SnSImpostorsAreVisible.GetBool()) return;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.Data.Role.IsImpostor)
+            new LateTask(() => {
+                foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    foreach (var ar in PlayerControl.AllPlayerControls)
-                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
+                    if (pc.Data.Role.IsImpostor)
+                    {
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
+                    }
                 }
-            }
+            }, 1.2f);
+            
         }
 
         public override void OnIntroDestroy()
@@ -123,7 +127,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.Data.Role.IsImpostor)
-                    GameData.Instance.RpcSetTasks(pc.PlayerId, new byte[0]);
+                    pc.Data.RpcSetTasks(new byte[0]);
             }
         }
 
@@ -145,7 +149,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, GameData.PlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
             return false;
         }
@@ -165,7 +169,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, byte amount)
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;
