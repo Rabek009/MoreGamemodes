@@ -223,3 +223,9 @@ public enum DeathReasons
     Trapped,
     Escaped,
 }
+
+public enum CustomObjectTypes
+{
+    Explosion,
+    TrapArea,
+}

@@ -13,19 +13,19 @@ namespace MoreGamemodes
         private static PassiveButton template;
         private static PassiveButton discordButton;
         private static PassiveButton gitHubButton;
-        public static SpriteRenderer MG_Logo;
+        public static SpriteRenderer MGM_Logo;
 
         [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.VeryHigh)]
         public static void StartPriorityPostfix(MainMenuManager __instance)
         {
             var rightpanel = __instance.gameModeButtons.transform.parent;
-            var logoObject = new GameObject("titleLogo_MG");
+            var logoObject = new GameObject("titleLogo_MGM");
             var logoTransform = logoObject.transform;
-            MG_Logo = logoObject.AddComponent<SpriteRenderer>();
+            MGM_Logo = logoObject.AddComponent<SpriteRenderer>();
             logoTransform.parent = rightpanel;
             logoTransform.localPosition = new(0f, 0.15f, 1f);
             logoTransform.localScale *= 1.2f;
-            MG_Logo.sprite = Utils.LoadSprite("MoreGamemodes.Resources.MoreGamemodes-Logo.png", 400f);
+            MGM_Logo.sprite = Utils.LoadSprite("MoreGamemodes.Resources.MoreGamemodes-Logo.png", 400f);
         }
 
         [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.Normal)]
@@ -116,17 +116,17 @@ namespace MoreGamemodes
         [HarmonyPostfix]
         public static void OpenMenuPostfix()
         {
-            if (MG_Logo != null)
+            if (MGM_Logo != null)
             {
-                MG_Logo.gameObject.SetActive(false);
+                MGM_Logo.gameObject.SetActive(false);
             }
         }
         [HarmonyPatch(nameof(MainMenuManager.ResetScreen)), HarmonyPostfix]
         public static void ResetScreenPostfix()
         {
-            if (MG_Logo != null)
+            if (MGM_Logo != null)
             {
-                MG_Logo.gameObject.SetActive(true);
+                MGM_Logo.gameObject.SetActive(true);
             }
         }
     }

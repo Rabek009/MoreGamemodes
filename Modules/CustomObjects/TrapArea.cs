@@ -19,6 +19,7 @@ namespace MoreGamemodes
                 RpcChangeSprite($"<size={Size}><font=\"VCR SDF\"><#ff000069>●");
                 State = 2;
             }
+            base.OnFixedUpdate();
             if (Timer < WaitDuration) return;
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
@@ -50,10 +51,11 @@ namespace MoreGamemodes
             Timer = -0.1f;
             WaitDuration = waitDuration;
             State = 0;
-            CreateNetObject($"<size={Size}><font=\"VCR SDF\"><#c7c7c769>●", position);
+            VisibleList = visibleList;
+            CreateNetObject($"<size={Size}><font=\"VCR SDF\"><#c7c7c769>●", position, CustomObjectTypes.TrapArea);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!visibleList.Contains(pc.PlayerId))
+                if (!VisibleList.Contains(pc.PlayerId))
                     Hide(pc);
             }
         }
@@ -63,5 +65,6 @@ namespace MoreGamemodes
         public float Timer;
         public float WaitDuration;
         public int State;
+        public List<byte> VisibleList;
     }
 }

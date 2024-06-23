@@ -75,6 +75,7 @@ namespace MoreGamemodes
         {
             if (player == null || name == null || !AmongUsClient.Instance.AmHost) return;
             if (seer == null) seer = player;
+            if (AntiCheat.BannedPlayers.Contains(player.NetId)) return;
             if (Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] == name && !isRaw) return;
             
             if (seer.AmOwner)

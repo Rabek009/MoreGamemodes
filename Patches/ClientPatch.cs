@@ -77,29 +77,33 @@ namespace MoreGamemodes
         }
     }
 
-    // [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnBecomeHost))]
-    // class OnBecomeHostPatch
-    // {
-    //     public static void Postfix(AmongUsClient __instance)
-    //     {
-    //         if (__instance.IsGameStarted)
-    //         {
-    //             List<byte> winners = new();
-    //             foreach (var pc in PlayerControl.AllPlayerControls)
-    //                 winners.Add(pc.PlayerId);
-    //             CheckEndCriteriaPatch.StartEndGame(GameOverReason.HumansByVote, winners);
-    //         }
-    //         else
-    //         {
-    //             AntiCheat.Init();
-    //             PlayerControl.LocalPlayer.RpcSendMessage("You are new host! Now this lobby modded with More Gamemodes v" + Main.CurrentVersion + "!", "Host");
-    //             foreach (var pc in PlayerControl.AllPlayerControls)
-    //             {
-    //                 if (!pc.AmOwner)
-    //                     pc.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-    //             }
-    //             PlayerControl.LocalPlayer.RpcRequestVersionCheck();
-    //         }
-    //     }
-    // }
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnBecomeHost))]
+    class OnBecomeHostPatch
+    {
+        public static void Postfix(AmongUsClient __instance)
+        {
+            if (__instance.IsGameStarted)
+            {
+                new LateTask(() => {
+                    List<byte> winners = new();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                        winners.Add(pc.PlayerId);
+                    CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
+                }, 0.5f);
+            }
+            else
+            {
+                AntiCheat.Init();
+                new LateTask(() => {
+                    PlayerControl.LocalPlayer.RpcSendMessage("You are new host! Now this lobby is modded with More Gamemodes v" + Main.CurrentVersion + "!", "Host");
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (!pc.AmOwner)
+                            pc.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
+                    }
+                    PlayerControl.LocalPlayer.RpcRequestVersionCheck();
+                }, 0.5f);
+            }
+        }
+    }
 }

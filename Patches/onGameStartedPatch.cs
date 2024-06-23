@@ -67,12 +67,7 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             Utils.SyncAllSettings();
-            if (!CustomGamemode.Instance.OnSelectRolesPrefix())
-            {
-                Postfix();
-                return false;
-            }
-            return true;
+            return CustomGamemode.Instance.OnSelectRolesPrefix();
         }
         public static void Postfix()
         {

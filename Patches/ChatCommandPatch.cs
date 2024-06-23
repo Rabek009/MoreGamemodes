@@ -573,51 +573,51 @@ namespace MoreGamemodes
                     {
                         case "classic":
                             Options.Gamemode.SetValue(0);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is classic", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is classic", "ModesChanger");
                             break;
                         case "hideandseek":
                             Options.Gamemode.SetValue(1);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is hide and seek", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is hide and seek", "ModesChanger");
                             break;
                         case "shiftandseek":
                             Options.Gamemode.SetValue(2);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is shift and seek", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is shift and seek", "ModesChanger");
                             break;
                         case "bombtag":
                             Options.Gamemode.SetValue(3);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is bomb tag", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is bomb tag", "ModesChanger");
                             break;
                         case "randomitems":
                             Options.Gamemode.SetValue(4);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is random items", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is random items", "ModesChanger");
                             break;
                         case "battleroyale":
                             Options.Gamemode.SetValue(5);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is battle royale", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is battle royale", "ModesChanger");
                             break;
                         case "speedrun":
                             Options.Gamemode.SetValue(6);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is speedrun", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is speedrun", "ModesChanger");
                             break;
                         case "paintbattle":
                             Options.Gamemode.SetValue(7);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is paint battle", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is paint battle", "ModesChanger");
                             break;
                         case "killordie":
                             Options.Gamemode.SetValue(8);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is kill or die", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is kill or die", "ModesChanger");
                             break;
                         case "zombies":
                             Options.Gamemode.SetValue(9);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is zombies", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is zombies", "ModesChanger");
                             break;
                         case "jailbreak":
                             Options.Gamemode.SetValue(10);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is jailbreak", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is jailbreak", "ModesChanger");
                             break;
                         case "deathrun":
                             Options.Gamemode.SetValue(11);
-                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is deathrun", "GamemodesChanger");
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is deathrun", "ModesChanger");
                             break;
                     }
                     break;       
@@ -1220,6 +1220,7 @@ namespace MoreGamemodes
                             var player_ids = "";
                             foreach (var pc in PlayerControl.AllPlayerControls)
                             {
+                                if (AntiCheat.BannedPlayers.Contains(pc.NetId)) continue;
                                 player_ids += pc.Data.PlayerName;
                                 player_ids += " - ";
                                 player_ids += pc.PlayerId;
@@ -2093,6 +2094,7 @@ namespace MoreGamemodes
                             var player_ids = "";
                             foreach (var pc in PlayerControl.AllPlayerControls)
                             {
+                                if (AntiCheat.BannedPlayers.Contains(pc.NetId)) continue;
                                 player_ids += pc.Data.PlayerName;
                                 player_ids += " - ";
                                 player_ids += pc.PlayerId;
