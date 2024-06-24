@@ -31,4 +31,4 @@ jobs:
       - uses: actions/upload-artifact@v4.3.3
         with:
           name: MoreGameModes.dll
-          path: MoreGamemodes/MoreGamemodes/bin/Release/net6.0/MoreGamemodes.dll
+          path: bin/Release/net6.0/MoreGamemodes.dll
