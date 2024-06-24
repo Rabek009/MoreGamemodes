@@ -19,6 +19,19 @@ namespace MoreGamemodes
             var client = player.GetClient();
             return client == null ? -1 : client.Id;
         }
+
+        public static ClientData GetClientById(int id)
+        {
+            try 
+            {
+                var client =  AmongUsClient.Instance.allClients.ToArray().FirstOrDefault(cd => cd.Id == id);
+                return client;
+            }
+            catch
+            {
+                return null;
+            }
+        }
         public static InnerNet.ClientData GetClient(this PlayerControl player)
         {
             var client = AmongUsClient.Instance.allClients.ToArray().Where(cd => cd.Character.PlayerId == player.PlayerId).FirstOrDefault();

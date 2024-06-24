@@ -4,13 +4,14 @@ using System.Collections.Generic;
 
 namespace MoreGamemodes
 {
-    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CreatePlayer))]
-    class CreatePlayerPatch
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn))]
+   static class InnerNetClientSpawnPatch
     {
-        public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
+        public static void Postfix(/*AmongUsClient __instance*/ [HarmonyArgument(1)] int ownerId, [HarmonyArgument(2)] SpawnFlags flags)
         {
-            if (!__instance.AmHost) return;
-            if (client.Id == __instance.ClientId)
+              if (AmongUsClient.Instance.AmHost  || flags != SpawnFlags.IsClientCharacter) return;
+            ClientData client = Utils.GetClientById(ownerId);
+            if (client.Character.AmOwner)
             {
                 AntiCheat.Init();
                 return;
