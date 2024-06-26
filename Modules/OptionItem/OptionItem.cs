@@ -22,6 +22,7 @@ namespace MoreGamemodes
         public Gamemodes Gamemode { get; protected set; }
         public bool IsHeader { get; protected set; }
         public bool IsHidden { get; protected set; }
+        public bool IsText { get; protected set; }
         public Dictionary<string, string> ReplacementDictionary
         {
             get => _replacementDictionary;
@@ -65,11 +66,12 @@ namespace MoreGamemodes
             Gamemode = Gamemodes.All;
             IsHeader = false;
             IsHidden = false;
+            IsText = false;
 
             Children = new();
 
             AllConfigEntries = new ConfigEntry<int>[10];
-            if (Id == 0)
+            if (Id == 1)
             {
                 singleEntry = Main.Instance.Config.Bind("Current Preset", id.ToString(), DefaultValue);
                 CurrentPreset = singleEntry.Value;
@@ -100,6 +102,7 @@ namespace MoreGamemodes
         public OptionItem SetGamemode(Gamemodes value) => Do(i => i.Gamemode = value);
         public OptionItem SetHeader(bool value) => Do(i => i.IsHeader = value);
         public OptionItem SetHidden(bool value) => Do(i => i.IsHidden = value);
+        public OptionItem SetText(bool value) => Do(i => i.IsHidden = value);
 
         public OptionItem SetParent(OptionItem parent) => Do(i =>
         {
@@ -146,7 +149,12 @@ namespace MoreGamemodes
             if (ValueFormat == OptionFormat.Percent) return value + "%";
             if (ValueFormat == OptionFormat.Multiplier) return value + "x";
             if (ValueFormat == OptionFormat.PerSecond) return value + "/s";
-            if (ValueFormat == OptionFormat.PerLevel) return value + "/level";
+            if (ValueFormat == OptionFormat.PerLevel) return value + "/lvl";
+            if (ValueFormat == OptionFormat.Resources) return value + " res";
+            if (ValueFormat == OptionFormat.Money) return value + "$";
+            if (ValueFormat == OptionFormat.PercentPerLevel) return value + "%/lvl";
+            if (ValueFormat == OptionFormat.ResourcesPerLevel) return value + " res/lvl";
+            if (ValueFormat == OptionFormat.MoneyPerLevel) return value + "$/lvl";
             return value;
         }
 
@@ -228,6 +236,11 @@ namespace MoreGamemodes
         Percent,
         Multiplier,
         PerSecond,
-        PerLevel
+        PerLevel,
+        Resources,
+        Money,
+        PercentPerLevel,
+        ResourcesPerLevel,
+        MoneyPerLevel,
     }
 }

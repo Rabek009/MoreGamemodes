@@ -111,6 +111,7 @@ public partial class Main : BasePlugin
         CustomNetObject.CustomObjects = new List<CustomNetObject>();
         CustomNetObject.MaxId = -1;
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
+        ChatUpdatePatch.SendingSystemMessage = false;
         AntiBlackout.Reset();
 
         Harmony.PatchAll();
@@ -173,6 +174,7 @@ public partial class Main : BasePlugin
                 CustomNetObject.CustomObjects = new List<CustomNetObject>();
                 CustomNetObject.MaxId = -1;
                 RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
+                ChatUpdatePatch.SendingSystemMessage = false;
                 AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)

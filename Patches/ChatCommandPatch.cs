@@ -22,9 +22,11 @@ namespace MoreGamemodes
                 __instance.freeChatField.textArea.SetText("");
                 return false;
             }
-            if (text[0] == '/' && (text.Contains("<") || text.Contains(">")))
+            string[] args = text.Split(' ');
+            string subArgs = "";
+            if (args[0] == "/name" && (text.Contains("<") || text.Contains(">")))
             {
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("You can't use text formatting in commands.");
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("You can't use text formatting in /name command.");
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
@@ -39,8 +41,6 @@ namespace MoreGamemodes
             {
                 return false;
             }
-            string[] args = text.Split(' ');
-            string subArgs = "";
             var canceled = false;
             if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !PlayerControl.LocalPlayer.Data.IsDead)
             {
@@ -940,276 +940,7 @@ namespace MoreGamemodes
                 case "/n":
                 case "/now":
                     canceled = true;
-                    var message = "";
-                    message += "No game end: "; message += Options.NoGameEnd.GetBool() ? "ON\n" : "OFF\n";
-                    message += "Can use /color command: "; message += Options.CanUseColorCommand.GetBool() ? "ON\n" : "OFF\n";
-                    if (Options.CanUseColorCommand.GetBool())
-                    {
-                        message += "Enable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON\n" : "OFF\n";
-                    }   
-                    message += "Can use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON\n" : "OFF\n";
-                    if (Options.CanUseNameCommand.GetBool())
-                    {
-                        message += "Enable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Maximum name length: " + Options.MaximumNameLength.GetInt() + "\n";
-                    }
-                    message += "Can use /tpout command: "; message += Options.CanUseTpoutCommand.GetBool() ? "ON\n" : "OFF\n";
-                    Utils.SendChat(message, "Options");
-
-                    message = "";
-                    switch (Options.CurrentGamemode)
-                    {
-                        case Gamemodes.Classic:
-                            message = "Gamemode: Classic\n";
-                            break;
-                        case Gamemodes.HideAndSeek:
-                            message = "Gamemode: Hide and seek\n\n";
-                            message += "Impostors blind time: " + Options.HnSImpostorsBlindTime.GetFloat() + "s\n";
-                            message += "Impostors can kill during blind: "; message += Options.HnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.HnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors are visible: "; message += Options.HnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.ShiftAndSeek:
-                            message = "Gamemode: Shift and seek\n\n";
-                            message += "Impostors blind time: " + Options.SnSImpostorsBlindTime.GetFloat() + "s\n";
-                            message += "Impostors can kill during blind: "; message += Options.SnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors are visible: "; message += Options.SnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Instant shapeshift: "; message += Options.InstantShapeshift.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.BombTag:
-                            message = "Gamemode: Bomb tag\n\n";
-                            message += "Teleport after explosion: "; message += Options.TeleportAfterExplosion.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Explosion delay: " + Options.ExplosionDelay.GetInt() + "s\n";
-                            message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
-                            message += "Max players with bomb: " + Options.MaxPlayersWithBomb.GetInt() + " players\n";
-                            message += "Arrow to nearest non bombed: "; message += Options.ArrowToNearestNonBombed.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Show explosion animation: "; message += Options.BtShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.RandomItems:
-                            message = "Gamemode: Random items\n\n";
-                            message += "Time slower: "; message += Options.EnableTimeSlower.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTimeSlower.GetBool())
-                            {
-                                message += "Discussion time increase: " + Options.DiscussionTimeIncrease.GetInt() + "s\n";
-                                message += "Voting time increase: " + Options.VotingTimeIncrease.GetInt() + "s\n";
-                            }
-                            message += "\nKnowledge: "; message += Options.EnableKnowledge.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableKnowledge.GetBool())
-                            {
-                                message += "Crewmates see reveal: "; message += Options.CrewmatesSeeReveal.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Impostors see reveal: "; message += Options.ImpostorsSeeReveal.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nShield: "; message += Options.EnableShield.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableShield.GetBool())
-                            {
-                                message += "Shield duration: " + Options.ShieldDuration.GetFloat() + "s\n";
-                                message += "See who tried kill: "; message += Options.SeeWhoTriedKill.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nGun: "; message += Options.EnableGun.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableGun.GetBool())
-                            {
-                                message += "Can kill crewmate: "; message += Options.CanKillCrewmate.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Misfire kills crewmate: "; message += Options.MisfireKillsCrewmate.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nIllusion: "; message += Options.EnableIllusion.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nRadar: "; message += Options.EnableRadar.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableRadar.GetBool())
-                            {
-                                message += "Radar range: " + Options.RadarRange.GetFloat() + "x\n";
-                            }
-                            message += "\nSwap: "; message += Options.EnableSwap.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nMedicine: "; message += Options.EnableMedicine.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableMedicine.GetBool())
-                            {
-                                message += "Die on revive: "; message += Options.DieOnRevive.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTime speeder: "; message += Options.EnableTimeSpeeder.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTimeSpeeder.GetBool())
-                            {
-                                message += "Discussion time decrease: " + Options.DiscussionTimeDecrease.GetInt() + "s\n";
-                                message += "Voting time decrease: " + Options.VotingTimeDecrease.GetInt() + "s\n";
-                            }
-                            message += "\nFlash: "; message += Options.EnableFlash.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableFlash.GetBool())
-                            {
-                                message += "Flash duration: " + Options.FlashDuration.GetFloat() + "s\n";
-                                message += "Impostor vision in flash: " + Options.ImpostorVisionInFlash.GetFloat() + "x\n";
-                            }
-                            message += "\nHack: "; message += Options.EnableHack.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableHack.GetBool())
-                            {
-                                message += "Hack duration: " + Options.HackDuration.GetFloat() + "s\n";
-                                message += "Hack affects impostors: "; message += Options.HackAffectsImpostors.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nCamouflage: "; message += Options.EnableCamouflage.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableCamouflage.GetBool())
-                            {
-                                message += "Camouflage duration: " + Options.CamouflageDuration.GetFloat() + "s\n";
-                            }
-                            message += "\nMulti teleport: "; message += Options.EnableMultiTeleport.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nBomb: "; message += Options.EnableBomb.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableBomb.GetBool())
-                            {
-                                message += "Bomb radius: " + Options.BombRadius.GetFloat() + "x\n";
-                                message += "Can kill impostors: "; message += Options.CanKillImpostors.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Show explosion animation: "; message += Options.RiShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTrap: "; message += Options.EnableTrap.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTrap.GetBool())
-                            {
-                                message += "Trap wait time: " + Options.TrapWaitTime.GetFloat() + "s\n";
-                                message += "Trap radius: " + Options.BombRadius.GetFloat() + "x\n";
-                                message += "Crewmates see trap: "; message += Options.CrewmatesSeeTrap.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Impostors see trap: "; message += Options.ImpostorsSeeTrap.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTeam changer: "; message += Options.EnableTeamChanger.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTeamChanger.GetBool())
-                            {
-                                message += "Target gets your role: "; message += Options.TargetGetsYourRole.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableButton.GetBool())
-                            {
-                                message += "Can use during sabotage: "; message += Options.CanUseDuringSabotage.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nFinder: "; message += Options.EnableFinder.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nRope: "; message += Options.EnableRope.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nStop: "; message += Options.EnableStop.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableStop.GetBool())
-                            {
-                                message += "Can be given to crewmate: "; message += Options.CanBeGivenToCrewmate.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nNewsletter: "; message += Options.EnableNewsletter.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nCompass: "; message += Options.EnableCompass.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableCompass.GetBool())
-                            {
-                                message += "Compass duration: " + Options.CompassDuration.GetFloat() + "s\n";
-                            }
-                            break;
-                        case Gamemodes.BattleRoyale:
-                            message = "Gamemode: Battle royale\n\n";
-                            message += "Lives: " + Options.Lives.GetInt() + "\n";
-                            message += "Lives visible to others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Arrow to nearest player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Grace period: " + Options.GracePeriod.GetFloat() + "s\n";
-                            break;
-                        case Gamemodes.Speedrun:
-                            message = "Gamemode: Speedrun\n\n";
-                            message += "Body type: " + Utils.BodyTypeString(Options.CurrentBodyType) + "\n";
-                            message += "Tasks visible to others: "; message += Options.TasksVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.PaintBattle:
-                            message = "Gamemode: Paint battle\n\n";
-                            message += "Painting time: " + Options.PaintingTime.GetInt() + "s\n";
-                            message += "Voting time: " + Options.VotingTime.GetInt() + "s\n";
-                            break;
-                        case Gamemodes.KillOrDie:
-                            message = "Gamemode: Kill or die\n\n";
-                            message += "Teleport after round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
-                            message += "Time to kill: " + Options.TimeToKill.GetInt() + "s\n";
-                            message += "Arrow to nearest survivor: "; message += Options.ArrowToNearestSurvivor.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.Zombies:
-                            message = "Gamemode: Zombies\n\n";
-                            message += "Zombie kills turn into zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Zombie speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
-                            message += "Zombie vision: " + Options.ZombieVision.GetFloat() + "x\n";
-                            message += "Can kill zombies after tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.CanKillZombiesAfterTasks.GetBool())
-                            {
-                                message += "Number of kills: " + Options.NumberOfKills.GetInt() + "\n";
-                            }
-                            message += "Zombie blind time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
-                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode) + "\n";
-                            message += "Ejected players are zombies: "; message += Options.EjectedPlayersAreZombies.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.ZoImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Zombies can vent: "; message += Options.ZombiesCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.Jailbreak:
-                            message = "Gamemode: Jailbreak\n\n";
-                            message += "Prisoner health: " + Options.PrisonerHealth.GetFloat() + "\n";
-                            message += "Prisoner regeneration: " + Options.PrisonerRegeneration.GetFloat() + "/s\n";
-                            message += "Prisoner damage: " + Options.PrisonerDamage.GetFloat() + "\n";
-                            message += "Guard health: " + Options.GuardHealth.GetFloat() + "\n";
-                            message += "Guard regeneration: " + Options.GuardRegeneration.GetFloat() + "/s\n";
-                            message += "Guard damage: " + Options.GuardDamage.GetFloat() + "\n";
-                            message += "Weapon damage: " + Options.WeaponDamage.GetFloat() + "/level\n";
-                            message += "Screwdriver price: " + Options.ScrewdriverPrice.GetInt() + "\n";
-                            message += "Prisoner weapon price: " + Options.PrisonerWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard weapon price: " + Options.GuardWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard outfit price: " + Options.GuardOutfitPrice.GetInt() + "\n";
-                            message += "Respawn cooldown: " + Options.RespawnCooldown.GetFloat() + "s\n";
-                            message += "Search cooldown: " + Options.SearchCooldown.GetFloat() + "s\n";
-                            message += "Maximum prisoner resources: " + Options.MaximumPrisonerResources.GetInt() + "\n";
-                            message += "Spaceship part price: " + Options.SpaceshipPartPrice.GetInt() + "\n";
-                            message += "Required spaceship parts: " + Options.RequiredSpaceshipParts.GetInt() + "\n";
-                            message += "Pickaxe price: " + Options.PickaxePrice.GetInt() + "/level\n";
-                            message += "Pickaxe speed" + Options.PickaxeSpeed.GetFloat() + "/level\n";
-                            message += "Prison takeover duration" + Options.PrisonTakeoverDuration.GetFloat() + "s\n";
-                            message += "Breathing mask price: " + Options.BreathingMaskPrice.GetInt() + "\n";
-                            message += "Energy drink price: " + Options.EnergyDrinkPrice.GetInt() + "\n";
-                            message += "Energy drink duration: " + Options.EnergyDrinkDuration.GetFloat() + "s\n";
-                            message += "Energy drink speed increase: " + Options.EnergyDrinkSpeedIncrease.GetInt() + "%\n";
-                            message += "Game time: " + Options.GameTime.GetInt() + "s\n";
-                            message += "Escapists can help others: "; message += Options.EscapistsCanHelpOthers.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EscapistsCanHelpOthers.GetBool())
-                            {
-                                message += "Help cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
-                                message += "Given resources: " + Options.GivenResources.GetInt() + "\n";
-                            }
-                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt() + "\n";
-                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt() + "\n";
-                            message += "Armor protection: " + Options.ArmorProtection.GetFloat() + "\n";
-                            break;
-                        case Gamemodes.Deathrun:
-                            message = "Gamemode: Deathrun\n\n";
-                            message += "Round cooldown: " + Options.RoundCooldown.GetFloat() + "s\n";
-                            message += "Disable meetings: "; message += Options.DisableMeetings.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.DrImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Amount of tasks: " + Options.AmountOfTasks.GetInt() + "\n";
-                            break;
-                    }
-                    Utils.SendChat(message, "Options");
-
-                    message = "Additional Gamemodes:\n";
-                    if (Options.RandomSpawn.GetBool())
-                    {
-                        message += "\nRandom spawn\n";
-                        message += "Teleport after meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
-                    }
-                    if (Options.RandomMap.GetBool())
-                    {
-                        message += "\nRandom Map\n";
-                        message += "Add the skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add dleks eht: "; message += Options.AddDleksEht.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add the airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add the fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
-                    }
-                    if (Options.DisableGapPlatform.GetBool())
-                        message += "\nDisable gap platform\n";
-                    if (Options.MidGameChat.GetBool())
-                    {
-                        message += "\nMid game chat\n";
-                        message += "Proximity chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
-                        if (Options.ProximityChat.GetBool())
-                        {
-                            message += "Messages radius: " + Options.MessagesRadius.GetFloat() + "x\n";
-                            message += "Impostor radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Fake shapeshift appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
-                        }
-                        message += "Disable during comms sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
-                    }
-                    if (Options.DisableZipline.GetBool())
-                        message += "\nDisable zipline\n";
-                    if (message != "Additional Gamemodes:\n")
-                        Utils.SendChat(message, "Options");
+                    Utils.SendGameOptionsMessage();
                     break;
                 case "/id":
                     canceled = true;
@@ -1814,276 +1545,7 @@ namespace MoreGamemodes
                 case "/n":
                 case "/now":
                     canceled = true;
-                    var message = "";
-                    message += "No game end: "; message += Options.NoGameEnd.GetBool() ? "ON\n" : "OFF\n";
-                    message += "Can use /color command: "; message += Options.CanUseColorCommand.GetBool() ? "ON\n" : "OFF\n";
-                    if (Options.CanUseColorCommand.GetBool())
-                    {
-                        message += "Enable fortegreen: "; message += Options.EnableFortegreen.GetBool() ? "ON\n" : "OFF\n";
-                    }   
-                    message += "Can use /name command: "; message += Options.CanUseNameCommand.GetBool() ? "ON\n" : "OFF\n";
-                    if (Options.CanUseNameCommand.GetBool())
-                    {
-                        message += "Enable name repeating: "; message += Options.EnableNameRepeating.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Maximum name length: " + Options.MaximumNameLength.GetInt() + "\n";
-                    }
-                    message += "Can use /tpout command: "; message += Options.CanUseTpoutCommand.GetBool() ? "ON\n" : "OFF\n";
-                    player.RpcSendMessage(message, "Options");
-
-                    message = "";
-                    switch (Options.CurrentGamemode)
-                    {
-                        case Gamemodes.Classic:
-                            message = "Gamemode: Classic\n";
-                            break;
-                        case Gamemodes.HideAndSeek:
-                            message = "Gamemode: Hide and seek\n\n";
-                            message += "Impostors blind time: " + Options.HnSImpostorsBlindTime.GetFloat() + "s\n";
-                            message += "Impostors can kill during blind: "; message += Options.HnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.HnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can close doors: "; message += Options.HnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors are visible: "; message += Options.HnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.ShiftAndSeek:
-                            message = "Gamemode: Shift and seek\n\n";
-                            message += "Impostors blind time: " + Options.SnSImpostorsBlindTime.GetFloat() + "s\n";
-                            message += "Impostors can kill during blind: "; message += Options.SnSImpostorsCanKillDuringBlind.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.SnSImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can close doors: "; message += Options.SnSImpostorsCanCloseDoors.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors are visible: "; message += Options.SnSImpostorsAreVisible.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Instant shapeshift: "; message += Options.InstantShapeshift.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.BombTag:
-                            message = "Gamemode: Bomb tag\n\n";
-                            message += "Teleport after explosion: "; message += Options.TeleportAfterExplosion.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Explosion delay: " + Options.ExplosionDelay.GetInt() + "s\n";
-                            message += "Players with bomb: " + Options.PlayersWithBomb.GetInt() + "%\n";
-                            message += "Max players with bomb: " + Options.MaxPlayersWithBomb.GetInt() + " players\n";
-                            message += "Arrow to nearest non bombed: "; message += Options.ArrowToNearestNonBombed.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Show explosion animation: "; message += Options.BtShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.RandomItems:
-                            message = "Gamemode: Random items\n\n";
-                            message += "Time slower: "; message += Options.EnableTimeSlower.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTimeSlower.GetBool())
-                            {
-                                message += "Discussion time increase: " + Options.DiscussionTimeIncrease.GetInt() + "s\n";
-                                message += "Voting time increase: " + Options.VotingTimeIncrease.GetInt() + "s\n";
-                            }
-                            message += "\nKnowledge: "; message += Options.EnableKnowledge.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableKnowledge.GetBool())
-                            {
-                                message += "Crewmates see reveal: "; message += Options.CrewmatesSeeReveal.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Impostors see reveal: "; message += Options.ImpostorsSeeReveal.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nShield: "; message += Options.EnableShield.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableShield.GetBool())
-                            {
-                                message += "Shield duration: " + Options.ShieldDuration.GetFloat() + "s\n";
-                                message += "See who tried kill: "; message += Options.SeeWhoTriedKill.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nGun: "; message += Options.EnableGun.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableGun.GetBool())
-                            {
-                                message += "Can kill crewmate: "; message += Options.CanKillCrewmate.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Misfire kills crewmate: "; message += Options.MisfireKillsCrewmate.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nIllusion: "; message += Options.EnableIllusion.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nRadar: "; message += Options.EnableRadar.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableRadar.GetBool())
-                            {
-                                message += "Radar range: " + Options.RadarRange.GetFloat() + "x\n";
-                            }
-                            message += "\nSwap: "; message += Options.EnableSwap.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nMedicine: "; message += Options.EnableMedicine.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableMedicine.GetBool())
-                            {
-                                message += "Die on revive: "; message += Options.DieOnRevive.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTime speeder: "; message += Options.EnableTimeSpeeder.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTimeSpeeder.GetBool())
-                            {
-                                message += "Discussion time decrease: " + Options.DiscussionTimeDecrease.GetInt() + "s\n";
-                                message += "Voting time decrease: " + Options.VotingTimeDecrease.GetInt() + "s\n";
-                            }
-                            message += "\nFlash: "; message += Options.EnableFlash.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableFlash.GetBool())
-                            {
-                                message += "Flash duration: " + Options.FlashDuration.GetFloat() + "s\n";
-                                message += "Impostor vision in flash: " + Options.ImpostorVisionInFlash.GetFloat() + "x\n";
-                            }
-                            message += "\nHack: "; message += Options.EnableHack.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableHack.GetBool())
-                            {
-                                message += "Hack duration: " + Options.HackDuration.GetFloat() + "s\n";
-                                message += "Hack affects impostors: "; message += Options.HackAffectsImpostors.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nCamouflage: "; message += Options.EnableCamouflage.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableCamouflage.GetBool())
-                            {
-                                message += "Camouflage duration: " + Options.CamouflageDuration.GetFloat() + "s\n";
-                            }
-                            message += "\nMulti teleport: "; message += Options.EnableMultiTeleport.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nBomb: "; message += Options.EnableBomb.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableBomb.GetBool())
-                            {
-                                message += "Bomb radius: " + Options.BombRadius.GetFloat() + "x\n";
-                                message += "Can kill impostors: "; message += Options.CanKillImpostors.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Show explosion animation: "; message += Options.RiShowExplosionAnimation.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTrap: "; message += Options.EnableTrap.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTrap.GetBool())
-                            {
-                                message += "Trap wait time: " + Options.TrapWaitTime.GetFloat() + "s\n";
-                                message += "Trap radius: " + Options.BombRadius.GetFloat() + "x\n";
-                                message += "Crewmates see trap: "; message += Options.CrewmatesSeeTrap.GetBool() ? "ON\n" : "OFF\n";
-                                message += "Impostors see trap: "; message += Options.ImpostorsSeeTrap.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTeam changer: "; message += Options.EnableTeamChanger.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableTeamChanger.GetBool())
-                            {
-                                message += "Target gets your role: "; message += Options.TargetGetsYourRole.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nTeleport: "; message += Options.EnableTeleport.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nButton: "; message += Options.EnableButton.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableButton.GetBool())
-                            {
-                                message += "Can use during sabotage: "; message += Options.CanUseDuringSabotage.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nFinder: "; message += Options.EnableFinder.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nRope: "; message += Options.EnableRope.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nStop: "; message += Options.EnableStop.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableStop.GetBool())
-                            {
-                                message += "Can be given to crewmate: "; message += Options.CanBeGivenToCrewmate.GetBool() ? "ON\n" : "OFF\n";
-                            }
-                            message += "\nNewsletter: "; message += Options.EnableNewsletter.GetBool() ? "ON\n" : "OFF\n";
-                            message += "\nCompass: "; message += Options.EnableCompass.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EnableCompass.GetBool())
-                            {
-                                message += "Compass duration: " + Options.CompassDuration.GetFloat() + "s\n";
-                            }
-                            break;
-                        case Gamemodes.BattleRoyale:
-                            message = "Gamemode: Battle royale\n\n";
-                            message += "Lives: " + Options.Lives.GetInt() + "\n";
-                            message += "Lives visible to others: "; message += Options.LivesVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Arrow to nearest player: "; message += Options.ArrowToNearestPlayer.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Grace period: " + Options.GracePeriod.GetFloat() + "s\n";
-                            break;
-                        case Gamemodes.Speedrun:
-                            message = "Gamemode: Speedrun\n\n";
-                            message += "Body type: " + Utils.BodyTypeString(Options.CurrentBodyType) + "\n";
-                            message += "Tasks visible to others: "; message += Options.TasksVisibleToOthers.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.PaintBattle:
-                            message = "Gamemode: Paint battle\n\n";
-                            message += "Painting time: " + Options.PaintingTime.GetInt() + "s\n";
-                            message += "Voting time: " + Options.VotingTime.GetInt() + "s\n";
-                            break;
-                        case Gamemodes.KillOrDie:
-                            message = "Gamemode: Kill or die\n\n";
-                            message += "Teleport after round: "; message += Options.TeleportAfterRound.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Killer blind time: " + Options.KillerBlindTime.GetFloat() + "s\n";
-                            message += "Time to kill: " + Options.TimeToKill.GetInt() + "s\n";
-                            message += "Arrow to nearest survivor: "; message += Options.ArrowToNearestSurvivor.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.Zombies:
-                            message = "Gamemode: Zombies\n\n";
-                            message += "Zombie kills turn into zombie: "; message += Options.ZombieKillsTurnIntoZombie.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Zombie speed: " + Options.ZombieSpeed.GetFloat() + "x\n";
-                            message += "Zombie vision: " + Options.ZombieVision.GetFloat() + "x\n";
-                            message += "Can kill zombies after tasks: "; message += Options.CanKillZombiesAfterTasks.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.CanKillZombiesAfterTasks.GetBool())
-                            {
-                                message += "Number of kills: " + Options.NumberOfKills.GetInt() + "\n";
-                            }
-                            message += "Zombie blind time: " + Options.ZombieBlindTime.GetFloat() + "s\n";
-                            message += "Tracking zombies mode: " + Utils.TrackingZombiesModeString(Options.CurrentTrackingZombiesMode) + "\n";
-                            message += "Ejected players are zombies: "; message += Options.EjectedPlayersAreZombies.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.ZoImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Zombies can vent: "; message += Options.ZombiesCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            break;
-                        case Gamemodes.Jailbreak:
-                            message = "Gamemode: Jailbreak\n\n";
-                            message += "Prisoner health: " + Options.PrisonerHealth.GetFloat() + "\n";
-                            message += "Prisoner regeneration: " + Options.PrisonerRegeneration.GetFloat() + "/s\n";
-                            message += "Prisoner damage: " + Options.PrisonerDamage.GetFloat() + "\n";
-                            message += "Guard health: " + Options.GuardHealth.GetFloat() + "\n";
-                            message += "Guard regeneration: " + Options.GuardRegeneration.GetFloat() + "/s\n";
-                            message += "Guard damage: " + Options.GuardDamage.GetFloat() + "\n";
-                            message += "Weapon damage: " + Options.WeaponDamage.GetFloat() + "/level\n";
-                            message += "Screwdriver price: " + Options.ScrewdriverPrice.GetInt() + "\n";
-                            message += "Prisoner weapon price: " + Options.PrisonerWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard weapon price: " + Options.GuardWeaponPrice.GetInt() + "/level\n";
-                            message += "Guard outfit price: " + Options.GuardOutfitPrice.GetInt() + "\n";
-                            message += "Respawn cooldown: " + Options.RespawnCooldown.GetFloat() + "s\n";
-                            message += "Search cooldown: " + Options.SearchCooldown.GetFloat() + "s\n";
-                            message += "Maximum prisoner resources: " + Options.MaximumPrisonerResources.GetInt() + "\n";
-                            message += "Spaceship part price: " + Options.SpaceshipPartPrice.GetInt() + "\n";
-                            message += "Required spaceship parts: " + Options.RequiredSpaceshipParts.GetInt() + "\n";
-                            message += "Pickaxe price: " + Options.PickaxePrice.GetInt() + "/level\n";
-                            message += "Pickaxe speed" + Options.PickaxeSpeed.GetFloat() + "/level\n";
-                            message += "Prison takeover duration" + Options.PrisonTakeoverDuration.GetFloat() + "s\n";
-                            message += "Breathing mask price: " + Options.BreathingMaskPrice.GetInt() + "\n";
-                            message += "Energy drink price: " + Options.EnergyDrinkPrice.GetInt() + "\n";
-                            message += "Energy drink duration: " + Options.EnergyDrinkDuration.GetFloat() + "s\n";
-                            message += "Energy drink speed increase: " + Options.EnergyDrinkSpeedIncrease.GetInt() + "%\n";
-                            message += "Game time: " + Options.GameTime.GetInt() + "s\n";
-                            message += "Escapists can help others: "; message += Options.EscapistsCanHelpOthers.GetBool() ? "ON\n" : "OFF\n";
-                            if (Options.EscapistsCanHelpOthers.GetBool())
-                            {
-                                message += "Help cooldown: " + Options.HelpCooldown.GetFloat() + "s\n";
-                                message += "Given resources: " + Options.GivenResources.GetInt() + "\n";
-                            }
-                            message += "Prisoner armor price: " + Options.PrisonerArmorPrice.GetInt() + "\n";
-                            message += "Guard armor price: " + Options.GuardArmorPrice.GetInt() + "\n";
-                            message += "Armor protection: " + Options.ArmorProtection.GetFloat() + "\n";
-                            break;
-                        case Gamemodes.Deathrun:
-                            message = "Gamemode: Deathrun\n\n";
-                            message += "Round cooldown: " + Options.RoundCooldown.GetFloat() + "s\n";
-                            message += "Disable meetings: "; message += Options.DisableMeetings.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Impostors can vent: "; message += Options.DrImpostorsCanVent.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Amount of tasks: " + Options.AmountOfTasks.GetInt() + "\n";
-                            break;
-                    }
-                    player.RpcSendMessage(message, "Options");
-
-                    message = "Additional Gamemodes:\n";
-                    if (Options.RandomSpawn.GetBool())
-                    {
-                        message += "\nRandom spawn\n";
-                        message += "Teleport after meeting: "; message += Options.TeleportAfterMeeting.GetBool() ? "ON\n" : "OFF\n";
-                    }
-                    if (Options.RandomMap.GetBool())
-                    {
-                        message += "\nRandom Map\n";
-                        message += "Add the skeld: "; message += Options.AddTheSkeld.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add mira HQ: "; message += Options.AddMiraHQ.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add polus: "; message += Options.AddPolus.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add dleks eht: "; message += Options.AddDleksEht.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add the airship: "; message += Options.AddTheAirship.GetBool() ? "ON\n" : "OFF\n";
-                        message += "Add the fungle: "; message += Options.AddTheFungle.GetBool() ? "ON\n" : "OFF\n";
-                    }
-                    if (Options.DisableGapPlatform.GetBool())
-                        message += "\nDisable gap platform\n";
-                    if (Options.MidGameChat.GetBool())
-                    {
-                        message += "\nMid game chat\n";
-                        message += "Proximity chat: "; message += Options.ProximityChat.GetBool() ? "ON\n" : "OFF\n";
-                        if (Options.ProximityChat.GetBool())
-                        {
-                            message += "Messages radius: " + Options.MessagesRadius.GetFloat() + "x\n";
-                            message += "Impostor radio: "; message += Options.ImpostorRadio.GetBool() ? "ON\n" : "OFF\n";
-                            message += "Fake shapeshift appearance: "; message += Options.FakeShapeshiftAppearance.GetBool() ? "ON\n" : "OFF\n";
-                        }
-                        message += "Disable during comms sabotage: "; message += Options.DisableDuringCommsSabotage.GetBool() ? "ON\n" : "OFF\n";
-                    }
-                    if (Options.DisableZipline.GetBool())
-                        message += "\nDisable zipline\n";
-                    if (message != "Additional gamemodes:\n")
-                        player.RpcSendMessage(message, "Options");
+                    Utils.SendGameOptionsMessage(player);
                     break;
                 case "/id":
                     canceled = true;
@@ -2282,6 +1744,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(ChatController), nameof(ChatController.Update))]
     class ChatUpdatePatch
     {
+        public static bool SendingSystemMessage = false;
         public static void Postfix(ChatController __instance)
         {
             if (!AmongUsClient.Instance.AmHost || Main.MessagesToSend.Count < 1 || (Main.MessagesToSend[0].Item2 == byte.MaxValue && 1f > __instance.timeSinceLastMessage)) return;
@@ -2299,7 +1762,9 @@ namespace MoreGamemodes
                     if (pc.AmOwner)
                     {
                         player.Data.PlayerName = Utils.ColorString(Color.blue, "MGM.SystemMessage." + title);
+                        SendingSystemMessage = true;
                         DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
+                        SendingSystemMessage = false;
                         player.Data.PlayerName = name;
                     }
                     else
@@ -2441,6 +1906,20 @@ namespace MoreGamemodes
         {
             __result = false;
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(ChatBubble), nameof(ChatBubble.SetRight))]
+    class SetRightPatch
+    {
+        public static bool Prefix(ChatBubble __instance)
+        {
+            if (ChatUpdatePatch.SendingSystemMessage)
+            {
+                __instance.SetLeft();
+                return false;
+            }
+            return true;
         }
     }
 }

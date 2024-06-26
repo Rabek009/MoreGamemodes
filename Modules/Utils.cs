@@ -8,6 +8,8 @@ using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
 using System.IO;
 using System.Reflection;
+using System;
+
 using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
@@ -19,7 +21,7 @@ namespace MoreGamemodes
             var client = player.GetClient();
             return client == null ? -1 : client.Id;
         }
-        public static InnerNet.ClientData GetClient(this PlayerControl player)
+        public static ClientData GetClient(this PlayerControl player)
         {
             var client = AmongUsClient.Instance.allClients.ToArray().Where(cd => cd.Character.PlayerId == player.PlayerId).FirstOrDefault();
             return client;
@@ -32,6 +34,19 @@ namespace MoreGamemodes
                     return pc;
             }
             return null;
+        }
+
+        public static ClientData GetClientById(int id)
+        {
+            try
+            {
+                var client = AmongUsClient.Instance.allClients.ToArray().FirstOrDefault(cd => cd.Id == id);
+                return client;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public static string ColorString(Color32 color, string str) => $"<#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
@@ -730,6 +745,69 @@ namespace MoreGamemodes
                 writer2.Write((ushort)othersRole);
                 writer2.Write(true);
                 AmongUsClient.Instance.FinishRpcImmediately(writer2);
+            }
+        }
+
+        public static void DestroyTranslator(this GameObject obj)
+        {
+            var translator = obj.GetComponent<TextTranslatorTMP>();
+            if (translator != null)
+            {
+                Object.Destroy(translator);
+            }
+        }
+
+        public static void DestroyTranslator(this MonoBehaviour obj) => obj.gameObject.DestroyTranslator();
+
+        public static void SendGameOptionsMessage(PlayerControl player = null)
+        {
+            Dictionary<TabGroup, string> Messages = new();
+            foreach (var tab in Enum.GetValues<TabGroup>())
+                Messages.Add(tab, "");
+            for (int index = 0; index < OptionItem.AllOptions.Count; index++)
+            {
+                var option = OptionItem.AllOptions[index];
+                var tab = option.Tab;
+                var enabled = !option.IsHiddenOn(Options.CurrentGamemode) && (option.Parent == null || (!option.Parent.IsHiddenOn(Options.CurrentGamemode) && option.Parent.GetBool()));
+                if (!enabled || option is PresetOptionItem) continue;
+                if (Messages[tab] != "")
+                    Messages[tab] += "\n";
+                if (option.IsHeader || option is TextOptionItem)
+                {
+                    if (Messages[tab] != "")
+                        Messages[tab] += "\n";
+                    Messages[tab] += "<b><u>";
+                }
+
+                if (option.Parent?.Parent?.Parent != null)
+                    Messages[tab] += "           → ";
+                else if (option.Parent?.Parent != null)
+                    Messages[tab] += "      → ";
+                else if (option.Parent != null)
+                    Messages[tab] += " → ";
+                Messages[tab] += option.GetName(option.NameColor == Color.white);
+
+                if (option.IsHeader || option is TextOptionItem)
+                    Messages[tab] += "</b></u>";
+                if (option is TextOptionItem) continue;
+
+                Messages[tab] += ": ";
+                if (option is BooleanOptionItem)
+                    Messages[tab] += option.GetBool() ? "✓" : "X";
+                else if (option is IntegerOptionItem)
+                    Messages[tab] += option.ApplyFormat(option.GetInt().ToString());
+                else if (option is FloatOptionItem)
+                    Messages[tab] += option.ApplyFormat(option.GetFloat().ToString());
+                else if (option is StringOptionItem)
+                    Messages[tab] += option.GetString();
+            }
+            foreach (var tab in Enum.GetValues<TabGroup>())
+            {
+                Messages[tab] = "<b><size=125%>" + GetTabName(tab) + "</size></b>\n\n" + Messages[tab];
+                if (player == null)
+                    SendChat(Messages[tab], "Options");
+                else
+                    player.RpcSendMessage(Messages[tab], "Options");
             }
         }
     }

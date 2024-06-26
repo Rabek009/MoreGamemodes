@@ -147,7 +147,14 @@ namespace MoreGamemodes
                 case CustomRPC.SyncCustomOptions:
                     foreach (var co in OptionItem.AllOptions)
                     {
-                        co.CurrentValue = reader.ReadInt32();
+                        if (co is TextOptionItem) continue;
+                        if (co.Id == 0)
+                        {
+                            co.SetValue(9);
+                            continue;
+                        }
+                        if (co.Id >= 1000 && co.IsHiddenOn(Options.CurrentGamemode)) continue;
+                        co.SetValue(reader.ReadInt32());
                     }
                     break;
                 case CustomRPC.SetHackActive:
@@ -377,6 +384,8 @@ namespace MoreGamemodes
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SyncCustomOptions, SendOption.Reliable, -1);
             foreach (var co in OptionItem.AllOptions)
             {
+                if (co.Id == 0 || co is TextOptionItem) continue;
+                if (co.Id >= 1000 && co.IsHiddenOn(Options.CurrentGamemode)) continue;
                 writer.Write(co.CurrentValue);
             }
             AmongUsClient.Instance.FinishRpcImmediately(writer);
