@@ -47,15 +47,11 @@ namespace MoreGamemodes
             switch (rpc)
             {
                 case RpcCalls.PlayAnimation:
-                case RpcCalls.SetScanner:
+                    if (rpc == RpcCalls.SetScanner && !sr.ReadBoolean()) break;
                     if (!gameStarted)
                     {
-                        if (rpc == RpcCalls.PlayAnimation || sr.ReadBoolean())
-                        {
-                            HandleCheat(pc, "PlayAnimation/SetScanner Rpc in lobby");
-                            return true;
-                        }
-                        return false;
+                        HandleCheat(pc, "PlayAnimation/SetScanner Rpc in lobby");
+                        return true;
                     }
                     if (!GameManager.Instance.LogicOptions.GetVisualTasks())
                     {
@@ -232,19 +228,22 @@ namespace MoreGamemodes
                         PlayerControl.LocalPlayer.RpcRemoveDeadBody(target.Data);
                         if (!target.Data.IsDead)
                         {
-                            new LateTask(() => {
+                            if (gameStarted)
+                                target.RpcRevive();
+                            else
+                            {
                                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
                                 AmongUsClient.Instance.FinishRpcImmediately(writer);
-                            }, 0.5f);
-                            new LateTask(() => target?.RpcRevive(), 1f);
-                            new LateTask(() => {
-                                if (target != null && !target.AmOwner && !gameStarted)
-                                {
-                                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.Exiled, SendOption.None, target.GetClientId());
-                                    AmongUsClient.Instance.FinishRpcImmediately(writer);
-                                    target.Data.MarkDirty();
-                                }
-                            }, 1.5f);
+                                new LateTask(() => target.RpcRevive(), 0.5f);
+                                new LateTask(() => {
+                                    if (!target.AmOwner && !gameStarted)
+                                    {
+                                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.Exiled, SendOption.None, target.GetClientId());
+                                        AmongUsClient.Instance.FinishRpcImmediately(writer);
+                                        target.Data.MarkDirty();
+                                    }
+                                }, 1f);
+                            }
                         }
                     }
                     HandleCheat(pc, "Invalid Rpc");
@@ -333,6 +332,11 @@ namespace MoreGamemodes
                     {
                         if (!TimeSinceRoleChange.ContainsKey(target2.PlayerId) || TimeSinceRoleChange[target2.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
                             HandleCheat(pc, "Trying to kill as crewmate");
+                        return true;
+                    }
+                    if (pc.Data.Role is PhantomRole phantomRole && phantomRole.IsInvisible)
+                    {
+                        HandleCheat(pc, "Trying to kill while invisible");
                         return true;
                     }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
@@ -460,8 +464,8 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Using vanish button in lobby");
                         return true;
                     }
-                    PhantomRole phantomRole = pc.Data.Role as PhantomRole;
-                    if (phantomRole != null && phantomRole.IsInvisible)
+                    PhantomRole phantomRole2 = pc.Data.Role as PhantomRole;
+                    if (phantomRole2 != null && phantomRole2.IsInvisible)
                     {
                         HandleCheat(pc, "Vanishing while invisible");
                         return true;
@@ -491,8 +495,8 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Using appear button in lobby");
                         return true;
                     }
-                    PhantomRole phantomRole2 = pc.Data.Role as PhantomRole;
-                    if (phantomRole2 != null && !phantomRole2.IsInvisible)
+                    PhantomRole phantomRole3 = pc.Data.Role as PhantomRole;
+                    if (phantomRole3 != null && !phantomRole3.IsInvisible)
                     {
                         HandleCheat(pc, "Appearing while invisible");
                         return true;
@@ -665,7 +669,7 @@ namespace MoreGamemodes
                         return true;
                     }
                     if (HasTeleported.ContainsKey(netTransform.myPlayer.PlayerId) && !netTransform.myPlayer.inVent && !netTransform.myPlayer.walkingToVent &&
-                        HasTeleported[netTransform.myPlayer.PlayerId] >= (Options.MidGameChat.GetBool() && GameManager.Instance.LogicOptions.MapId == 4 ? 2 : 1))
+                        HasTeleported[netTransform.myPlayer.PlayerId] >= (Options.EnableMidGameChat.GetBool() && GameManager.Instance.LogicOptions.MapId == 4 ? 2 : 1))
                     {
                         HandleCheat(netTransform.myPlayer, "Too many teleportations");
                         return true;
@@ -761,6 +765,7 @@ namespace MoreGamemodes
                     }
                     break;
                 case SystemTypes.Sabotage:
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
                     if (!selfRole.IsImpostor())
                     {   
                         if (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
@@ -811,8 +816,7 @@ namespace MoreGamemodes
                                 return true;
                             }
                             if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
-                            var selfRole2 = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
-                            if (selfRole2.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
+                            if (selfRole.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
                             {
                                 HandleCheat(player, "Cleaning vent as impostor");
                                 return true;
@@ -924,12 +928,40 @@ namespace MoreGamemodes
         
         public static void HandleCheat(PlayerControl pc, string reason)
         {
-            // if (!BannedPlayers.Contains(pc.NetId))
-            // {
-            //     pc.RpcSetName(pc.Data.PlayerName + " was banned for hacking.\nReason: " + reason + "\n<size=0>");
-            //     BannedPlayers.Add(pc.NetId);
-            //     AmongUsClient.Instance.KickPlayer(pc.GetClientId(), false);
-            // }
+            switch (Options.CurrentCheatingPenalty)
+            {
+                case CheatingPenalties.WarnHost:
+                    HudManager.Instance.Notifier.AddDisconnectMessage("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
+                    break;
+                case CheatingPenalties.WarnEveryone:
+                    HudManager.Instance.Notifier.AddDisconnectMessage("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
+                    Utils.SendChat(pc.Data.PlayerName + " is hacking!\nReason: " + reason, "AntiCheat");
+                    break;
+                case CheatingPenalties.Kick:
+                    if (!BannedPlayers.Contains(pc.NetId))
+                    {
+                        pc.RpcSetName(pc.Data.PlayerName + " was kicked for hacking.\nReason: " + reason + "<size=0>");
+                        BannedPlayers.Add(pc.NetId);
+                        AmongUsClient.Instance.KickPlayer(pc.GetClientId(), false);
+                    }
+                    break;
+                case CheatingPenalties.Ban:
+                    if (!BannedPlayers.Contains(pc.NetId))
+                    {
+                        pc.RpcSetName(pc.Data.PlayerName + " was banned for hacking.\nReason: " + reason + "<size=0>");
+                        BannedPlayers.Add(pc.NetId);
+                        AmongUsClient.Instance.KickPlayer(pc.GetClientId(), true);
+                    }
+                    break;
+            }
         }
+    }
+
+    public enum CheatingPenalties
+    {
+        WarnHost,
+        WarnEveryone,
+        Kick,
+        Ban,
     }
 }

@@ -32,7 +32,7 @@ namespace MoreGamemodes
             
             if (RandomItemsGamemode.instance != null)
                 RandomItemsGamemode.instance.CamouflageTimer = -1f;
-            if (Options.RandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
+            if (Options.EnableRandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.RpcRandomVentTeleport();
@@ -46,7 +46,7 @@ namespace MoreGamemodes
         public static void Postfix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] NetworkedPlayerInfo exiled, [HarmonyArgument(2)] bool tie)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (Options.MidGameChat.GetBool())
+            if (Options.EnableMidGameChat.GetBool())
                 new LateTask(() => Utils.SetChatVisible(), 8f, "Set Chat Visible");
             CustomGamemode.Instance.OnVotingComplete(__instance, states, exiled, tie);
         }

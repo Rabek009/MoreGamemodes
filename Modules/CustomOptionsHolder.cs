@@ -45,13 +45,21 @@ namespace MoreGamemodes
             "None", "Nearest", "Every"
         };
 
+        public static readonly string[] cheatingPenalties =
+        {
+            "Warn Host", "Warn Everyone", "Kick", "Ban"
+        };
+
         //Main settings
         public static OptionItem Basic;
         public static OptionItem Gamemode;
         public static Gamemodes CurrentGamemode => (Gamemodes)Gamemode.GetValue();
         public static SpeedrunBodyTypes CurrentBodyType => (SpeedrunBodyTypes)BodyType.GetValue();
         public static TrackingZombiesModes CurrentTrackingZombiesMode => (TrackingZombiesModes)TrackingZombiesMode.GetValue();
+        public static CheatingPenalties CurrentCheatingPenalty => (CheatingPenalties)CheatingPenalty.GetValue();
         public static OptionItem NoGameEnd;
+        public static OptionItem AntiCheat;
+        public static OptionItem CheatingPenalty;
         public static OptionItem Commands;
         public static OptionItem CanUseColorCommand;
         public static OptionItem EnableFortegreen;
@@ -168,6 +176,10 @@ namespace MoreGamemodes
         public static OptionItem Compass;
         public static OptionItem EnableCompass;
         public static OptionItem CompassDuration;
+        public static OptionItem Booster;
+        public static OptionItem EnableBooster;
+        public static OptionItem BoosterDuration;
+        public static OptionItem BoosterSpeedIncrease;
 
         //Battle royale
         public static OptionItem BattleRoyale;
@@ -305,6 +317,12 @@ namespace MoreGamemodes
             NoGameEnd = BooleanOptionItem.Create(3, "No game end", false, TabGroup.ModSettings, false)
                 .SetGamemode(Gamemodes.All)
                 .SetColor(Color.red);
+            AntiCheat = BooleanOptionItem.Create(4, "Anti Cheat", true, TabGroup.ModSettings, false)
+                .SetGamemode(Gamemodes.All)
+                .SetColor(Color.blue);
+            CheatingPenalty = StringOptionItem.Create(5, "Cheating Penalty", cheatingPenalties, 3, TabGroup.ModSettings, false)
+                .SetGamemode(Gamemodes.All)
+                .SetParent(AntiCheat);
             Commands = TextOptionItem.Create(10, "Commands", TabGroup.ModSettings)
                 .SetGamemode(Gamemodes.All)
                 .SetColor(Color.cyan);
@@ -601,6 +619,19 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetValueFormat(OptionFormat.Seconds)
                 .SetParent(EnableCompass);
+            Booster = TextOptionItem.Create(6070, "Booster", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetColor(Color.magenta);
+            EnableBooster = BooleanOptionItem.Create(6071, "Enable", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems);
+            BoosterDuration = FloatOptionItem.Create(6072, "Booster duration", new(1f, 60f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetValueFormat(OptionFormat.Seconds)
+                .SetParent(EnableBooster);
+            BoosterSpeedIncrease = IntegerOptionItem.Create(6073, "Booster Speed Increase", new(10, 200, 10), 50, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetValueFormat(OptionFormat.Percent)
+                .SetParent(EnableBooster);
 
             //Battle royale
             BattleRoyale = TextOptionItem.Create(7000, "Battle royale", TabGroup.GamemodeSettings)

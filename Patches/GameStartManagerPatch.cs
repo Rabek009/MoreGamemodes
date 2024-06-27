@@ -30,7 +30,7 @@ namespace MoreGamemodes
         public static void Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (Options.RandomMap.GetBool())
+            if (Options.EnableRandomMap.GetBool())
             {
                 List<byte> maps = new();
                 if (Options.AddTheSkeld.GetBool())

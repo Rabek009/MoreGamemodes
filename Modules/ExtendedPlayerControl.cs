@@ -49,13 +49,19 @@ namespace MoreGamemodes
         public static void RpcSendMessage(this PlayerControl player, string message, string title)
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            if (message.Length > 1200)
+            {
+                foreach (var text in message.SplitMessage())
+                    player.RpcSendMessage(text, title);
+                return;
+            }
             Main.MessagesToSend.Add((message, player.PlayerId, title));
         }
 
         public static void RpcSetDesyncRole(this PlayerControl player, RoleTypes role, PlayerControl seer)
         {
             if (player == null || seer == null) return;
-            if (player.AmOwner)
+            if (seer.AmOwner)
             {
                 player.StartCoroutine(player.CoSetRole(role, true));
                 return;
@@ -69,6 +75,20 @@ namespace MoreGamemodes
             if (!Main.DesyncRoles.ContainsKey((player.PlayerId, seer.PlayerId)) && role != Main.StandardRoles[player.PlayerId])
                 Main.DesyncRoles.Add((player.PlayerId, seer.PlayerId), role);
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
+        }
+
+        public static void RpcSetDesyncRoleV2(this PlayerControl player, RoleTypes role, PlayerControl seer)
+        {
+            if (player == null || seer == null) return;
+            if (seer.AmOwner)
+            {
+                player.StartCoroutine(player.CoSetRole(role, true));
+                return;
+            }
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, seer.GetClientId());
+            writer.Write((ushort)role);
+            writer.Write(true);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
@@ -223,8 +243,7 @@ namespace MoreGamemodes
             new LateTask(() => 
             {
                 killer.RpcMurderPlayer(target, true);
-                if (killer.AmOwner)
-                    killer.MyPhysics.RpcCancelPet();
+                killer.MyPhysics.RpcCancelPet();
             }, 0.01f, "Late Murder");
         }
 
@@ -369,6 +388,8 @@ namespace MoreGamemodes
                         opt.SetFloat(FloatOptionNames.TrackerDuration, 1f);
                         opt.SetFloat(FloatOptionNames.TrackerDelay, 255f);
                     }
+                    if (RandomItemsGamemode.instance.BoosterTimer[player.PlayerId] > -1f)
+                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (Options.BoosterSpeedIncrease.GetInt() / 100f)));
                     break;
                 case Gamemodes.BattleRoyale:
                     opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
@@ -468,7 +489,7 @@ namespace MoreGamemodes
                     if (!player.IsGuard())
                         opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
                     if (player.IsGuard() && JailbreakGamemode.instance.EnergyDrinkDuration[player.PlayerId] > 0f)
-                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Main.RealOptions.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (Options.EnergyDrinkSpeedIncrease.GetFloat() / 100f)));
+                        opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Main.RealOptions.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (Options.EnergyDrinkSpeedIncrease.GetInt() / 100f)));
                     if (player.Data.IsDead)
                         opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
                     break;
@@ -528,6 +549,8 @@ namespace MoreGamemodes
                                 name += Utils.ColorString(RandomItemsGamemode.instance.CamouflageTimer > -1f ? Palette.PlayerColors[15] : Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId], Utils.GetArrow(player.transform.position, pc.transform.position));
                         }
                     }
+                    if (RandomItemsGamemode.instance.BoosterTimer[player.PlayerId] > 0f && (player == seer || seer.Data.IsDead))
+                        name += "\n" + Utils.ColorString(Color.cyan, "Booster: " + (int)(RandomItemsGamemode.instance.BoosterTimer[player.PlayerId] + 0.99f) + "s");
                     if (RandomItemsGamemode.instance.CamouflageTimer > -1f && player != seer)
                         name = Utils.ColorString(Color.clear, "Player");
                     break;
@@ -691,7 +714,7 @@ namespace MoreGamemodes
                         name += Utils.ColorString(Color.cyan, "\nTIME: " + (int)((float)Options.GameTime.GetInt() - Main.Timer + 0.99f) + "s");
                     break;
             }
-            if (Options.MidGameChat.GetBool() && Options.ProximityChat.GetBool() && player == seer)
+            if (Options.EnableMidGameChat.GetBool() && Options.ProximityChat.GetBool() && player == seer)
             {
                 foreach (var message in Main.ProximityMessages[player.PlayerId])
                     name += "\n" + Utils.ColorString(Color.white, message.Item1);
@@ -959,8 +982,28 @@ namespace MoreGamemodes
         {
             if (!Main.StandardRoles.ContainsKey(player.PlayerId))
             {
-                player.RpcSetRoleV2(RoleTypes.Crewmate);
+                player.RpcSetRoleV3(RoleTypes.Crewmate, false);
                 PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
+                return;
+            }
+            if (Options.CurrentGamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak)
+            {
+                player.RpcSetDesyncRole(RoleTypes.Shapeshifter, player);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc != player)
+                        player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                }
+                return;
+            }
+            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
+            {
+                player.RpcSetDesyncRole(RoleTypes.Impostor, player);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc != player)
+                        player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                }
                 return;
             }
             player.RpcSetRoleV2(Main.StandardRoles[player.PlayerId]);

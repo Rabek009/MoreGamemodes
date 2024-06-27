@@ -71,6 +71,7 @@ namespace MoreGamemodes
             if (Options.EnableStop.GetBool() && Options.CanBeGivenToCrewmate.GetBool()) items.Add(Items.Stop);
             if (Options.EnableNewsletter.GetBool()) items.Add(Items.Newsletter);
             if (Options.EnableCompass.GetBool()) items.Add(Items.Compass);
+            if (Options.EnableBooster.GetBool()) items.Add(Items.Booster);
 
             return items[rand.Next(0, items.Count)];
         }
@@ -94,6 +95,7 @@ namespace MoreGamemodes
             if (Options.EnableStop.GetBool()) items.Add(Items.Stop);
             if (Options.EnableNewsletter.GetBool()) items.Add(Items.Newsletter);
             if (Options.EnableCompass.GetBool()) items.Add(Items.Compass);
+            if (Options.EnableBooster.GetBool()) items.Add(Items.Booster);
 
             return items[rand.Next(0, items.Count)];
         }
@@ -148,6 +150,8 @@ namespace MoreGamemodes
                     return "Newsletter";
                 case Items.Compass:
                     return "Compass";
+                case Items.Booster:
+                    return "Booster";
                 default:
                     return "INVALID ITEM";
             }
@@ -203,6 +207,8 @@ namespace MoreGamemodes
                     return "Type /info to get extra informations";
                 case Items.Compass:
                     return "Track other players";
+                case Items.Booster:
+                    return "Increase your speed";
                 default:
                     return "INVALID DESCRIPTION";
             }
@@ -258,6 +264,8 @@ namespace MoreGamemodes
                     return "Newsletter(Both): Sends you information about how amny roles are alive, how people died. Use this item by typing /info in chat";
                 case Items.Compass:
                     return "Compass(Both): Show arrow to all players for short period of time.";
+                case Items.Booster:
+                    return "Booster(Both): Increases your speed temporarily.";
                 default:
                     return "INVALID DESCRIPTION LONG";
             }
@@ -391,6 +399,12 @@ namespace MoreGamemodes
         public static void SendChat(string message, string title)
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            if (message.Length > 1200)
+            {
+                foreach (var text in message.SplitMessage())
+                    SendChat(text, title);
+                return;
+            }
             Main.MessagesToSend.Add((message, 255, title));
         }
 
@@ -629,6 +643,7 @@ namespace MoreGamemodes
         {
             if (role == RoleTypes.Impostor) return true;
             if (role == RoleTypes.Shapeshifter) return true;
+            if (role == RoleTypes.Phantom) return true;
             if (role == RoleTypes.ImpostorGhost) return true;
             return false;
         }
@@ -711,17 +726,11 @@ namespace MoreGamemodes
                         pc.Data.Disconnected = Disconnected[pc.PlayerId];
                 }, 0.5f);
                 new LateTask(() => {
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, player.GetClientId());
-                    writer.Write((ushort)selfRole);
-                    writer.Write(true);
-                    AmongUsClient.Instance.FinishRpcImmediately(writer);
+                    player.RpcSetDesyncRoleV2(selfRole, player);
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
                         if (pc == player) continue;
-                        MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, pc.GetClientId());
-                        writer2.Write((ushort)othersRole);
-                        writer2.Write(true);
-                        AmongUsClient.Instance.FinishRpcImmediately(writer2);
+                        player.RpcSetDesyncRoleV2(othersRole, pc);
                     }
                 }, 1f);
                 new LateTask(() => {
@@ -734,17 +743,11 @@ namespace MoreGamemodes
                 return;
             }
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, player.GetClientId());
-            writer.Write((ushort)selfRole);
-            writer.Write(true);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            player.RpcSetDesyncRoleV2(selfRole, player);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == player) continue;
-                MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, pc.GetClientId());
-                writer2.Write((ushort)othersRole);
-                writer2.Write(true);
-                AmongUsClient.Instance.FinishRpcImmediately(writer2);
+                player.RpcSetDesyncRoleV2(othersRole, pc);
             }
         }
 
@@ -809,6 +812,29 @@ namespace MoreGamemodes
                 else
                     player.RpcSendMessage(Messages[tab], "Options");
             }
+        }
+
+        public static List<string> SplitMessage(this string LongMsg)
+        {
+            List<string> result = new();
+            var lines = LongMsg.Split('\n');
+            var shortenedtext = string.Empty;
+
+            foreach (var line in lines)
+            {
+
+                if (shortenedtext.Length + line.Length < 1200)
+                {
+                    shortenedtext += line + "\n";
+                    continue;
+                }
+
+                if (shortenedtext.Length >= 1200) result.AddRange(shortenedtext.Chunk(1200).Select(x => new string(x)));
+                else result.Add(shortenedtext);
+                shortenedtext = line + "\n";
+            }
+            if (shortenedtext.Length > 0) result.Add(shortenedtext);
+         return result;
         }
     }
 }

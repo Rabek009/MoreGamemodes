@@ -94,6 +94,9 @@ namespace MoreGamemodes
                     case Items.Compass:
                         __instance.PetButton.OverrideText("Track");
                         break;
+                    case Items.Booster:
+                        __instance.PetButton.OverrideText("Boost");
+                        break;
                 }
             }
             if (IsHackActive && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()))
@@ -350,6 +353,11 @@ namespace MoreGamemodes
                         CompassTimer[pc.PlayerId] = Options.CompassDuration.GetFloat();
                         pc.RpcSetItem(Items.None);
                         break;
+                    case Items.Booster:
+                        BoosterTimer[pc.PlayerId] = Options.BoosterDuration.GetFloat();
+                        pc.SyncPlayerSettings();
+                        pc.RpcSetItem(Items.None);
+                        break;
                 }
             }
         }
@@ -489,6 +497,15 @@ namespace MoreGamemodes
                 {
                     CompassTimer[pc.PlayerId] = 0f;
                 }
+                if (BoosterTimer[pc.PlayerId] > -1f)
+                {
+                    BoosterTimer[pc.PlayerId] -= Time.fixedDeltaTime;
+                }
+                if (BoosterTimer[pc.PlayerId] <= 0f && BoosterTimer[pc.PlayerId] > -1f)
+                {
+                    BoosterTimer[pc.PlayerId] = -1f;
+                    pc.SyncPlayerSettings();
+                }
             }
         }
 
@@ -536,11 +553,13 @@ namespace MoreGamemodes
             TimeSlowersUsed = 0;
             TimeSpeedersUsed = 0;
             PlayersDiedThisRound = new List<byte>();
+            BoosterTimer = new Dictionary<byte, float>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 AllPlayersItems[pc.PlayerId] = Items.None;
                 ShieldTimer[pc.PlayerId] = 0f;
                 CompassTimer[pc.PlayerId] = 0f;
+                BoosterTimer[pc.PlayerId] = -1f;
             }
         }
 
@@ -558,6 +577,7 @@ namespace MoreGamemodes
         public int TimeSlowersUsed;
         public int TimeSpeedersUsed;
         public List<byte> PlayersDiedThisRound;
+        public Dictionary<byte, float> BoosterTimer;
     }
 
     public enum Items
@@ -589,5 +609,6 @@ namespace MoreGamemodes
         Stop,
         Newsletter,
         Compass,
+        Booster,
     }
 }

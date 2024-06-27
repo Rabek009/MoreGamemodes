@@ -487,6 +487,14 @@ Due to au sever changes people can't find your lobby with find game option. Play
 
 ## Credits
 1. Using some code from Town of Host
-2. Some code from Town Of Host: The Other Roles
+https://github.com/tukasa0001/TownOfHost
+
+2. Some code from Town Of Host: The Other Roles (Project Lotus)
+https://github.com/discus-sions/TownOfHost-TheOtherRoles
+https://github.com/ImaMapleTree/Lotus
+
 3. Many features from TOHE
+https://github.com/0xDrMoe/TownofHost-Enhanced
+
 4. Game options menu from TOHY
+https://github.com/Yumenopai/TownOfHost_Y

@@ -86,13 +86,13 @@ namespace MoreGamemodes
             PlayerControl.LocalPlayer.GetComponent<CircleCollider2D>().enabled = true;
             if (!AmongUsClient.Instance.AmHost) return;
             Main.Timer = 0f;
-            if (Options.RandomSpawn.GetBool())
+            if (Options.EnableRandomSpawn.GetBool())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.RpcRandomVentTeleport();
             }
             CustomGamemode.Instance.OnIntroDestroy();
-            if (Options.MidGameChat.GetBool())
+            if (Options.EnableMidGameChat.GetBool())
                 Utils.SetChatVisible();
             Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)

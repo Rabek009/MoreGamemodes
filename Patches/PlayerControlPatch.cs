@@ -232,7 +232,7 @@ namespace MoreGamemodes
                     netObject.OnFixedUpdate();
             }
             AntiCheat.OnUpdate();         
-            if (Options.MidGameChat.GetBool() && Options.ProximityChat.GetBool())
+            if (Options.EnableMidGameChat.GetBool() && Options.ProximityChat.GetBool())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -282,7 +282,7 @@ namespace MoreGamemodes
         public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (Options.DisableGapPlatform.GetBool()) return false;
+            if (Options.EnableDisableGapPlatform.GetBool()) return false;
             return true;
         }
     }
@@ -293,7 +293,7 @@ namespace MoreGamemodes
         public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (Options.DisableZipline.GetBool())
+            if (Options.EnableDisableZipline.GetBool())
                 return false;
             return true;
         }

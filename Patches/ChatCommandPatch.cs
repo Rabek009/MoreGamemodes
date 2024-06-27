@@ -42,13 +42,13 @@ namespace MoreGamemodes
                 return false;
             }
             var canceled = false;
-            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !PlayerControl.LocalPlayer.Data.IsDead)
+            if (!Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !PlayerControl.LocalPlayer.Data.IsDead)
             {
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
             }
-            if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
+            if (Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
@@ -883,6 +883,9 @@ namespace MoreGamemodes
                                 case "compass":
                                     PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Compass), "Items");
                                     break;
+                                case "booster":
+                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Booster), "Items");
+                                    break;
                                 default:
                                     if (PlayerControl.LocalPlayer.GetItem() == Items.None)
                                     {
@@ -1167,12 +1170,12 @@ namespace MoreGamemodes
             var canceled = false;
             string[] args = text.Split(' ');
             string subArgs = "";
-            if (!Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
+            if (!Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
             {
                 Utils.SendSpam("Someone alive tried to send message during round");
                 return false;
             }
-            if (Options.MidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
+            if (Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
@@ -1487,6 +1490,9 @@ namespace MoreGamemodes
                                     break;
                                 case "compass":
                                     player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Compass), "Items");
+                                    break;
+                                case "booster":
+                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Booster), "Items");
                                     break;
                                 default:
                                     if (player.GetItem() == Items.None)
