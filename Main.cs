@@ -50,7 +50,7 @@ public partial class Main : BasePlugin
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
 
-    public const string CurrentVersion = "2.0.0 dev1";
+    public const string CurrentVersion = "2.0.0 dev2";
 
     public override void Load()
     {

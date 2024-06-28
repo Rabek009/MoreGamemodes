@@ -86,7 +86,6 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     pc.Data.IsDead = false;
-                    AntiCheat.IsDead[pc.PlayerId] = false;
                     pc.RpcResetAbilityCooldown();
                 }
                 Utils.SendGameData();

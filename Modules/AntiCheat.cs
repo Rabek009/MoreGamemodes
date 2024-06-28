@@ -13,7 +13,6 @@ namespace MoreGamemodes
     {
         public static Dictionary<byte, float> TimeSinceLastTask;
         public static List<byte> LobbyDeadBodies;
-        public static Dictionary<byte, bool> IsDead;
         public static Dictionary<byte, int> HasTeleported;
         public static Dictionary<byte, float> TimeSinceRoleChange;
         public static List<byte> ChangedTasks;
@@ -26,7 +25,6 @@ namespace MoreGamemodes
         {
             TimeSinceLastTask = new Dictionary<byte, float>();
             LobbyDeadBodies = new List<byte>();
-            IsDead = new Dictionary<byte, bool>();
             HasTeleported = new Dictionary<byte, int>();
             TimeSinceRoleChange = new Dictionary<byte, float>();
             ChangedTasks = new List<byte>();
@@ -38,7 +36,7 @@ namespace MoreGamemodes
 
         public static bool PlayerControlReceiveRpc(PlayerControl pc, byte callId, MessageReader reader)
         {
-            if (!AmongUsClient.Instance.AmHost) return false;
+            if (!AmongUsClient.Instance.AmHost || !Options.AntiCheat.GetBool()) return false;
             if (pc == null || reader == null) return false;
             if (pc.AmOwner) return false;
             MessageReader sr = MessageReader.Get(reader);
@@ -192,11 +190,6 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Reporting in hide n seek");
                         return true;
                     }
-                    if (IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Reporting as dead");
-                        return true;
-                    }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
                     {
                         HandleCheat(pc, "Reporting during meeting");
@@ -272,11 +265,6 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Using platform in hide n seek");
                         return true;
                     }
-                    if (IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Using platform as dead");
-                        return true;
-                    }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
                     {
                         HandleCheat(pc, "Using platform during meeting");
@@ -305,16 +293,6 @@ namespace MoreGamemodes
                     if (target2 != null && target2 == pc)
                     {
                         HandleCheat(pc, "Using kill button on self");
-                        return true;
-                    }
-                    if (IsDead.ContainsKey(pc.PlayerId) && IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Trying to kill as dead");
-                        return true;
-                    }
-                    if (IsDead.ContainsKey(target2.PlayerId) && IsDead[target2.PlayerId])
-                    {
-                        HandleCheat(pc, "Trying to kill dead player");
                         return true;
                     }
                     if (target2 == null) break;
@@ -357,11 +335,6 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Using protect button on self");
                         return true;
                     }
-                    if (IsDead.ContainsKey(target3.PlayerId) && IsDead[target3.PlayerId])
-                    {
-                        HandleCheat(pc, "Trying to protect dead player");
-                        return true;
-                    }
                     if (target3 == null) break;
                     if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
                     if (pc.Data.Role.Role != RoleTypes.GuardianAngel)
@@ -387,11 +360,6 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Using zipline on wrong map");
                         return true;
                     }
-                    if (IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Using zipline as dead");
-                        return true;
-                    }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
                     {
                         HandleCheat(pc, "Using zipline during meeting");
@@ -407,11 +375,6 @@ namespace MoreGamemodes
                     if (GameManager.Instance.LogicOptions.MapId < 5)
                     {
                         HandleCheat(pc, "Triggering spore on wrong map");
-                        return true;
-                    }
-                    if (IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Triggering spore as dead");
                         return true;
                     }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
@@ -436,11 +399,6 @@ namespace MoreGamemodes
                     if (pc.shapeshiftTargetPlayerId != -1 && target4 != null && target4 != pc)
                     {
                         HandleCheat(pc, "Shapeshifting while shapeshifted");
-                        return true;
-                    }
-                    if (IsDead.ContainsKey(pc.PlayerId) && IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Trying to shift as dead");
                         return true;
                     }
                     if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
@@ -470,11 +428,6 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Vanishing while invisible");
                         return true;
                     }
-                    if (IsDead.ContainsKey(pc.PlayerId) && IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Trying to vanish as dead");
-                        return true;
-                    }
                     if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
                     var selfRole5 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     if (selfRole5 != RoleTypes.Phantom)
@@ -499,11 +452,6 @@ namespace MoreGamemodes
                     if (phantomRole3 != null && !phantomRole3.IsInvisible)
                     {
                         HandleCheat(pc, "Appearing while invisible");
-                        return true;
-                    }
-                    if (IsDead.ContainsKey(pc.PlayerId) && IsDead[pc.PlayerId])
-                    {
-                        HandleCheat(pc, "Trying to appear as dead");
                         return true;
                     }
                     if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
@@ -567,7 +515,7 @@ namespace MoreGamemodes
 
         public static bool PlayerPhysicsReceiveRpc(PlayerPhysics physics, byte callId, MessageReader reader)
         {
-            if (!AmongUsClient.Instance.AmHost) return false;
+            if (!AmongUsClient.Instance.AmHost || !Options.AntiCheat.GetBool()) return false;
             if (physics == null || reader == null) return false;
             if (physics.AmOwner) return false;
             MessageReader sr = MessageReader.Get(reader);
@@ -580,11 +528,6 @@ namespace MoreGamemodes
                     if (!gameStarted)
                     {
                         HandleCheat(physics.myPlayer, "Venting in lobby");
-                        return true;
-                    }
-                    if (IsDead[physics.myPlayer.PlayerId])
-                    {
-                        HandleCheat(physics.myPlayer, "Venting as dead");
                         return true;
                     }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
@@ -604,11 +547,6 @@ namespace MoreGamemodes
                     if (!gameStarted)
                     {
                         HandleCheat(physics.myPlayer, "Climbing ladder in lobby");
-                        return true;
-                    }
-                    if (IsDead[physics.myPlayer.PlayerId])
-                    {
-                        HandleCheat(physics.myPlayer, "Climbing ladder as dead");
                         return true;
                     }
                     if (GameManager.Instance.LogicOptions.MapId < 4)
@@ -632,11 +570,6 @@ namespace MoreGamemodes
                         HandleCheat(physics.myPlayer, "Petting in vent");
                         return true;
                     }
-                    if (IsDead.ContainsKey(physics.myPlayer.PlayerId) && IsDead[physics.myPlayer.PlayerId])
-                    {
-                        HandleCheat(physics.myPlayer, "Petting as dead");
-                        return true;
-                    }
                     if (!physics.myPlayer.cosmetics.HasPetEquipped())
                     {
                         HandleCheat(physics.myPlayer, "Petting without pet");
@@ -654,7 +587,7 @@ namespace MoreGamemodes
 
         public static bool CustomNetworkTransformReceiveRpc(CustomNetworkTransform netTransform, byte callId, MessageReader reader)
         {
-            if (!AmongUsClient.Instance.AmHost) return false;
+            if (!AmongUsClient.Instance.AmHost || !Options.AntiCheat.GetBool()) return false;
             if (netTransform == null || reader == null) return false;
             if (netTransform.AmOwner) return false;
             MessageReader sr = MessageReader.Get(reader);
@@ -689,7 +622,7 @@ namespace MoreGamemodes
 
         public static bool RpcUpdateSystemCheck(PlayerControl player, SystemTypes systemType, byte amount, MessageReader reader)
         {
-            if (!AmongUsClient.Instance.AmHost) return false;
+            if (!AmongUsClient.Instance.AmHost || !Options.AntiCheat.GetBool()) return false;
             if (player == null || reader == null) return false;
             if (player.AmOwner) return false;
             MessageReader sr = MessageReader.Get(reader);
@@ -805,11 +738,6 @@ namespace MoreGamemodes
                     switch (operation)
                     {
                         case VentilationSystem.Operation.StartCleaning:
-                            if (IsDead[player.PlayerId])
-                            {
-                                HandleCheat(player, "Cleaning vent as dead");
-                                return true;
-                            }
                             if (ventilationSystem.PlayersCleaningVents.ContainsKey(player.PlayerId))
                             {
                                 HandleCheat(player, "Hack sent clean vent");
@@ -836,11 +764,6 @@ namespace MoreGamemodes
                         case VentilationSystem.Operation.Enter:
                         case VentilationSystem.Operation.Exit:
                         case VentilationSystem.Operation.Move:
-                            if (IsDead[player.PlayerId])
-                            {
-                                HandleCheat(player, "Venting as dead");
-                                return true;
-                            }
                             if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
                             var selfRole3 = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
                             if (!selfRole3.IsImpostor() && selfRole3 != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f)))
@@ -850,11 +773,6 @@ namespace MoreGamemodes
                             }
                             break;
                         case VentilationSystem.Operation.BootImpostors:
-                            if (IsDead[player.PlayerId])
-                            {
-                                HandleCheat(player, "Boot from vent hack");
-                                return true;
-                            }
                             if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
                             var selfRole4 = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
                             if (selfRole4.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
@@ -928,6 +846,7 @@ namespace MoreGamemodes
         
         public static void HandleCheat(PlayerControl pc, string reason)
         {
+            if (!Options.AntiCheat.GetBool()) return;
             switch (Options.CurrentCheatingPenalty)
             {
                 case CheatingPenalties.WarnHost:

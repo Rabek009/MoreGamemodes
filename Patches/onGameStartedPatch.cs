@@ -47,7 +47,6 @@ namespace MoreGamemodes
                 CheckMurderPatch.TimeSinceLastKill[pc.PlayerId] = 0f;
                 CheckProtectPatch.TimeSinceLastProtect[pc.PlayerId] = 0f;
                 Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
-                AntiCheat.IsDead[pc.PlayerId] = false;
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {

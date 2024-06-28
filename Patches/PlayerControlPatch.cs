@@ -305,7 +305,7 @@ namespace MoreGamemodes
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (!RoleManager.IsGhostRole(roleType))
+            if (!Main.StandardRoles.ContainsKey(__instance.PlayerId) && !RoleManager.IsGhostRole(roleType))
                 Main.StandardRoles[__instance.PlayerId] = roleType;
         }
     }
@@ -402,9 +402,6 @@ namespace MoreGamemodes
             }
             if (CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
                 __instance.RpcSetPet("");
-            new LateTask(() => {
-                AntiCheat.IsDead[__instance.PlayerId] = true;
-            }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
             return true;
         }
     }

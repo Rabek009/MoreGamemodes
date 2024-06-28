@@ -49,12 +49,7 @@ namespace MoreGamemodes
             AntiBlackout.RestoreIsDead(doSend: false);
             CustomGamemode.Instance.OnExile(exiled);
             if (exiled != null)
-            {
                 exiled.IsDead = true;
-                new LateTask(() => {
-                    AntiCheat.IsDead[exiled.PlayerId] = true;
-                }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
-            }
                 
             if (exiled == null || exiled.Object == null) return;
             if (exiled.Object.GetDeathReason() == DeathReasons.Alive)

@@ -318,9 +318,6 @@ namespace MoreGamemodes
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.Orange;
                         RespawnCooldown[target.PlayerId] = Options.RespawnCooldown.GetFloat();
                         target.Data.IsDead = true;
-                        new LateTask(() => {
-                            AntiCheat.IsDead[target.PlayerId] = true;
-                        }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
                         Utils.SendGameData();
                         target.SyncPlayerSettings();
                         target.RpcTeleport(new Vector2(1000f, 1000f));
@@ -404,9 +401,6 @@ namespace MoreGamemodes
                 }   
                 RespawnCooldown[target.PlayerId] = Options.RespawnCooldown.GetFloat();
                 target.Data.IsDead = true;
-                new LateTask(() => {
-                    AntiCheat.IsDead[target.PlayerId] = true;
-                }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
                 Utils.SendGameData();
                 target.SyncPlayerSettings();
                 target.RpcTeleport(new Vector2(1000f, 1000f));
@@ -419,7 +413,9 @@ namespace MoreGamemodes
         {
             if (shapeshifter.GetPlainShipRoom() != null && shapeshifter.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && shapeshifter.IsGuard())
             {
-                ReactorWallHealth = 100f;
+                ReactorWallHealth += 10f;
+                if (ReactorWallHealth > 100f)
+                    ReactorWallHealth = 100f;
                 shapeshifter.RpcResetAbilityCooldown();
                 return false;
             }
@@ -545,7 +541,6 @@ namespace MoreGamemodes
                     {
                         PlayerHealth[pc.PlayerId] = pc.IsGuard() ? Options.GuardHealth.GetFloat() : Options.PrisonerHealth.GetFloat();
                         pc.Data.IsDead = false;
-                        AntiCheat.IsDead[pc.PlayerId] = false;
                         Utils.SendGameData();
                         if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3)
                             pc.MyPhysics.RpcBootFromVent(6);
@@ -636,7 +631,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.Data.IsDead) continue;
-                    if (pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.MedBay && TimeSinceLastDamage[pc.PlayerId] >= 5f  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
+                    if (pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.MedBay && TimeSinceLastDamage[pc.PlayerId] >= 5f && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
                     {
                         if (pc.IsGuard())
                         {
@@ -651,7 +646,7 @@ namespace MoreGamemodes
                                 PlayerHealth[pc.PlayerId] = Options.PrisonerHealth.GetFloat();
                         } 
                     }
-                    else
+                    else if (TimeSinceLastDamage[pc.PlayerId] >= 5f && !pc.inVent)
                     {
                         if (pc.IsGuard())
                         {

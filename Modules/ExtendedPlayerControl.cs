@@ -805,7 +805,6 @@ namespace MoreGamemodes
         {
             if (player == null) return;
             Main.StandardRoles[player.PlayerId] = role;
-            AntiCheat.IsDead[player.PlayerId] = role is RoleTypes.GuardianAngel or RoleTypes.CrewmateGhost or RoleTypes.ImpostorGhost;
             player.StartCoroutine(player.CoSetRole(role, true));
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);

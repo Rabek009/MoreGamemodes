@@ -834,7 +834,7 @@ namespace MoreGamemodes
                 shortenedtext = line + "\n";
             }
             if (shortenedtext.Length > 0) result.Add(shortenedtext);
-         return result;
+            return result;
         }
     }
 }

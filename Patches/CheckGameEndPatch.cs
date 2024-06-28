@@ -252,18 +252,19 @@ namespace MoreGamemodes
 
         private static bool CheckAndEndGameForZombiesTaskWin()
         {
-            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
+            foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                List<byte> winners = new();
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie())
-                        winners.Add(pc.PlayerId);
-                }
-                StartEndGame(GameOverReason.HumansByTask, winners);
-                return true;
+                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie() && !pc.AllTasksCompleted())
+                    return false;
             }
-            return false;
+            List<byte> winners = new();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie())
+                    winners.Add(pc.PlayerId);
+            }
+            StartEndGame(GameOverReason.HumansByTask, winners);
+            return true;
         }
 
         private static bool CheckAndEndGameForEveryoneEscape()

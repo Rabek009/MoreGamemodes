@@ -96,10 +96,7 @@ namespace MoreGamemodes
                 if (pc.GetZombieType() == ZombieTypes.JustTurned)
                     pc.RpcSetZombieType(ZombieTypes.FullZombie);
                 if (pc.IsZombie() && pc.GetZombieType() != ZombieTypes.Dead)
-                {
                     pc.Data.IsDead = false;
-                    AntiCheat.IsDead[pc.PlayerId] = false;
-                }  
             }
             Utils.SendGameData();
             if (exiled != null && exiled.Object != null && !Main.StandardRoles[exiled.PlayerId].IsImpostor() && exiled.Object.KillsRemain() > 0)
@@ -109,6 +106,7 @@ namespace MoreGamemodes
                     if (!pc.Data.IsDead)
                         pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], exiled.Object);
                 }
+                Main.NameColors[(exiled.PlayerId, exiled.PlayerId)] = Color.clear;
             }
             new LateTask(() =>{
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -160,6 +158,7 @@ namespace MoreGamemodes
                     if (!pc.Data.IsDead)
                         pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], killer);
                 }
+                Main.NameColors[(killer.PlayerId, killer.PlayerId)] = Color.clear;
                 return false;
             }
             return true;
@@ -195,6 +194,7 @@ namespace MoreGamemodes
                         if (!pc.Data.IsDead)
                             pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], killer);
                     }
+                    Main.NameColors[(killer.PlayerId, killer.PlayerId)] = Color.clear;
                 }
             }
             if (!Main.StandardRoles[target.PlayerId].IsImpostor() && target.KillsRemain() <= 0)
@@ -204,7 +204,14 @@ namespace MoreGamemodes
                     if (!pc.Data.IsDead)
                         pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], target);
                 }
+                Main.NameColors[(target.PlayerId, target.PlayerId)] = Color.clear;
             }
+        }
+
+        public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
+        {
+            if (target.IsZombie()) return false;
+            return true;
         }
 
         public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
@@ -214,12 +221,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.IsZombie())
-                {
                     pc.Data.IsDead = true;
-                    new LateTask(() => {
-                        AntiCheat.IsDead[__instance.PlayerId] = true;
-                    }, Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 12f));
-                }
             }
             Utils.SendGameData();
             return true;
@@ -245,6 +247,7 @@ namespace MoreGamemodes
                     if (Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.Data.IsDead)
                         pc.RpcSetDesyncRole(RoleTypes.Crewmate, __instance);
                 }
+                Main.NameColors[(__instance.PlayerId, __instance.PlayerId)] = Color.white;
             }
         }
 
