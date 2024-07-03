@@ -49,7 +49,7 @@ namespace MoreGamemodes
         public static void RpcSendMessage(this PlayerControl player, string message, string title)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (message.Length > 1200)
+            if (message.Length > 1000)
             {
                 foreach (var text in message.SplitMessage())
                     player.RpcSendMessage(text, title);

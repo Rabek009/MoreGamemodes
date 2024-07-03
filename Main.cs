@@ -50,7 +50,7 @@ public partial class Main : BasePlugin
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
 
-    public const string CurrentVersion = "2.0.0 dev2";
+    public const string CurrentVersion = "2.0.0 dev3";
 
     public override void Load()
     {
@@ -97,7 +97,7 @@ public partial class Main : BasePlugin
         {
             "Crewmate", "Impostor", "Dead body", "Cosmos", "House", "Beach", "Sky", "Love", "Jungle", "Robot", "Fruits", "Vegetables", "Lake",
             "Rainbow", "Portal", "Planet", "Desert", "Taiga", "Airplane", "Cave", "Island", "Animal", "Anything", "Flag", "Jewellery", "Scary",
-            "Shapeshifter", "Sword", "Treasure", "Your dream", "Celebrity", "Fungus"
+            "Shapeshifter", "Sword", "Treasure", "Your dream", "Celebrity", "Fungus", "City", "Spaceship", "Toilet", "Tree", "Abstraction"
         };
         MessagesToSend = new List<(string, byte, string)>();
         CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();

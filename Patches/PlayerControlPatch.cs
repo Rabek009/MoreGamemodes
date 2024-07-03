@@ -185,7 +185,7 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] NetworkedPlayerInfo target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (target != null && !target.IsDead) return false;
+            if (target != null && !target.IsDead && CustomGamemode.Instance.Gamemode != Gamemodes.Zombies) return false;
             if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target)) return false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {

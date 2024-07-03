@@ -71,22 +71,6 @@ namespace MoreGamemodes
                     if (rpc == RpcCalls.PlayAnimation)
                     {
                         var animation = sr.ReadByte();
-                        var mapId = GameManager.Instance.LogicOptions.MapId;
-                        if (animation == 1 && mapId != 0 && mapId != 3)
-                        {
-                            HandleCheat(pc, "Animation on wrong map");
-                            return true;
-                        }
-                        if (animation == 6 && mapId != 0 && mapId != 2 && mapId != 3)
-                        {
-                            HandleCheat(pc, "Animation on wrong map");
-                            return true;
-                        }
-                        if ((animation == 9 || animation == 10) && mapId != 0 && mapId != 3)
-                        {
-                            HandleCheat(pc, "Animation on wrong map");
-                            return true;
-                        }
                         if (!pc.HasTask((TaskTypes)animation) && !ChangedTasks.Contains(pc.PlayerId))
                         {
                             HandleCheat(pc, "Hack sent animation");
@@ -95,11 +79,6 @@ namespace MoreGamemodes
                     }
                     else
                     {
-                        if (GameManager.Instance.LogicOptions.MapId >= 4)
-                        {
-                            HandleCheat(pc, "Scanning on wrong map");
-                            return true;
-                        }
                         if (!pc.HasTask(TaskTypes.SubmitScan) && !ChangedTasks.Contains(pc.PlayerId))
                         {
                             HandleCheat(pc, "Hack sent scan");

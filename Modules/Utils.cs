@@ -399,7 +399,7 @@ namespace MoreGamemodes
         public static void SendChat(string message, string title)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (message.Length > 1200)
+            if (message.Length > 1000)
             {
                 foreach (var text in message.SplitMessage())
                     SendChat(text, title);
@@ -823,18 +823,38 @@ namespace MoreGamemodes
             foreach (var line in lines)
             {
 
-                if (shortenedtext.Length + line.Length < 1200)
+                if (shortenedtext.Length + line.Length < 1000)
                 {
                     shortenedtext += line + "\n";
                     continue;
                 }
 
-                if (shortenedtext.Length >= 1200) result.AddRange(shortenedtext.Chunk(1200).Select(x => new string(x)));
+                if (shortenedtext.Length >= 1000) result.AddRange(shortenedtext.Chunk(1000).Select(x => new string(x)));
                 else result.Add(shortenedtext);
                 shortenedtext = line + "\n";
             }
             if (shortenedtext.Length > 0) result.Add(shortenedtext);
             return result;
+        }
+
+        public static bool IsValidFriendCode(string friendCode)
+        {
+            if (string.IsNullOrEmpty(friendCode)) return false;
+            if (friendCode.Length < 7) return false;
+            if (friendCode[friendCode.Length - 5] != '#') return false;
+
+            for (int i = 0; i < friendCode.Length - 5; ++i)
+            {
+                if (friendCode[i] < 'a' || friendCode[i] > 'z')
+                    return false;
+            }
+
+            for (int i = friendCode.Length - 4; i < friendCode.Length; ++i)
+            {
+                if (friendCode[i] < '0' || friendCode[i] > '9')
+                    return false;
+            }
+            return true;
         }
     }
 }

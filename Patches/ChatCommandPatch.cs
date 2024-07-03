@@ -432,27 +432,6 @@ namespace MoreGamemodes
                                     break;
                             }
                             break;
-                        /*case "gamemode":
-                            subArgs = args.Length < 3 ? "" : args[2];
-                            switch (subArgs)
-                            {
-                                case "none":
-                                    Utils.ChangeGamemode(GameModes.None);
-                                    break;
-                                case "classic":
-                                    Utils.ChangeGamemode(GameModes.Normal);
-                                    break;
-                                case "hidenseek":
-                                    Utils.ChangeGamemode(GameModes.HideNSeek);
-                                    break;
-                                case "classicfools":
-                                    Utils.ChangeGamemode(GameModes.NormalFools);
-                                    break;
-                                case "hidenseekfools":
-                                    Utils.ChangeGamemode(GameModes.SeekFools);
-                                    break;
-                            }
-                            break;*/
                         case "hidingtime":
                             subArgs = args.Length < 3 ? "" : args[2];
                             GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.EscapeTime, float.Parse(subArgs));
@@ -1810,12 +1789,12 @@ namespace MoreGamemodes
         {
             int length = __instance.textArea.text.Length;
 		    __instance.charCountText.text = length + "/" + __instance.textArea.characterLimit;
-		    if (length < (AmongUsClient.Instance.AmHost ? 1500 : 375))
+		    if (length < (AmongUsClient.Instance.AmHost ? 750 : 225))
 		    {
 		    	__instance.charCountText.color = Color.black;
 		    	return;
 		    }
-		    if (length < (AmongUsClient.Instance.AmHost ? 2000 : 500))
+		    if (length < (AmongUsClient.Instance.AmHost ? 1000 : 300))
 		    {
 		    	__instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
 		    	return;
@@ -1873,7 +1852,7 @@ namespace MoreGamemodes
     {
         public static void Postfix(ChatController __instance)
         {
-            __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 2000 : 500;
+            __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 1000 : 300;
 
             if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.C))
                 ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);

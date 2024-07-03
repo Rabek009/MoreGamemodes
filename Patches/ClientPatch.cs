@@ -15,17 +15,19 @@ namespace MoreGamemodes
                 AntiCheat.Init();
                 return;
             }
+            if (client != null && Options.AntiCheat.GetBool() && !Utils.IsValidFriendCode(client.FriendCode) && AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
+            {
+                AmongUsClient.Instance.KickPlayer(client.Id, Options.CurrentCheatingPenalty == CheatingPenalties.Ban);
+                return;
+            }
             OptionItem.SyncAllOptions();
             new LateTask(() => 
             {
                 if (client.Character != null)
                     client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-            }, 2f, "Welcome Message");
-            new LateTask(() =>
-            {
-                if (client.Character == null)
+                else
                     __instance.KickPlayer(client.Id, false);
-            }, 3f, "Kick Fortegreen");
+            }, 2f, "Welcome Message");
         }
     }
 
@@ -109,6 +111,17 @@ namespace MoreGamemodes
                     PlayerControl.LocalPlayer.RpcRequestVersionCheck();
                 }, 0.5f);
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.AddVote))]
+    class AddVotePatch
+    {
+        public static bool Prefix(VoteBanSystem __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            new LateTask(() => __instance.SetDirtyBit(1U), 0.5f);
+            return false;
         }
     }
 }
