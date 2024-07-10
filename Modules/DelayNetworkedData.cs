@@ -6,9 +6,8 @@ using UnityEngine;
 using HarmonyLib;
 using System.Linq;
 using System.Collections.Generic;
-using MoreGamemodes;
 
-namespace TOHE.Modules.DelayNetworkDataSpawn;
+namespace MoreGamemodes;
 
 [HarmonyPatch(typeof(InnerNetClient))]
 public class InnerNetClientPatch

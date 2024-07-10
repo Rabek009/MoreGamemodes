@@ -454,7 +454,7 @@ namespace MoreGamemodes
             }
         }
 
-        public static void SendGameDataV02()
+        public static void SendGameData()
         {
             MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(5);
@@ -749,7 +749,7 @@ namespace MoreGamemodes
                         Disconnected[pc.PlayerId] = pc.Data.Disconnected;
                         pc.Data.Disconnected = true;
                     }
-                    SendGameDataV02();
+                    SendGameData();
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         pc.Data.Disconnected = Disconnected[pc.PlayerId];
                 }, 0.5f);
@@ -767,7 +767,7 @@ namespace MoreGamemodes
 					DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
 					DestroyableSingleton<HudManager>.Instance.HideGameLoader();
                 }, 1.2f);
-                new LateTask(() => SendGameDataV02(), 1.5f);
+                new LateTask(() => SendGameData(), 1.5f);
                 return;
             }
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;

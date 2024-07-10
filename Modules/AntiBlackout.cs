@@ -22,7 +22,7 @@ namespace MoreGamemodes
                 info.Disconnected = false;
             }
             IsCached = true;
-            if (doSend) Utils.SendGameDataV02();
+            if (doSend) Utils.SendGameData();
         }
         public static void RestoreIsDead(bool doSend = true, [CallerMemberName] string callerMethodName = "")
         {
@@ -37,26 +37,15 @@ namespace MoreGamemodes
             }
             isDeadCache.Clear();
             IsCached = false;
-            if (doSend) Utils.SendGameDataV02();
+            if (doSend) Utils.SendGameData();
+            
         }
-
-
-         public static void LegacySendGameData([CallerMemberName] string callerMethodName = "")
-         {
-              Main.Instance.Log.LogInfo($"SendGameData is called from {callerMethodName}");
-             foreach (var innerNetObject in GameData.Instance.AllPlayers)
-            {
-               innerNetObject.SetDirtyBit(uint.MaxValue);
-            }
-               AmongUsClient.Instance.SendAllStreamedObjects();
-         }
-
         public static void OnDisconnect(NetworkedPlayerInfo player)
         {
             if (!AmongUsClient.Instance.AmHost || !IsCached || !player.Disconnected) return;
             isDeadCache[player.PlayerId] = (true, true);
             player.IsDead = player.Disconnected = false;
-            Utils.SendGameDataV02();
+            Utils.SendGameData();
         }
 
         public static void Reset()
