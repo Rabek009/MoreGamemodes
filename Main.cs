@@ -50,7 +50,7 @@ public partial class Main : BasePlugin
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
 
-    public const string CurrentVersion = "2.0.0 dev3";
+    public const string CurrentVersion = "2.0.0 dev4";
 
     public override void Load()
     {
@@ -113,6 +113,8 @@ public partial class Main : BasePlugin
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
         ChatUpdatePatch.SendingSystemMessage = false;
         AntiBlackout.Reset();
+        DevManager.Init();
+
 
         Harmony.PatchAll();
     }

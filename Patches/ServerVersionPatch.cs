@@ -9,8 +9,13 @@ namespace MoreGamemodes
         {
             if (AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
             {
-                __result += 25;
+                __result += 25; // Protocol Broken
             }
+            if (AmongUsClient.Instance.NetworkMode == NetworkModes.LocalGame)
+            {
+                Main.Instance.Log.LogMessage($"IsLocalGame : {__result}");
+            }
+
         }
     }
 

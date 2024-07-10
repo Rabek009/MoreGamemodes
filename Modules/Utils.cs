@@ -11,6 +11,9 @@ using System.Reflection;
 using System;
 
 using Object = UnityEngine.Object;
+using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace MoreGamemodes
 {
@@ -49,9 +52,34 @@ namespace MoreGamemodes
             }
         }
 
+        public static string GetHashedPuid(this ClientData player)
+    {
+        if (player == null) return "";
+        string puid = player.ProductUserId;
+        using SHA256 sha256 = SHA256.Create();
+        
+        // get sha-256 hash
+        byte[] sha256Bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(puid));
+        string sha256Hash = BitConverter.ToString(sha256Bytes).Replace("-", "").ToLower();
+
+        // pick front 5 and last 4
+        return string.Concat(sha256Hash.AsSpan(0, 5), sha256Hash.AsSpan(sha256Hash.Length - 4));
+    }
+
         public static string ColorString(Color32 color, string str) => $"<#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
         public static string ColorToHex(Color32 color) => $"#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}";
-        
+        public static bool CheckColorHex(string ColorCode)
+        {
+            Regex regex = new("^[0-9A-Fa-f]{6}$");
+            if (!regex.IsMatch(ColorCode)) return false;
+            return true;
+        }
+        public static bool CheckGradientCode(string ColorCode)
+        {
+            Regex regex = new(@"^[0-9A-Fa-f]{6}\s[0-9A-Fa-f]{6}$");
+             if (!regex.IsMatch(ColorCode)) return false;
+             return true;
+        } 
         public static Items RandomItemCrewmate()
         {
             List<Items> items = new();
@@ -426,7 +454,7 @@ namespace MoreGamemodes
             }
         }
 
-        public static void SendGameData()
+        public static void SendGameDataV02()
         {
             MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(5);
@@ -721,7 +749,7 @@ namespace MoreGamemodes
                         Disconnected[pc.PlayerId] = pc.Data.Disconnected;
                         pc.Data.Disconnected = true;
                     }
-                    SendGameData();
+                    SendGameDataV02();
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         pc.Data.Disconnected = Disconnected[pc.PlayerId];
                 }, 0.5f);
@@ -739,7 +767,7 @@ namespace MoreGamemodes
 					DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
 					DestroyableSingleton<HudManager>.Instance.HideGameLoader();
                 }, 1.2f);
-                new LateTask(() => SendGameData(), 1.5f);
+                new LateTask(() => SendGameDataV02(), 1.5f);
                 return;
             }
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
