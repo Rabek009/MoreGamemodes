@@ -1009,6 +1009,7 @@ namespace MoreGamemodes
                         announce += subArgs;
                     }
                     Utils.SendChat(announce, "HostMessage");
+                    
                     break;
                 case "/lastresult":
                 case "/l":

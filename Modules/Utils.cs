@@ -841,6 +841,33 @@ namespace MoreGamemodes
                     player.RpcSendMessage(Messages[tab], "Options");
             }
         }
+        public static void AddCustomSettingsChangeMessage(this NotificationPopper notificationPopper, string optionName, string value,  bool playSound)
+        {
+           OptionItem optionItem = OptionItem.AllOptions.FirstOrDefault(opt => opt.Name == optionName);
+           if (optionItem == null)
+           {
+             Main.Instance.Log.LogError($"Option with name {optionName} Not Found Check Speeling Errors");
+             Debug.LogError(optionItem == null); // This Will display False or True
+           }
+             string text = $"<font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{optionItem.GetName()}</font>: <font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{value}</font>";
+           
+           HudManager.Instance.Notifier.CustomSettingsChangeMessageLogic(optionName, text, playSound);
+        }
+        public static void CustomSettingsChangeMessageLogic(this NotificationPopper notificationPopper, string optionName, string text,  bool playSound)
+        {
+            LobbyNotificationMessage settingmessage = Object.Instantiate<LobbyNotificationMessage>(notificationPopper.notificationMessageOrigin, Vector3.zero, Quaternion.identity, notificationPopper.notificationMessageOrigin.transform.parent);
+            settingmessage.transform.localPosition = new Vector3(0f, 0f, -2f);
+            settingmessage.SetUp(text, notificationPopper.settingsChangeSprite, notificationPopper.settingsChangeColor, new Action(() =>
+            {
+                notificationPopper.OnMessageDestroy(settingmessage);
+            }));
+            if (playSound)
+            {
+               SoundManager.Instance.PlaySound(notificationPopper.settingsChangeSound, false, 1f, null);
+            }
+            notificationPopper.ShiftMessages();
+            notificationPopper.AddMessageToQueue(settingmessage);
+        }
 
         public static List<string> SplitMessage(this string LongMsg)
         {

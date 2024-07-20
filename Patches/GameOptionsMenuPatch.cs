@@ -208,7 +208,13 @@ public static class GameOptionsMenuPatch
         if (ModGameOptionsMenu.OptionList.TryGetValue(option, out var index))
         {
             var item = OptionItem.AllOptions[index];
-            if (item != null && item.Children.Count > 0) ReCreateSettings(__instance);
+            if (item != null && item.Children.Count > 0) 
+            {
+                ReCreateSettings(__instance);
+
+                HudManager.Instance.Notifier.AddCustomSettingsChangeMessage(item.Name, item.GetValue().ToString(), true);
+            }
+
         }
         return false;
     }
