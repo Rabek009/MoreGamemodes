@@ -205,12 +205,12 @@ public static class GameOptionsMenuPatch
     {
         if (ModGameOptionsMenu.TabIndex < 3) return true;
 
-        ReCreateSettings(__instance);
         if (ModGameOptionsMenu.OptionList.TryGetValue(option, out var index))
         {
             var item = OptionItem.AllOptions[index];
             if (item != null) 
             {
+                ReCreateSettings(__instance);
                 if (item is IntegerOptionItem)
                     GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetInt().ToString(), true);
                 else if (item is FloatOptionItem)
