@@ -205,16 +205,21 @@ public static class GameOptionsMenuPatch
     {
         if (ModGameOptionsMenu.TabIndex < 3) return true;
 
+        ReCreateSettings(__instance);
         if (ModGameOptionsMenu.OptionList.TryGetValue(option, out var index))
         {
             var item = OptionItem.AllOptions[index];
-            if (item != null && item.Children.Count > 0) 
+            if (item != null) 
             {
-                ReCreateSettings(__instance);
-
-                HudManager.Instance.Notifier.AddCustomSettingsChangeMessage(item.Name, item.GetValue().ToString(), true);
+                if (item is IntegerOptionItem)
+                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetInt().ToString(), true);
+                else if (item is FloatOptionItem)
+                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetFloat().ToString(), true);
+                else if (item is BooleanOptionItem)
+                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetBool() ? "ON" : "OFF", true);
+                else if (item is StringOptionItem || item is PresetOptionItem)
+                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetString(), true);
             }
-
         }
         return false;
     }

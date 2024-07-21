@@ -3,6 +3,7 @@ using Hazel;
 using InnerNet;
 using UnityEngine;
 using System;
+using System.Linq;
 
 using Object = UnityEngine.Object;
 
@@ -29,6 +30,7 @@ namespace MoreGamemodes
         StartGamemode,
         RemoveDeadBody,
         RequestVersionCheck,
+        AddCustomSettingsChangeMessage,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -168,6 +170,11 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.StartGamemode:
                     __instance.StartGamemode((Gamemodes)reader.ReadPackedInt32());
+                    break;
+                case CustomRPC.AddCustomSettingsChangeMessage:
+                    var optionItem = OptionItem.AllOptions.FirstOrDefault(opt => opt.Id == reader.ReadInt32());
+                    if (optionItem == null) break;
+                    __instance.AddCustomSettingsChangeMessage(optionItem, reader.ReadString(), reader.ReadBoolean());
                     break;
             }
         }
@@ -371,6 +378,20 @@ namespace MoreGamemodes
             }
         }
 
+        public static void AddCustomSettingsChangeMessage(this GameManager manager, OptionItem optionItem, string value, bool playSound)
+        {
+            string optionName = "";
+            if (optionItem.Parent?.Parent?.Parent != null)
+                optionName += optionItem.Parent.Parent.Parent.GetOptionNameSCM() + " → ";
+            if (optionItem.Parent?.Parent != null)
+                optionName += optionItem.Parent.Parent.GetOptionNameSCM() + " → ";
+            if (optionItem.Parent != null)
+                optionName += optionItem.Parent.GetOptionNameSCM() + " → ";
+            optionName += optionItem.GetOptionNameSCM();
+            string text = $"<font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{optionName}</font>: <font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{value}</font>";
+            HudManager.Instance.Notifier.CustomSettingsChangeMessageLogic(optionItem, text, playSound);
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -540,6 +561,16 @@ namespace MoreGamemodes
         public static void RpcRequestVersionCheck(this PlayerControl player)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.RequestVersionCheck, SendOption.Reliable, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcAddCustomSettingsChangeMessage(this GameManager manager, OptionItem optionItem, string value, bool playSound)
+        {
+            manager.AddCustomSettingsChangeMessage(optionItem, value, playSound);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.AddCustomSettingsChangeMessage, SendOption.Reliable, -1);
+            writer.Write(optionItem.Id);
+            writer.Write(value);
+            writer.Write(playSound);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

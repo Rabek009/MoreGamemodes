@@ -670,40 +670,6 @@ namespace MoreGamemodes
                             break;
                     }        
                     break;
-                    case "/up":
-                    canceled = true;
-                    subArgs = text.Remove(0, 3);
-                    if (!PlayerControl.LocalPlayer.FriendCode.GetDevUser().IsUp)
-                    {
-                        Utils.SendChat("<color=#ff1919><size=125%><b>INVALID PERMISSION</b></size></color>\n\n<color=#ff1919>Sorry, you do not have the permission to use this command, check /me for all permissions</color>", "SYSTEM TAG DEV");
-                        break;
-                    }
-                    break;
-                case "/me":
-                canceled = true;
-                subArgs = text.Length == 3 ? string.Empty : text.Remove(0,3);
-                    string Devbox = PlayerControl.LocalPlayer.FriendCode.GetDevUser().DeBug ? "<#10e341><b>✓</b></color>" : "<#e31010><b>〤</b></color>";
-                    string UpBox = PlayerControl.LocalPlayer.FriendCode.GetDevUser().IsUp ? "<#10e341><b>✓</b></color>" : "<#e31010><b>〤</b></color>";
-                    string ColorBox = PlayerControl.LocalPlayer.FriendCode.GetDevUser().ColorCmd ? "<#10e341><b>✓</b></color>" : "<#e31010><b>〤</b></color>";
-                if (string.IsNullOrEmpty(subArgs))
-                {
-                     HudManager.Instance.Chat.AddChat(PlayerControl.LocalPlayer, (PlayerControl.LocalPlayer.FriendCode.GetDevUser().HasTag() ? "\n" : string.Empty) + $"{string.Format("<size=100%><b>Hi [{0}] {1} !</b></size>\n\n<size=80%><align=\"flush\"><color=#f34c50>friend-code</color> <color=#a6a832>Hash-Puid</color> <color=#6632a8>Type</color><br>{2} {3} {4}<br><br><color=#7a0000>IsDev</color> <color=#349972>HasUp</color> <size=50%><color=#252dc4>/color-Bypass</color></size><br>{5} {6} {7} <br><br></align>", PlayerControl.LocalPlayer.PlayerId, PlayerControl.LocalPlayer.GetClient().PlayerName, PlayerControl.LocalPlayer.GetClient().FriendCode, PlayerControl.LocalPlayer.GetClient().GetHashedPuid(), PlayerControl.LocalPlayer.FriendCode.GetDevUser().GetUserType(), Devbox, UpBox, ColorBox)}");
-                }
-                else
-                {
-                    if (byte.TryParse(subArgs, out byte meidId))
-                    {
-                        if (meidId != PlayerControl.LocalPlayer.PlayerId)
-                        {
-                            var targetplayer = Utils.GetPlayerById(meidId);
-                            if (targetplayer != null && targetplayer.GetClient() != null)
-                            {
-                                HudManager.Instance.Chat.AddChat(PlayerControl.LocalPlayer, (PlayerControl.LocalPlayer.FriendCode.GetDevUser().HasTag() ? "\n" : string.Empty) + $"{string.Format("<size=100%><b>Selected [{0}] Player {1} ,</b></size>\n\n<size=90%>Their <color=#f34c50>friend code</color> is <u>{2}</u>.</size>\n\n<size=90%>Their <color=#f34c50>hash puid</color> is <u>{3}</u>.</size>\n\n<size=90%>Their <b><color=#ffc0cb>TOHE</color> <color=#5865F2>Discord</color></b> role is <u>{4}</u>.</size>\n\n", targetplayer.PlayerId, targetplayer.GetClient().PlayerName, targetplayer.GetClient().FriendCode, targetplayer.GetClient().GetHashedPuid(), targetplayer.FriendCode.GetDevUser().GetUserType())}");
-                            }
-                        }
-                    }
-                }
-                break;
                 case "/name":
                     canceled = true;
                     if (Main.GameStarted) break;

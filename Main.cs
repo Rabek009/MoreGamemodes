@@ -113,8 +113,6 @@ public partial class Main : BasePlugin
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
         ChatUpdatePatch.SendingSystemMessage = false;
         AntiBlackout.Reset();
-        DevManager.Init();
-
 
         Harmony.PatchAll();
     }

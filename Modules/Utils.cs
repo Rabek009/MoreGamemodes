@@ -9,11 +9,11 @@ using InnerNet;
 using System.IO;
 using System.Reflection;
 using System;
-
-using Object = UnityEngine.Object;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Text;
+
+using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
@@ -52,34 +52,8 @@ namespace MoreGamemodes
             }
         }
 
-        public static string GetHashedPuid(this ClientData player)
-    {
-        if (player == null) return "";
-        string puid = player.ProductUserId;
-        using SHA256 sha256 = SHA256.Create();
-        
-        // get sha-256 hash
-        byte[] sha256Bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(puid));
-        string sha256Hash = BitConverter.ToString(sha256Bytes).Replace("-", "").ToLower();
-
-        // pick front 5 and last 4
-        return string.Concat(sha256Hash.AsSpan(0, 5), sha256Hash.AsSpan(sha256Hash.Length - 4));
-    }
-
         public static string ColorString(Color32 color, string str) => $"<#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}>{str}</color>";
         public static string ColorToHex(Color32 color) => $"#{color.r:x2}{color.g:x2}{color.b:x2}{color.a:x2}";
-        public static bool CheckColorHex(string ColorCode)
-        {
-            Regex regex = new("^[0-9A-Fa-f]{6}$");
-            if (!regex.IsMatch(ColorCode)) return false;
-            return true;
-        }
-        public static bool CheckGradientCode(string ColorCode)
-        {
-            Regex regex = new(@"^[0-9A-Fa-f]{6}\s[0-9A-Fa-f]{6}$");
-             if (!regex.IsMatch(ColorCode)) return false;
-             return true;
-        } 
         public static Items RandomItemCrewmate()
         {
             List<Items> items = new();
@@ -841,32 +815,29 @@ namespace MoreGamemodes
                     player.RpcSendMessage(Messages[tab], "Options");
             }
         }
-        public static void AddCustomSettingsChangeMessage(this NotificationPopper notificationPopper, string optionName, string value,  bool playSound)
+
+        public static void CustomSettingsChangeMessageLogic(this NotificationPopper notificationPopper, OptionItem optionItem, string text, bool playSound)
         {
-           OptionItem optionItem = OptionItem.AllOptions.FirstOrDefault(opt => opt.Name == optionName);
-           if (optionItem == null)
-           {
-             Main.Instance.Log.LogError($"Option with name {optionName} Not Found Check Speeling Errors");
-             Debug.LogError(optionItem == null); // This Will display False or True
-           }
-             string text = $"<font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{optionItem.GetName()}</font>: <font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{value}</font>";
-           
-           HudManager.Instance.Notifier.CustomSettingsChangeMessageLogic(optionName, text, playSound);
-        }
-        public static void CustomSettingsChangeMessageLogic(this NotificationPopper notificationPopper, string optionName, string text,  bool playSound)
-        {
-            LobbyNotificationMessage settingmessage = Object.Instantiate<LobbyNotificationMessage>(notificationPopper.notificationMessageOrigin, Vector3.zero, Quaternion.identity, notificationPopper.notificationMessageOrigin.transform.parent);
-            settingmessage.transform.localPosition = new Vector3(0f, 0f, -2f);
-            settingmessage.SetUp(text, notificationPopper.settingsChangeSprite, notificationPopper.settingsChangeColor, new Action(() =>
+            if (notificationPopper.lastMessageKey == 10000 + optionItem.Id && notificationPopper.activeMessages.Count > 0)
             {
-                notificationPopper.OnMessageDestroy(settingmessage);
-            }));
+                notificationPopper.activeMessages[notificationPopper.activeMessages.Count - 1].UpdateMessage(text);
+            }
+            else
+            {
+                notificationPopper.lastMessageKey = 10000 + optionItem.Id;
+                LobbyNotificationMessage settingmessage = Object.Instantiate(notificationPopper.notificationMessageOrigin, Vector3.zero, Quaternion.identity, notificationPopper.transform);
+                settingmessage.transform.localPosition = new Vector3(0f, 0f, -2f);
+                settingmessage.SetUp(text, notificationPopper.settingsChangeSprite, notificationPopper.settingsChangeColor, new Action(() =>
+                {
+                    notificationPopper.OnMessageDestroy(settingmessage);
+                }));
+                notificationPopper.ShiftMessages();
+                notificationPopper.AddMessageToQueue(settingmessage);
+            }
             if (playSound)
             {
-               SoundManager.Instance.PlaySound(notificationPopper.settingsChangeSound, false, 1f, null);
+                SoundManager.Instance.PlaySoundImmediate(notificationPopper.settingsChangeSound, false, 1f, 1f, null);
             }
-            notificationPopper.ShiftMessages();
-            notificationPopper.AddMessageToQueue(settingmessage);
         }
 
         public static List<string> SplitMessage(this string LongMsg)
@@ -910,6 +881,20 @@ namespace MoreGamemodes
                     return false;
             }
             return true;
+        }
+
+        public static string GetOptionNameSCM(this OptionItem optionItem)
+        {
+            if (optionItem.Name == "Enable")
+            {
+                int id = optionItem.Id;
+                while (id % 10 != 0)
+                    --id;
+                var optionItem2 = OptionItem.AllOptions.FirstOrDefault(opt => opt.Id == id);
+                return optionItem2 != null ? optionItem2.GetName() : optionItem.GetName();
+            }
+            else
+                return optionItem.GetName();
         }
     }
 }
