@@ -24,13 +24,13 @@ namespace MoreGamemodes
             }
             string[] args = text.Split(' ');
             string subArgs = "";
-            if (args[0] == "/name" && (text.Contains("<") || text.Contains(">")))
+            /*if (args[0] == "/name" && (text.Contains("<") || text.Contains(">")))
             {
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("You can't use text formatting in /name command.");
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
-            }
+            }*/
             if (!AmongUsClient.Instance.AmHost) return true;
             __instance.timeSinceLastMessage = 3f;
             if (__instance.quickChatField.Visible)
@@ -794,84 +794,85 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "timeslower":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSlower), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TimeSlower), "Items");
                                     break;
                                 case "knowledge":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Knowledge), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Knowledge), "Items");
                                     break;
                                 case "gun":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Gun), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Gun), "Items");
                                     break;
                                 case "shield":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Shield), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Shield), "Items");
                                     break;
                                 case "illusion":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Illusion), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Illusion), "Items");
                                     break;
                                 case "radar":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Radar), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Radar), "Items");
                                     break;
                                 case "swap":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Swap), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Swap), "Items");
                                     break;
                                 case "medicine":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Medicine), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Medicine), "Items");
                                     break;
                                 case "timespeeder":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSpeeder), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TimeSpeeder), "Items");
                                     break;
                                 case "flash":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Flash), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Flash), "Items");
                                     break;
                                 case "hack":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Hack), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Hack), "Items");
                                     break;
                                 case "camouflage":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Camouflage), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Camouflage), "Items");
                                     break;
                                 case "multiteleport":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.MultiTeleport), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.MultiTeleport), "Items");
                                     break;
                                 case "bomb":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Bomb), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Bomb), "Items");
                                     break;
                                 case "trap":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Trap), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Trap), "Items");
                                     break;
                                 case "teamchanger":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.TeamChanger), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TeamChanger), "Items");
                                     break;
                                 case "teleport":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Teleport), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Teleport), "Items");
                                     break;
                                 case "button":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Button), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Button), "Items");
                                     break;
                                 case "finder":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Finder), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Finder), "Items");
                                     break;
                                 case "rope":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Rope), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Rope), "Items");
                                     break;
                                 case "stop":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Stop), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Stop), "Items");
                                     break;
                                 case "newsletter":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Newsletter), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Newsletter), "Items");
                                     break;
                                 case "compass":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Compass), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Compass), "Items");
                                     break;
                                 case "booster":
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(Items.Booster), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Booster), "Items");
                                     break;
                                 default:
-                                    if (PlayerControl.LocalPlayer.GetItem() == Items.None)
+                                    if (RandomItemsGamemode.instance == null) break;
+                                    if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.None)
                                     {
                                         PlayerControl.LocalPlayer.RpcSendMessage("You don't have any item. Do your task or kill someone to get item!", "Items");
                                         break;
                                     }
-                                    PlayerControl.LocalPlayer.RpcSendMessage(Utils.ItemDescriptionLong(PlayerControl.LocalPlayer.GetItem()), "Items");
+                                    PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer)), "Items");
                                     break;
                             }
                             break;
@@ -912,7 +913,7 @@ namespace MoreGamemodes
                 case "/stop":
                     if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead || !MeetingHud.Instance) break;
                     canceled = true;
-                    if (PlayerControl.LocalPlayer.GetItem() == Items.Stop)
+                    if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.Stop)
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);    
                         PlayerControl.LocalPlayer.RpcSetItem(Items.None);
@@ -986,7 +987,7 @@ namespace MoreGamemodes
                 case "/info":
                     if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead) break;
                     canceled = true;
-                    if (PlayerControl.LocalPlayer.GetItem() == Items.Newsletter)
+                    if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.Newsletter)
                     {
                         int crewmates = 0;
                         int scientists = 0 ;
@@ -1403,84 +1404,85 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "timeslower":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSlower), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TimeSlower), "Items");
                                     break;
                                 case "knowledge":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Knowledge), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Knowledge), "Items");
                                     break;
                                 case "gun":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Gun), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Gun), "Items");
                                     break;
                                 case "shield":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Shield), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Shield), "Items");
                                     break;
                                 case "illusion":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Illusion), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Illusion), "Items");
                                     break;
                                 case "radar":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Radar), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Radar), "Items");
                                     break;
                                 case "swap":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Swap), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Swap), "Items");
                                     break;
                                 case "medicine":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Medicine), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Medicine), "Items");
                                     break;
                                 case "timespeeder":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.TimeSpeeder), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TimeSpeeder), "Items");
                                     break;
                                 case "flash":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Flash), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Flash), "Items");
                                     break;
                                 case "hack":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Hack), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Hack), "Items");
                                     break;
                                 case "camouflage":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Camouflage), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Camouflage), "Items");
                                     break;
                                 case "multiteleport":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.MultiTeleport), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.MultiTeleport), "Items");
                                     break;
                                 case "bomb":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Bomb), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Bomb), "Items");
                                     break;
                                 case "trap":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Trap), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Trap), "Items");
                                     break;
                                 case "teamchanger":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.TeamChanger), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TeamChanger), "Items");
                                     break;
                                 case "teleport":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Teleport), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Teleport), "Items");
                                     break;
                                 case "button":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Button), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Button), "Items");
                                     break;
                                 case "finder":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Finder), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Finder), "Items");
                                     break;
                                 case "rope":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Rope), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Rope), "Items");
                                     break;
                                 case "stop":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Stop), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Stop), "Items");
                                     break;
                                 case "newsletter":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Newsletter), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Newsletter), "Items");
                                     break;
                                 case "compass":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Compass), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Compass), "Items");
                                     break;
                                 case "booster":
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(Items.Booster), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.Booster), "Items");
                                     break;
                                 default:
-                                    if (player.GetItem() == Items.None)
+                                    if (RandomItemsGamemode.instance == null) break;
+                                    if (RandomItemsGamemode.instance.GetItem(player) == Items.None)
                                     {
                                         player.RpcSendMessage("You don't have any item. Do your task or kill someone to get item!", "Items");
                                         break;
                                     }
-                                    player.RpcSendMessage(Utils.ItemDescriptionLong(player.GetItem()), "Items");
+                                    player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(RandomItemsGamemode.instance.GetItem(player)), "Items");
                                     break;
                             }
                             break;
@@ -1521,7 +1523,7 @@ namespace MoreGamemodes
                 case "/stop":
                     if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead || !MeetingHud.Instance) break;
                     canceled = true;
-                    if (player.GetItem() == Items.Stop)
+                    if (RandomItemsGamemode.instance.GetItem(player) == Items.Stop)
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);  
                         player.RpcSetItem(Items.None);
@@ -1572,7 +1574,7 @@ namespace MoreGamemodes
                 case "/info":
                     if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead) break;
                     canceled = true;
-                    if (player.GetItem() == Items.Newsletter)
+                    if (RandomItemsGamemode.instance.GetItem(player) == Items.Newsletter)
                     {
                         int crewmates = 0;
                         int scientists = 0 ;

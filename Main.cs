@@ -49,6 +49,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, List<(string, float)>> ProximityMessages;
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
+    public static Dictionary<byte, uint> RoleFakePlayer;
 
     public const string CurrentVersion = "2.0.0 dev4";
 
@@ -108,6 +109,7 @@ public partial class Main : BasePlugin
         ProximityMessages = new Dictionary<byte, List<(string, float)>>();
         NameColors = new Dictionary<(byte, byte), Color>();
         IsModded = new Dictionary<byte, bool>();
+        RoleFakePlayer = new Dictionary<byte, uint>();
         CustomNetObject.CustomObjects = new List<CustomNetObject>();
         CustomNetObject.MaxId = -1;
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
@@ -171,6 +173,7 @@ public partial class Main : BasePlugin
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
+                RoleFakePlayer = new Dictionary<byte, uint>();
                 CustomNetObject.CustomObjects = new List<CustomNetObject>();
                 CustomNetObject.MaxId = -1;
                 RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
@@ -224,10 +227,4 @@ public enum DeathReasons
     Suicide,
     Trapped,
     Escaped,
-}
-
-public enum CustomObjectTypes
-{
-    Explosion,
-    TrapArea,
 }

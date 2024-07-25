@@ -85,6 +85,36 @@ namespace MoreGamemodes
             return false;
         }
 
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            var tasksCompleted = 0;
+            var totalTasks = 0;
+            foreach (var task in player.myTasks)
+            {
+                ++totalTasks;
+                if (task.IsComplete)
+                    ++tasksCompleted;
+            }
+            if (Options.CurrentBodyType == SpeedrunBodyTypes.Ghost)
+                --totalTasks;
+            if (player == seer || Options.TasksVisibleToOthers.GetBool())
+                name += Utils.ColorString(Color.yellow, "(" + tasksCompleted + "/" + totalTasks + ")");
+            return name;
+        }
+
         public SpeedrunGamemode()
         {
             Gamemode = Gamemodes.Speedrun;

@@ -198,7 +198,7 @@ namespace MoreGamemodes
         public static void SetBomb(this PlayerControl player, bool hasBomb)
         {
             if (BombTagGamemode.instance == null) return;
-            BombTagGamemode.instance.HasBomb[player.PlayerId] = hasBomb;
+            BombTagGamemode.instance.PlayerHasBomb[player.PlayerId] = hasBomb;
             if (player.AmOwner)
                 HudManager.Instance.TaskPanel.SetTaskText("");
         }
@@ -243,7 +243,7 @@ namespace MoreGamemodes
         public static void SetIsKiller(this PlayerControl player, bool isKiller)
         {
             if (KillOrDieGamemode.instance == null) return;
-            KillOrDieGamemode.instance.IsKiller[player.PlayerId] = isKiller;
+            KillOrDieGamemode.instance.IsPlayerKiller[player.PlayerId] = isKiller;
             if (player.AmOwner)
                 HudManager.Instance.TaskPanel.SetTaskText("");
         }

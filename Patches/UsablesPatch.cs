@@ -11,7 +11,7 @@ namespace MoreGamemodes
             float num = float.MaxValue;
             if (pc.IsDead) return false;
 
-            canUse = couldUse = pc.Object.CanVent();
+            canUse = couldUse = CustomGamemode.Instance.OnEnterVent(pc.Object, __instance.Id) && GameOptionsManager.Instance.CurrentGameOptions.MapId != 3;
             canUse = couldUse = (pc.Object.inVent || canUse) && (pc.Object.CanMove || pc.Object.inVent);
 
             if (canUse)

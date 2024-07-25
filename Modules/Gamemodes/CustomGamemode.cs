@@ -162,6 +162,11 @@ namespace MoreGamemodes
 
         }
 
+        public virtual bool OnEnterVent(PlayerControl player, int id)
+        {
+            return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
+        }
+
         public virtual void OnCompleteTask(PlayerControl __instance)
         {
 
@@ -180,6 +185,16 @@ namespace MoreGamemodes
         public virtual bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             return true;
+        }
+
+        public virtual IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            return opt;
+        }
+
+        public virtual string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            return name;
         }
 
         public static CustomGamemode Instance;

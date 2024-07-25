@@ -1,7 +1,9 @@
-using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
+using System.Linq;
+using System.Collections.Generic;
+using System.Data;
 
 namespace MoreGamemodes
 {
@@ -18,7 +20,7 @@ namespace MoreGamemodes
         {
             if (__instance.HauntTarget.Data.IsDead)
                 __instance.FilterText.text = "Ghost";
-            else if (__instance.HauntTarget.IsKiller())
+            else if (IsKiller(__instance.HauntTarget))
                 __instance.FilterText.text = "Killer";
             else
                 __instance.FilterText.text = "Runner";
@@ -35,7 +37,7 @@ namespace MoreGamemodes
             __instance.SabotageButton.ToggleVisible(false);
             if (!player.Data.IsDead)
                 __instance.AbilityButton.OverrideText("Timer");
-            if (player.IsKiller() && !player.Data.IsDead)
+            if (IsKiller(player) && !player.Data.IsDead)
             {
                 __instance.KillButton.ToggleVisible(true);
             }
@@ -51,7 +53,7 @@ namespace MoreGamemodes
             var player = PlayerControl.LocalPlayer;
             if (player.Data.IsDead)
                 __instance.taskText.text = Utils.ColorString(Color.red, "You're dead. Enjoy the chaos.");
-            else if (player.IsKiller())
+            else if (IsKiller(player))
                 __instance.taskText.text = Utils.ColorString(Color.red, "Killer\nKill someone before timer runs out.");
             else
                 __instance.taskText.text = Utils.ColorString(Color.blue, "Runner\nEscape from the killer.");
@@ -77,7 +79,7 @@ namespace MoreGamemodes
 
         public override void OnShowRole(IntroCutscene __instance)
         {
-            if (PlayerControl.LocalPlayer.IsKiller())
+            if (IsKiller(PlayerControl.LocalPlayer))
             {
                 __instance.RoleText.text = "Killer";
                 __instance.RoleText.color = Color.red;
@@ -114,7 +116,7 @@ namespace MoreGamemodes
             player.RpcSetIsKiller(true);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.IsKiller())
+                if (IsKiller(pc))
                 {
                      pc.RpcSetColor(0);
                     foreach (var ar in PlayerControl.AllPlayerControls)
@@ -137,7 +139,7 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (!killer.IsKiller() || Main.Timer < Options.KillerBlindTime.GetFloat()) return false;
+            if (!IsKiller(killer) || Main.Timer < Options.KillerBlindTime.GetFloat()) return false;
             return true;
         }
 
@@ -192,7 +194,7 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.IsKiller())
+                    if (IsKiller(pc))
                         pc.SyncPlayerSettings();
                 }
                 Main.Timer += 1f;
@@ -201,7 +203,7 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.IsKiller() && !pc.Data.IsDead)
+                    if (IsKiller(pc) && !pc.Data.IsDead)
                     {
                         pc.RpcSetDeathReason(DeathReasons.Suicide);
                         pc.RpcMurderPlayer(pc, true);
@@ -235,6 +237,11 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnEnterVent(PlayerControl player, int id)
+        {
+            return false;
+        }
+
         public override bool OnCloseDoors(ShipStatus __instance)
         {
             return false;
@@ -246,17 +253,73 @@ namespace MoreGamemodes
             return true;
         }
 
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            opt.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
+            opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.TimeToKill.GetInt() + Options.KillerBlindTime.GetFloat() + 0.1f);
+            opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
+            opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
+            if (!IsKiller(player))
+                opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
+            else if (Main.Timer < Options.KillerBlindTime.GetFloat())
+            {
+                opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+            }
+            return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            if (IsKiller(player) && Options.ArrowToNearestSurvivor.GetBool() && player == seer && GetClosestSurvivor(player) != null && !player.Data.IsDead)
+                name += "\n" + Utils.ColorString(Color.blue, Utils.GetArrow(player.transform.position, GetClosestSurvivor(player).transform.position));
+            return name;
+        }
+
+        public bool IsKiller(PlayerControl player)
+        {
+            if (player == null) return false;
+            if (IsPlayerKiller.ContainsKey(player.PlayerId)) return false;
+            return IsPlayerKiller[player.PlayerId];
+        }
+
+        public PlayerControl GetClosestSurvivor(PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            Dictionary<PlayerControl, float> pcdistance = new();
+            float dis;
+            foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+            {
+                if (!p.Data.IsDead && p != player && !IsKiller(p))
+                {
+                    dis = Vector2.Distance(playerpos, p.transform.position);
+                    pcdistance.Add(p, dis);
+                }
+            }
+            var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
+            PlayerControl target = min.Key;
+            return target;
+        }
+
         public KillOrDieGamemode()
         {
             Gamemode = Gamemodes.KillOrDie;
             PetAction = false;
             DisableTasks = true;
-            IsKiller = new System.Collections.Generic.Dictionary<byte, bool>();
+            IsPlayerKiller = new Dictionary<byte, bool>();
             foreach (var pc in PlayerControl.AllPlayerControls)
-                IsKiller[pc.PlayerId] = false;
+                IsPlayerKiller[pc.PlayerId] = false;
         }
 
         public static KillOrDieGamemode instance;
-        public System.Collections.Generic.Dictionary<byte, bool> IsKiller;
+        public Dictionary<byte, bool> IsPlayerKiller;
     }
 }

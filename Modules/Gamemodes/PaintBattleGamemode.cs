@@ -1,25 +1,42 @@
 using UnityEngine;
 using AmongUs.GameOptions;
+using System.Collections.Generic;
+using Hazel;
 
 namespace MoreGamemodes
 {
     public class PaintBattleGamemode : CustomGamemode
     {
+        public override void OnExile(NetworkedPlayerInfo exiled)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                pc.RpcSetKillTimer(0.5f);
+            PaintTime = Options.PaintingTime.GetInt() + 0.5f;
+        }
+
         public override void OnHudUpate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             __instance.ReportButton.SetDisabled();
             __instance.ReportButton.ToggleVisible(false);
-            __instance.PetButton.OverrideText("Paint");
-            __instance.AbilityButton.OverrideText("Remaining Time");
+            __instance.SabotageButton.SetDisabled();
+            __instance.SabotageButton.ToggleVisible(false);
+            __instance.ImpostorVentButton.SetDisabled();
+            __instance.ImpostorVentButton.ToggleVisible(false);
+            __instance.MapButton.gameObject.SetActive(false);
             if (IsPaintActive)
-                __instance.AbilityButton.ToggleVisible(true);
+            {
+                __instance.KillButton.ToggleVisible(true);
+                __instance.KillButton.OverrideText("Paint");
+                if (player.IsKillTimerEnabled || player.ForceKillTimerContinue)
+                    __instance.KillButton.SetTarget(player);
+                else
+                    __instance.KillButton.SetTarget(null);
+            }
             else
             {
-                __instance.PetButton.SetDisabled();
-                __instance.PetButton.ToggleVisible(false);
-                __instance.AbilityButton.SetDisabled();
-                __instance.AbilityButton.ToggleVisible(false);
+                __instance.KillButton.SetDisabled();
+                __instance.KillButton.ToggleVisible(false);
             }
         }
 
@@ -34,9 +51,14 @@ namespace MoreGamemodes
             __instance.taskText.text = Utils.ColorString(Color.gray, "Painter:\nPaint something in theme.\nThe theme is " + Theme + ".");
         }
 
-        public override void OnShowNormalMap(MapBehaviour __instance)
+        public override void OnShowSabotageMap(MapBehaviour __instance)
         {
             __instance.Close();
+        }
+
+        public override void OnToggleHighlight(PlayerControl __instance)
+        {
+            __instance.cosmetics.currentBodySprite.BodySprite.material.SetColor("_OutlineColor", Color.clear);
         }
 
         public override Il2CppSystem.Collections.Generic.List<PlayerControl> OnBeginCrewmatePrefix(IntroCutscene __instance)
@@ -72,46 +94,40 @@ namespace MoreGamemodes
 
         public override void OnIntroDestroy()
         {
+            PaintTime = Options.PaintingTime.GetInt();
+            GameManager.Instance.SetPaintActive(true);
+            RoleManager.Instance.SetRole(PlayerControl.LocalPlayer, RoleTypes.Impostor);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                pc.RpcTeleport(GetPaintBattleLocation(pc));
             new LateTask(() =>
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    pc.RpcSetDeathReason(DeathReasons.Command);
-                    pc.RpcSetRole(RoleTypes.GuardianAngel, true);
-                    pc.RpcTeleport(pc.GetPaintBattleLocation());
+                    pc.RpcTeleport(GetPaintBattleLocation(pc));
+                    new LateTask(() => pc.RpcSetWeirdRole(RoleTypes.Impostor, false, pc), 0f);
                 }
+                new LateTask(() => {
+                    SetKillInteraction();
+                    LastPosition = PlayerControl.LocalPlayer.transform.position;
+                }, 0.5f);
+                PaintTime = Options.PaintingTime.GetInt() + 0.5f;
             }, 5f, "Set Dead");
-            new LateTask(() =>
-            {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    pc.Data.IsDead = false;
-                    pc.RpcResetAbilityCooldown();
-                }
-                Utils.SendGameData();
-            }, 6f, "Alive Dead Role");
-            new LateTask(() =>
-            {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                    pc.RpcShapeshift(pc, false);
-            }, 7f, "Fix Pets");
-            PaintTime = Options.PaintingTime.GetInt() + 5;
-            GameManager.Instance.RpcSetPaintActive(true);
             var rand = new System.Random();
             GameManager.Instance.RpcSetTheme(Main.PaintBattleThemes[rand.Next(0, Main.PaintBattleThemes.Count)]);
             Utils.SendChat("Start painting! The theme is " + Theme + "! Remember to evalute less paintings that are not in theme!", "Theme");
         }
 
-        public override void OnPet(PlayerControl pc)
+        public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (IsPaintActive && Vector2.Distance(pc.transform.position, pc.GetPaintBattleLocation()) < 5f && Main.Timer >= 6f && CreateBodyCooldown[pc.PlayerId] <= 0f)
+            if (IsPaintActive && Vector2.Distance(killer.transform.position, GetPaintBattleLocation(killer)) < 5f)
             {
-                CreateBodyCooldown[pc.PlayerId] = 0.5f;
-                Utils.RpcCreateDeadBody(pc.transform.position, (byte)pc.CurrentOutfit.ColorId, PlayerControl.LocalPlayer);
+                Utils.RpcCreateDeadBody(killer.transform.position, (byte)killer.CurrentOutfit.ColorId, killer);
+                killer.RpcSetKillTimer(0.5f);
             }
+            return false;
         }
 
-        public override bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
+        public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
             return false;
         }
@@ -123,21 +139,18 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
-            if (IsPaintActive && PaintTime > 0f)
+            if (IsPaintActive)
             {
                 PaintTime -= Time.fixedDeltaTime;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (CreateBodyCooldown[pc.PlayerId] > 0f)
-                    {
-                        CreateBodyCooldown[pc.PlayerId] -= Time.fixedDeltaTime;
-                    }
-                    if (CreateBodyCooldown[pc.PlayerId] < 0f)
-                    {
-                        CreateBodyCooldown[pc.PlayerId] = 0f;
-                    }
-                    if (Vector2.Distance(pc.transform.position, pc.GetPaintBattleLocation()) > 5f)
-                        pc.RpcTeleport(pc.GetPaintBattleLocation());
+                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(pc)) > 5f)
+                        pc.RpcTeleport(GetPaintBattleLocation(pc));
+                }
+                if (LastPosition != Vector2.zero && Vector2.Distance(PlayerControl.LocalPlayer.transform.position, LastPosition) >= 2f)
+                {
+                    LastPosition = PlayerControl.LocalPlayer.transform.position;
+                    SetKillInteraction();
                 }
                 if (PaintTime <= 0f)
                 {
@@ -156,8 +169,8 @@ namespace MoreGamemodes
                 }
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Vector2.Distance(pc.transform.position, Utils.GetPlayerById(VotingPlayerId).GetPaintBattleLocation()) > 5f)
-                        pc.RpcTeleport(Utils.GetPlayerById(VotingPlayerId).GetPaintBattleLocation());
+                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(Utils.GetPlayerById(VotingPlayerId))) > 5f)
+                        pc.RpcTeleport(GetPaintBattleLocation(Utils.GetPlayerById(VotingPlayerId)));
                 }
                 PaintBattleVotingTime -= Time.fixedDeltaTime;
                 if (PaintBattleVotingTime <= 0f)
@@ -165,13 +178,13 @@ namespace MoreGamemodes
                     PaintBattleVotingTime = Options.VotingTime.GetInt();
                     ++VotingPlayerId;
                     if (VotingPlayerId > 14)
-                        Utils.EndPaintBattleGame();
+                        EndPaintBattleGame();
                     while (Utils.GetPlayerById(VotingPlayerId) == null)
                     {
                         ++VotingPlayerId;
                         if (VotingPlayerId > 14)
                         {
-                            Utils.EndPaintBattleGame();
+                            EndPaintBattleGame();
                             break;
                         }
                     }
@@ -182,24 +195,113 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnCloseDoors(ShipStatus __instance)
+        {
+            return false;
+        }
+
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
+        {
+            return false;
+        }
+
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
+            opt.SetFloat(FloatOptionNames.CrewLightMod, 100f);
+            opt.SetFloat(FloatOptionNames.ImpostorLightMod, 100f);
+            opt.SetInt(Int32OptionNames.KillDistance, 2);
+            opt.SetFloat(FloatOptionNames.KillCooldown, 0.5f);
+            return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            if (player == seer && IsPaintActive)
+                name = Utils.ColorString(Color.cyan, "<font=\"VCR SDF\"><size=10>REMAINING TIME: " + (int)(PaintTime + 0.99f) + "s</size><size=15>\n\n</size></font>") + name + "<font=\"VCR SDF\"><size=25>\n\n<size=0>.";
+            if (player == seer && !IsPaintActive)
+                name = Utils.ColorString(Color.magenta, "<font=\"VCR SDF\"><size=8>Rate " + Main.StandardNames[VotingPlayerId] + "'s painting!</size><size=17>\n\n</size></font>") + name + "<font=\"VCR SDF\"><size=25>\n\n<size=0>.";
+            return name;
+        }
+
+        public void SetKillInteraction()
+        {
+            ++LastSequenceId;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.AmOwner || Main.IsModded[pc.PlayerId] || Main.RoleFakePlayer[pc.PlayerId] == pc.NetId) continue;
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Main.RoleFakePlayer[pc.PlayerId] + 2U, (byte)RpcCalls.SnapTo, SendOption.None, pc.GetClientId());
+                NetHelpers.WriteVector2(PlayerControl.LocalPlayer.transform.position, writer);
+                writer.Write(LastSequenceId);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+            }
+        }
+
+        public void EndPaintBattleGame()
+        {
+            List<byte> winners = new();
+            List<byte> bestPlayers = new();
+            float bestRate = 0f;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (PlayerVotes[pc.PlayerId].Item2 == 0)
+                    winners.Add(pc.PlayerId);
+                else if ((float)PlayerVotes[pc.PlayerId].Item1 / (float)PlayerVotes[pc.PlayerId].Item2 > bestRate)
+                {
+                    bestRate = (float)PlayerVotes[pc.PlayerId].Item1 / (float)PlayerVotes[pc.PlayerId].Item2;
+                    bestPlayers.Clear();
+                    bestPlayers.Add(pc.PlayerId);
+                }
+                else if ((float)PlayerVotes[pc.PlayerId].Item1 / (float)PlayerVotes[pc.PlayerId].Item2 == bestRate)
+                    bestPlayers.Add(pc.PlayerId);
+            }
+            foreach (var id in bestPlayers)
+                winners.Add(id);
+            CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByTask, winners);
+        }
+
+        public Vector2 GetPaintBattleLocation(PlayerControl player)
+        {
+            int x, y;
+            if (player.PlayerId < 8)
+            {
+                x = (player.PlayerId % 4 * -12) - 8;
+                y = (player.PlayerId / 4 * -12) - 30;
+            }
+            else
+            {
+                x = (player.PlayerId % 4 * 12) - 8;
+                y = (player.PlayerId / 4 * 12) + 10;
+            }
+            return new Vector2(x, y);
+        }
+
         public PaintBattleGamemode()
         {
             Gamemode = Gamemodes.PaintBattle;
-            PetAction = true;
+            PetAction = false;
             DisableTasks = true;
             PaintTime = 0f;
             IsPaintActive = false;
             VotingPlayerId = 0;
             PaintBattleVotingTime = 0f;
-            HasVoted = new System.Collections.Generic.Dictionary<byte, bool>();
-            PlayerVotes = new System.Collections.Generic.Dictionary<byte, (int, int)>();
+            HasVoted = new Dictionary<byte, bool>();
+            PlayerVotes = new Dictionary<byte, (int, int)>();
             Theme = "";
-            CreateBodyCooldown = new System.Collections.Generic.Dictionary<byte, float>();
+            LastPosition = Vector2.zero;
+            LastSequenceId = 10;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 HasVoted[pc.PlayerId] = false;
                 PlayerVotes[pc.PlayerId] = (0, 0);
-                CreateBodyCooldown[pc.PlayerId] = 0f;
             }
         }
 
@@ -208,9 +310,10 @@ namespace MoreGamemodes
         public bool IsPaintActive;
         public byte VotingPlayerId;
         public float PaintBattleVotingTime;
-        public System.Collections.Generic.Dictionary<byte, bool> HasVoted;
-        public System.Collections.Generic.Dictionary<byte, (int, int)> PlayerVotes;
+        public Dictionary<byte, bool> HasVoted;
+        public Dictionary<byte, (int, int)> PlayerVotes;
         public string Theme;
-        public System.Collections.Generic.Dictionary<byte, float> CreateBodyCooldown;
+        public Vector2 LastPosition;
+        ushort LastSequenceId;
     }
 }

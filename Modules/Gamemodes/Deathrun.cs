@@ -1,3 +1,4 @@
+using AmongUs.GameOptions;
 using Hazel;
 
 namespace MoreGamemodes
@@ -82,6 +83,13 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnEnterVent(PlayerControl player, int id)
+        {
+            if (!Options.DrImpostorsCanVent.GetBool() && player.Data.Role.IsImpostor)
+                return false;
+            return base.OnEnterVent(player, id);
+        }
+
         public override bool OnCloseDoors(ShipStatus __instance)
         {
             return false;
@@ -91,6 +99,32 @@ namespace MoreGamemodes
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;
+        }
+
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumCommonTasks, 0);
+            opt.SetInt(Int32OptionNames.NumShortTasks, Options.AmountOfTasks.GetInt());
+            opt.SetInt(Int32OptionNames.NumLongTasks, 0);
+            if (Main.Timer < Options.RoundCooldown.GetFloat())
+            {
+                opt.SetFloat(FloatOptionNames.KillCooldown, Options.RoundCooldown.GetFloat());
+                opt.SetFloat(FloatOptionNames.ScientistCooldown, Options.RoundCooldown.GetFloat() - 2f);
+                opt.SetFloat(FloatOptionNames.EngineerCooldown, Options.RoundCooldown.GetFloat() - 2f);
+                opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, Options.RoundCooldown.GetFloat() - 2f);
+                opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.RoundCooldown.GetFloat() -2f);
+            }
+            else
+            {
+                opt.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
+                opt.SetFloat(FloatOptionNames.ScientistCooldown, 0.001f);
+                opt.SetFloat(FloatOptionNames.EngineerCooldown, 0.001f);
+                opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, 0.001f);
+                opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 0.001f);
+            }
+            if (Options.DisableMeetings.GetBool())
+                opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            return opt;
         }
 
         public DeathrunGamemode()

@@ -256,7 +256,7 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] int id)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (!__instance.myPlayer.CanVent())
+            if (!CustomGamemode.Instance.OnEnterVent(__instance.myPlayer, id) || GameOptionsManager.Instance.CurrentGameOptions.MapId == 3)
             {
                 __instance.RpcExitVent(id);
                 return false;

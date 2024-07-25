@@ -163,6 +163,13 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnEnterVent(PlayerControl player, int id)
+        {
+            if (!Options.SnSImpostorsCanVent.GetBool() && player.Data.Role.IsImpostor)
+                return false;
+            return base.OnEnterVent(player, id);
+        }
+
         public override bool OnCloseDoors(ShipStatus __instance)
         {
             if (!Options.SnSImpostorsCanCloseDoors.GetBool()) return false;
@@ -173,6 +180,23 @@ namespace MoreGamemodes
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;
+        }
+
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 15, 100);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 15, 100);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
+            {
+                opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+            } 
+            return opt;
         }
 
         public ShiftAndSeekGamemode()

@@ -206,14 +206,14 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.Data.IsDead) ++numImpostorAlive;
-                if (!pc.Data.IsDead && !pc.IsZombie()) AllAlivePlayers.Add(pc);
+                if (!pc.Data.IsDead && !ZombiesGamemode.instance.IsZombie(pc)) AllAlivePlayers.Add(pc);
             }
             if (numImpostorAlive * 2 >= AllAlivePlayers.Count)
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Main.StandardRoles[pc.PlayerId].IsImpostor() || pc.IsZombie())
+                    if (Main.StandardRoles[pc.PlayerId].IsImpostor() || ZombiesGamemode.instance.IsZombie(pc))
                         winners.Add(pc.PlayerId);
                 }
                 var reason = GameOverReason.ImpostorByKill;
@@ -234,14 +234,14 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.Data.IsDead) ++numImpostorAlive;
-                if (!pc.Data.IsDead && !pc.IsZombie()) AllAlivePlayers.Add(pc);
+                if (!pc.Data.IsDead && !ZombiesGamemode.instance.IsZombie(pc)) AllAlivePlayers.Add(pc);
             }
             if (numImpostorAlive == 0)
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie())
+                    if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc))
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.HumansByVote, winners);
@@ -254,13 +254,13 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie() && !pc.AllTasksCompleted())
+                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc) && !pc.AllTasksCompleted())
                     return false;
             }
             List<byte> winners = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.IsZombie())
+                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc))
                     winners.Add(pc.PlayerId);
             }
             StartEndGame(GameOverReason.HumansByTask, winners);
@@ -272,7 +272,7 @@ namespace MoreGamemodes
             bool someoneRemain = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!pc.IsGuard() && !pc.HasEscaped())
+                if (!JailbreakGamemode.instance.IsGuard(pc) && !JailbreakGamemode.instance.HasEscaped(pc))
                     someoneRemain = true;
             }
             if (!someoneRemain)
@@ -280,7 +280,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (!pc.IsGuard())
+                    if (!JailbreakGamemode.instance.IsGuard(pc))
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.ImpostorByKill, winners);
@@ -298,14 +298,14 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     ++prisoners;
-                    if (!pc.IsGuard() && pc.HasEscaped())
+                    if (!JailbreakGamemode.instance.IsGuard(pc) && JailbreakGamemode.instance.HasEscaped(pc))
                         winners.Add(pc.PlayerId);
                 }
                 if (winners.Count * 2 < prisoners)
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
-                        if (pc.IsGuard())
+                        if (JailbreakGamemode.instance.IsGuard(pc))
                             winners.Add(pc.PlayerId);
                     }
                 }

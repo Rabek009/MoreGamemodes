@@ -31,6 +31,7 @@ namespace MoreGamemodes
             CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
+            Main.RoleFakePlayer = new Dictionary<byte, uint>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             AntiBlackout.Reset();
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -48,6 +49,7 @@ namespace MoreGamemodes
                 CheckProtectPatch.TimeSinceLastProtect[pc.PlayerId] = 0f;
                 Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
+                Main.RoleFakePlayer[pc.PlayerId] = pc.NetId;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
@@ -91,7 +93,7 @@ namespace MoreGamemodes
                     pc.RpcRandomVentTeleport();
             }
             CustomGamemode.Instance.OnIntroDestroy();
-            if (Options.EnableMidGameChat.GetBool())
+            if (Options.EnableMidGameChat.GetBool() || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle)
                 Utils.SetChatVisible();
             Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)

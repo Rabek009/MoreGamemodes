@@ -35,11 +35,6 @@ namespace MoreGamemodes
 
             PlayerControl pc = __instance.myPlayer;
             if (pc.Data.IsDead || MeetingHud.Instance) return true;
-            if (PaintBattleGamemode.instance != null)
-            {
-                if (PaintBattleGamemode.instance.CreateBodyCooldown[pc.PlayerId] > 0f)
-                    return true;
-            }
             if (JailbreakGamemode.instance != null)
             {
                 if (JailbreakGamemode.instance.ChangeRecipeCooldown[pc.PlayerId] > 0f)

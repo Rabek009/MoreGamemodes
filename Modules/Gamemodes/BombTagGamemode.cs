@@ -1,7 +1,9 @@
-using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
+using System.Linq;
+using System.Collections.Generic;
+using System.Data;
 
 namespace MoreGamemodes
 {
@@ -18,7 +20,7 @@ namespace MoreGamemodes
         {
             if (__instance.HauntTarget.Data.IsDead)
                 __instance.FilterText.text = "Ghost";
-            else if (__instance.HauntTarget.HasBomb())
+            else if (HasBomb(__instance.HauntTarget))
                 __instance.FilterText.text = "Has Bomb";
             else
                __instance.FilterText.text = "Hasn't Bomb"; 
@@ -35,11 +37,11 @@ namespace MoreGamemodes
             __instance.SabotageButton.ToggleVisible(false);
             if (!player.Data.IsDead)
                 __instance.AbilityButton.OverrideText("Explosion");
-            if (player.HasBomb() && !player.Data.IsDead)
+            if (HasBomb(player) && !player.Data.IsDead)
             {
                 __instance.KillButton.ToggleVisible(true);
                 __instance.KillButton.OverrideText("Bomb");
-                if (player.GetClosestPlayer(true) != null && player.GetClosestPlayer(true).HasBomb())
+                if (player.GetClosestPlayer(true) != null && HasBomb(player.GetClosestPlayer(true)))
                     __instance.KillButton.SetTarget(null);
             }
             else
@@ -54,7 +56,7 @@ namespace MoreGamemodes
             var player = PlayerControl.LocalPlayer;
             if (player.Data.IsDead)
                 __instance.taskText.text = Utils.ColorString(Color.red, "You're dead. Enjoy the chaos.");
-            else if (player.HasBomb())
+            else if (HasBomb(player))
                 __instance.taskText.text = Utils.ColorString(Color.black, "You have bomb!\nGive your bomb away.");
             else
                 __instance.taskText.text = Utils.ColorString(Color.green, "You haven't bomb!\nDon't get bomb.");
@@ -80,7 +82,7 @@ namespace MoreGamemodes
 
         public override void OnShowRole(IntroCutscene __instance)
         {
-            if (PlayerControl.LocalPlayer.HasBomb())
+            if (HasBomb(PlayerControl.LocalPlayer))
             {
                 __instance.RoleText.text = "You have bomb";
                 __instance.RoleText.color = Color.gray;
@@ -125,7 +127,7 @@ namespace MoreGamemodes
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.HasBomb())
+                if (HasBomb(pc))
                 {
                      pc.RpcSetColor(6);
                     foreach (var ar in PlayerControl.AllPlayerControls)
@@ -148,7 +150,7 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (killer.HasBomb() && !target.HasBomb())
+            if (HasBomb(killer) && !HasBomb(target))
             {
                 killer.RpcSetBomb(false);
                 target.RpcSetBomb(true);
@@ -180,7 +182,7 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.HasBomb() && !pc.Data.IsDead)
+                    if (HasBomb(pc) && !pc.Data.IsDead)
                     {
                         pc.RpcSetDeathReason(DeathReasons.Bombed);
                         pc.RpcMurderPlayer(pc, true);
@@ -224,6 +226,11 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnEnterVent(PlayerControl player, int id)
+        {
+            return false;
+        }
+
         public override bool OnCloseDoors(ShipStatus __instance)
         {
             return false;
@@ -235,17 +242,68 @@ namespace MoreGamemodes
             return true;
         }
 
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            opt.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
+            opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.ExplosionDelay.GetInt() + 0.1f);
+            opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
+            opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
+            if (!HasBomb(player))
+                opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
+            return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            if (HasBomb(player) && Options.ArrowToNearestNonBombed.GetBool() && player == seer && GetClosestNonBombed(player) != null && !player.Data.IsDead)
+                name += "\n" + Utils.ColorString(Color.green, Utils.GetArrow(player.transform.position, GetClosestNonBombed(player).transform.position));
+            return name;
+        }
+
+        public bool HasBomb(PlayerControl player)
+        {
+            if (player == null) return false;
+            if (!PlayerHasBomb.ContainsKey(player.PlayerId)) return false;
+            return PlayerHasBomb[player.PlayerId];
+        }
+
+        public PlayerControl GetClosestNonBombed(PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            Dictionary<PlayerControl, float> pcdistance = new();
+            float dis;
+            foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+            {
+                if (!p.Data.IsDead && p != player && !HasBomb(p))
+                {
+                    dis = Vector2.Distance(playerpos, p.transform.position);
+                    pcdistance.Add(p, dis);
+                }
+            }
+            var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
+            PlayerControl target = min.Key;
+            return target;
+        }
+
         public BombTagGamemode()
         {
             Gamemode = Gamemodes.BombTag;
             PetAction = false;
             DisableTasks = true;
-            HasBomb = new Dictionary<byte, bool>();
+            PlayerHasBomb = new Dictionary<byte, bool>();
             foreach (var pc in PlayerControl.AllPlayerControls)
-                HasBomb[pc.PlayerId] = false;
+                PlayerHasBomb[pc.PlayerId] = false;
         }
 
         public static BombTagGamemode instance;
-        public Dictionary<byte, bool> HasBomb;
+        public Dictionary<byte, bool> PlayerHasBomb;
     }
 }

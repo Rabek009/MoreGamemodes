@@ -332,4 +332,10 @@ namespace MoreGamemodes
         public float PlayerControlTimer;
         public CustomObjectTypes Type;
     }
+
+    public enum CustomObjectTypes
+    {
+        Explosion,
+        TrapArea,
+    }
 }

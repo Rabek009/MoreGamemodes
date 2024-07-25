@@ -73,7 +73,7 @@ namespace MoreGamemodes
         {
             if (Main.Timer < Options.GracePeriod.GetFloat())
                 return false;         
-            if (target.Lives() > 1)
+            if (GetLives(target) > 1)
             {
                 --Lives[target.PlayerId];
                 killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
@@ -91,6 +91,11 @@ namespace MoreGamemodes
             return false;
         }
 
+        public override bool OnEnterVent(PlayerControl player, int id)
+        {
+            return false;
+        }
+
         public override bool OnCloseDoors(ShipStatus __instance)
         {
             return false;
@@ -100,6 +105,46 @@ namespace MoreGamemodes
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;
+        }
+
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Scientist, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Shapeshifter, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
+            opt.SetFloat(FloatOptionNames.KillCooldown, Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
+            return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            var livesText = "";
+            if (GetLives(player) <= 5)
+            {
+                for (int i = 1; i <= GetLives(player); i++)
+                    livesText += "♥";
+            }
+            else
+                livesText = "Lives: " + GetLives(player);
+            livesText = Utils.ColorString(Color.red, livesText);
+            if (Options.ArrowToNearestPlayer.GetBool() && player == seer && player.GetClosestPlayer() != null && !player.Data.IsDead)
+                name += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[player.GetClosestPlayer().PlayerId]], Utils.GetArrow(player.transform.position, player.GetClosestPlayer().transform.position));
+            if (player == seer || Options.LivesVisibleToOthers.GetBool() || seer.Data.IsDead)
+                name += "\n" + livesText;
+            return name;
+        }
+
+        public int GetLives(PlayerControl player)
+        {
+            if (player == null) return 0;
+            if (!Lives.ContainsKey(player.PlayerId)) return 0;
+            return Lives[player.PlayerId];
         }
 
         public BattleRoyaleGamemode()

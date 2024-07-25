@@ -169,6 +169,13 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnEnterVent(PlayerControl player, int id)
+        {
+            if (!Options.HnSImpostorsCanVent.GetBool() && player.Data.Role.IsImpostor)
+                return false;
+            return base.OnEnterVent(player, id);
+        }
+
         public override bool OnCloseDoors(ShipStatus __instance)
         {
             if (!Options.HnSImpostorsCanCloseDoors.GetBool()) return false;
@@ -179,6 +186,17 @@ namespace MoreGamemodes
         {
             if (systemType == SystemTypes.Sabotage) return false;
             return true;
+        }
+
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
+            if (Main.Timer < Options.HnSImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
+            {
+                opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+            }
+            return opt;
         }
 
         public HideAndSeekGamemode()

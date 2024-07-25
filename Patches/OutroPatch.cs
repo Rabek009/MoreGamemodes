@@ -69,6 +69,11 @@ namespace MoreGamemodes
 		    for (int i = 0; i < GameData.Instance.PlayerCount; i++)
 		    {
 			    NetworkedPlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
+                if (playerInfo.PlayerId == 254)
+                {
+                    GameData.Instance.RemovePlayer(playerInfo.PlayerId);
+                    continue;
+                }
 			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
 			    {
                     if (!((CustomGamemode.Instance.Gamemode == Gamemodes.BombTag || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || CustomGamemode.Instance.Gamemode == Gamemodes.Zombies) && playerInfo.Disconnected))
@@ -247,6 +252,7 @@ namespace MoreGamemodes
             CustomNetObject.CustomObjects = new List<CustomNetObject>();
             CustomNetObject.MaxId = -1;
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
+            Main.RoleFakePlayer = new Dictionary<byte, uint>();
             AntiBlackout.Reset();
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun)
             {

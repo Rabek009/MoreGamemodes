@@ -1,7 +1,9 @@
-using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
+using System.Linq;
+using System.Collections.Generic;
+using System.Data;
 
 namespace MoreGamemodes
 {
@@ -30,13 +32,13 @@ namespace MoreGamemodes
         }
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
-            if (__instance.HauntTarget.Data.IsDead && __instance.HauntTarget.IsZombie())
+            if (__instance.HauntTarget.Data.IsDead && IsZombie(__instance.HauntTarget))
                 __instance.FilterText.text = "Zombie Ghost";
             else if (__instance.HauntTarget.Data.IsDead && Main.StandardRoles[__instance.HauntTarget.PlayerId].IsImpostor())
                 __instance.FilterText.text = "Impostor Ghost";
             else if (__instance.HauntTarget.Data.IsDead)
                 __instance.FilterText.text = "Crewmate Ghost";
-            else if (__instance.HauntTarget.IsZombie())
+            else if (IsZombie(__instance.HauntTarget))
                 __instance.FilterText.text = "Zombie";
             else if (Main.StandardRoles[__instance.HauntTarget.PlayerId].IsImpostor())
                 __instance.FilterText.text = "Impostor";
@@ -46,14 +48,15 @@ namespace MoreGamemodes
 
         public override void OnHudUpate(HudManager __instance)
         {
-            if (!PlayerControl.LocalPlayer.IsZombie() && PlayerControl.LocalPlayer.KillsRemain() > 0)
+            var player = PlayerControl.LocalPlayer;
+            if (!IsZombie(player) && GetKillsRemain(player) > 0)
             {
                 __instance.ImpostorVentButton.SetDisabled();
                 __instance.ImpostorVentButton.ToggleVisible(false);
                 __instance.SabotageButton.SetDisabled();
                 __instance.SabotageButton.ToggleVisible(false);
             }
-            if (PlayerControl.LocalPlayer.IsZombie())
+            if (IsZombie(player))
             {
                 if (!Options.ZombiesCanVent.GetBool())
                 {
@@ -65,7 +68,7 @@ namespace MoreGamemodes
                 __instance.SabotageButton.SetDisabled();
                 __instance.SabotageButton.ToggleVisible(false);
             }
-            if (Main.StandardRoles[PlayerControl.LocalPlayer.PlayerId].IsImpostor())
+            if (Main.StandardRoles[player.PlayerId].IsImpostor())
             {
                 if (!Options.ZoImpostorsCanVent.GetBool())
                 {
@@ -79,7 +82,7 @@ namespace MoreGamemodes
 
         public override void OnSetTaskText(TaskPanelBehaviour __instance, string str)
         {
-            if (PlayerControl.LocalPlayer.IsZombie())
+            if (IsZombie(PlayerControl.LocalPlayer))
                 __instance.taskText.text = Utils.ColorString(Palette.PlayerColors[2], "Zombie\nHelp impostor by killing crewmates.");
         }
 
@@ -93,13 +96,13 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.GetZombieType() == ZombieTypes.JustTurned)
+                if (GetZombieType(pc) == ZombieTypes.JustTurned)
                     pc.RpcSetZombieType(ZombieTypes.FullZombie);
-                if (pc.IsZombie() && pc.GetZombieType() != ZombieTypes.Dead)
+                if (IsZombie(pc) && GetZombieType(pc) != ZombieTypes.Dead)
                     pc.Data.IsDead = false;
             }
             Utils.SendGameData();
-            if (exiled != null && exiled.Object != null && !Main.StandardRoles[exiled.PlayerId].IsImpostor() && exiled.Object.KillsRemain() > 0)
+            if (exiled != null && exiled.Object != null && !Main.StandardRoles[exiled.PlayerId].IsImpostor() && GetKillsRemain(exiled.Object) > 0)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -111,7 +114,7 @@ namespace MoreGamemodes
             new LateTask(() =>{
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if ((pc.IsZombie() && pc.GetZombieType() != ZombieTypes.Dead) || (exiled != null && pc.PlayerId == exiled.PlayerId && Options.EjectedPlayersAreZombies.GetBool()))
+                    if ((IsZombie(pc) && GetZombieType(pc) != ZombieTypes.Dead) || (exiled != null && pc.PlayerId == exiled.PlayerId && Options.EjectedPlayersAreZombies.GetBool()))
                     {
                         var rand = new System.Random();
                         pc.MyPhysics.RpcBootFromVent(rand.Next(0, ShipStatus.Instance.AllVents.Count));
@@ -126,12 +129,12 @@ namespace MoreGamemodes
             var voter = Utils.GetPlayerById(srcPlayerId);
             var target = Utils.GetPlayerById(suspectPlayerId);
             if (voter == null || target == null) return true;
-            if (voter.IsZombie())
+            if (IsZombie(voter))
             {
                 voter.RpcSendMessage("You can't vote as zombie!", "Warning");
                 return false;
             }
-            if (target.IsZombie())
+            if (IsZombie(target))
             {
                 voter.RpcSendMessage("You can't vote for zombie. Zombies can't be ejected!", "Warning");
                 return false;
@@ -141,17 +144,17 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (killer.IsZombie() && killer.GetZombieType() != ZombieTypes.FullZombie)
+            if (IsZombie(killer) && GetZombieType(killer) != ZombieTypes.FullZombie)
                 return false;
-            if (target.IsZombie() && (Main.StandardRoles[killer.PlayerId].IsImpostor() || killer.IsZombie()))
+            if (IsZombie(target) && (Main.StandardRoles[killer.PlayerId].IsImpostor() || IsZombie(killer)))
                 return false;
-            if (killer.IsZombie() && Main.Timer < Options.ZombieBlindTime.GetFloat())
+            if (IsZombie(killer) && Main.Timer < Options.ZombieBlindTime.GetFloat())
                 return false;
-            if (target.IsZombie() && target.GetZombieType() != ZombieTypes.FullZombie)
+            if (IsZombie(target) && GetZombieType(target) != ZombieTypes.FullZombie)
                 return false;
-            if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && !target.IsZombie() && !killer.IsZombie())
+            if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && !IsZombie(target) && !IsZombie(killer))
                 return false;
-            if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && killer.KillsRemain() <= 0 && !killer.IsZombie())
+            if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && GetKillsRemain(killer) <= 0 && !IsZombie(killer))
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -166,7 +169,7 @@ namespace MoreGamemodes
 
         public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
         {
-            if (Main.StandardRoles[killer.PlayerId].IsImpostor() || (killer.IsZombie() && Options.ZombieKillsTurnIntoZombie.GetBool()))
+            if (Main.StandardRoles[killer.PlayerId].IsImpostor() || (IsZombie(killer) && Options.ZombieKillsTurnIntoZombie.GetBool()))
             {
                 target.RpcSetZombieType(ZombieTypes.JustTurned);
                 new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate), 0.5f);
@@ -183,11 +186,11 @@ namespace MoreGamemodes
                 }
                 target.SyncPlayerSettings();
             }
-            if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && target.IsZombie())
+            if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && IsZombie(target))
             {
                 target.RpcSetZombieType(ZombieTypes.Dead);
-                killer.RpcSetKillsRemain(killer.KillsRemain() - 1);
-                if (killer.KillsRemain() <= 0)
+                killer.RpcSetKillsRemain(GetKillsRemain(killer) - 1);
+                if (GetKillsRemain(killer) <= 0)
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
@@ -197,7 +200,7 @@ namespace MoreGamemodes
                     Main.NameColors[(killer.PlayerId, killer.PlayerId)] = Color.clear;
                 }
             }
-            if (!Main.StandardRoles[target.PlayerId].IsImpostor() && target.KillsRemain() <= 0)
+            if (!Main.StandardRoles[target.PlayerId].IsImpostor() && GetKillsRemain(target) > 0)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -210,17 +213,17 @@ namespace MoreGamemodes
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
-            if (target.IsZombie()) return false;
+            if (IsZombie(target)) return false;
             return true;
         }
 
         public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
         {
-            if (__instance.IsZombie())
+            if (IsZombie(__instance))
                 return false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.IsZombie())
+                if (IsZombie(pc))
                     pc.Data.IsDead = true;
             }
             Utils.SendGameData();
@@ -236,9 +239,14 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnEnterVent(PlayerControl player, int id)
+        {
+            return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (IsZombie(player) && Options.ZombiesCanVent.GetBool()) || (Main.StandardRoles[player.PlayerId] == RoleTypes.Engineer && !IsZombie(player) && GetKillsRemain(player) <= 0);
+        }
+
         public override void OnCompleteTask(PlayerControl __instance)
         {
-            if (Options.CanKillZombiesAfterTasks.GetBool() && __instance.AllTasksCompleted() && !__instance.IsZombie())
+            if (Options.CanKillZombiesAfterTasks.GetBool() && __instance.AllTasksCompleted() && !IsZombie(__instance))
             {
                 __instance.RpcSetKillsRemain(Options.NumberOfKills.GetInt());
                 __instance.RpcSetDesyncRole(RoleTypes.Impostor, __instance);
@@ -261,6 +269,98 @@ namespace MoreGamemodes
             if (systemType == SystemTypes.Sabotage)
                 return false;
             return true;
+        }
+
+        public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
+        {
+            if (Options.CanKillZombiesAfterTasks.GetBool())
+                opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
+            if (IsZombie(player))
+            {
+                if (Main.Timer >= Options.ZombieBlindTime.GetFloat() && GetZombieType(player) != ZombieTypes.JustTurned)
+                {
+                    opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Options.ZombieSpeed.GetFloat());
+                    opt.SetFloat(FloatOptionNames.ImpostorLightMod, Options.ZombieVision.GetFloat());
+                    opt.SetFloat(FloatOptionNames.CrewLightMod, Options.ZombieVision.GetFloat());
+                }
+                else
+                {
+                    opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+                    opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+                    opt.SetFloat(FloatOptionNames.CrewLightMod, 0f);
+                }
+                opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
+            }
+            if (Main.StandardRoles.ContainsKey(player.PlayerId) && !Main.StandardRoles[player.PlayerId].IsImpostor() && !IsZombie(player))
+            {
+                opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
+                opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
+            }
+            return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            if (player == seer && !IsZombie(player) && !player.Data.IsDead)
+            {
+                if (Options.CurrentTrackingZombiesMode == TrackingZombiesModes.Nearest)
+                {
+                    var nearest = GetClosestZombie(player);
+                    if (nearest != null)
+                        name += "\n" + Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.transform.position, nearest.transform.position)); 
+                }
+                else if (Options.CurrentTrackingZombiesMode == TrackingZombiesModes.Every && GetClosestZombie(player) != null)
+                {
+                    name += "\n";
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (GetZombieType(pc) == ZombieTypes.FullZombie && !pc.Data.IsDead)
+                            name += Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.transform.position, pc.transform.position));
+                    }
+                }
+                if (GetKillsRemain(player) > 0)
+                    name += "\n" + Utils.ColorString(Color.cyan, "YOU CAN KILL " + GetKillsRemain(player) + " " + (GetKillsRemain(player) == 1 ? "ZOMBIE" : "ZOMBIES") + "!");
+            }
+            if (player != seer && seer.Data.IsDead && !player.Data.IsDead && GetKillsRemain(player) > 0)
+                name += "\n" + Utils.ColorString(Color.cyan, "CAN KILL " + GetKillsRemain(player) + " " + (GetKillsRemain(player) == 1 ? "ZOMBIE" : "ZOMBIES") + "!");
+            return name;
+        }
+
+        public ZombieTypes GetZombieType(PlayerControl player)
+        {
+            if (player == null) return ZombieTypes.None;
+            if (!ZombieType.ContainsKey(player.PlayerId)) return ZombieTypes.None;
+            return ZombieType[player.PlayerId];
+        }
+
+        public bool IsZombie(PlayerControl player)
+        {
+            return GetZombieType(player) != ZombieTypes.None;
+        }
+
+        public int GetKillsRemain(PlayerControl player)
+        {
+            if (player == null) return 0;
+            if (!KillsRemain.ContainsKey(player.PlayerId)) return 0;
+            return KillsRemain[player.PlayerId];
+        }
+
+        public PlayerControl GetClosestZombie(PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            Dictionary<PlayerControl, float> pcdistance = new();
+            float dis;
+            foreach (PlayerControl p in PlayerControl.AllPlayerControls)
+            {
+                if (!p.Data.IsDead && p != player && GetZombieType(p) == ZombieTypes.FullZombie)
+                {
+                    dis = Vector2.Distance(playerpos, p.transform.position);
+                    pcdistance.Add(p, dis);
+                }
+            }
+            var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
+            PlayerControl target = min.Key;
+            return target;
         }
 
         public ZombiesGamemode()
