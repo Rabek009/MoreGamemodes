@@ -32,6 +32,7 @@ namespace MoreGamemodes
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
+            Main.PlayerKills = new Dictionary<byte, int>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             AntiBlackout.Reset();
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -50,6 +51,7 @@ namespace MoreGamemodes
                 Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
                 Main.RoleFakePlayer[pc.PlayerId] = pc.NetId;
+                Main.PlayerKills[pc.PlayerId] = 0;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];

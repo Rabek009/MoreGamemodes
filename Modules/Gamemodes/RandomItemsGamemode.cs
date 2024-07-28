@@ -177,10 +177,10 @@ namespace MoreGamemodes
                                 pc.RpcFixedMurderPlayer(target);
                             else
                             {
-                                if (Options.MisfireKillsCrewmate.GetBool())
-                                    target.RpcMurderPlayer(target, true);
                                 pc.RpcSetDeathReason(DeathReasons.Misfire);
                                 pc.RpcMurderPlayer(pc, true);
+                                if (Options.MisfireKillsCrewmate.GetBool())
+                                    pc.RpcMurderPlayer(target, true);
                             }
                         }
                         pc.RpcSetItem(Items.None);
@@ -287,6 +287,7 @@ namespace MoreGamemodes
                             {
                                 player.RpcSetDeathReason(DeathReasons.Bombed);
                                 player.RpcMurderPlayer(player, true);
+                                ++Main.PlayerKills[pc.PlayerId];
                             }
                         }
                         pc.RpcSetDeathReason(DeathReasons.Suicide);
@@ -319,7 +320,7 @@ namespace MoreGamemodes
                             if ((!player.Data.Role.IsImpostor && Options.CrewmatesSeeTrap.GetBool()) || (player.Data.Role.IsImpostor && Options.ImpostorsSeeTrap.GetBool()) || player.Data.Role.IsDead || player == pc)
                                 visibleList.Add(player.PlayerId);
                         }
-                        Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.transform.position, visibleList);
+                        Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.transform.position, visibleList, pc.PlayerId);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.TeamChanger:

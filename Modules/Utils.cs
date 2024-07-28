@@ -369,9 +369,9 @@ namespace MoreGamemodes
             new Explosion(size, duration, position);
         }
 
-        public static void RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList)
+        public static void RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
         {
-            new TrapArea(radius, waitDuration, position, visibleList);
+            new TrapArea(radius, waitDuration, position, visibleList, ownerId);
         }
 
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)

@@ -1,79 +1,23 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
-using AmongUs.Data;
-using Assets.CoreScripts;
-using Il2CppSystem;
 using AmongUs.GameOptions;
+using Sentry.Unity.NativeUtils;
 
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]
     class EndGamePatch
     {
-        public static bool Prefix(AmongUsClient __instance, [HarmonyArgument(0)] EndGameResult endGameResult)
+        public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ref EndGameResult endGameResult)
         {
-            if (!__instance.AmHost) return true;
+            if (!__instance.AmHost) return;
             List<byte> winners = new();
-            StatsManager.Instance.BanPoints -= 1.5f;
-		    StatsManager.Instance.LastGameStarted = DateTime.MinValue;
 		    GameOverReason gameOverReason = endGameResult.GameOverReason;
-		    bool showAd = endGameResult.ShowAd;
-            Il2CppSystem.Collections.Generic.List<IDisconnectHandler> obj = __instance.DisconnectHandlers;
-            lock (obj)
-			{
-				for (int j = __instance.DisconnectHandlers.Count - 1; j > -1; j--)
-				{
-					IDisconnectHandler handler = __instance.DisconnectHandlers[j];
-					if (!handler.IsPersistent)
-						__instance.DisconnectHandlers.RemoveAt(j);
-				}
-			}
-		    if (Minigame.Instance)
-		    {
-			    Minigame.Instance.Close();
-			    Minigame.Instance.Close();
-		    }
-		    float durationInSeconds = Time.realtimeSinceStartup - GameData.TimeGameStarted;
-		    DestroyableSingleton<DebugAnalytics>.Instance.Analytics.EndGame(durationInSeconds, gameOverReason, GameData.Instance.AllPlayers);
-			DestroyableSingleton<UnityTelemetry>.Instance.EndGame(gameOverReason);
-		    GameData.OnGameEnd();
-		    EndGameResult.CachedGameOverReason = gameOverReason;
-		    EndGameResult.CachedShowAd = showAd;
-		    GameManager.Instance.DidHumansWin(gameOverReason);
-		    ProgressionManager.XpGrantResult cachedXpGrantResult = endGameResult.XpGrantResult ?? ProgressionManager.XpGrantResult.Default();
-		    ProgressionManager.CurrencyGrantResult currencyGrantResult = endGameResult.BeansGrantResult ?? ProgressionManager.CurrencyGrantResult.Default();
-		    ProgressionManager.CurrencyGrantResult currencyGrantResult2 = endGameResult.PodsGrantResult ?? ProgressionManager.CurrencyGrantResult.Default();
-		    EndGameResult.CachedXpGrantResult = cachedXpGrantResult;
-		    EndGameResult.CachedBeansGrantResult = currencyGrantResult;
-		    EndGameResult.CachedPodsGrantResult = currencyGrantResult2;
-		    if (endGameResult.XpGrantResult != null)
-		    {
-			    DataManager.Player.Stats.Xp = endGameResult.XpGrantResult.OldXpAmount + endGameResult.XpGrantResult.GrantedXp;
-			    if (endGameResult.XpGrantResult.LevelledUp)
-			    {
-			    	DataManager.Player.Stats.Xp = endGameResult.XpGrantResult.OldXpAmount + endGameResult.XpGrantResult.GrantedXp - endGameResult.XpGrantResult.XpRequiredToLevelUp;
-			    	DataManager.Player.Stats.Level = endGameResult.XpGrantResult.NewLevel;
-			    	DataManager.Player.Stats.XpForNextLevel = endGameResult.XpGrantResult.XpRequiredToLevelUpNextLevel;
-			    }
-			    else
-			    {
-				    DataManager.Player.Stats.Xp = endGameResult.XpGrantResult.OldXpAmount + endGameResult.XpGrantResult.GrantedXp;
-				    DataManager.Player.Stats.Level = endGameResult.XpGrantResult.OldLevel;
-				    DataManager.Player.Stats.XpForNextLevel = endGameResult.XpGrantResult.XpRequiredToLevelUp;
-			    }
-			    DataManager.Player.Save();
-		    }
-		    DestroyableSingleton<InventoryManager>.Instance.ChangePodCount(currencyGrantResult2.PodId, (int)currencyGrantResult2.GrantedPodsWithMultiplierApplied);
-		    DestroyableSingleton<InventoryManager>.Instance.UnusedBeans += (int)currencyGrantResult.GrantedPodsWithMultiplierApplied;
+            EndGameResult.CachedWinners = new Il2CppSystem.Collections.Generic.List<CachedPlayerData>();
 		    for (int i = 0; i < GameData.Instance.PlayerCount; i++)
 		    {
 			    NetworkedPlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
-                if (playerInfo.PlayerId == 254)
-                {
-                    GameData.Instance.RemovePlayer(playerInfo.PlayerId);
-                    continue;
-                }
 			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
 			    {
                     if (!((CustomGamemode.Instance.Gamemode == Gamemodes.BombTag || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || CustomGamemode.Instance.Gamemode == Gamemodes.Zombies) && playerInfo.Disconnected))
@@ -100,31 +44,20 @@ namespace MoreGamemodes
                     case Gamemodes.Deathrun:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], CustomGamemode.Instance.Gamemode)) + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.BombTag:
                     case Gamemodes.KillOrDie:
                         lastResult += "★" + Main.StandardNames[playerInfo.PlayerId] + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.BattleRoyale:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.Speedrun:
-                        int completedTasks = 0;
-                        int totalTasks = 0;
-                        foreach (var task in playerInfo.Tasks)
-                        {
-                            ++totalTasks;
-                            if (task.Complete)
-                                ++completedTasks;
-                        }
-                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
-                        lastResult += Utils.ColorString(Color.yellow, completedTasks + "/" + totalTasks) + ")\n";
-                        break;
                     case Gamemodes.PaintBattle:
-                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + "\n";
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + "";
                         break;
                     case Gamemodes.Zombies:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
@@ -134,7 +67,7 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
                         else
                             lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.Jailbreak:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
@@ -142,9 +75,27 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Color.blue, "Guard") + " (";
                         else
                             lastResult += Utils.ColorString(Palette.Orange, "Prisoner") + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                 }
+                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies)
+                {
+                    if (!Main.StandardRoles[playerInfo.PlayerId].IsImpostor())
+                    {
+                        int completedTasks = 0;
+                        int totalTasks = 0;
+                        foreach (var task in playerInfo.Tasks)
+                        {
+                            ++totalTasks;
+                            if (task.Complete)
+                                ++completedTasks;
+                        }
+                        lastResult += Utils.ColorString(Color.yellow, " (" + completedTasks + "/" + totalTasks + ")");
+                    }
+                }
+                if (Main.PlayerKills[playerInfo.PlayerId] > 0)
+                    lastResult += Utils.ColorString(Color.red, " Kills: " + Main.PlayerKills[playerInfo.PlayerId]);
+                lastResult += "\n";
             }
             for (int i = 0; i < GameData.Instance.PlayerCount; ++i)
             {
@@ -162,31 +113,20 @@ namespace MoreGamemodes
                     case Gamemodes.Deathrun:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(playerInfo.Role.Role)) + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.BombTag:
                     case Gamemodes.KillOrDie:
                         lastResult += Main.StandardNames[playerInfo.PlayerId] + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.BattleRoyale:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.Speedrun:
-                        int completedTasks = 0;
-                        int totalTasks = 0;
-                        foreach (var task in playerInfo.Tasks)
-                        {
-                            ++totalTasks;
-                            if (task.Complete)
-                                ++completedTasks;
-                        }
-                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " (";
-                        lastResult += Utils.ColorString(Color.yellow, completedTasks + "/" + totalTasks) + ")\n";
-                        break;
                     case Gamemodes.PaintBattle:
-                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + "\n";
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]);
                         break;
                     case Gamemodes.Zombies:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
@@ -196,7 +136,7 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
                         else
                             lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.Jailbreak:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
@@ -204,15 +144,29 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Color.blue, "Guard") + " (";
                         else
                             lastResult += Utils.ColorString(Palette.Orange, "Prisoner") + " (";
-                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")\n";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                 }
+                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies)
+                {
+                    if (!Main.StandardRoles[playerInfo.PlayerId].IsImpostor())
+                    {
+                        int completedTasks = 0;
+                        int totalTasks = 0;
+                        foreach (var task in playerInfo.Tasks)
+                        {
+                            ++totalTasks;
+                            if (task.Complete)
+                                ++completedTasks;
+                        }
+                        lastResult += Utils.ColorString(Color.yellow, " (" + completedTasks + "/" + totalTasks + ")");
+                    }
+                }
+                if (Main.PlayerKills[playerInfo.PlayerId] > 0)
+                    lastResult += Utils.ColorString(Color.red, " Kills: " + Main.PlayerKills[playerInfo.PlayerId]);
+                lastResult += "\n";
             }
             Main.LastResult = lastResult;
-            EndGameResult.CachedLocalPlayer = new CachedPlayerData(PlayerControl.LocalPlayer.Data);
-		    GameDebugCommands.RemoveCommands();
-		    __instance.StartCoroutine(__instance.CoEndGame());
-            return false;
         }
     }
 
@@ -253,6 +207,7 @@ namespace MoreGamemodes
             CustomNetObject.MaxId = -1;
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
+            Main.PlayerKills = new Dictionary<byte, int>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             AntiBlackout.Reset();
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun)

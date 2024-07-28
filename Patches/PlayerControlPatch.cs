@@ -117,6 +117,8 @@ namespace MoreGamemodes
             CustomGamemode.Instance.OnMurderPlayer(killer, target);
             if (Main.StandardRoles[target.PlayerId].IsImpostor() && CustomGamemode.Instance.Gamemode != Gamemodes.BombTag && CustomGamemode.Instance.Gamemode != Gamemodes.BattleRoyale && CustomGamemode.Instance.Gamemode != Gamemodes.KillOrDie)
                 target.RpcSetRole(RoleTypes.ImpostorGhost, true);
+            if (killer != target)
+                ++Main.PlayerKills[killer.PlayerId];
         }
     }
 

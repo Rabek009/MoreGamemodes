@@ -39,12 +39,13 @@ namespace MoreGamemodes
                 {
                     target.RpcSetDeathReason(DeathReasons.Trapped);
                     target.RpcMurderPlayer(target, true);
+                    ++Main.PlayerKills[OwnerId];
                 }
                 Despawn();
             }
         }
 
-        public TrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList)
+        public TrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
         {
             Radius = radius;
             Size = radius * 25f;
@@ -52,6 +53,7 @@ namespace MoreGamemodes
             WaitDuration = waitDuration;
             State = 0;
             VisibleList = visibleList;
+            OwnerId = ownerId;
             CreateNetObject($"<size={Size}><font=\"VCR SDF\"><#c7c7c769>●", position, CustomObjectTypes.TrapArea);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -66,5 +68,6 @@ namespace MoreGamemodes
         public float WaitDuration;
         public int State;
         public List<byte> VisibleList;
+        public byte OwnerId;
     }
 }
