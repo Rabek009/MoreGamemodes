@@ -253,6 +253,7 @@ namespace MoreGamemodes
             CustomNetObject.MaxId = -1;
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
+            CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             AntiBlackout.Reset();
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun)
             {

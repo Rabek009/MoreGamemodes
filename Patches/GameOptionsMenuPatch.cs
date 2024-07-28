@@ -2,6 +2,7 @@
 using Il2CppSystem.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
+using Object= UnityEngine.Object;
 
 namespace MoreGamemodes;
 
@@ -54,7 +55,7 @@ public static class GameOptionsMenuPatch
 
             if (option.IsHeader || option is TextOptionItem)
             {
-                CategoryHeaderMasked categoryHeaderMasked = UnityEngine.Object.Instantiate<CategoryHeaderMasked>(__instance.categoryHeaderOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
+                CategoryHeaderMasked categoryHeaderMasked = Object.Instantiate(__instance.categoryHeaderOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
                 categoryHeaderMasked.SetHeader(StringNames.RolesCategory, 20);
                 categoryHeaderMasked.Title.text = option.GetName();
                 categoryHeaderMasked.transform.localScale = Vector3.one * 0.63f;
@@ -77,7 +78,7 @@ public static class GameOptionsMenuPatch
             {
                 case OptionTypes.Checkbox:
                     {
-                        optionBehaviour = UnityEngine.Object.Instantiate<ToggleOption>(__instance.checkboxOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
+                        optionBehaviour = Object.Instantiate(__instance.checkboxOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
                         optionBehaviour.transform.localPosition = new Vector3(pos_x, num, pos_z);
 
                         OptionBehaviourSetSizeAndPosition(optionBehaviour, option, baseGameSetting.Type);
@@ -89,7 +90,7 @@ public static class GameOptionsMenuPatch
                     }
                 case OptionTypes.String:
                     {
-                        optionBehaviour = UnityEngine.Object.Instantiate<StringOption>(__instance.stringOptionOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
+                        optionBehaviour = Object.Instantiate(__instance.stringOptionOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
                         optionBehaviour.transform.localPosition = new Vector3(pos_x, num, pos_z);
 
                         OptionBehaviourSetSizeAndPosition(optionBehaviour, option, baseGameSetting.Type);
@@ -102,7 +103,7 @@ public static class GameOptionsMenuPatch
                 case OptionTypes.Float:
                 case OptionTypes.Int:
                     {
-                        optionBehaviour = UnityEngine.Object.Instantiate<NumberOption>(__instance.numberOptionOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
+                        optionBehaviour = Object.Instantiate(__instance.numberOptionOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
                         optionBehaviour.transform.localPosition = new Vector3(pos_x, num, pos_z);
 
                         OptionBehaviourSetSizeAndPosition(optionBehaviour, option, baseGameSetting.Type);
@@ -208,26 +209,47 @@ public static class GameOptionsMenuPatch
         if (ModGameOptionsMenu.OptionList.TryGetValue(option, out var index))
         {
             var item = OptionItem.AllOptions[index];
-            if (item != null) 
+            if (item != null)
             {
-                ReCreateSettings(__instance);
                 if (item is IntegerOptionItem)
-                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetInt().ToString(), true);
+                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.ApplyFormat(item.GetInt().ToString()), true);
                 else if (item is FloatOptionItem)
-                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetFloat().ToString(), true);
+                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.ApplyFormat(item.GetFloat().ToString()), true);
                 else if (item is BooleanOptionItem)
                     GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetBool() ? "ON" : "OFF", true);
                 else if (item is StringOptionItem || item is PresetOptionItem)
                     GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetString(), true);
+                if (item.Id == 0)
+                {
+                    foreach (var tab in Enum.GetValues<TabGroup>())
+                        ReCreateSettings(__instance, tab);
+                    for (int index2 = 0; index2 < OptionItem.AllOptions.Count; index2++)
+                    {
+                        var option2 = OptionItem.AllOptions[index2];
+                        if (option2 != null && option2 is not TextOptionItem && ModGameOptionsMenu.BehaviourList.TryGetValue(index2, out var optionBehaviour))
+                        {
+                            if (option2 is IntegerOptionItem && optionBehaviour.TryCast<NumberOption>(out var numberOption))
+                                numberOption.Value = option2.GetInt();
+                            else if (option2 is FloatOptionItem && optionBehaviour.TryCast<NumberOption>(out var numberOption2))
+                                numberOption2.Value = option2.GetFloat();
+                            else if (option2 is BooleanOptionItem && optionBehaviour.TryCast<ToggleOption>(out var toggleOption))
+                                toggleOption.CheckMark.enabled = option2.GetBool();
+                            else if ((option2 is StringOptionItem || option2 is PresetOptionItem) && optionBehaviour.TryCast<StringOption>(out var stringOption))
+                                stringOption.Value = option2.GetInt();
+                        }
+                    }
+                }
+                else if (item.Id == 2)
+                    ReCreateSettings(__instance, TabGroup.GamemodeSettings);
+                else if (item.Children.Count > 0)
+                    ReCreateSettings(__instance, (TabGroup)(ModGameOptionsMenu.TabIndex - 3));
             }
         }
         return false;
     }
-    private static void ReCreateSettings(GameOptionsMenu __instance)
+    public static void ReCreateSettings(GameOptionsMenu __instance, TabGroup modTab)
     {
         if (ModGameOptionsMenu.TabIndex < 3) return;
-        var modTab = (TabGroup)(ModGameOptionsMenu.TabIndex - 3);
-
         float num = 2.0f;
         for (int index = 0; index < OptionItem.AllOptions.Count; index++)
         {
@@ -249,11 +271,13 @@ public static class GameOptionsMenuPatch
                 if (enabled) num -= 0.45f;
             }
         }
-
-        __instance.ControllerSelectable.Clear();
-        foreach (var x in __instance.scrollBar.GetComponentsInChildren<UiElement>())
-            __instance.ControllerSelectable.Add(x);
-        __instance.scrollBar.SetYBoundsMax(-num - 1.65f);
+        if (ModGameOptionsMenu.TabIndex - 3 == (int)modTab)
+        {
+            __instance.ControllerSelectable.Clear();
+            foreach (var x in __instance.scrollBar.GetComponentsInChildren<UiElement>())
+                __instance.ControllerSelectable.Add(x);
+            __instance.scrollBar.SetYBoundsMax(-num - 1.65f);
+        }
     }
 
     private static BaseGameSetting GetSetting(OptionItem item)

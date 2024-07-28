@@ -57,7 +57,13 @@ namespace MoreGamemodes
                 var rand = new Random();
                 byte map = maps[rand.Next(0, maps.Count)];
                 GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, map);
+                if (map == 3)
+                    CreateOptionsPickerPatch.SetDleks = true;
+                else
+                    CreateOptionsPickerPatch.SetDleks = false;
             }
+            else if (CreateOptionsPickerPatch.SetDleks)
+                GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 3);
             if (Options.CurrentGamemode == Gamemodes.PaintBattle)
                 GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
             if (Options.CurrentGamemode == Gamemodes.Jailbreak && GameOptionsManager.Instance.CurrentGameOptions.MapId != 0 && GameOptionsManager.Instance.CurrentGameOptions.MapId != 3)

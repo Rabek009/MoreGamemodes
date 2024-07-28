@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using System;
 
+using Object = UnityEngine.Object;
+
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(ControllerManager), nameof(ControllerManager.Update))]
@@ -45,6 +47,27 @@ namespace MoreGamemodes
             if (GetKeysDown(new[] { KeyCode.LeftControl, KeyCode.Delete }) && !Main.GameStarted)
             {
                 OptionItem.AllOptions.ToArray().Where(x => x.Id > 0).Do(x => x.CurrentValue = x.DefaultValue);
+                var menu = Object.FindObjectOfType<GameOptionsMenu>();
+                if (menu)
+                {
+                    foreach (var tab in Enum.GetValues<TabGroup>())
+                        GameOptionsMenuPatch.ReCreateSettings(menu, tab);
+                    for (int index = 0; index < OptionItem.AllOptions.Count; index++)
+                    {
+                        var option = OptionItem.AllOptions[index];
+                        if (option != null && option is not TextOptionItem && ModGameOptionsMenu.BehaviourList.TryGetValue(index, out var optionBehaviour))
+                        {
+                            if (option is IntegerOptionItem && optionBehaviour.TryCast<NumberOption>(out var numberOption))
+                                numberOption.Value = option.GetInt();
+                            else if (option is FloatOptionItem && optionBehaviour.TryCast<NumberOption>(out var numberOption2))
+                                numberOption2.Value = option.GetFloat();
+                            else if (option is BooleanOptionItem && optionBehaviour.TryCast<ToggleOption>(out var toggleOption))
+                                toggleOption.CheckMark.enabled = option.GetBool();
+                            else if ((option is StringOptionItem || option is PresetOptionItem) && optionBehaviour.TryCast<StringOption>(out var stringOption))
+                                stringOption.Value = option.GetInt();
+                        }
+                    }
+                }
             }
         }
 

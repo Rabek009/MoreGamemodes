@@ -7,6 +7,8 @@ using System;
 using Assets.CoreScripts;
 using System.Text;
 
+using Object = UnityEngine.Object;
+
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(ChatController), nameof(ChatController.SendChat))]
@@ -24,13 +26,13 @@ namespace MoreGamemodes
             }
             string[] args = text.Split(' ');
             string subArgs = "";
-            /*if (args[0] == "/name" && (text.Contains("<") || text.Contains(">")))
+            if (args[0] == "/name" && (text.Contains("<") || text.Contains(">")))
             {
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("You can't use text formatting in /name command.");
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
-            }*/
+            }
             if (!AmongUsClient.Instance.AmHost) return true;
             __instance.timeSinceLastMessage = 3f;
             if (__instance.quickChatField.Visible)
@@ -112,25 +114,42 @@ namespace MoreGamemodes
                             {
                                 case "theskeld":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
+                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "mirahq":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 1);
+                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "polus":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 2);
+                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "dlekseht":
-                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 3);
+                                    var mapPicker = Object.FindObjectOfType<GameOptionsMapPicker>();
+                                    if (mapPicker) mapPicker.selectedMapId = 3;
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
+                                    CreateOptionsPickerPatch.SetDleks = true;
                                     break;
                                 case "airship":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 4);
+                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "thefungle":
-                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 4);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 5);
+                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "custom":
                                     subArgs = args.Length < 4 ? "" : args[3];
+                                    if (byte.Parse(subArgs) == 3)
+                                    {
+                                        var mapPicker2 = Object.FindObjectOfType<GameOptionsMapPicker>();
+                                        if (mapPicker2) mapPicker2.selectedMapId = 3;
+                                        GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
+                                        CreateOptionsPickerPatch.SetDleks = true;
+                                        break;
+                                    }
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, byte.Parse(subArgs));
+                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                             }
                             break;

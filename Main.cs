@@ -114,6 +114,7 @@ public partial class Main : BasePlugin
         CustomNetObject.MaxId = -1;
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
         ChatUpdatePatch.SendingSystemMessage = false;
+        CreateOptionsPickerPatch.SetDleks = false;
         AntiBlackout.Reset();
 
         Harmony.PatchAll();
@@ -178,6 +179,7 @@ public partial class Main : BasePlugin
                 CustomNetObject.MaxId = -1;
                 RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
                 ChatUpdatePatch.SendingSystemMessage = false;
+                CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
                 AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)
