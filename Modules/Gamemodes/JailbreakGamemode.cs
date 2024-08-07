@@ -8,19 +8,27 @@ namespace MoreGamemodes
 {
     public class JailbreakGamemode : CustomGamemode
     {
-        public override void OnSetFilterText(HauntMenuMinigame __instance)
-        {
-            if (HasEscaped(__instance.HauntTarget))
-                __instance.FilterText.text = "Escapist";
-            else if (IsGuard(__instance.HauntTarget))
-                __instance.FilterText.text = "Guard";
-            else
-                __instance.FilterText.text = "Prisoner";
-        }
-
         public override void OnHudUpate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
+            if (IsDead[player.PlayerId])
+            {
+                __instance.AbilityButton.SetDisabled();
+                __instance.AbilityButton.ToggleVisible(false);
+                __instance.ImpostorVentButton.SetDisabled();
+                __instance.ImpostorVentButton.ToggleVisible(false);
+                __instance.KillButton.SetDisabled();
+                __instance.KillButton.ToggleVisible(false);
+                __instance.PetButton.SetDisabled();
+                __instance.PetButton.ToggleVisible(false);
+            }
+            else
+            {
+                __instance.AbilityButton.ToggleVisible(true);
+                __instance.ImpostorVentButton.ToggleVisible(true);
+                __instance.KillButton.ToggleVisible(true);
+                __instance.PetButton.ToggleVisible(true);
+            }
             if (IsGuard(player))
             {
                 if (__instance.KillButton.currentTarget != null && GetJailbreakPlayerType(__instance.KillButton.currentTarget) == JailbreakPlayerTypes.Wanted && __instance.KillButton.currentTarget.shapeshiftTargetPlayerId == -1)
@@ -242,7 +250,7 @@ namespace MoreGamemodes
 
         public override void OnPet(PlayerControl pc)
         {
-            if (ChangeRecipeCooldown[pc.PlayerId] > 0f) return;
+            if (ChangeRecipeCooldown[pc.PlayerId] > 0f || IsDead[pc.PlayerId]) return;
             var recipeId = GetCurrentRecipe(pc) + 1;
             if (!IsGuard(pc) && recipeId > 7)
                 recipeId = 0;
@@ -268,7 +276,7 @@ namespace MoreGamemodes
         public override bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
         {
             if (!HasEscaped(guardian)) return false;
-            if (IsGuard(target) || HasEscaped(target) || target.Data.IsDead) return false;
+            if (IsGuard(target) || HasEscaped(target) || IsDead[target.PlayerId]) return false;
             target.RpcSetItemAmount(InventoryItems.Resources, Math.Min(GetItemAmount(target, InventoryItems.Resources) + Options.GivenResources.GetInt(), Options.MaximumPrisonerResources.GetInt()));
             guardian.RpcResetAbilityCooldown();
             return false;
@@ -276,7 +284,7 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (Main.Timer < 10f) return false;
+            if (Main.Timer < 10f || IsDead[killer.PlayerId] || IsDead[target.PlayerId]) return false;
             if (IsGuard(killer))
             {
                 if (IsGuard(target) || Main.AllShapeshifts[target.PlayerId] != target.PlayerId)
@@ -316,11 +324,12 @@ namespace MoreGamemodes
                         target.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Prisoner);
                         foreach (var pc in PlayerControl.AllPlayerControls)
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.Orange;
-                        RespawnCooldown[target.PlayerId] = Options.RespawnCooldown.GetFloat();
-                        target.Data.IsDead = true;
-                        Utils.SendGameData();
+                        RespawnCooldown[target.PlayerId] = Options.JbRespawnCooldown.GetFloat();
+                        target.RpcSetIsDead(true);
+                        target.Data.MarkDirty();
                         target.SyncPlayerSettings();
                         target.RpcTeleport(new Vector2(1000f, 1000f));
+                        ++Main.PlayerKills[killer.PlayerId];
                     }
                     killer.RpcSetKillTimer(1f);
                 }
@@ -341,7 +350,7 @@ namespace MoreGamemodes
             bool guardNearby = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (IsGuard(pc) && !pc.Data.IsDead && Vector2.Distance(pc.transform.position, killer.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
+                if (IsGuard(pc) && !IsDead[pc.PlayerId] && Vector2.Distance(pc.transform.position, killer.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
                 && !PhysicsHelpers.AnythingBetween(pc.transform.position, killer.transform.position, Constants.ShadowMask, false))
                     guardNearby = true;
             }
@@ -399,11 +408,12 @@ namespace MoreGamemodes
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         Main.NameColors[(killer.PlayerId, pc.PlayerId)] = Palette.Orange;
                 }   
-                RespawnCooldown[target.PlayerId] = Options.RespawnCooldown.GetFloat();
-                target.Data.IsDead = true;
-                Utils.SendGameData();
+                RespawnCooldown[target.PlayerId] = Options.JbRespawnCooldown.GetFloat();
+                target.RpcSetIsDead(true);
+                target.Data.MarkDirty();
                 target.SyncPlayerSettings();
                 target.RpcTeleport(new Vector2(1000f, 1000f));
+                ++Main.PlayerKills[killer.PlayerId];
             }
             killer.RpcSetKillTimer(1f);
             return false;
@@ -411,6 +421,7 @@ namespace MoreGamemodes
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
+            if (IsDead[target.PlayerId]) return false;
             if (shapeshifter.GetPlainShipRoom() != null && shapeshifter.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && IsGuard(shapeshifter))
             {
                 ReactorWallHealth += 10f;
@@ -530,9 +541,9 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.Data.IsDead)
+                if (HasEscaped(pc)) continue;
+                if (IsDead[pc.PlayerId])
                 {
-                    if (HasEscaped(pc)) continue;
                     if (RespawnCooldown[pc.PlayerId] > 0f)
                     {
                         RespawnCooldown[pc.PlayerId] -= Time.fixedDeltaTime;
@@ -540,8 +551,7 @@ namespace MoreGamemodes
                     if (RespawnCooldown[pc.PlayerId] <= 0f)
                     {
                         PlayerHealth[pc.PlayerId] = IsGuard(pc) ? Options.GuardHealth.GetFloat() : Options.PrisonerHealth.GetFloat();
-                        pc.Data.IsDead = false;
-                        Utils.SendGameData();
+                        pc.RpcSetIsDead(false);
                         if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3)
                             pc.MyPhysics.RpcBootFromVent(6);
                         pc.RpcShapeshift(pc, false);
@@ -579,7 +589,7 @@ namespace MoreGamemodes
                 bool guardNearby = false;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
-                    if (IsGuard(ar) && !ar.Data.IsDead && Vector2.Distance(ar.transform.position, pc.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
+                    if (IsGuard(ar) && !IsDead[ar.PlayerId] && Vector2.Distance(ar.transform.position, pc.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
                     && !PhysicsHelpers.AnythingBetween(ar.transform.position, pc.transform.position, Constants.ShadowMask, false))
                         guardNearby = true;
                 }
@@ -610,9 +620,9 @@ namespace MoreGamemodes
             bool isPrisonerInNav = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (IsGuard(pc) && !pc.Data.IsDead)
+                if (IsGuard(pc) && !IsDead[pc.PlayerId])
                     isGuardAlive = true;
-                if (!IsGuard(pc) && !pc.Data.IsDead && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav && !pc.inVent)
+                if (!IsGuard(pc) && !IsDead[pc.PlayerId] && pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav && !pc.inVent)
                     isPrisonerInNav = true;
             }
             if (!isGuardAlive && isPrisonerInNav)
@@ -630,7 +640,7 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.Data.IsDead) continue;
+                    if (IsDead[pc.PlayerId]) continue;
                     if (pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId == SystemTypes.MedBay && TimeSinceLastDamage[pc.PlayerId] >= 5f && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
                     {
                         if (IsGuard(pc))
@@ -699,6 +709,7 @@ namespace MoreGamemodes
             opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
+            opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
             opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 1f);
             opt.SetFloat(FloatOptionNames.ShapeshifterDuration, 0f);
             opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, Options.HelpCooldown.GetFloat());
@@ -708,8 +719,11 @@ namespace MoreGamemodes
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
             if (IsGuard(player) && EnergyDrinkDuration[player.PlayerId] > 0f)
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, Main.RealOptions.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (Options.EnergyDrinkSpeedIncrease.GetInt() / 100f)));
-            if (player.Data.IsDead)
+            if (IsDead[player.PlayerId])
+            {
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
+                opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
+            }
             return opt;
         }
 
@@ -804,7 +818,7 @@ namespace MoreGamemodes
                 bool isGuardAlive = false;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (IsGuard(pc) && !pc.Data.IsDead)
+                    if (IsGuard(pc) && !IsDead[pc.PlayerId])
                         isGuardAlive = true;
                 }
                 if (!isGuardAlive)
@@ -916,6 +930,7 @@ namespace MoreGamemodes
             OneSecondTimer = 0f;
             TimeSinceNameUpdate = new Dictionary<byte, float>();
             ChangeRecipeCooldown = new Dictionary<byte, float>();
+            IsDead = new Dictionary<byte, bool>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 PlayerType[pc.PlayerId] = JailbreakPlayerTypes.None;
@@ -924,11 +939,12 @@ namespace MoreGamemodes
                 TimeSinceLastDamage[pc.PlayerId] = 0f;
                 RespawnCooldown[pc.PlayerId] = 0f;
                 SearchCooldown[pc.PlayerId] = Options.SearchCooldown.GetFloat();
-                PlayerHealth[pc.PlayerId] = 0;
+                PlayerHealth[pc.PlayerId] = 0f;
                 CurrentRecipe[pc.PlayerId] = -1;
                 EnergyDrinkDuration[pc.PlayerId] = 0f;
                 TimeSinceNameUpdate[pc.PlayerId] = 1f / GameData.Instance.PlayerCount * pc.PlayerId;
                 ChangeRecipeCooldown[pc.PlayerId] = 0f;
+                IsDead[pc.PlayerId] = false;
             }
         }
 
@@ -946,6 +962,7 @@ namespace MoreGamemodes
         public float OneSecondTimer;
         public Dictionary<byte, float> TimeSinceNameUpdate;
         public Dictionary<byte, float> ChangeRecipeCooldown;
+        public Dictionary<byte, bool> IsDead;
     }
 
     public enum JailbreakPlayerTypes

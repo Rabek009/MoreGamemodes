@@ -1,7 +1,6 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using AmongUs.GameOptions;
-using Hazel;
 
 namespace MoreGamemodes
 {
@@ -36,7 +35,7 @@ namespace MoreGamemodes
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.BombTag)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
-                if (CheckAndEndGameForBattleRoyale()) return false;          
+                if (CheckAndEndGameForBattleRoyale()) return false;   
             }
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale)
             {
@@ -50,7 +49,7 @@ namespace MoreGamemodes
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
-                if (CheckAndEndGameForBattleRoyale()) return false;          
+                if (CheckAndEndGameForBattleRoyale()) return false;
             }
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies)
             {
@@ -61,7 +60,7 @@ namespace MoreGamemodes
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
             {
                 if (CheckAndEndGameForEveryoneEscape()) return false;
-                if (CheckAndEndGameForTimeEnd()) return false;          
+                if (CheckAndEndGameForTimeEnd()) return false;
             }
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun)
             {
@@ -71,6 +70,11 @@ namespace MoreGamemodes
                     return false;
                 }
                 return true;    
+            }
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
+            {
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForBaseWars()) return false;
             }
             return false;
         }
@@ -315,8 +319,39 @@ namespace MoreGamemodes
             return false;
         }
 
+        private static bool CheckAndEndGameForBaseWars()
+        {
+            BaseWarsTeams winner = BaseWarsTeams.None;
+            int redMembers = 0;
+            int blueMembers = 0;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (BaseWarsGamemode.instance.GetTeam(pc) == BaseWarsTeams.Red)
+                    ++redMembers;
+                else if (BaseWarsGamemode.instance.GetTeam(pc) == BaseWarsTeams.Blue)
+                    ++blueMembers;
+            }
+            if (redMembers == 0)
+                winner = BaseWarsTeams.Blue;
+            else if (blueMembers == 0)
+                winner = BaseWarsTeams.Red;
+            if (winner != BaseWarsTeams.None)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (BaseWarsGamemode.instance.GetTeam(pc) == winner)
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.HumansDisconnect, winners);
+                return true;
+            }
+            return false;
+        }
+
         public static void StartEndGame(GameOverReason reason, List<byte> winners)
         {
+            if (!GameManager.Instance.ShouldCheckForGameEnd) return;
             GameManager.Instance.ShouldCheckForGameEnd = false;
             var ImpostorWin = false;
             switch (reason)

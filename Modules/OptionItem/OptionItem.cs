@@ -155,6 +155,8 @@ namespace MoreGamemodes
             if (ValueFormat == OptionFormat.PercentPerLevel) return value + "%/lvl";
             if (ValueFormat == OptionFormat.ResourcesPerLevel) return value + " res/lvl";
             if (ValueFormat == OptionFormat.MoneyPerLevel) return value + "$/lvl";
+            if (ValueFormat == OptionFormat.Experience) return value + " exp";
+            if (ValueFormat == OptionFormat.ExperiencePerSecond) return value + " exp/s";
             return value;
         }
 
@@ -242,5 +244,7 @@ namespace MoreGamemodes
         PercentPerLevel,
         ResourcesPerLevel,
         MoneyPerLevel,
+        Experience,
+        ExperiencePerSecond,
     }
 }

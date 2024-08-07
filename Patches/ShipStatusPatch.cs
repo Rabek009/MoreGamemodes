@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Hazel;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MoreGamemodes
 {
@@ -89,6 +90,42 @@ namespace MoreGamemodes
             {
                 new LateTask(() => __instance.Begin(), 2f, "Delayed Task Assign");
                 return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(VentilationSystem), nameof(VentilationSystem.PerformVentOp))]
+    class PerformVentOpPatch
+    {
+        public static bool Prefix(VentilationSystem __instance, [HarmonyArgument(0)] byte playerId, [HarmonyArgument(1)] VentilationSystem.Operation op, [HarmonyArgument(2)] byte ventId, [HarmonyArgument(3)] SequenceBuffer<VentilationSystem.VentMoveInfo> seqBuffer)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (Utils.GetPlayerById(playerId) == null) return true;
+            switch (op)
+            {
+                case VentilationSystem.Operation.Enter:
+                    if (CoEnterVentPatch.PlayersToKick.Contains(playerId))
+                    {
+                        AntiCheat.TimeSinceVentCancel[playerId] = 0f;
+                        seqBuffer.BumpSid();
+		                Vector2 vector = Utils.GetVentById(ventId).transform.position;
+		                vector -= Utils.GetPlayerById(playerId).Collider.offset;
+		                Utils.GetPlayerById(playerId).NetTransform.SnapTo(vector);
+                        MessageWriter writer = AmongUsClient.Instance.StartRpc(Utils.GetPlayerById(playerId).MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable);
+		                writer.WritePacked(ventId);
+		                writer.EndMessage();
+                        CoEnterVentPatch.PlayersToKick.Remove(playerId);
+                        return false;
+                    }
+                    break;
+                case VentilationSystem.Operation.Move:
+                    if (!__instance.PlayersInsideVents.ContainsKey(playerId))
+                    {
+                        seqBuffer.BumpSid();
+                        return false;
+                    }
+                    break;
             }
             return true;
         }

@@ -114,9 +114,6 @@ namespace MoreGamemodes
                 __instance.KillButton.ToggleVisible(false);
                 __instance.AbilityButton.SetDisabled();
                 __instance.AbilityButton.ToggleVisible(false);
-                __instance.AdminButton.SetDisabled();
-                __instance.AdminButton.ToggleVisible(false);
-                __instance.UseButton.SetDisabled();
             }
         }
 
@@ -776,7 +773,7 @@ namespace MoreGamemodes
                 case Items.Swap:
                     return "Swap(Crewmate only): Swap your tasks with nearby player tasks.";
                 case Items.Medicine:
-                    return "Medicine(Crewmate only): Use report button to bring back dead player. But depending on options you die after using it";
+                    return "Medicine(Crewmate only): Use report button to bring back dead player. But depending on options you die after using it.";
                 case Items.TimeSpeeder:
                     return "Time Speeder(Impostor only): Increase discussion and voting time by amount in settings.";
                 case Items.Flash:

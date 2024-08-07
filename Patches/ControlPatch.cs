@@ -26,7 +26,8 @@ namespace MoreGamemodes
                 CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
             }
 
-            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead)
+            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead &&
+                !(CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.Speedrun or Gamemodes.Jailbreak or Gamemodes.BaseWars))
             {
                 PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Command);
                 PlayerControl.LocalPlayer.RpcExileV2();

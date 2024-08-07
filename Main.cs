@@ -52,7 +52,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, uint> RoleFakePlayer;
     public static Dictionary<byte, int> PlayerKills;
 
-    public const string CurrentVersion = "2.0.0 dev4";
+    public const string CurrentVersion = "2.0.0 dev5";
 
     public override void Load()
     {
@@ -117,6 +117,7 @@ public partial class Main : BasePlugin
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
         ChatUpdatePatch.SendingSystemMessage = false;
         CreateOptionsPickerPatch.SetDleks = false;
+        CoEnterVentPatch.PlayersToKick = new List<byte>();
         AntiBlackout.Reset();
 
         Harmony.PatchAll();
@@ -183,6 +184,7 @@ public partial class Main : BasePlugin
                 RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
                 ChatUpdatePatch.SendingSystemMessage = false;
                 CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
+                CoEnterVentPatch.PlayersToKick = new List<byte>();
                 AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)
@@ -217,6 +219,7 @@ public enum Gamemodes
     Zombies,
     Jailbreak,
     Deathrun,
+    BaseWars,
     All = int.MaxValue,
 }
 

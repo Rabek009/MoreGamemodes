@@ -20,6 +20,7 @@ namespace MoreGamemodes
         public static List<byte> RemovedBodies;
         public static Dictionary<byte, (byte, float)> TimeSinceLastStartCleaning;
         public static Dictionary<byte, (byte, float)> TimeSinceLastBootImpostors;
+        public static Dictionary<byte, float> TimeSinceVentCancel;
 
         public static void Init()
         {
@@ -32,6 +33,7 @@ namespace MoreGamemodes
             RemovedBodies = new List<byte>();
             TimeSinceLastStartCleaning = new Dictionary<byte, (byte, float)>();
             TimeSinceLastBootImpostors = new Dictionary<byte, (byte, float)>();
+            TimeSinceVentCancel = new Dictionary<byte, float>();
         }
 
         public static bool PlayerControlReceiveRpc(PlayerControl pc, byte callId, MessageReader reader)
@@ -61,7 +63,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "PlayAnimation/SetScanner Rpc during meeting");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var selfRole = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     if (selfRole.IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
                     {
@@ -102,7 +104,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Doing task during meeting");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var selfRole2 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     if (selfRole2.IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
                     {
@@ -198,25 +200,7 @@ namespace MoreGamemodes
                     if (!resultFlags.HasFlag(MurderResultFlags.FailedError) && !resultFlags.HasFlag(MurderResultFlags.FailedProtected) && target != null)
                     {
                         PlayerControl.LocalPlayer.RpcRemoveDeadBody(target.Data);
-                        if (!target.Data.IsDead)
-                        {
-                            if (gameStarted)
-                                target.RpcRevive();
-                            else
-                            {
-                                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
-                                AmongUsClient.Instance.FinishRpcImmediately(writer);
-                                new LateTask(() => target.RpcRevive(), 0.5f);
-                                new LateTask(() => {
-                                    if (!target.AmOwner && !gameStarted)
-                                    {
-                                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.Exiled, SendOption.None, target.GetClientId());
-                                        AmongUsClient.Instance.FinishRpcImmediately(writer);
-                                        target.Data.MarkDirty();
-                                    }
-                                }, 1f);
-                            }
-                        }
+                        target.Data.MarkDirty();
                     }
                     HandleCheat(pc, "Invalid Rpc");
                     return true;
@@ -275,7 +259,7 @@ namespace MoreGamemodes
                         return true;
                     }
                     if (target2 == null) break;
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var selfRole3 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     var targetRole = Main.DesyncRoles.ContainsKey((target2.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(target2.PlayerId, pc.PlayerId)] : Main.StandardRoles[target2.PlayerId];
                     if (!selfRole3.IsImpostor())
@@ -315,7 +299,7 @@ namespace MoreGamemodes
                         return true;
                     }
                     if (target3 == null) break;
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     if (pc.Data.Role.Role != RoleTypes.GuardianAngel)
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
@@ -380,7 +364,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Shapeshifting while shapeshifted");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var selfRole4 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     if (selfRole4 != RoleTypes.Shapeshifter)
                     {
@@ -407,7 +391,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Vanishing while invisible");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var selfRole5 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     if (selfRole5 != RoleTypes.Phantom)
                     {
@@ -433,7 +417,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Appearing while invisible");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var selfRole6 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     if (selfRole6 != RoleTypes.Phantom)
                     {
@@ -514,7 +498,7 @@ namespace MoreGamemodes
                         HandleCheat(physics.myPlayer, "Venting during meeting");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var selfRole = Main.DesyncRoles.ContainsKey((physics.myPlayer.PlayerId, physics.myPlayer.PlayerId)) ? Main.DesyncRoles[(physics.myPlayer.PlayerId, physics.myPlayer.PlayerId)] : Main.StandardRoles[physics.myPlayer.PlayerId];
                     if (!selfRole.IsImpostor() && selfRole != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(physics.myPlayer.PlayerId) || TimeSinceRoleChange[physics.myPlayer.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f)))
                     {
@@ -580,7 +564,8 @@ namespace MoreGamemodes
                         HandleCheat(netTransform.myPlayer, "Teleportation in lobby");
                         return true;
                     }
-                    if (HasTeleported.ContainsKey(netTransform.myPlayer.PlayerId) && !netTransform.myPlayer.inVent && !netTransform.myPlayer.walkingToVent &&
+                    if (HasTeleported.ContainsKey(netTransform.myPlayer.PlayerId) && !netTransform.myPlayer.inVent && !netTransform.myPlayer.walkingToVent && !CoEnterVentPatch.PlayersToKick.Contains(netTransform.myPlayer.PlayerId) &&
+                        (!TimeSinceVentCancel.ContainsKey(netTransform.myPlayer.PlayerId) || TimeSinceVentCancel[netTransform.myPlayer.PlayerId] > 5f) &&
                         HasTeleported[netTransform.myPlayer.PlayerId] >= (Options.EnableMidGameChat.GetBool() && GameManager.Instance.LogicOptions.MapId == 4 ? 2 : 1))
                     {
                         HandleCheat(netTransform.myPlayer, "Too many teleportations");
@@ -645,14 +630,6 @@ namespace MoreGamemodes
                         return true;
                     }
                     break;
-                case SystemTypes.Security:
-                    if (mapId == 2 || mapId >= 5)
-                    {
-                        HandleCheat(player, "Using cameras on wrong map");
-                        return true;
-                    }
-                    SecurityCameraSystemType securitySystem = ShipStatus.Instance.Systems[SystemTypes.Security].Cast<SecurityCameraSystemType>();
-                    break;
                 case SystemTypes.Comms:
                     if (amount == 0)
                     {
@@ -677,7 +654,7 @@ namespace MoreGamemodes
                     }
                     break;
                 case SystemTypes.Sabotage:
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     if (!selfRole.IsImpostor())
                     {   
                         if (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
@@ -722,7 +699,7 @@ namespace MoreGamemodes
                                 HandleCheat(player, "Hack sent clean vent");
                                 return true;
                             }
-                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                             if (selfRole.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
                             {
                                 HandleCheat(player, "Cleaning vent as impostor");
@@ -743,7 +720,7 @@ namespace MoreGamemodes
                         case VentilationSystem.Operation.Enter:
                         case VentilationSystem.Operation.Exit:
                         case VentilationSystem.Operation.Move:
-                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                             var selfRole3 = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
                             if (!selfRole3.IsImpostor() && selfRole3 != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f)))
                             {
@@ -752,7 +729,7 @@ namespace MoreGamemodes
                             }
                             break;
                         case VentilationSystem.Operation.BootImpostors:
-                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak) break;
+                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                             var selfRole4 = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
                             if (selfRole4.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
                             {

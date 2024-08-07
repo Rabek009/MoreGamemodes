@@ -255,12 +255,29 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoEnterVent))]
     class CoEnterVentPatch
     {
+        public static List<byte> PlayersToKick;
         public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] int id)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            if (PlayersToKick.Contains(__instance.myPlayer.PlayerId)) return false;
             if (!CustomGamemode.Instance.OnEnterVent(__instance.myPlayer, id))
             {
-                __instance.RpcExitVent(id);
+                PlayersToKick.Add(__instance.myPlayer.PlayerId);
+                return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoExitVent))]
+    class CoExitVentPatch
+    {
+        public static bool Prefix(PlayerPhysics __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (CoEnterVentPatch.PlayersToKick.Contains(__instance.myPlayer.PlayerId))
+            {
+                __instance.myPlayer.NetTransform.lastSequenceId += 2;
                 return false;
             }
             return true;
@@ -281,9 +298,11 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcUsePlatform))]
     class RpcUsePlatformPatch
     {
-        public static bool Prefix()
+        public static bool Prefix(PlayerControl __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
+                return false;
             if (Options.EnableDisableGapPlatform.GetBool()) return false;
             return true;
         }
@@ -292,9 +311,11 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckUseZipline))]
     class CheckUseZiplinePatch
     {
-        public static bool Prefix()
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!target.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
+                return false;
             if (Options.EnableDisableZipline.GetBool())
                 return false;
             return true;

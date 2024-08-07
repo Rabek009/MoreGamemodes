@@ -36,6 +36,17 @@ namespace MoreGamemodes
             return null;
         }
 
+        public static Vent GetVentById(int id)
+        {
+            if (!ShipStatus.Instance) return null;
+            foreach (var vent in ShipStatus.Instance.AllVents)
+            {
+                if (vent.Id == id)
+                    return vent;
+            }
+            return null;
+        }
+
         public static ClientData GetClientById(int id)
         {
             try
@@ -59,7 +70,7 @@ namespace MoreGamemodes
             {
                 case SystemTypes.Electrical:
                     {
-                        if (mapId == 5) return false;
+                        if (mapId >= 5) return false;
                         var SwitchSystem = ShipStatus.Instance.Systems[type].Cast<SwitchSystem>();
                         return SwitchSystem != null && SwitchSystem.IsActive;
                     }
@@ -91,7 +102,7 @@ namespace MoreGamemodes
                     }
                 case SystemTypes.Comms:
                     {
-                        if (mapId is 1 or 5)
+                        if (mapId == 1 || mapId >= 5)
                         {
                             var HqHudSystemType = ShipStatus.Instance.Systems[type].Cast<HqHudSystemType>();
                             return HqHudSystemType != null && HqHudSystemType.IsActive;
@@ -104,7 +115,7 @@ namespace MoreGamemodes
                     }
                 case SystemTypes.MushroomMixupSabotage:
                     {
-                        if (mapId != 5) return false;
+                        if (mapId < 5) return false;
                         var MushroomMixupSabotageSystemType = ShipStatus.Instance.Systems[type].Cast<MushroomMixupSabotageSystem>();
                         return MushroomMixupSabotageSystemType != null && MushroomMixupSabotageSystemType.IsActive;
                     }
@@ -364,14 +375,32 @@ namespace MoreGamemodes
             return sprite;
         }
 
-        public static void RpcCreateExplosion(float size, float duration, Vector2 position)
+        public static Explosion RpcCreateExplosion(float size, float duration, Vector2 position)
         {
-            new Explosion(size, duration, position);
+            return new Explosion(size, duration, position);
         }
 
-        public static void RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
+        public static TrapArea RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
         {
-            new TrapArea(radius, waitDuration, position, visibleList, ownerId);
+            if (RandomItemsGamemode.instance == null) return null;
+            return new TrapArea(radius, waitDuration, position, visibleList, ownerId);
+        }
+
+        public static Turret RpcCreateTurret(BaseWarsTeams team, SystemTypes room, Vector2 position)
+        {
+            if (BaseWarsGamemode.instance == null) return null;
+            return new Turret(team, room, position);
+        }
+
+        public static Base RpcCreateBase(BaseWarsTeams team, Vector2 position)
+        {
+            if (BaseWarsGamemode.instance == null) return null;
+            return new Base(team, position);
+        }
+
+        public static Display RpcCreateDisplay(string text, Vector2 position)
+        {
+            return new Display(text, position);
         }
 
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)
@@ -573,6 +602,19 @@ namespace MoreGamemodes
             }
             else
                 return optionItem.GetName();
+        }
+
+        public static Vector2 GetOutsideMapPosition()
+        {
+            return Main.RealOptions.GetByte(ByteOptionNames.MapId) switch
+            {
+                0 => new(-27f, 3.3f),
+                1 => new(-11.4f, 8.2f),
+                2 => new(42.6f, -19.9f),
+                3 => new(27f, 3.3f),
+                4 => new(-16.8f, -6.2f),
+                _ => new(9.6f, 23.2f),
+            };
         }
     }
 }

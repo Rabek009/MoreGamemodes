@@ -66,7 +66,7 @@ namespace MoreGamemodes
                 GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 3);
             if (Options.CurrentGamemode == Gamemodes.PaintBattle)
                 GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-            if (Options.CurrentGamemode == Gamemodes.Jailbreak && GameOptionsManager.Instance.CurrentGameOptions.MapId != 0 && GameOptionsManager.Instance.CurrentGameOptions.MapId != 3)
+            if (Options.CurrentGamemode is Gamemodes.Jailbreak or Gamemodes.BaseWars && GameOptionsManager.Instance.CurrentGameOptions.MapId != 0 && GameOptionsManager.Instance.CurrentGameOptions.MapId != 3)
                 GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
             GameOptionsManager.Instance.GameHostOptions = GameOptionsManager.Instance.CurrentGameOptions;
 		    GameManager.Instance.LogicOptions.SyncOptions();

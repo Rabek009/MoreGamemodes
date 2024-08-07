@@ -169,23 +169,6 @@ namespace MoreGamemodes
 
         public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
         {
-            if (Main.StandardRoles[killer.PlayerId].IsImpostor() || (IsZombie(killer) && Options.ZombieKillsTurnIntoZombie.GetBool()))
-            {
-                target.RpcSetZombieType(ZombieTypes.JustTurned);
-                new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate), 0.5f);
-                new LateTask(() => target.RpcSetDesyncRole(RoleTypes.Impostor, target), 1f);
-                target.RpcSetOutfit(18, "", "", "", "");
-                target.Data.RpcSetTasks(new byte[0]);
-                if (!AntiCheat.ChangedTasks.Contains(target.PlayerId))
-                    AntiCheat.ChangedTasks.Add(target.PlayerId);
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (Main.StandardRoles[pc.PlayerId].IsImpostor())
-                        Main.NameColors[(pc.PlayerId, target.PlayerId)] = Color.red;
-                    Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.PlayerColors[2];
-                }
-                target.SyncPlayerSettings();
-            }
             if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && IsZombie(target))
             {
                 target.RpcSetZombieType(ZombieTypes.Dead);
@@ -208,6 +191,23 @@ namespace MoreGamemodes
                         pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], target);
                 }
                 Main.NameColors[(target.PlayerId, target.PlayerId)] = Color.clear;
+            }
+            if (Main.StandardRoles[killer.PlayerId].IsImpostor() || (IsZombie(killer) && Options.ZombieKillsTurnIntoZombie.GetBool()))
+            {
+                target.RpcSetZombieType(ZombieTypes.JustTurned);
+                new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate), 0.5f);
+                new LateTask(() => target.RpcSetDesyncRole(RoleTypes.Impostor, target), 1f);
+                target.RpcSetOutfit(18, "", "", "", "");
+                target.Data.RpcSetTasks(new byte[0]);
+                if (!AntiCheat.ChangedTasks.Contains(target.PlayerId))
+                    AntiCheat.ChangedTasks.Add(target.PlayerId);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (Main.StandardRoles[pc.PlayerId].IsImpostor())
+                        Main.NameColors[(pc.PlayerId, target.PlayerId)] = Color.red;
+                    Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.PlayerColors[2];
+                }
+                target.SyncPlayerSettings();
             }
         }
 

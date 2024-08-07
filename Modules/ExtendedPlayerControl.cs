@@ -6,7 +6,6 @@ using AmongUs.GameOptions;
 using Il2CppInterop.Runtime.InteropTypes;
 using System.Collections.Generic;
 using System.Data;
-using System;
 
 using Object = UnityEngine.Object;
 
@@ -378,7 +377,7 @@ namespace MoreGamemodes
                 PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
                 return;
             }
-            if (Options.CurrentGamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak)
+            if (Options.CurrentGamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars)
             {
                 player.RpcSetDesyncRole(RoleTypes.Shapeshifter, player);
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -458,6 +457,57 @@ namespace MoreGamemodes
                 playerControl.MyPhysics.RpcExitVent(0);
                 playerControl.MyPhysics.RpcEnterVent(0);
             }
+        }
+
+        public static void RpcSetUnshiftButton(this PlayerControl player)
+        {
+            if (Main.AllShapeshifts[player.PlayerId] != player.PlayerId) return;
+            if (player.AmOwner)
+            {
+                player.RawSetOutfit(player.Data.Outfits[PlayerOutfitType.Default], PlayerOutfitType.Shapeshifted);
+                return;
+            }
+            new LateTask(() => {
+                var outfit = player.Data.Outfits[PlayerOutfitType.Default];
+                var sender = CustomRpcSender.Create("Set Unshift Button", SendOption.None);
+                sender.StartMessage(player.GetClientId());
+                sender.StartRpc(player.NetId, RpcCalls.Shapeshift)
+                    .WriteNetObject(PlayerControl.LocalPlayer)
+                    .Write(false)
+                    .EndRpc();
+                sender.StartRpc(player.NetId, RpcCalls.SetColor)
+                    .Write(player.Data.NetId)
+                    .Write((byte)outfit.ColorId)
+                    .EndRpc();
+                sender.StartRpc(player.NetId, RpcCalls.SetHatStr)
+                    .Write(outfit.HatId)
+                    .Write(player.GetNextRpcSequenceId(RpcCalls.SetHatStr))
+                    .EndRpc();
+                sender.StartRpc(player.NetId, RpcCalls.SetSkinStr)
+                    .Write(outfit.SkinId)
+                    .Write(player.GetNextRpcSequenceId(RpcCalls.SetSkinStr))
+                    .EndRpc();
+                sender.StartRpc(player.NetId, RpcCalls.SetVisorStr)
+                    .Write(outfit.VisorId)
+                    .Write(player.GetNextRpcSequenceId(RpcCalls.SetVisorStr))
+                    .EndRpc();
+                sender.StartRpc(player.NetId, RpcCalls.SetPetStr)
+                    .Write(outfit.PetId)
+                    .Write(player.GetNextRpcSequenceId(RpcCalls.SetPetStr))
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
+            }, 0f);
+            new LateTask(() => player.RpcSetNamePrivate(player.BuildPlayerName(player, false), player, true), 0.2f);
+        }
+
+        public static void RpcDesyncUpdateSystem(this PlayerControl target, SystemTypes systemType, int amount)
+        {
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, target.GetClientId());
+            messageWriter.Write((byte)systemType);
+            messageWriter.WriteNetObject(target);
+            messageWriter.Write((byte)amount);
+            AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
         }
     }
 }

@@ -178,6 +178,15 @@ Swap your tasks with nearby player tasks. Only crewmates can get this item.
 | ----------- |
 | Enable swap |
 
+##### Medicine
+Use report button to bring back dead player. But depending on options you die after using it. Only crewmates can get this item.
+
+###### Game options
+| Name            |
+| --------------- |
+| Enable medicine |
+| Die on revive   |
+
 ##### Time speeder
 Decreases discussion and voting time. Only impostors can get this item.
 
@@ -248,6 +257,15 @@ Place trap that kills first player touches it. Trap is completely invisible and 
 | Crewmates see trap |
 | Impostors see trap |
 
+##### Team changer
+You can turn nearby crewmate into impostor, but you die after doing it. Only impostors can get this item.
+
+###### Game options
+| Name                  |
+| --------------------- |
+| Enable team changer   |
+| Target gets your role |
+
 ##### Teleport
 Teleports you to random vent. Everyone can get this item.
 
@@ -307,6 +325,16 @@ Show arrow to all players for short period of time. Everyone can get this item.
 | Enable compass   |
 | Compass duration |
 
+##### Booster
+Increases your speed temporarily. Everyone can get this item.
+
+###### Game options
+| Name                   |
+| ---------------------- |
+| Enable booster         |
+| Booster duration       |
+| Booster speed increase |
+
 ### Battle royale
 Everyone is impostor. Click kill button to attack. If you get hit, you lose 1 live. When your lives drop down to 0, you die and lose. Last one alive wins! No reporting, emergiencies, venting and sabotaging. Depending on options you see arrow to nearst player.
 
@@ -328,7 +356,7 @@ Everyone is crewmate. Finish tasks first to win. You can play alone - finish tas
 | Tasks visible to others |
 
 ### Paint battle
-Type (/color ID) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.
+Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.
 
 #### Game options
 | Name          |
@@ -365,7 +393,7 @@ Players killed by impostor are turned into zombies and are on impostors side. Zo
 | Zombies can vent              |
 
 ### Jailbreak
-Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.
+Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.<br>Items:<br>Resources - prisoners use it to craft items.<br>Screwdriver (illegal) - gives prisoner ability to vent<br>Weapon (illegal) - has 10 levels. Increase damage depending on level.<br>Spaceship part (illegal) - used to craft spaceship.<br>Spaceship (illegal) - used to escape.<br>Breathing mask - used to escape.<br>Pickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.<br>Guard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.<br>Money - used to buy items by guards.<br>Energy drink - increase your speed temporarily.<br><br>Illegal actions:<br>Attacking<br>Venting<br>Being in forbidden room<br>Disguising as guard<br>Having illegal item<br><br>All prisoners are orange and all guards are blue.<br>Do /help jailbreak to see how to play in actual map.
 
 #### Maps
 The skeld, Dleks eht: There are 5 forbidden areas, where is illegal for prisoners to be in. These are:<br>Reactor<br>Security<br>Admin<br>Storage<br>Navigation<br><br>Your health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:<br>1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!<br>2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!<br>3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!
@@ -414,6 +442,32 @@ Deathrun is normal among us, but there are no cooldowns. There is no kill cooldo
 | Disable meetings   |
 | Impostors can vent |
 | Amount of tasks    |
+
+### Base wars
+Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.
+
+#### Game options
+| Name                    |
+| ----------------------- |
+| Starting health         |
+| Starting damage         |
+| Regeneration            |
+| Turret health           |
+| Turret damage           |
+| Turret regeneration     |
+| Turret slow enemies     |
+| Speed decrease          |
+| Base health             |
+| Base damage             |
+| Base regeneration       |
+| Regeneration in base    |
+| Can teleport to base    |
+| Teleport cooldown       |
+| Exp gain in middle      |
+| Exp for kill            |
+| Health increase         |
+| Damage increase         |
+| Smaller team gets level |
 
 ### Additional gamemodes
 Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.
@@ -473,6 +527,9 @@ When you join to non modded lobby mod is disabled and you can play normally. You
 
 ### No chat character limit
 You can use any character in chat. Also using text formatting is allowed. Only limits are that you can't use chat formatting in chat and can't change size of text as non host. Tutorial on how to use text formatting: https://docs.unity3d.com/Packages/com.unity.textmeshpro@3.2/manual/RichTextSupportedTags.html
+
+### Dleks eht compatibility
+You can play dleks eht (reversed skeld) map! Venting is bugged, but everything else works fine.
 
 ## Others
 

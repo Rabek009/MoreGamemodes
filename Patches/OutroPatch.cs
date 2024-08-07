@@ -77,6 +77,13 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Palette.Orange, "Prisoner") + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
+                    case Gamemodes.BaseWars:
+                        if (BaseWarsGamemode.instance.PlayerTeam[playerInfo.PlayerId] == BaseWarsTeams.Red)
+                            lastResult += Utils.ColorString(Color.red, "★" + Main.StandardNames[playerInfo.PlayerId]) + " - (";
+                        else if (BaseWarsGamemode.instance.PlayerTeam[playerInfo.PlayerId] == BaseWarsTeams.Blue)
+                            lastResult += Utils.ColorString(Color.blue, "★" + Main.StandardNames[playerInfo.PlayerId]) + " - (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
+                        break;
                 }
                 if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies)
                 {
@@ -146,6 +153,13 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Palette.Orange, "Prisoner") + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
+                    case Gamemodes.BaseWars:
+                        if (BaseWarsGamemode.instance.PlayerTeam[playerInfo.PlayerId] == BaseWarsTeams.Red)
+                            lastResult += Utils.ColorString(Color.red, Main.StandardNames[playerInfo.PlayerId]) + " - (";
+                        else if (BaseWarsGamemode.instance.PlayerTeam[playerInfo.PlayerId] == BaseWarsTeams.Blue)
+                            lastResult += Utils.ColorString(Color.blue, Main.StandardNames[playerInfo.PlayerId]) + " - (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
+                        break;
                 }
                 if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies)
                 {
@@ -209,9 +223,11 @@ namespace MoreGamemodes
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
             Main.PlayerKills = new Dictionary<byte, int>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
+            CoEnterVentPatch.PlayersToKick = new List<byte>();
             AntiBlackout.Reset();
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun)
+            if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
+                Main.Timer -= 0.5f;
                 var hours = (int)Main.Timer / 3600;
                 Main.Timer -= hours * 3600;
                 var minutes = (int)Main.Timer / 60;
@@ -219,7 +235,7 @@ namespace MoreGamemodes
                 var seconds = (int)Main.Timer;
                 Main.Timer -= seconds;
                 var miliseconds = (int)(Main.Timer * 1000);
-                var TimeTextObject = UnityEngine.Object.Instantiate(__instance.WinText.gameObject);
+                var TimeTextObject = Object.Instantiate(__instance.WinText.gameObject);
                 TimeTextObject.transform.position = new(__instance.WinText.transform.position.x, __instance.WinText.transform.position.y - 0.5f, __instance.WinText.transform.position.z);
                 TimeTextObject.transform.localScale = new(0.6f, 0.6f, 0.6f);
                 var TimeText = TimeTextObject.GetComponent<TMPro.TextMeshPro>();

@@ -337,5 +337,8 @@ namespace MoreGamemodes
     {
         Explosion,
         TrapArea,
+        Turret,
+        Base,
+        Display,
     }
 }

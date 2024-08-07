@@ -34,6 +34,7 @@ namespace MoreGamemodes
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
             Main.PlayerKills = new Dictionary<byte, int>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
+            CoEnterVentPatch.PlayersToKick = new List<byte>();
             AntiBlackout.Reset();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -89,7 +90,7 @@ namespace MoreGamemodes
             PlayerControl.LocalPlayer.GetComponent<CircleCollider2D>().enabled = true;
             if (!AmongUsClient.Instance.AmHost) return;
             Main.Timer = 0f;
-            if (Options.EnableRandomSpawn.GetBool())
+            if (Options.EnableRandomSpawn.GetBool() && !(CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.Jailbreak or Gamemodes.BaseWars))
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.RpcRandomVentTeleport();

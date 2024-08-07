@@ -31,6 +31,10 @@ namespace MoreGamemodes
         RemoveDeadBody,
         RequestVersionCheck,
         AddCustomSettingsChangeMessage,
+        SetBaseWarsTeam,
+        DestroyTurret,
+        SetCanTeleport,
+        SetIsDead,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -70,6 +74,7 @@ namespace MoreGamemodes
                     if (!SendChatPatch.OnReceiveChat(__instance, text)) return false;
                     break;
                 case RpcCalls.UsePlatform:
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive) return false;
                     if (Options.DisableGapPlatform.GetBool()) return false;
                     break;
             }
@@ -94,13 +99,13 @@ namespace MoreGamemodes
                     __instance.SetBomb(reader.ReadBoolean());
                     break;
                 case CustomRPC.SetItem:
-                    __instance.SetItem((Items)reader.ReadPackedInt32());
+                    __instance.SetItem((Items)reader.ReadInt32());
                     break;
                 case CustomRPC.SetIsKiller:
                     __instance.SetIsKiller(reader.ReadBoolean());
                     break;
                 case CustomRPC.SetZombieType:
-                    __instance.SetZombieType((ZombieTypes)reader.ReadPackedInt32());
+                    __instance.SetZombieType((ZombieTypes)reader.ReadInt32());
                     break;
                 case CustomRPC.SetKillsRemain:
                     __instance.SetKillsRemain(reader.ReadInt32());
@@ -110,10 +115,10 @@ namespace MoreGamemodes
                     HudManager.Instance.ReactorFlash(reader.ReadSingle(), reader.ReadColor());
                     break;
                 case CustomRPC.SetJailbreakPlayerType:
-                    __instance.SetJailbreakPlayerType((JailbreakPlayerTypes)reader.ReadPackedInt32());
+                    __instance.SetJailbreakPlayerType((JailbreakPlayerTypes)reader.ReadInt32());
                     break;
                 case CustomRPC.SetItemAmount:
-                    __instance.SetItemAmount((InventoryItems)reader.ReadPackedInt32(), reader.ReadInt32());
+                    __instance.SetItemAmount((InventoryItems)reader.ReadInt32(), reader.ReadInt32());
                     break;
                 case CustomRPC.SetCurrentRecipe:
                     __instance.SetCurrentRecipe(reader.ReadInt32());
@@ -133,6 +138,15 @@ namespace MoreGamemodes
                 case CustomRPC.RequestVersionCheck:
                     if (__instance.GetClientId() != AmongUsClient.Instance.HostId) break;
                     PlayerControl.LocalPlayer.RpcVersionCheck(Main.CurrentVersion);
+                    break;
+                case CustomRPC.SetBaseWarsTeam:
+                    __instance.SetBaseWarsTeam((BaseWarsTeams)reader.ReadInt32());
+                    break;
+                case CustomRPC.SetCanTeleport:
+                    __instance.SetCanTeleport(reader.ReadBoolean());
+                    break;
+                case CustomRPC.SetIsDead:
+                    __instance.SetIsDead(reader.ReadBoolean());
                     break;
             }
         }
@@ -169,12 +183,15 @@ namespace MoreGamemodes
                     __instance.SetTheme(reader.ReadString());
                     break;
                 case CustomRPC.StartGamemode:
-                    __instance.StartGamemode((Gamemodes)reader.ReadPackedInt32());
+                    __instance.StartGamemode((Gamemodes)reader.ReadInt32());
                     break;
                 case CustomRPC.AddCustomSettingsChangeMessage:
                     var optionItem = OptionItem.AllOptions.FirstOrDefault(opt => opt.Id == reader.ReadInt32());
                     if (optionItem == null) break;
                     __instance.AddCustomSettingsChangeMessage(optionItem, reader.ReadString(), reader.ReadBoolean());
+                    break;
+                case CustomRPC.DestroyTurret:
+                    __instance.DestroyTurret((SystemTypes)reader.ReadByte());
                     break;
             }
         }
@@ -189,6 +206,13 @@ namespace MoreGamemodes
             var rpcType = (RpcCalls)callId;
             MessageReader subReader = MessageReader.Get(reader);
             if (AntiCheat.CustomNetworkTransformReceiveRpc(__instance, callId, reader)) return false;
+            switch (rpcType)
+            {
+                case RpcCalls.SnapTo:
+                    var text = subReader.ReadString();
+                    if (CoEnterVentPatch.PlayersToKick.Contains(__instance.myPlayer.PlayerId) || (AntiCheat.TimeSinceVentCancel.ContainsKey(__instance.myPlayer.PlayerId) && AntiCheat.TimeSinceVentCancel[__instance.myPlayer.PlayerId] <= 5f)) return false;
+                    break;
+            }
             return true;
         }
     }
@@ -268,7 +292,7 @@ namespace MoreGamemodes
             var obj = hud.transform.FindChild("FlashColor_FullScreen")?.gameObject;
             if (obj == null)
             {
-                obj = GameObject.Instantiate(hud.FullScreen.gameObject, hud.transform);
+                obj = Object.Instantiate(hud.FullScreen.gameObject, hud.transform);
                 obj.name = "FlashColor_FullScreen";
             }
             hud.StartCoroutine(Effects.Lerp(duration, new Action<float>((t) =>
@@ -361,6 +385,10 @@ namespace MoreGamemodes
                     DeathrunGamemode.instance = new DeathrunGamemode();
                     CustomGamemode.Instance = DeathrunGamemode.instance;
                     break;
+                case Gamemodes.BaseWars:
+                    BaseWarsGamemode.instance = new BaseWarsGamemode();
+                    CustomGamemode.Instance = BaseWarsGamemode.instance;
+                    break;
             }
         }
 
@@ -390,6 +418,40 @@ namespace MoreGamemodes
             optionName += optionItem.GetOptionNameSCM();
             string text = $"<font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{optionName}</font>: <font=\"Barlow-Black SDF\" material=\"Barlow-Black Outline\">{value}</font>";
             HudManager.Instance.Notifier.CustomSettingsChangeMessageLogic(optionItem, text, playSound);
+        }
+
+        public static void SetBaseWarsTeam(this PlayerControl player, BaseWarsTeams team)
+        {
+            if (BaseWarsGamemode.instance == null) return;
+            BaseWarsGamemode.instance.PlayerTeam[player.PlayerId] = team;
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+        }
+
+        public static void DestroyTurret(this GameManager manager, SystemTypes room)
+        {
+            if (BaseWarsGamemode.instance == null) return;
+            if (BaseWarsGamemode.instance.AllTurretsPosition.Contains(room))
+                BaseWarsGamemode.instance.AllTurretsPosition.Remove(room);
+        }
+
+        public static void SetCanTeleport(this PlayerControl player, bool canTeleport)
+        {
+            if (BaseWarsGamemode.instance == null) return;
+            BaseWarsGamemode.instance.CanTeleport[player.PlayerId] = canTeleport;
+        }
+
+        public static void SetIsDead(this PlayerControl player, bool isDead)
+        {
+            switch (CustomGamemode.Instance.Gamemode)
+            {
+                case Gamemodes.Jailbreak:
+                    JailbreakGamemode.instance.IsDead[player.PlayerId] = isDead;
+                    break;
+                case Gamemodes.BaseWars:
+                    BaseWarsGamemode.instance.IsDead[player.PlayerId] = isDead;
+                    break;
+            }
         }
 
         public static void RpcVersionCheck(this PlayerControl player, string version)
@@ -424,7 +486,7 @@ namespace MoreGamemodes
         {
             player.SetItem(item);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetItem, SendOption.Reliable, -1);
-            writer.WritePacked((int)item);
+            writer.Write((int)item);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -464,7 +526,7 @@ namespace MoreGamemodes
         {
             player.SetZombieType(zombieType);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetZombieType, SendOption.Reliable, -1);
-            writer.WritePacked((int)zombieType);
+            writer.Write((int)zombieType);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -498,7 +560,7 @@ namespace MoreGamemodes
         {
             player.SetJailbreakPlayerType(playerType);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetJailbreakPlayerType, SendOption.Reliable, -1);
-            writer.WritePacked((int)playerType);
+            writer.Write((int)playerType);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -506,7 +568,7 @@ namespace MoreGamemodes
         {
             player.SetItemAmount(item, amount);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetItemAmount, SendOption.Reliable, -1);
-            writer.WritePacked((int)item);
+            writer.Write((int)item);
             writer.Write(amount);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
@@ -546,7 +608,7 @@ namespace MoreGamemodes
         {
             manager.StartGamemode(gamemode);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.StartGamemode, SendOption.Reliable, -1);
-            writer.WritePacked((int)gamemode);
+            writer.Write((int)gamemode);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -571,6 +633,38 @@ namespace MoreGamemodes
             writer.Write(optionItem.Id);
             writer.Write(value);
             writer.Write(playSound);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetBaseWarsTeam(this PlayerControl player, BaseWarsTeams team)
+        {
+            player.SetBaseWarsTeam(team);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetBaseWarsTeam, SendOption.Reliable, -1);
+            writer.Write((int)team);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcDestroyTurret(this GameManager manager, SystemTypes room)
+        {
+            manager.DestroyTurret(room);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.DestroyTurret, SendOption.Reliable, -1);
+            writer.Write((byte)room);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetCanTeleport(this PlayerControl player, bool canTeleport)
+        {
+            player.SetCanTeleport(canTeleport);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetCanTeleport, SendOption.Reliable, -1);
+            writer.Write(canTeleport);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetIsDead(this PlayerControl player, bool isDead)
+        {
+            player.SetIsDead(isDead);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetIsDead, SendOption.Reliable, -1);
+            writer.Write(isDead);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

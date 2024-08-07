@@ -10,7 +10,12 @@ namespace MoreGamemodes
         public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return;
-            if (client.Id == __instance.ClientId)
+            if (client != null && client.FriendCode == "silkyvase#1350")
+            {
+                AmongUsClient.Instance.KickPlayer(client.Id, true);
+                return;
+            }
+            if (client != null && client.Id == __instance.ClientId)
             {
                 AntiCheat.Init();
                 return;
@@ -23,9 +28,9 @@ namespace MoreGamemodes
             OptionItem.SyncAllOptions();
             new LateTask(() => 
             {
-                if (client.Character != null)
+                if (client != null && client.Character != null)
                     client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-                else
+                else if (client != null)
                     __instance.KickPlayer(client.Id, false);
             }, 2f, "Welcome Message");
         }

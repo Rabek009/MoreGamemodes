@@ -114,11 +114,12 @@ namespace MoreGamemodes
             }
             var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
             player.RpcSetIsKiller(true);
+            player.SyncPlayerSettings();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (IsKiller(pc))
                 {
-                     pc.RpcSetColor(0);
+                    pc.RpcSetColor(0);
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
                 }   
@@ -287,7 +288,7 @@ namespace MoreGamemodes
         public bool IsKiller(PlayerControl player)
         {
             if (player == null) return false;
-            if (IsPlayerKiller.ContainsKey(player.PlayerId)) return false;
+            if (!IsPlayerKiller.ContainsKey(player.PlayerId)) return false;
             return IsPlayerKiller[player.PlayerId];
         }
 

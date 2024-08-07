@@ -32,7 +32,7 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak", "Deathrun"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak", "Deathrun", "Base Wars"
         };
 
         public static readonly string[] speedrunBodyTypes =
@@ -220,7 +220,6 @@ namespace MoreGamemodes
         public static OptionItem TrackingZombiesMode;
         public static OptionItem ZoImpostorsCanVent;
         
-
         //Jailbreak
         public static OptionItem Prisoners;
         public static OptionItem PrisonerHealth;
@@ -234,7 +233,7 @@ namespace MoreGamemodes
         public static OptionItem SearchCooldown;
         public static OptionItem JbGameplay;
         public static OptionItem GameTime;
-        public static OptionItem RespawnCooldown;
+        public static OptionItem JbRespawnCooldown;
         public static OptionItem PrisonTakeoverDuration;
         public static OptionItem Weapon;
         public static OptionItem PrisonerWeaponPrice;
@@ -263,7 +262,6 @@ namespace MoreGamemodes
         public static OptionItem HelpCooldown;
         public static OptionItem GivenResources;
         
-
         //Deathrun
         public static OptionItem DrCrewmates;
         public static OptionItem DisableMeetings;
@@ -271,8 +269,33 @@ namespace MoreGamemodes
         public static OptionItem DrImpostors;
         public static OptionItem RoundCooldown;
         public static OptionItem DrImpostorsCanVent;
-        
 
+        //Base wars
+        public static OptionItem PlayerStats;
+        public static OptionItem StartingHealth;
+        public static OptionItem StartingDamage;
+        public static OptionItem Regeneration;
+        public static OptionItem BwRespawnCooldown;
+        public static OptionItem Turrets;
+        public static OptionItem TurretHealth;
+        public static OptionItem TurretDamage;
+        public static OptionItem TurretRegeneration;
+        public static OptionItem TurretSlowEnemies;
+        public static OptionItem SpeedDecrease;
+        public static OptionItem Bases;
+        public static OptionItem BaseHealth;
+        public static OptionItem BaseDamage;
+        public static OptionItem BaseRegeneration;
+        public static OptionItem RegenerationInBase;
+        public static OptionItem CanTeleportToBase;
+        public static OptionItem TeleportCooldown;
+        public static OptionItem Levels;
+        public static OptionItem ExpGainInMiddle;
+        public static OptionItem ExpForKill;
+        public static OptionItem HealthIncrease;
+        public static OptionItem DamageIncrease;
+        public static OptionItem SmallerTeamGetsLevel;
+        
         //Additional gamemodes
         public static OptionItem RandomSpawn;
         public static OptionItem EnableRandomSpawn;
@@ -749,7 +772,7 @@ namespace MoreGamemodes
             GameTime = IntegerOptionItem.Create(12021, "Game time", new(300, 3600, 30), 600, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Jailbreak)
                 .SetValueFormat(OptionFormat.Seconds);
-            RespawnCooldown = FloatOptionItem.Create(12022, "Respawn cooldown", new(5f, 60f, 2.5f), 20f, TabGroup.GamemodeSettings, false)
+            JbRespawnCooldown = FloatOptionItem.Create(12022, "Respawn cooldown", new(5f, 60f, 2.5f), 20f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Jailbreak)
                 .SetValueFormat(OptionFormat.Seconds);
             PrisonTakeoverDuration = FloatOptionItem.Create(12023, "Prison takeover duration", new(5f, 60f, 2.5f), 10f, TabGroup.GamemodeSettings, false)
@@ -849,7 +872,76 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             DrImpostorsCanVent = BooleanOptionItem.Create(13012, "Impostors can vent", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.Deathrun);
-
+            
+            //Base wars
+            PlayerStats = TextOptionItem.Create(14000, "Player stats", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetColor(Color.magenta);
+            StartingHealth = FloatOptionItem.Create(14001, "Starting health", new(10f, 250f, 5f), 100f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars);
+            StartingDamage = FloatOptionItem.Create(14002, "Starting damage", new(1f, 25f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars);
+            Regeneration = FloatOptionItem.Create(14003, "Regeneration", new(0f, 20f, 0.5f), 5f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerSecond);
+            BwRespawnCooldown = FloatOptionItem.Create(14004, "Respawn cooldown", new(5f, 60f, 2.5f), 20f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.Seconds);
+            Turrets = TextOptionItem.Create(14010, "Turrets", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetColor(Color.red);
+            TurretHealth = FloatOptionItem.Create(14011, "Turret health", new(100f, 1500f, 25f), 500f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars);
+            TurretDamage = FloatOptionItem.Create(14012, "Turret damage", new(5f, 100f, 2.5f), 25f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerSecond);
+            TurretRegeneration = FloatOptionItem.Create(14013, "Turret regeneration", new(0f, 50f, 1f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerSecond);
+            TurretSlowEnemies = BooleanOptionItem.Create(14014, "Turret slow enemies", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars);
+            SpeedDecrease = IntegerOptionItem.Create(14015, "Speed decrease", new(10, 100, 5), 50, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.Percent)
+                .SetParent(TurretSlowEnemies);
+            Bases = TextOptionItem.Create(14020, "Bases", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetColor(Color.green);
+            BaseHealth = FloatOptionItem.Create(14021, "Base health", new(100f, 1500f, 25f), 1000f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars);
+            BaseDamage = FloatOptionItem.Create(14022, "Base damage", new(5f, 100f, 2.5f), 35f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerSecond);
+            BaseRegeneration = FloatOptionItem.Create(14023, "Base regeneration", new(0f, 50f, 1f), 20f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerSecond);
+            RegenerationInBase = FloatOptionItem.Create(14024, "Regeneration in base", new(0f, 100f, 2.5f), 30f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerSecond);
+            CanTeleportToBase = BooleanOptionItem.Create(14025, "Can teleport to base", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars);
+            TeleportCooldown = FloatOptionItem.Create(14026, "Teleport cooldown", new(5f, 60f, 2.5f), 30f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.Seconds)
+                .SetParent(CanTeleportToBase);
+            Levels = TextOptionItem.Create(14030, "Levels", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetColor(Color.blue);
+            ExpGainInMiddle = IntegerOptionItem.Create(14031, "Exp gain in middle", new(1, 25, 1), 5, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.ExperiencePerSecond);
+            ExpForKill = IntegerOptionItem.Create(14032, "Exp for kill", new(5, 100, 5), 30, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.Experience);
+            HealthIncrease = FloatOptionItem.Create(14033, "Health increase", new(1f, 50f, 1f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerLevel);
+            DamageIncrease = FloatOptionItem.Create(14034, "Damage increase", new(1f, 25f, 0.5f), 5f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars)
+                .SetValueFormat(OptionFormat.PerLevel);
+            SmallerTeamGetsLevel = BooleanOptionItem.Create(14035, "Smaller team gets level", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BaseWars);
+            
             //Additional gamemodes
             RandomSpawn = TextOptionItem.Create(100000, "Random spawn", TabGroup.AdditionalGamemodes)
                 .SetGamemode(Gamemodes.All)

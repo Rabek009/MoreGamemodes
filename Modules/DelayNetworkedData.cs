@@ -45,7 +45,6 @@ public class InnerNetClientPatch
                 }
             }
             messageWriter.EndMessage();
-            // Logger.Info($"send first data to {clientId}, size is {messageWriter.Length}", "SendInitialDataPrefix");
             __instance.SendOrDisconnect(messageWriter);
             messageWriter.Recycle();
         }
@@ -78,7 +77,6 @@ public class InnerNetClientPatch
                 players.Remove(player);
             }
             messageWriter.EndMessage();
-            // Logger.Info($"send delayed network data to {clientId} , size is {messageWriter.Length}", "SendInitialDataPrefix");
             __instance.SendOrDisconnect(messageWriter);
             messageWriter.Recycle();
         }

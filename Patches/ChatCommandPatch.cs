@@ -733,7 +733,7 @@ namespace MoreGamemodes
                                     Utils.SendChat("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                     break;
                                 case "paintbattle":
-                                    Utils.SendChat("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                    Utils.SendChat("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
                                     Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -747,6 +747,9 @@ namespace MoreGamemodes
                                     break;
                                 case "deathrun":
                                     Utils.SendChat("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
+                                    break;
+                                case "basewars":
+                                    Utils.SendChat("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -788,7 +791,7 @@ namespace MoreGamemodes
                                             Utils.SendChat("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                             break;
                                         case Gamemodes.PaintBattle:
-                                            Utils.SendChat("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                            Utils.SendChat("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
                                             Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -802,6 +805,9 @@ namespace MoreGamemodes
                                             break;
                                         case Gamemodes.Deathrun:
                                             Utils.SendChat("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
+                                            break;
+                                        case Gamemodes.BaseWars:
+                                            Utils.SendChat("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
                                             break;
                                     }
                                     break;
@@ -1343,7 +1349,7 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                     break;
                                 case "paintbattle":
-                                    player.RpcSendMessage("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                    player.RpcSendMessage("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
                                     player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -1357,6 +1363,9 @@ namespace MoreGamemodes
                                     break;
                                 case "deathrun":
                                     player.RpcSendMessage("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
+                                    break;
+                                case "basewars":
+                                    player.RpcSendMessage("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -1398,7 +1407,7 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                             break;
                                         case Gamemodes.PaintBattle:
-                                            player.RpcSendMessage("Paint Battle: Type (/color COLOR) command to change paint color. Pet your pet to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                            player.RpcSendMessage("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
                                             player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -1412,6 +1421,9 @@ namespace MoreGamemodes
                                             break;
                                         case Gamemodes.Deathrun:
                                             player.RpcSendMessage("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
+                                            break;
+                                        case Gamemodes.BaseWars:
+                                            player.RpcSendMessage("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
                                             break;
                                     }
                                     break;
