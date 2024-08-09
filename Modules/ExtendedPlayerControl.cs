@@ -169,8 +169,11 @@ namespace MoreGamemodes
         public static void RpcUnmoddedSetKillTimer(this PlayerControl player, float time)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            var opt = player.BuildGameOptions(time * 2);
-            Utils.SyncSettings(opt, player.GetClientId());
+            if (time != float.MaxValue)
+            {
+                var opt = player.BuildGameOptions(time * 2);
+                Utils.SyncSettings(opt, player.GetClientId());
+            }
             player.RpcGuardAndKill(player);
         }
 
@@ -398,7 +401,6 @@ namespace MoreGamemodes
                 return;
             }
             player.RpcSetRoleV2(Main.StandardRoles[player.PlayerId]);
-            player.SyncPlayerSettings();
             player.RpcSetKillTimer(10f);
             player.RpcResetAbilityCooldown();
             foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())

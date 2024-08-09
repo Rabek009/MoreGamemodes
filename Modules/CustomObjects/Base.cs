@@ -27,7 +27,8 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (!BaseWarsGamemode.instance.IsDead[pc.PlayerId] && BaseWarsGamemode.instance.GetTeam(pc) != Team && ((Team == BaseWarsTeams.Red && pc.GetPlainShipRoom().RoomId == SystemTypes.Reactor) || (Team == BaseWarsTeams.Blue && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav)))
+                    var room = pc.GetPlainShipRoom();
+                    if (!BaseWarsGamemode.instance.IsDead[pc.PlayerId] && BaseWarsGamemode.instance.GetTeam(pc) != Team && room != null && ((Team == BaseWarsTeams.Red && room.RoomId == SystemTypes.Reactor) || (Team == BaseWarsTeams.Blue && room.RoomId == SystemTypes.Nav)))
                         BaseWarsGamemode.instance.Damage(pc, Options.BaseDamage.GetFloat(), null);
                 }
                 if (TimeSinceLastDamage >= 5f)

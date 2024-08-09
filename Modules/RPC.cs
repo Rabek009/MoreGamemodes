@@ -4,6 +4,7 @@ using InnerNet;
 using UnityEngine;
 using System;
 using System.Linq;
+using AmongUs.GameOptions;
 
 using Object = UnityEngine.Object;
 
@@ -581,17 +582,17 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
-        public static void RpcSetKillTimer(this PlayerControl player, float time)
+        public static void RpcSetKillTimer(this PlayerControl player, float time = float.MaxValue)
         {
             if (player.AmOwner)
             {
-                player.SetKillTimer(time);
+                player.SetKillTimer(time != float.MaxValue ? time : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.KillCooldown) / 2f);
                 return;
             }
             if (Main.IsModded[player.PlayerId])
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetKillTimer, SendOption.Reliable, -1);
-                writer.Write(time);
+                writer.Write(time != float.MaxValue ? time : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.KillCooldown) / 2f);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 return;
             }

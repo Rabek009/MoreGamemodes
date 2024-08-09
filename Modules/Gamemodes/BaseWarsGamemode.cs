@@ -10,6 +10,7 @@ namespace MoreGamemodes
         public override void OnHudUpate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
+            var room = player.GetPlainShipRoom();
             __instance.SabotageButton.SetDisabled();
             __instance.SabotageButton.ToggleVisible(false);
             __instance.ReportButton.SetDisabled();
@@ -28,11 +29,11 @@ namespace MoreGamemodes
                 __instance.KillButton.SetDisabled();
                 __instance.KillButton.ToggleVisible(false);
             }
-            if (player.GetPlainShipRoom() != null && ((player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && GetTeam(player) == BaseWarsTeams.Blue) || (player.GetPlainShipRoom().RoomId == SystemTypes.Nav && GetTeam(player) == BaseWarsTeams.Red) ||
-                (player.GetPlainShipRoom().RoomId == SystemTypes.LowerEngine && GetTeam(player) == BaseWarsTeams.Blue && AllTurretsPosition.Contains(SystemTypes.LowerEngine)) ||
-                (player.GetPlainShipRoom().RoomId == SystemTypes.UpperEngine && GetTeam(player) == BaseWarsTeams.Blue && AllTurretsPosition.Contains(SystemTypes.UpperEngine)) ||
-                (player.GetPlainShipRoom().RoomId == SystemTypes.Shields && GetTeam(player) == BaseWarsTeams.Red && AllTurretsPosition.Contains(SystemTypes.Shields)) ||
-                (player.GetPlainShipRoom().RoomId == SystemTypes.Weapons && GetTeam(player) == BaseWarsTeams.Red && AllTurretsPosition.Contains(SystemTypes.Weapons))))
+            if (room != null && ((room.RoomId == SystemTypes.Reactor && GetTeam(player) == BaseWarsTeams.Blue) || (room.RoomId == SystemTypes.Nav && GetTeam(player) == BaseWarsTeams.Red) ||
+                (room.RoomId == SystemTypes.LowerEngine && GetTeam(player) == BaseWarsTeams.Blue && AllTurretsPosition.Contains(SystemTypes.LowerEngine)) ||
+                (room.RoomId == SystemTypes.UpperEngine && GetTeam(player) == BaseWarsTeams.Blue && AllTurretsPosition.Contains(SystemTypes.UpperEngine)) ||
+                (room.RoomId == SystemTypes.Shields && GetTeam(player) == BaseWarsTeams.Red && AllTurretsPosition.Contains(SystemTypes.Shields)) ||
+                (room.RoomId == SystemTypes.Weapons && GetTeam(player) == BaseWarsTeams.Red && AllTurretsPosition.Contains(SystemTypes.Weapons))))
             {
                 __instance.AbilityButton.OverrideText("Attack");
                 __instance.AbilityButton.ToggleVisible(true);
@@ -219,7 +220,7 @@ namespace MoreGamemodes
         {
             if (Main.Timer < 10f || IsDead[killer.PlayerId] || IsDead[target.PlayerId] || GetTeam(killer) == GetTeam(target)) return false;
             Damage(target, Options.StartingDamage.GetFloat() + (Options.DamageIncrease.GetFloat() * GetLevel(killer)), killer);
-            killer.RpcSetKillTimer(1f);
+            killer.RpcSetKillTimer();
             killer.RpcResetAbilityCooldown();
             return false;
         }
@@ -227,36 +228,37 @@ namespace MoreGamemodes
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
             if (IsDead[shapeshifter.PlayerId]) return false;
+            var room = shapeshifter.GetPlainShipRoom();
             if (IsInTurretRange(shapeshifter))
             {
                 foreach (var turret in AllTurrets)
                 {
-                    if (shapeshifter.GetPlainShipRoom() != null && turret.Room == shapeshifter.GetPlainShipRoom().RoomId)
+                    if (room != null && turret.Room == room.RoomId)
                         turret.ReceiveDamage(Options.StartingDamage.GetFloat() + (Options.DamageIncrease.GetFloat() * GetLevel(shapeshifter)));
                 }
-                shapeshifter.RpcSetKillTimer(1f);
+                shapeshifter.RpcSetKillTimer();
                 shapeshifter.RpcResetAbilityCooldown();
                 return false;
             }
-            if (shapeshifter.GetPlainShipRoom() != null && shapeshifter.GetPlainShipRoom().RoomId == SystemTypes.Reactor && GetTeam(shapeshifter) == BaseWarsTeams.Blue)
+            if (room != null && room.RoomId == SystemTypes.Reactor && GetTeam(shapeshifter) == BaseWarsTeams.Blue)
             {
                 foreach (var Base in AllBases)
                 {
                     if (Base.Team == BaseWarsTeams.Red)
                         Base.ReceiveDamage(Options.StartingDamage.GetFloat() + (Options.DamageIncrease.GetFloat() * GetLevel(shapeshifter)));
                 }
-                shapeshifter.RpcSetKillTimer(1f);
+                shapeshifter.RpcSetKillTimer();
                 shapeshifter.RpcResetAbilityCooldown();
                 return false;
             }
-            if (shapeshifter.GetPlainShipRoom() != null && shapeshifter.GetPlainShipRoom().RoomId == SystemTypes.Nav && GetTeam(shapeshifter) == BaseWarsTeams.Red)
+            if (room != null && room.RoomId == SystemTypes.Nav && GetTeam(shapeshifter) == BaseWarsTeams.Red)
             {
                 foreach (var Base in AllBases)
                 {
                     if (Base.Team == BaseWarsTeams.Blue)
                         Base.ReceiveDamage(Options.StartingDamage.GetFloat() + (Options.DamageIncrease.GetFloat() * GetLevel(shapeshifter)));
                 }
-                shapeshifter.RpcSetKillTimer(1f);
+                shapeshifter.RpcSetKillTimer();
                 shapeshifter.RpcResetAbilityCooldown();
                 return false;
             }
@@ -288,6 +290,7 @@ namespace MoreGamemodes
                     }   
                     continue;
                 }
+                var room = pc.GetPlainShipRoom();
                 if (Options.CanTeleportToBase.GetBool())
                 {
                     if (TeleportCooldown[pc.PlayerId] > 0)
@@ -316,7 +319,7 @@ namespace MoreGamemodes
                 }
                 if (DesyncComms[pc.PlayerId] && !Main.IsModded[pc.PlayerId])
                 {
-                    if (pc.GetPlainShipRoom() == null || !(pc.GetPlainShipRoom().RoomId is SystemTypes.Admin or SystemTypes.Security))
+                    if (room == null || !(room.RoomId is SystemTypes.Admin or SystemTypes.Security))
                     {
                         pc.RpcDesyncUpdateSystem(SystemTypes.Comms, 16);
                         DesyncComms[pc.PlayerId] = false;
@@ -324,7 +327,7 @@ namespace MoreGamemodes
                 }
                 else if (!Main.IsModded[pc.PlayerId])
                 {
-                    if (pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId is SystemTypes.Admin or SystemTypes.Security)
+                    if (room != null && room.RoomId is SystemTypes.Admin or SystemTypes.Security)
                     {
                         pc.RpcDesyncUpdateSystem(SystemTypes.Comms, 128);
                         DesyncComms[pc.PlayerId] = true;
@@ -337,16 +340,17 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
+                    var room = pc.GetPlainShipRoom();
                     if (TimeSinceLastDamage[pc.PlayerId] >= 5f)
                     {
-                        if (pc.GetPlainShipRoom() != null && ((GetTeam(pc) == BaseWarsTeams.Red && pc.GetPlainShipRoom().RoomId == SystemTypes.Reactor) || (GetTeam(pc) == BaseWarsTeams.Blue && pc.GetPlainShipRoom().RoomId == SystemTypes.Nav)))
+                        if (room != null && ((GetTeam(pc) == BaseWarsTeams.Red && room.RoomId == SystemTypes.Reactor) || (GetTeam(pc) == BaseWarsTeams.Blue && room.RoomId == SystemTypes.Nav)))
                             PlayerHealth[pc.PlayerId] += Options.RegenerationInBase.GetFloat();
                         else
                             PlayerHealth[pc.PlayerId] += Options.Regeneration.GetFloat();
                         if (PlayerHealth[pc.PlayerId] > Options.StartingHealth.GetFloat() + (Options.HealthIncrease.GetFloat() * GetLevel(pc)))
                             PlayerHealth[pc.PlayerId] = Options.StartingHealth.GetFloat() + (Options.HealthIncrease.GetFloat() * GetLevel(pc));
                     }
-                    if (pc.GetPlainShipRoom() != null && pc.GetPlainShipRoom().RoomId is SystemTypes.Cafeteria or SystemTypes.Storage)
+                    if (room != null && room.RoomId is SystemTypes.Cafeteria or SystemTypes.Storage)
                         AddExp(pc, Options.ExpGainInMiddle.GetInt());
                 }
                 OneSecondTimer -= 1f;
@@ -380,7 +384,7 @@ namespace MoreGamemodes
             opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
-            opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
+            opt.SetFloat(FloatOptionNames.KillCooldown, 2f);
             opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 1f);
             opt.SetFloat(FloatOptionNames.ShapeshifterDuration, 0f);
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
@@ -458,9 +462,10 @@ namespace MoreGamemodes
 
         public bool IsInTurretRange(PlayerControl player)
         {
+            var room = player.GetPlainShipRoom();
             foreach (var turret in AllTurrets)
             {
-                if (turret.Team != GetTeam(player) && player.GetPlainShipRoom() != null && turret.Room == player.GetPlainShipRoom().RoomId)
+                if (turret.Team != GetTeam(player) && room != null && turret.Room == room.RoomId)
                     return true;
             }
             return false;

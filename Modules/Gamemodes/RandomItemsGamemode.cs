@@ -574,19 +574,19 @@ namespace MoreGamemodes
         {
             if (GetItem(player) != Items.None && (player == seer || seer.Data.Role.IsDead))
                 name += "\n" + Utils.ColorString(Color.magenta, ItemString(GetItem(player)) + ": " + ItemDescription(GetItem(player)));
-            if (ShieldTimer[player.PlayerId] > 0f && (player == seer || seer.Data.IsDead))
+            if (ShieldTimer[player.PlayerId] > 0f && (player == seer || seer.Data.Role.IsDead))
                 name += "\n" + Utils.ColorString(Color.cyan, "Shield: " + (int)(ShieldTimer[player.PlayerId] + 0.99f) + "s");
-            if (CompassTimer[player.PlayerId] > 0f && (player == seer || seer.Data.IsDead))
+            if (CompassTimer[player.PlayerId] > 0f && (player == seer || seer.Data.Role.IsDead))
             {
                 name += "\n" + Utils.ColorString(Color.cyan, "Compass: " + (int)(CompassTimer[player.PlayerId] + 0.99f) + "s") + "\n";
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc != player && !pc.Data.IsDead)
+                    if (pc != player && !pc.Data.IsDead && player == seer)
                         name += Utils.ColorString(CamouflageTimer > -1f ? Palette.PlayerColors[15] : Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId], Utils.GetArrow(player.transform.position, pc.transform.position));
                 }
             }
-            if (BoosterTimer[player.PlayerId] > 0f && (player == seer || seer.Data.IsDead))
-                        name += "\n" + Utils.ColorString(Color.cyan, "Booster: " + (int)(BoosterTimer[player.PlayerId] + 0.99f) + "s");
+            if (BoosterTimer[player.PlayerId] > 0f && (player == seer || seer.Data.Role.IsDead))
+                name += "\n" + Utils.ColorString(Color.cyan, "Booster: " + (int)(BoosterTimer[player.PlayerId] + 0.99f) + "s");
             if (CamouflageTimer > -1f && player != seer)
                 name = Utils.ColorString(Color.clear, "Player");
             return name;

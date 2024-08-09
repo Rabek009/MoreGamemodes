@@ -10,7 +10,7 @@ namespace MoreGamemodes
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
-                pc.RpcSetKillTimer(0.5f);
+                pc.RpcSetKillTimer();
             PaintTime = Options.PaintingTime.GetInt() + 0.5f;
         }
 
@@ -122,7 +122,7 @@ namespace MoreGamemodes
             if (IsPaintActive && Vector2.Distance(killer.transform.position, GetPaintBattleLocation(killer)) < 5f)
             {
                 Utils.RpcCreateDeadBody(killer.transform.position, (byte)killer.CurrentOutfit.ColorId, killer);
-                killer.RpcSetKillTimer(0.5f);
+                killer.RpcSetKillTimer();
             }
             return false;
         }
@@ -219,7 +219,7 @@ namespace MoreGamemodes
             opt.SetFloat(FloatOptionNames.CrewLightMod, 100f);
             opt.SetFloat(FloatOptionNames.ImpostorLightMod, 100f);
             opt.SetInt(Int32OptionNames.KillDistance, 2);
-            opt.SetFloat(FloatOptionNames.KillCooldown, 0.5f);
+            opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
             return opt;
         }
 

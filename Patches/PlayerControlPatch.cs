@@ -79,10 +79,7 @@ namespace MoreGamemodes
             } 
             
             if (CustomGamemode.Instance.OnCheckMurder(killer, target))
-            {
-                killer.SyncPlayerSettings();
                 killer.RpcMurderPlayer(target, true);
-            } 
             else
                 killer.RpcMurderPlayer(target, false);
 
@@ -216,15 +213,8 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
-                    {
-                        JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] += Time.fixedDeltaTime;
-                        if (JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] < 1f) continue;
-                    }
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, false);
-                    if (CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak)
-                        JailbreakGamemode.instance.TimeSinceNameUpdate[pc.PlayerId] -= 1f;
                 }
             }
             if (Main.GameStarted)
@@ -396,7 +386,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             MurderResultFlags murderResultFlags = didSucceed ? MurderResultFlags.Succeeded : MurderResultFlags.FailedError;
             if (murderResultFlags == MurderResultFlags.Succeeded && target.protectedByGuardianId > -1)
-                murderResultFlags= MurderResultFlags.FailedProtected;
+                murderResultFlags = MurderResultFlags.FailedProtected;
             if (murderResultFlags != MurderResultFlags.FailedError)
                 __instance.SyncPlayerSettings();
             if (AmongUsClient.Instance.AmClient)
@@ -528,9 +518,22 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.OnCheckVanish(phantom))
             {
                 phantom.SyncPlayerSettings();
-                phantom.SetRoleInvisibility(true, true, true);
+			    phantom.SetRoleInvisibility(true, true, true);
                 phantom.RpcVanish();
-            }     
+            }
+            else
+            {
+                if (phantom.AmOwner) return false;
+                CustomRpcSender sender = CustomRpcSender.Create("Cancel Vanish", SendOption.None);
+                sender.StartMessage(phantom.GetClientId());
+                sender.StartRpc(phantom.NetId, (byte)RpcCalls.StartVanish)
+                    .EndRpc();
+                sender.StartRpc(phantom.NetId, (byte)RpcCalls.StartAppear)
+                    .Write(false)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
+            }
             return false;
         }
     }
