@@ -13,11 +13,11 @@ namespace MoreGamemodes
             {
                 try
                 {
-                    WrapUpPostfix(__instance.exiled);
+                    WrapUpPostfix(__instance.initData.networkedPlayer);
                 }
                 finally
                 {
-                    WrapUpFinalizer(__instance.exiled);
+                    WrapUpFinalizer(__instance.initData.networkedPlayer);
                 }
             }
         }
@@ -29,11 +29,11 @@ namespace MoreGamemodes
             {
                 try
                 {
-                    WrapUpPostfix(__instance.exiled);
+                    WrapUpPostfix(__instance.initData.networkedPlayer);
                 }
                 finally
                 {
-                    WrapUpFinalizer(__instance.exiled);
+                    WrapUpFinalizer(__instance.initData.networkedPlayer);
                 }
             }
         }
