@@ -15,7 +15,6 @@ namespace MoreGamemodes
             {
                 Main.Instance.Log.LogMessage($"IsLocalGame : {__result}");
             }
-
         }
     }
 

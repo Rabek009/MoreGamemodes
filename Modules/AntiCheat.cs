@@ -688,7 +688,7 @@ namespace MoreGamemodes
                     Vent vent = ShipStatus.Instance.AllVents.FirstOrDefault((Vent v) => v.Id == ventId);
                     if (vent == null)
                     {
-                        HandleCheat(player, "Hack sent sabotage");
+                        HandleCheat(player, "Hack sent vent");
                         return true;
                     }
                     switch (operation)
@@ -768,6 +768,7 @@ namespace MoreGamemodes
             }
             if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
             {
+                if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && systemType == SystemTypes.Ventilation) return false;
                 HandleCheat(player, "Sent UpdateSystem Rpc during meeting");
                 return true;
             }

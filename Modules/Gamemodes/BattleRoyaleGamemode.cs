@@ -76,7 +76,7 @@ namespace MoreGamemodes
             if (GetLives(target) > 1)
             {
                 --Lives[target.PlayerId];
-                killer.RpcSetKillTimer();
+                killer.RpcSetKillTimer(Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
                 return false;
             }
             else
@@ -118,7 +118,7 @@ namespace MoreGamemodes
             opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
-            opt.SetFloat(FloatOptionNames.KillCooldown, Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown) * 2f);
+            opt.SetFloat(FloatOptionNames.KillCooldown, Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
             return opt;
         }
 

@@ -718,6 +718,7 @@ namespace MoreGamemodes
             opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, Options.HelpCooldown.GetFloat());
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
             opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
+            opt.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, false);
             if (!IsGuard(player))
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
             if (IsGuard(player) && EnergyDrinkDuration[player.PlayerId] > 0f)

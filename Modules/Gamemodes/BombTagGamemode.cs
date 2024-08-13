@@ -190,6 +190,16 @@ namespace MoreGamemodes
                             Utils.RpcCreateExplosion(3f, 1f, pc.transform.position);
                     }
                 }
+                Main.Timer = 0f;
+            }
+            bool bombedExists = false;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (HasBomb(pc) && !pc.Data.IsDead)
+                    bombedExists = true;
+            }
+            if (!bombedExists)
+            {
                 var rand = new System.Random();
                 List<PlayerControl> AllPlayers = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -222,7 +232,6 @@ namespace MoreGamemodes
                             pc.RpcRandomVentTeleport();
                     }
                 }
-                Main.Timer = 0f;
             }
         }
 
@@ -256,6 +265,7 @@ namespace MoreGamemodes
             opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.ExplosionDelay.GetInt() + 0.1f);
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
             opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
+            opt.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, false);
             if (!HasBomb(player))
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
             return opt;

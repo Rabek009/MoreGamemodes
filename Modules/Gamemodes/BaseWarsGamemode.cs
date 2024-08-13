@@ -388,6 +388,8 @@ namespace MoreGamemodes
             opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 1f);
             opt.SetFloat(FloatOptionNames.ShapeshifterDuration, 0f);
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
+            opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
+            opt.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, false);
             if (SlowedByTurret[player.PlayerId])
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * ((100f - Options.SpeedDecrease.GetInt()) / 100f));
             if (IsDead[player.PlayerId])

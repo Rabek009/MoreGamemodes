@@ -152,31 +152,6 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
                 Main.NameColors[(killer.PlayerId, pc.PlayerId)] = Color.blue;
             killer.SyncPlayerSettings();
-            var rand = new System.Random();
-            List<PlayerControl> AllPlayers = new();
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (!pc.Data.IsDead)
-                {
-                    AllPlayers.Add(pc);
-                    pc.RpcResetAbilityCooldown();
-                }
-            }
-            var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-            player.RpcSetIsKiller(true);
-            player.RpcSetColor(0);
-            foreach (var pc in PlayerControl.AllPlayerControls)
-                Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.red;
-            Main.Timer = 0f;
-            player.SyncPlayerSettings();
-            if (Options.TeleportAfterRound.GetBool())
-            {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (!pc.Data.IsDead)
-                        pc.RpcRandomVentTeleport();
-                }
-            }
         }
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
@@ -210,6 +185,15 @@ namespace MoreGamemodes
                         pc.RpcMurderPlayer(pc, true);
                     }   
                 }
+            }
+            bool killerExists = false;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (IsKiller(pc) && !pc.Data.IsDead)
+                    killerExists = true;
+            }
+            if (!killerExists)
+            {
                 var rand = new System.Random();
                 List<PlayerControl> AllPlayers = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -268,6 +252,7 @@ namespace MoreGamemodes
             opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, Options.TimeToKill.GetInt() + Options.KillerBlindTime.GetFloat() + 0.1f);
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
             opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
+            opt.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, false);
             if (!IsKiller(player))
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, Main.RealOptions.GetFloat(FloatOptionNames.CrewLightMod));
             else if (Main.Timer < Options.KillerBlindTime.GetFloat())

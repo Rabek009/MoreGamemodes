@@ -442,7 +442,30 @@ namespace MoreGamemodes
             playerControl.PlayerId = player.PlayerId;
             playerControl.isNew = false;
             playerControl.notRealPlayer = true;
-            AmongUsClient.Instance.Spawn(playerControl, -2, SpawnFlags.None);
+            AmongUsClient.Instance.NetIdCnt += 1U;
+            MessageWriter msg = MessageWriter.Get(SendOption.None);
+			msg.StartMessage(5);
+			msg.Write(AmongUsClient.Instance.GameId);
+			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
+			msg.EndMessage();
+			msg.StartMessage(6);
+			msg.Write(AmongUsClient.Instance.GameId);
+			msg.WritePacked(int.MaxValue);
+			for (uint i = 1; i <= 3; ++i)
+			{
+			    msg.StartMessage(4);
+			    msg.WritePacked(2U);
+			    msg.WritePacked(-2);
+			    msg.Write((byte)SpawnFlags.None);
+			    msg.WritePacked(1);
+		        msg.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+			    msg.StartMessage(1);
+			    msg.EndMessage();
+			    msg.EndMessage();
+			}
+			msg.EndMessage();
+			AmongUsClient.Instance.SendOrDisconnect(msg);
+			msg.Recycle();
             if (seer == null)
                 playerControl.RpcSetRoleV2(role);
             else
