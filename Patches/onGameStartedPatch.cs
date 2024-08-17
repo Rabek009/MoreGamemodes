@@ -35,6 +35,7 @@ namespace MoreGamemodes
             Main.PlayerKills = new Dictionary<byte, int>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
+            VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
             AntiBlackout.Reset();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -53,6 +54,7 @@ namespace MoreGamemodes
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
                 Main.RoleFakePlayer[pc.PlayerId] = pc.NetId;
                 Main.PlayerKills[pc.PlayerId] = 0;
+                VentilationSystemDeterioratePatch.LastClosestVent[pc.PlayerId] = 0;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
@@ -77,7 +79,9 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             CustomGamemode.Instance.OnSelectRolesPostfix();
-            new LateTask(() => Utils.SyncAllSettings(), 1.5f);
+            new LateTask(() => {
+                Utils.SyncAllSettings();
+            }, 1.5f);
         }
     }
 
@@ -114,6 +118,15 @@ namespace MoreGamemodes
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.Data.RpcSetTasks(new byte[0]);
+            }
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                VentilationSystemDeterioratePatch.LastClosestVent[pc.PlayerId] = pc.GetVentsFromClosest()[0].Id;
+                if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
+                {
+                    Utils.SetAllVentInteractions();
+                    break;
+                }
             }
         }
     }

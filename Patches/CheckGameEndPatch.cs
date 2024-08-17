@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {

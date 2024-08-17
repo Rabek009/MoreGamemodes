@@ -118,6 +118,7 @@ public partial class Main : BasePlugin
         ChatUpdatePatch.SendingSystemMessage = false;
         CreateOptionsPickerPatch.SetDleks = false;
         CoEnterVentPatch.PlayersToKick = new List<byte>();
+        VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
         AntiBlackout.Reset();
 
         Harmony.PatchAll();
@@ -185,6 +186,7 @@ public partial class Main : BasePlugin
                 ChatUpdatePatch.SendingSystemMessage = false;
                 CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
                 CoEnterVentPatch.PlayersToKick = new List<byte>();
+                VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
                 AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)

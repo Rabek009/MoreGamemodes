@@ -257,6 +257,7 @@ namespace MoreGamemodes
                         HackTimer = Options.HackDuration.GetFloat();
                         GameManager.Instance.RpcSetHackActive(true);
                         Utils.SyncAllSettings();
+                        Utils.SetAllVentInteractions();
                         foreach (var ar in PlayerControl.AllPlayerControls)
                             Main.NameColors[(ar.PlayerId, ar.PlayerId)] = Color.yellow;
                         pc.RpcSetItem(Items.None);
@@ -450,6 +451,7 @@ namespace MoreGamemodes
                 HackTimer = 0f;
                 GameManager.Instance.RpcSetHackActive(false);
                 Utils.SyncAllSettings();
+                Utils.SetAllVentInteractions();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(pc.PlayerId, pc.PlayerId)] = Color.clear;
             }

@@ -327,6 +327,7 @@ namespace MoreGamemodes
                         target.RpcSetIsDead(true);
                         target.Data.MarkDirty();
                         target.SyncPlayerSettings();
+                        target.RpcSetVentInteraction();
                         target.RpcTeleport(new Vector2(1000f, 1000f));
                         ++Main.PlayerKills[killer.PlayerId];
                     }
@@ -411,6 +412,8 @@ namespace MoreGamemodes
                 target.RpcSetIsDead(true);
                 target.Data.MarkDirty();
                 target.SyncPlayerSettings();
+                killer.RpcSetVentInteraction();
+                target.RpcSetVentInteraction();
                 target.RpcTeleport(new Vector2(1000f, 1000f));
                 ++Main.PlayerKills[killer.PlayerId];
             }
@@ -460,6 +463,7 @@ namespace MoreGamemodes
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.ScrewdriverPrice.GetInt()) break;
                     shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.ScrewdriverPrice.GetInt());
                     shapeshifter.RpcSetItemAmount(InventoryItems.Screwdriver, GetItemAmount(shapeshifter, InventoryItems.Screwdriver) + 1);
+                    shapeshifter.RpcSetVentInteraction();
                     break;
                 case Recipes.PrisonerWeapon:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.PrisonerWeaponPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1)) break;

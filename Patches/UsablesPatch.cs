@@ -101,8 +101,8 @@ namespace MoreGamemodes
             canUse = couldUse = false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.BombTag ||
                 (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.IsHackActive) || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun ||
-                CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak
-                || (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun && Options.DisableMeetings.GetBool()) || CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
+                CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && ZombiesGamemode.instance.IsZombie(PlayerControl.LocalPlayer))
+                || CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak || (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun && Options.DisableMeetings.GetBool()) || CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
             {
                 if (__instance.MinigamePrefab is EmergencyMinigame)
                     return false;

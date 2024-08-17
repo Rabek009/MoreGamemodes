@@ -6,6 +6,7 @@ using AmongUs.GameOptions;
 using Il2CppInterop.Runtime.InteropTypes;
 using System.Collections.Generic;
 using System.Data;
+using System;
 
 using Object = UnityEngine.Object;
 
@@ -73,6 +74,7 @@ namespace MoreGamemodes
                 Main.DesyncRoles.Remove((player.PlayerId, seer.PlayerId));
             if (!Main.DesyncRoles.ContainsKey((player.PlayerId, seer.PlayerId)) && role != Main.StandardRoles[player.PlayerId])
                 Main.DesyncRoles.Add((player.PlayerId, seer.PlayerId), role);
+            player.RpcSetVentInteraction();
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
         }
 
@@ -256,6 +258,8 @@ namespace MoreGamemodes
         {
             IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV08(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
             opt = CustomGamemode.Instance.BuildGameOptions(player, opt);
+            if (opt.GetByte(ByteOptionNames.MapId) == 3)
+                opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
             return opt;
         }
@@ -331,6 +335,7 @@ namespace MoreGamemodes
                 if (Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)))
                     Main.DesyncRoles.Remove((player.PlayerId, pc.PlayerId));
             }
+            new LateTask(() => player.RpcSetVentInteraction(), 0.1f);
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
         }
 
@@ -533,6 +538,28 @@ namespace MoreGamemodes
             messageWriter.WriteNetObject(target);
             messageWriter.Write((byte)amount);
             AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+        }
+
+        public static RoleTypes GetSelfRole(this PlayerControl player)
+        {
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale) return RoleTypes.Impostor;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) return RoleTypes.Shapeshifter;
+            return Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
+        }
+
+        public static List<Vent> GetVentsFromClosest(this PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            List<Vent> vents = new();
+            foreach (var vent in ShipStatus.Instance.AllVents)
+                vents.Add(vent);
+            vents.Sort((v1, v2) => Vector2.Distance(playerpos, v1.transform.position).CompareTo(Vector2.Distance(playerpos, v2.transform.position)));
+            return vents;
+        }
+
+        public static void RpcSetVentInteraction(this PlayerControl player)
+        {
+            VentilationSystemDeterioratePatch.SerializeV2(ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>(), player);
         }
     }
 }

@@ -42,13 +42,23 @@ namespace MoreGamemodes
         public static void Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return;
+            if (__instance.GameState != InnerNetClient.GameStates.Started) return;
             if (Main.AllPlayersDeathReason.ContainsKey(client.Character.PlayerId))
             {
                 if (client.Character.GetDeathReason() == DeathReasons.Alive)
                     client.Character.RpcSetDeathReason(DeathReasons.Disconnected);
             }
-            if (__instance.GameState == InnerNetClient.GameStates.Started)
-                AntiBlackout.OnDisconnect(client.Character.Data);
+            AntiBlackout.OnDisconnect(client.Character.Data);
+            new LateTask(() => {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
+                    {
+                        Utils.SetAllVentInteractions();
+                        break;
+                    }
+                }
+            }, 0.2f);
         }
     }
 

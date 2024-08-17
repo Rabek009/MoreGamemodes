@@ -164,7 +164,7 @@ namespace MoreGamemodes
 
         public virtual bool OnEnterVent(PlayerControl player, int id)
         {
-            return player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor;
+            return (player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor) && GameManager.Instance.LogicOptions.MapId != 3;
         }
 
         public virtual void OnCompleteTask(PlayerControl __instance)

@@ -253,6 +253,7 @@ namespace MoreGamemodes
             if (!CustomGamemode.Instance.OnEnterVent(__instance.myPlayer, id))
             {
                 PlayersToKick.Add(__instance.myPlayer.PlayerId);
+                __instance.myPlayer.RpcSetVentInteraction();
                 return false;
             }
             return true;
@@ -265,7 +266,7 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerPhysics __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (CoEnterVentPatch.PlayersToKick.Contains(__instance.myPlayer.PlayerId))
+            if (CoEnterVentPatch.PlayersToKick.Contains(__instance.myPlayer.PlayerId) || (AntiCheat.TimeSinceVentCancel.ContainsKey(__instance.myPlayer.PlayerId) && AntiCheat.TimeSinceVentCancel[__instance.myPlayer.PlayerId] <= 1f))
             {
                 __instance.myPlayer.NetTransform.lastSequenceId += 2;
                 return false;
@@ -529,7 +530,7 @@ namespace MoreGamemodes
                 sender.StartRpc(phantom.NetId, (byte)RpcCalls.StartVanish)
                     .EndRpc();
                 sender.StartRpc(phantom.NetId, (byte)RpcCalls.StartAppear)
-                    .Write(false)
+                    .Write(true)
                     .EndRpc();
                 sender.EndMessage();
                 sender.SendMessage();

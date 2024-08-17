@@ -63,9 +63,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "PlayAnimation/SetScanner Rpc during meeting");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                    var selfRole = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
-                    if (selfRole.IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
+                    if (pc.GetSelfRole().IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
                     {
                         HandleCheat(pc, "PlayAnimation/SetScanner Rpc as impostor");
                         return true;
@@ -104,9 +102,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Doing task during meeting");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                    var selfRole2 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
-                    if (selfRole2.IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
+                    if (pc.GetSelfRole().IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
                     {
                         HandleCheat(pc, "Doing task as impostor");
                         return true;
@@ -260,9 +256,8 @@ namespace MoreGamemodes
                     }
                     if (target2 == null) break;
                     if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                    var selfRole3 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
                     var targetRole = Main.DesyncRoles.ContainsKey((target2.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(target2.PlayerId, pc.PlayerId)] : Main.StandardRoles[target2.PlayerId];
-                    if (!selfRole3.IsImpostor())
+                    if (!pc.GetSelfRole().IsImpostor())
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
                             HandleCheat(pc, "Trying to kill as crewmate");
@@ -272,7 +267,7 @@ namespace MoreGamemodes
                     if (targetRole.IsImpostor())
                     {
                         if (!TimeSinceRoleChange.ContainsKey(target2.PlayerId) || TimeSinceRoleChange[target2.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
-                            HandleCheat(pc, "Trying to kill as crewmate");
+                            HandleCheat(pc, "Trying to kill impostor");
                         return true;
                     }
                     if (pc.Data.Role is PhantomRole phantomRole && phantomRole.IsInvisible)
@@ -364,9 +359,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Shapeshifting while shapeshifted");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                    var selfRole4 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
-                    if (selfRole4 != RoleTypes.Shapeshifter)
+                    if (pc.GetSelfRole() != RoleTypes.Shapeshifter)
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
                             HandleCheat(pc, "Trying to shift as not shapeshifter");
@@ -391,9 +384,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Vanishing while invisible");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                    var selfRole5 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
-                    if (selfRole5 != RoleTypes.Phantom)
+                    if (pc.GetSelfRole() != RoleTypes.Phantom)
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
                             HandleCheat(pc, "Trying to vanish as not phantom");
@@ -417,9 +408,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Appearing while invisible");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                    var selfRole6 = Main.DesyncRoles.ContainsKey((pc.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(pc.PlayerId, pc.PlayerId)] : Main.StandardRoles[pc.PlayerId];
-                    if (selfRole6 != RoleTypes.Phantom)
+                    if (pc.GetSelfRole() != RoleTypes.Phantom)
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
                             HandleCheat(pc, "Trying to appear as not phantom");
@@ -498,9 +487,7 @@ namespace MoreGamemodes
                         HandleCheat(physics.myPlayer, "Venting during meeting");
                         return true;
                     }
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                    var selfRole = Main.DesyncRoles.ContainsKey((physics.myPlayer.PlayerId, physics.myPlayer.PlayerId)) ? Main.DesyncRoles[(physics.myPlayer.PlayerId, physics.myPlayer.PlayerId)] : Main.StandardRoles[physics.myPlayer.PlayerId];
-                    if (!selfRole.IsImpostor() && selfRole != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(physics.myPlayer.PlayerId) || TimeSinceRoleChange[physics.myPlayer.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f)))
+                    if (!physics.myPlayer.GetSelfRole().IsImpostor() && physics.myPlayer.GetSelfRole() != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(physics.myPlayer.PlayerId) || TimeSinceRoleChange[physics.myPlayer.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f)))
                     {
                         HandleCheat(physics.myPlayer, "Trying to vent as non venting role");
                         return true;
@@ -591,7 +578,7 @@ namespace MoreGamemodes
             if (player.AmOwner) return false;
             MessageReader sr = MessageReader.Get(reader);
             var mapId = GameManager.Instance.LogicOptions.MapId;
-            var selfRole = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
+            var selfRole = player.GetSelfRole();
             switch (systemType)
             {
                 case SystemTypes.Reactor:
@@ -654,7 +641,6 @@ namespace MoreGamemodes
                     }
                     break;
                 case SystemTypes.Sabotage:
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     if (!selfRole.IsImpostor())
                     {   
                         if (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
@@ -699,7 +685,6 @@ namespace MoreGamemodes
                                 HandleCheat(player, "Hack sent clean vent");
                                 return true;
                             }
-                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                             if (selfRole.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
                             {
                                 HandleCheat(player, "Cleaning vent as impostor");
@@ -717,21 +702,8 @@ namespace MoreGamemodes
                             }
                             TimeSinceLastStartCleaning[player.PlayerId] = (ventId, 0f);
                             break;
-                        case VentilationSystem.Operation.Enter:
-                        case VentilationSystem.Operation.Exit:
-                        case VentilationSystem.Operation.Move:
-                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                            var selfRole3 = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
-                            if (!selfRole3.IsImpostor() && selfRole3 != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f)))
-                            {
-                                HandleCheat(player, "Trying to vent as non venting role");
-                                return true;
-                            }
-                            break;
                         case VentilationSystem.Operation.BootImpostors:
-                            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
-                            var selfRole4 = Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
-                            if (selfRole4.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
+                            if (selfRole.IsImpostor() && !TimeSinceRoleChange.ContainsKey(player.PlayerId))
                             {
                                 HandleCheat(player, "Boot from vent hack");
                                 return true;

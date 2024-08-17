@@ -29,6 +29,7 @@ namespace MoreGamemodes
             }
             Main.Timer = 0f;
             Utils.SyncAllSettings();
+            Utils.SetAllVentInteractions();
         }
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
@@ -173,6 +174,7 @@ namespace MoreGamemodes
             {
                 target.RpcSetZombieType(ZombieTypes.Dead);
                 killer.RpcSetKillsRemain(GetKillsRemain(killer) - 1);
+                killer.RpcSetVentInteraction();
                 if (GetKillsRemain(killer) <= 0)
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)
@@ -241,7 +243,7 @@ namespace MoreGamemodes
 
         public override bool OnEnterVent(PlayerControl player, int id)
         {
-            return (Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (IsZombie(player) && Options.ZombiesCanVent.GetBool()) || (Main.StandardRoles[player.PlayerId] == RoleTypes.Engineer && !IsZombie(player) && GetKillsRemain(player) <= 0);
+            return ((Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (GetZombieType(player) == ZombieTypes.FullZombie && Options.ZombiesCanVent.GetBool()) || (Main.StandardRoles[player.PlayerId] == RoleTypes.Engineer && !IsZombie(player) && GetKillsRemain(player) <= 0)) && GameManager.Instance.LogicOptions.MapId != 3;
         }
 
         public override void OnCompleteTask(PlayerControl __instance)
@@ -250,6 +252,7 @@ namespace MoreGamemodes
             {
                 __instance.RpcSetKillsRemain(Options.NumberOfKills.GetInt());
                 __instance.RpcSetDesyncRole(RoleTypes.Impostor, __instance);
+                __instance.RpcSetVentInteraction();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (Main.StandardRoles[pc.PlayerId].IsImpostor() && !pc.Data.IsDead)

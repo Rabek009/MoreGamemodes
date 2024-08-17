@@ -641,5 +641,10 @@ namespace MoreGamemodes
                 _ => new(9.6f, 23.2f),
             };
         }
+
+        public static void SetAllVentInteractions()
+        {
+            VentilationSystemDeterioratePatch.SerializeV2(ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>());
+        }
     }
 }
