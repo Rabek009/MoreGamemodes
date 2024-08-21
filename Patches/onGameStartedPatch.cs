@@ -37,9 +37,9 @@ namespace MoreGamemodes
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
             AntiBlackout.Reset();
+            PlayerTagManager.ResetPlayerTags();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
                 Main.StandardColors[pc.PlayerId] = (byte)pc.Data.DefaultOutfit.ColorId;
                 Main.StandardHats[pc.PlayerId] = pc.Data.DefaultOutfit.HatId;
                 Main.StandardSkins[pc.PlayerId] = pc.Data.DefaultOutfit.SkinId;
@@ -63,7 +63,6 @@ namespace MoreGamemodes
             }
             GameManager.Instance.RpcSyncCustomOptions();
             GameManager.Instance.RpcStartGamemode(Options.CurrentGamemode);
-            PlayerTagManager.ResetPlayerTags();
         }
     }
 

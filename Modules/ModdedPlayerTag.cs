@@ -1,9 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using BepInEx.Unity.IL2CPP.Utils;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -46,14 +43,15 @@ namespace MoreGamemodes
 
     public static class PlayerTagManager
     {
-        public static  List<ModdedPlayerTag> PlayersWithTags = new();
+        public static List<ModdedPlayerTag> PlayersWithTags = new();
         public static void Initialize()
         {
-            PlayersWithTags.Add(new(friendCode: "wallstate#7631",  preferredColor: "FF0000",  tag: "#Dev",    isDeveloper: true));
+            PlayersWithTags.Clear();
+            PlayersWithTags.Add(new(friendCode: "wallstate#7631",  preferredColor: "ff0000",  tag: "#Dev",    isDeveloper: true));
             PlayersWithTags.Add(new(friendCode: "motorstack#2287", preferredColor: "e2bd51",  tag: "#Tester", isDeveloper: false));
             PlayersWithTags.Add(new(friendCode: "leadenjoke#3670", preferredColor: "00ff00",  tag: "#Tester", isDeveloper: false));
             PlayersWithTags.Add(new(friendCode: "cannylinke#0564", preferredColor: "#ffffff", tag: "#Tester", isDeveloper: false));
-            PlayersWithTags.Add(new(friendCode: "stiltedgap#2406", preferredColor:  "FFC0CB", tag:"#YT",      isDeveloper:false));
+            PlayersWithTags.Add(new(friendCode: "stiltedgap#2406", preferredColor:  "ffc0cb", tag:"#YT",      isDeveloper:false));
         }
 
         public static bool IsPlayerTagged(string friendCode)
@@ -66,19 +64,15 @@ namespace MoreGamemodes
             var tag = GetPlayerTag(friendCode);
             if (tag != null)
             {
-                  RemovePlayerTag(friendCode);
+                RemovePlayerTag(friendCode);
+                tag.PreferredColor = newColor;
+                PlayersWithTags.Add(tag);
 
-                  tag.PreferredColor = newColor;
-
-                  PlayersWithTags.Add(tag);
-              
-                   string coloredName = $"<color=#{tag.PreferredColor}>{name}</color>";
-                   string coloredTag = tag.GetFormattedTag();
-                   string newName = $"{coloredName}\n{coloredTag}";
-
-                PlayerControl.LocalPlayer.RpcSetName(newName);
+                PlayerControl player = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(x => x.Data.FriendCode == friendCode);
+                player.RpcSetName(name);
             }
         }
+
         public static List<ModdedPlayerTag> GetAllPlayersTags(string Friendcode)
         {
             return PlayersWithTags.Where(x => x.FriendCode == Friendcode).ToList();
@@ -88,11 +82,23 @@ namespace MoreGamemodes
         {
             return PlayersWithTags.FirstOrDefault(x => x.FriendCode == friendCode);
         }
+
         public static void ResetPlayerTags()
         {
-            if (PlayersWithTags == null) PlayersWithTags = new();
-            PlayersWithTags.Clear();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                string name = Main.StandardNames[pc.PlayerId];
+                if (AmongUsClient.Instance.AmClient)
+		        {
+			        pc.SetName(name);
+		        }
+		        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(pc.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+		        writer.Write(pc.Data.NetId);
+                writer.Write(name);
+		        AmongUsClient.Instance.FinishRpcImmediately(writer);
+            }
         }
+
         public static void RemovePlayerTag(string friendCode)
         {
             var playerTag = PlayersWithTags.FirstOrDefault(tag => tag.FriendCode == friendCode);

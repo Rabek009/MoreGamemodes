@@ -34,24 +34,6 @@ namespace MoreGamemodes
                 __instance.freeChatField.textArea.SetText("");
                 return false;
             }
-            if (args[0].Equals("/tagColor", StringComparison.OrdinalIgnoreCase))
-            {
-              if (args.Length < 2 || !Utils.IsValidHexCode(args[1]))
-              {
-                  DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Invalid color code. Please provide a valid hex color code.\n Usage : <color=red>/tagColor FF0000</color>");
-                __instance.freeChatField.textArea.Clear();
-                __instance.freeChatField.textArea.SetText("");
-                return false;
-              }
-             var hexColor = args[1];
-             string playerName = PlayerControl.LocalPlayer.Data.PlayerName;
-             string friendCode = PlayerControl.LocalPlayer.Data.FriendCode;
-            PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor);
-            __instance.freeChatField.textArea.Clear();
-            __instance.freeChatField.textArea.SetText("");
-            return false; 
-
-            }
             if (!AmongUsClient.Instance.AmHost) return true;
             __instance.timeSinceLastMessage = 3f;
             if (__instance.quickChatField.Visible)
@@ -1120,6 +1102,18 @@ namespace MoreGamemodes
                     if (Main.GameStarted) break;
                     PlayerControl.LocalPlayer.RpcTeleport(new Vector2(-0.2f, 1.3f));
                     break;
+                case "/tagcolor":
+                    canceled = true;
+                    if (args.Length < 2 || !Utils.IsValidHexCode(args[1]))
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("Invalid color code. Please provide a valid hex color code.\nUsage: <color=red>/tagColor FF0000</color>", "Warning");
+                        break;
+                    }
+                    var hexColor = args[1];
+                    string playerName = Main.StandardNames[PlayerControl.LocalPlayer.PlayerId];
+                    string friendCode = PlayerControl.LocalPlayer.Data.FriendCode;
+                    PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor);
+                    break; 
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;
                     if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
@@ -1713,6 +1707,18 @@ namespace MoreGamemodes
                     if (Main.GameStarted || !Options.CanUseTpoutCommand.GetBool()) break;
                     player.RpcTeleport(new Vector2(-0.2f, 1.3f));
                     break;
+                case "/tagcolor":
+                    canceled = true;
+                    if (args.Length < 2 || !Utils.IsValidHexCode(args[1]))
+                    {
+                        player.RpcSendMessage("Invalid color code. Please provide a valid hex color code.\nUsage: <color=red>/tagColor FF0000</color>", "Warning");
+                        break;
+                    }
+                    var hexColor = args[1];
+                    string playerName = Main.StandardNames[player.PlayerId];
+                    string friendCode = player.Data.FriendCode;
+                    PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor);
+                    break; 
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;
                     if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;

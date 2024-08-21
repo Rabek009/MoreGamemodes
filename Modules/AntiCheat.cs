@@ -788,16 +788,16 @@ namespace MoreGamemodes
                 case CheatingPenalties.Kick:
                     if (!BannedPlayers.Contains(pc.NetId))
                     {
-                        pc.RpcSetName(pc.Data.PlayerName + " was kicked for hacking.\nReason: " + reason + "<size=0>");
                         BannedPlayers.Add(pc.NetId);
+                        pc.RpcSetName(pc.Data.PlayerName + " was kicked for hacking.\nReason: " + reason + "<size=0>");
                         AmongUsClient.Instance.KickPlayer(pc.GetClientId(), false);
                     }
                     break;
                 case CheatingPenalties.Ban:
                     if (!BannedPlayers.Contains(pc.NetId))
                     {
-                        pc.RpcSetName(pc.Data.PlayerName + " was banned for hacking.\nReason: " + reason + "<size=0>");
                         BannedPlayers.Add(pc.NetId);
+                        pc.RpcSetName(pc.Data.PlayerName + " was banned for hacking.\nReason: " + reason + "<size=0>");
                         AmongUsClient.Instance.KickPlayer(pc.GetClientId(), true);
                     }
                     break;

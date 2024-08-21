@@ -495,31 +495,30 @@ namespace MoreGamemodes
                     }
                 }
             }
-           */ 
-             if (PlayerTagManager.IsPlayerTagged(friendCode))
+           */
+            Main.StandardNames[__instance.PlayerId] = name;
+            if (PlayerTagManager.IsPlayerTagged(friendCode))
             {
-              var tag = PlayerTagManager.GetPlayerTag(friendCode);
-              if (tag != null)
-              {
-                   Main.Instance.Log.LogInfo("Tag is not null proceeding...");
-                   string coloredName = $"<color=#{tag.PreferredColor}>{name}</color>";
-                   string coloredTag = tag.GetFormattedTag();
-                   string formattedNameWithNewLine = $"{coloredName}\n{coloredTag}";
+                var tag = PlayerTagManager.GetPlayerTag(friendCode);
+                if (tag != null)
+                {
+                    Main.Instance.Log.LogInfo("Tag is not null proceeding...");
+                    string coloredName = $"<color=#{tag.PreferredColor}>{name}</color>";
+                    string coloredTag = tag.GetFormattedTag();
+                    string formattedNameWithNewLine = $"{coloredName}\n{coloredTag}";
                     
-                   name = formattedNameWithNewLine;
-
-                 Main.Instance.Log.LogMessage("Tag Now should be appeared with color");
+                    name = formattedNameWithNewLine;
+                    Main.Instance.Log.LogMessage("Tag Now should be appeared with color");
               }
             }
-		    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
-		    writer.Write(__instance.Data.NetId);
-            writer.Write(name);
-		    AmongUsClient.Instance.FinishRpcImmediately(writer);
-
             if (AmongUsClient.Instance.AmClient)
 		    {
 			    __instance.SetName(name);
 		    }
+		    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+		    writer.Write(__instance.Data.NetId);
+            writer.Write(name);
+		    AmongUsClient.Instance.FinishRpcImmediately(writer);
             return false;
         }
     }
