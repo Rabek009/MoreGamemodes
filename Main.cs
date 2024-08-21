@@ -53,6 +53,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, int> PlayerKills;
 
     public const string CurrentVersion = "2.0.0 dev6";
+    public bool isBeta = CurrentVersion.Contains("dev");
 
     public override void Load()
     {
@@ -120,6 +121,9 @@ public partial class Main : BasePlugin
         CoEnterVentPatch.PlayersToKick = new List<byte>();
         VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
         AntiBlackout.Reset();
+        PlayerTagManager.Initialize();
+
+        Instance.Log.LogMessage($"Sucessfully Loaded MoreGamemodes With Version {CurrentVersion} Is Dev Version : {isBeta}");
 
         Harmony.PatchAll();
     }

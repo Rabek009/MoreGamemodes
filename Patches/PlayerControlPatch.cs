@@ -4,6 +4,7 @@ using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
 using InnerNet;
+using System.Linq;
 
 namespace MoreGamemodes
 {
@@ -475,14 +476,50 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (AntiCheat.BannedPlayers.Contains(__instance.NetId)) return false;
-            if (AmongUsClient.Instance.AmClient)
-		    {
-			    __instance.SetName(name);
-		    }
+            var friendCode = __instance.Data.FriendCode;
+            /*var host = GameData.Instance.GetHost();
+            if (__instance == host)
+            {
+                var tagsForHost = PlayerTagManager.GetAllPlayersTags(host.FriendCode);
+                if (tagsForHost.Count == 2)
+                {
+                     string formattedTags = string.Join("\n", tagsForHost.Select(t => $"<color=#{t.PreferredColor}>{t.GetFormattedTag()}</color>"));
+                     name = $"{name}\n{formattedTags}";
+                }
+                else
+                {
+                    string hostTag = tagsForHost.FirstOrDefault(t => t.Tag == "#Host")?.GetFormattedTag();
+                    if (hostTag != null)
+                    {
+                        name = $"{name}\n<color=#00ff00>{hostTag}</color>";
+                    }
+                }
+            }
+           */ 
+             if (PlayerTagManager.IsPlayerTagged(friendCode))
+            {
+              var tag = PlayerTagManager.GetPlayerTag(friendCode);
+              if (tag != null)
+              {
+                   Main.Instance.Log.LogInfo("Tag is not null proceeding...");
+                   string coloredName = $"<color=#{tag.PreferredColor}>{name}</color>";
+                   string coloredTag = tag.GetFormattedTag();
+                   string formattedNameWithNewLine = $"{coloredName}\n{coloredTag}";
+                    
+                   name = formattedNameWithNewLine;
+
+                 Main.Instance.Log.LogMessage("Tag Now should be appeared with color");
+              }
+            }
 		    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
 		    writer.Write(__instance.Data.NetId);
             writer.Write(name);
 		    AmongUsClient.Instance.FinishRpcImmediately(writer);
+
+            if (AmongUsClient.Instance.AmClient)
+		    {
+			    __instance.SetName(name);
+		    }
             return false;
         }
     }

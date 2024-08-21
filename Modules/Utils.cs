@@ -614,6 +614,17 @@ namespace MoreGamemodes
             }
             return true;
         }
+        public static bool IsValidHexCode(string hex)
+        {
+             if (string.IsNullOrWhiteSpace(hex) || (hex.Length != 6 && hex.Length != 3)) return false;
+
+             foreach (char c in hex)
+             {
+                if (!Uri.IsHexDigit(c)) return false;
+
+             }
+             return true;
+        }
 
         public static string GetOptionNameSCM(this OptionItem optionItem)
         {
@@ -646,5 +657,7 @@ namespace MoreGamemodes
         {
             VentilationSystemDeterioratePatch.SerializeV2(ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>());
         }
+        public static string RemoveHtmlTags(this string str) => System.Text.RegularExpressions.Regex.Replace(str, "<[^>]*?>", string.Empty);
+
     }
 }

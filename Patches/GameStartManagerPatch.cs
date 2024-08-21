@@ -13,7 +13,6 @@ namespace MoreGamemodes
             __instance.MinPlayers = 1;
         }
     }
-
     [HarmonyPatch(typeof(IGameOptionsExtensions), nameof(IGameOptionsExtensions.GetAdjustedNumImpostors))]
     class UnrestrictedNumImpostorsPatch
     {

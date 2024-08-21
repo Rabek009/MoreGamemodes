@@ -63,6 +63,7 @@ namespace MoreGamemodes
             }
             GameManager.Instance.RpcSyncCustomOptions();
             GameManager.Instance.RpcStartGamemode(Options.CurrentGamemode);
+            PlayerTagManager.ResetPlayerTags();
         }
     }
 

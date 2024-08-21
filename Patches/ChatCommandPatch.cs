@@ -8,6 +8,7 @@ using Assets.CoreScripts;
 using System.Text;
 
 using Object = UnityEngine.Object;
+using Iced.Intel;
 
 namespace MoreGamemodes
 {
@@ -32,6 +33,24 @@ namespace MoreGamemodes
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
+            }
+            if (args[0].Equals("/tagColor", StringComparison.OrdinalIgnoreCase))
+            {
+              if (args.Length < 2 || !Utils.IsValidHexCode(args[1]))
+              {
+                  DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Invalid color code. Please provide a valid hex color code.\n Usage : <color=red>/tagColor FF0000</color>");
+                __instance.freeChatField.textArea.Clear();
+                __instance.freeChatField.textArea.SetText("");
+                return false;
+              }
+             var hexColor = args[1];
+             string playerName = PlayerControl.LocalPlayer.Data.PlayerName;
+             string friendCode = PlayerControl.LocalPlayer.Data.FriendCode;
+            PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor);
+            __instance.freeChatField.textArea.Clear();
+            __instance.freeChatField.textArea.SetText("");
+            return false; 
+
             }
             if (!AmongUsClient.Instance.AmHost) return true;
             __instance.timeSinceLastMessage = 3f;
@@ -101,6 +120,7 @@ namespace MoreGamemodes
             }
             switch (args[0])
             {
+               
                 case "/cs":
                 case "/changesetting":
                     canceled = true;
