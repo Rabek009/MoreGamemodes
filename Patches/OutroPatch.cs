@@ -228,7 +228,6 @@ namespace MoreGamemodes
             AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
-                Main.Timer -= 0.5f;
                 var hours = (int)Main.Timer / 3600;
                 Main.Timer -= hours * 3600;
                 var minutes = (int)Main.Timer / 60;

@@ -52,8 +52,9 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, uint> RoleFakePlayer;
     public static Dictionary<byte, int> PlayerKills;
 
-    public const string CurrentVersion = "2.0.0 dev6";
-    public bool isBeta = CurrentVersion.Contains("dev");
+    public const string CurrentVersion = "2.0.0 beta6.3";
+    public bool isDev = CurrentVersion.Contains("dev");
+    public bool isBeta = CurrentVersion.Contains("beta");
 
     public override void Load()
     {
@@ -123,7 +124,7 @@ public partial class Main : BasePlugin
         AntiBlackout.Reset();
         PlayerTagManager.Initialize();
 
-        Instance.Log.LogMessage($"Sucessfully Loaded MoreGamemodes With Version {CurrentVersion} Is Dev Version : {isBeta}");
+        Instance.Log.LogMessage($"Sucessfully Loaded MoreGamemodes With Version {CurrentVersion} Is Dev Version: {isDev} Is Beta Version: {isBeta}");
 
         Harmony.PatchAll();
     }

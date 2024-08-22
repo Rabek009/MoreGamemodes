@@ -9,14 +9,12 @@ namespace MoreGamemodes
         public string FriendCode { get; set; }
         public string PreferredColor { get; set; }
         public string Tag { get; set; }
-        public bool IsDeveloper { get; set; }
 
-        public ModdedPlayerTag(string friendCode, string preferredColor = "FFFFFF", string tag = "", bool isDeveloper = false)
+        public ModdedPlayerTag(string friendCode, string preferredColor = "ffffff", string tag = "")
         {
             FriendCode = friendCode;
             PreferredColor = preferredColor;
             Tag = tag;
-            IsDeveloper = isDeveloper;
         }
 
         public bool HasTag() => Tag != null;
@@ -47,11 +45,11 @@ namespace MoreGamemodes
         public static void Initialize()
         {
             PlayersWithTags.Clear();
-            PlayersWithTags.Add(new(friendCode: "wallstate#7631",  preferredColor: "ff0000",  tag: "#Dev",    isDeveloper: true));
-            PlayersWithTags.Add(new(friendCode: "motorstack#2287", preferredColor: "e2bd51",  tag: "#Tester", isDeveloper: false));
-            PlayersWithTags.Add(new(friendCode: "leadenjoke#3670", preferredColor: "00ff00",  tag: "#Tester", isDeveloper: false));
-            PlayersWithTags.Add(new(friendCode: "cannylinke#0564", preferredColor: "ffffff", tag: "#Tester", isDeveloper: false));
-            PlayersWithTags.Add(new(friendCode: "stiltedgap#2406", preferredColor:  "ffc0cb", tag:"#YT",      isDeveloper:false));
+            PlayersWithTags.Add(new(friendCode: "wallstate#7631",  preferredColor: "ff0000", tag: "#Dev"));
+            PlayersWithTags.Add(new(friendCode: "motorstack#2287", preferredColor: "e2bd51", tag: "#Tester"));
+            PlayersWithTags.Add(new(friendCode: "leadenjoke#3670", preferredColor: "00ff00", tag: "#Tester"));
+            PlayersWithTags.Add(new(friendCode: "cannylinke#0564", preferredColor: "ffffff", tag: "#Tester"));
+            PlayersWithTags.Add(new(friendCode: "stiltedgap#2406", preferredColor: "ffc0cb", tag: "#YT"));
         }
 
         public static bool IsPlayerTagged(string friendCode)
@@ -59,12 +57,12 @@ namespace MoreGamemodes
             return PlayersWithTags.Any(x => x.FriendCode == friendCode);
         }
 
-        public static void UpdateNameAndTag(string name, string friendCode, string newColor)
+        public static void UpdateNameAndTag(string name, string friendCode, string newColor, bool host)
         {
-            var tag = GetPlayerTag(friendCode);
+            var tag = host ? GetHostTag(friendCode) : GetPlayerTag(friendCode);
             if (tag != null)
             {
-                RemovePlayerTag(friendCode);
+                RemovePlayerTag(friendCode, host);
                 tag.PreferredColor = newColor;
                 PlayersWithTags.Add(tag);
 
@@ -73,14 +71,14 @@ namespace MoreGamemodes
             }
         }
 
-        public static List<ModdedPlayerTag> GetAllPlayersTags(string Friendcode)
-        {
-            return PlayersWithTags.Where(x => x.FriendCode == Friendcode).ToList();
-        }
-
         public static ModdedPlayerTag GetPlayerTag(string friendCode)
         {
-            return PlayersWithTags.FirstOrDefault(x => x.FriendCode == friendCode);
+            return PlayersWithTags.FirstOrDefault(x => x.FriendCode == friendCode && x.Tag != "#Host");
+        }
+
+        public static ModdedPlayerTag GetHostTag(string friendCode)
+        {
+            return PlayersWithTags.FirstOrDefault(x => x.FriendCode == friendCode && x.Tag == "#Host");
         }
 
         public static void ResetPlayerTags()
@@ -99,9 +97,9 @@ namespace MoreGamemodes
             }
         }
 
-        public static void RemovePlayerTag(string friendCode)
+        public static void RemovePlayerTag(string friendCode, bool host)
         {
-            var playerTag = PlayersWithTags.FirstOrDefault(tag => tag.FriendCode == friendCode);
+            var playerTag = host ? GetHostTag(friendCode) : GetPlayerTag(friendCode);
             if (playerTag != null)
             {
                 PlayersWithTags.Remove(playerTag);

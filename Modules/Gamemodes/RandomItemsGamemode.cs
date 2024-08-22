@@ -801,7 +801,7 @@ namespace MoreGamemodes
                 case Items.Rope:
                     return "Rope(Both): Teleports nearest player to you.";
                 case Items.Stop:
-                    return "Stop(Both/Impostor only): You can instantly end meeting without anyone ejected by typing /stop command.";
+                    return "Stop(Both/Impostor only): You can instantly end meeting without anyone ejected by typing /stop command. You can only use this item during voting time.";
                 case Items.Newsletter:
                     return "Newsletter(Both): Sends you information about how amny roles are alive, how people died. Use this item by typing /info in chat";
                 case Items.Compass:

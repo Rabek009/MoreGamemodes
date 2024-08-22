@@ -8,7 +8,6 @@ using Assets.CoreScripts;
 using System.Text;
 
 using Object = UnityEngine.Object;
-using Iced.Intel;
 
 namespace MoreGamemodes
 {
@@ -18,13 +17,6 @@ namespace MoreGamemodes
         public static bool Prefix(ChatController __instance)
         {
             var text = __instance.freeChatField.Text;
-            if (!AmongUsClient.Instance.AmHost && (text.Contains("<size=") || text.Contains("<br>") || text.Contains("<line-height=") || text.Contains("<cspace=")))
-            {
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChatWarning("Only host can use <noparse><size>, <ㅤbr>, <line-height> <cspace></noparse>,! Other text formatting is allowed.");
-                __instance.freeChatField.textArea.Clear();
-                __instance.freeChatField.textArea.SetText("");
-                return false;
-            }
             string[] args = text.Split(' ');
             string subArgs = "";
             if (args[0] == "/name" && (text.Contains("<") || text.Contains(">")))
@@ -108,10 +100,12 @@ namespace MoreGamemodes
                     canceled = true;
                     if (Main.GameStarted) break;
                     subArgs = args.Length < 2 ? "" : args[1];
+                    subArgs = subArgs.ToLower();
                     switch (subArgs)
                     {
                         case "map":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "theskeld":
@@ -165,6 +159,7 @@ namespace MoreGamemodes
                             break;
                         case "recommended":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -177,6 +172,7 @@ namespace MoreGamemodes
                             break;
                         case "confirmejects":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -193,6 +189,7 @@ namespace MoreGamemodes
                             break;
                         case "anonymousvotes":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -233,6 +230,7 @@ namespace MoreGamemodes
                             break;
                         case "killdistance":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "short":
@@ -252,6 +250,7 @@ namespace MoreGamemodes
                             break;
                         case "taskbarupdates":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "always":
@@ -271,13 +270,14 @@ namespace MoreGamemodes
                             break;
                         case "visualtasks":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.VisualTasks, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.VisualTasks, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.VisualTasks, false);
                                     break;
                             }
                             break;
@@ -343,6 +343,7 @@ namespace MoreGamemodes
                             break;
                         case "protectvisibletoimpostors":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -371,6 +372,7 @@ namespace MoreGamemodes
                             break;
                         case "leaveshapeshiftevidence":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -411,6 +413,7 @@ namespace MoreGamemodes
                             break;
                         case "impostorsgetalert":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -443,6 +446,7 @@ namespace MoreGamemodes
                             break;
                         case "ghostdotasks":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -471,6 +475,7 @@ namespace MoreGamemodes
                             break;
                         case "flashlightmode":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -495,6 +500,7 @@ namespace MoreGamemodes
                             break;
                         case "finalhideseekmap":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -507,6 +513,7 @@ namespace MoreGamemodes
                             break;
                         case "finalhidepings":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -523,6 +530,7 @@ namespace MoreGamemodes
                             break;
                         case "shownames":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "on":
@@ -539,6 +547,7 @@ namespace MoreGamemodes
                             break;
                         case "preset":
                             subArgs = args.Length < 3 ? "" : args[2];
+                            subArgs = subArgs.ToLower();
                             switch (subArgs)
                             {
                                 case "coresettings":
@@ -560,6 +569,9 @@ namespace MoreGamemodes
                                     break;
                             }
                             break;
+                        default:
+                            PlayerControl.LocalPlayer.RpcSendMessage("Invalid setting. Please provide existing setting.\nUsage: /cs killcooldown 0,001.", "Warning");
+                            break;
                     }
                     GameOptionsManager.Instance.GameHostOptions = GameOptionsManager.Instance.CurrentGameOptions;
 		            GameManager.Instance.LogicOptions.SyncOptions();
@@ -567,9 +579,19 @@ namespace MoreGamemodes
                 case "/gm":
                 case "/gamemode":
                     canceled = true;
-                    if (Main.GameStarted) break;
-                    subArgs = args.Length < 2 ? "" : args[1];
-                    switch (subArgs)
+                    if (Main.GameStarted)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /gamemode during game.", "Warning");
+                        break;
+                    }
+                    var gamemode = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        gamemode += subArgs;
+                    }
+                    gamemode = gamemode.ToLower().Replace(" ", "");
+                    switch (gamemode)
                     {
                         case "classic":
                             Options.Gamemode.SetValue(0);
@@ -619,14 +641,27 @@ namespace MoreGamemodes
                             Options.Gamemode.SetValue(11);
                             PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is deathrun", "ModesChanger");
                             break;
+                        default:
+                            PlayerControl.LocalPlayer.RpcSendMessage("Invalid gamemode. Please provide existing gamemode.\nUsage: /gamemode hideandseek", "Warning");
+                            break;
                     }
                     break;       
                 case "/color":
                 case "/colour":
                     canceled = true;
-                    if (Main.GameStarted && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle) break;
-                    subArgs = args.Length < 2 ? "" : args[1];
-                    switch (subArgs)
+                    if (Main.GameStarted && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /color during game.", "Warning");
+                        break;
+                    }
+                    var color = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        color += subArgs;
+                    }
+                    color = color.ToLower().Replace(" ", "");
+                    switch (color)
                     {
                         case "red":
                             PlayerControl.LocalPlayer.RpcSetColor(0);
@@ -693,25 +728,37 @@ namespace MoreGamemodes
                     break;
                 case "/name":
                     canceled = true;
-                    if (Main.GameStarted) break;
+                    if (Main.GameStarted)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /name during game.", "Warning");
+                        break;
+                    }
                     var name = "";
                     for (int i = 1; i <= args.Length; ++i)
                     {
                         subArgs = args.Length < i + 1 ? "" : " " + args[i];
                         name += subArgs;
                     }
+                    name = name[1..];
                     PlayerControl.LocalPlayer.RpcSetName(name);
                     break;
                 case "/h":
                 case "/help":
                     canceled = true;
                     subArgs = args.Length < 2 ? "" : args[1];
+                    subArgs = subArgs.ToLower();
                     switch (subArgs)
                     {
                         case "gm":
                         case "gamemode":
-                            subArgs = args.Length < 3 ? "" : args[2];
-                            switch (subArgs)
+                            var gamemode2 = "";
+                            for (int i = 2; i <= args.Length; ++i)
+                            {
+                                subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                                gamemode2 += subArgs;
+                            }
+                            gamemode2 = gamemode2.ToLower().Replace(" ", "");
+                            switch (gamemode2)
                             {
                                 case "classic":
                                     Utils.SendChat("Classic: Standard among us game.", "Gamemodes");
@@ -817,8 +864,14 @@ namespace MoreGamemodes
                             break;
                         case "item":
                         case "i":
-                            subArgs = args.Length < 3 ? "" : args[2];
-                            switch (subArgs)
+                            var item = "";
+                            for (int i = 2; i <= args.Length; ++i)
+                            {
+                                subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                                item += subArgs;
+                            }
+                            item = item.ToLower().Replace(" ", "");
+                            switch (item)
                             {
                                 case "timeslower":
                                     PlayerControl.LocalPlayer.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TimeSlower), "Items");
@@ -905,8 +958,14 @@ namespace MoreGamemodes
                             break;
                         case "jailbreak":
                         case "j":
-                            subArgs = args.Length < 3 ? "" : args[2];
-                            switch (subArgs)
+                            var map = "";
+                            for (int i = 2; i <= args.Length; ++i)
+                            {
+                                subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                                map += subArgs;
+                            }
+                            map = map.ToLower().Replace(" ", "");
+                            switch (map)
                             {
                                 case "theskeld":
                                 case "dlekseht":
@@ -925,20 +984,24 @@ namespace MoreGamemodes
                                         case 3:
                                             Utils.SendChat("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
                                             break;
-                                        case 1:
-                                        case 2:
-                                        case 4:
-                                        case 5:
+                                        default:
                                             Utils.SendChat("Jailbreak doesn't work in this map for now. Compatibility will be added in next updates.", "Jailbreak");
                                             break;
                                     }
                                     break;
                             }
                             break;
+                        default:
+                            PlayerControl.LocalPlayer.RpcSendMessage("Invalid use of command.\nUsage: /h gm, /h i, /h j", "Warning");
+                            break;
                     }
                     break;
                 case "/stop":
-                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead || !MeetingHud.Instance) break;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted))
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /stop now.", "Warning");
+                        break;
+                    }
                     canceled = true;
                     if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.Stop)
                     {
@@ -954,8 +1017,14 @@ namespace MoreGamemodes
                     break;
                 case "/id":
                     canceled = true;
-                    subArgs = args.Length < 2 ? "" : args[1];
-                    switch (subArgs)
+                    var type = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        type += subArgs;
+                    }
+                    type = type.ToLower().Replace(" ", "");
+                    switch (type)
                     {
                         case "players":
                             var player_ids = "";
@@ -973,6 +1042,9 @@ namespace MoreGamemodes
                         case "colours":
                             PlayerControl.LocalPlayer.RpcSendMessage("red - 0\nblue - 1\ngreen - 2\npink - 3\norange - 4\nyellow - 5\nblack - 6\nwhite - 7\npurple - 8\nbrown - 9\ncyan - 10\nlime - 11\nmaroon - 12\nrose - 13\nbanana - 14\ngray - 15\ntan - 16\ncoral - 17\nfortegreen - >17", "Ids");
                             break;
+                        default:
+                            PlayerControl.LocalPlayer.RpcSendMessage("Invalid use of command.\nUsage: /id players, /id colors", "Warning");
+                            break;
                     }
                     break;
                 case "/commands":
@@ -981,7 +1053,7 @@ namespace MoreGamemodes
                     PlayerControl.LocalPlayer.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n" +
                         "/now - show active settings\n/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/changesetting SETTING VALUE - changes setting value\n" +
                         "/gamemode GAMEMODE - changes gamemode\n/kick PLAYER_ID - kick player\n/ban PLAYER_ID - ban player\n/announce MESSAGE - send message\n/lastresult - show last game result\n" +
-                        "/tpout - teleports you outside lobby ship\n/tpin - teleports you into lobby ship", "Command");
+                        "/tpout - teleports you outside lobby ship\n/tpin - teleports you into lobby ship\n/tagcolor - changes color of your tag (not host tag)\n/hostcolor - changes color of host tag", "Command");
                     break;
                 case "/kick":
                     canceled = true;
@@ -1003,7 +1075,6 @@ namespace MoreGamemodes
                         announce += subArgs;
                     }
                     Utils.SendChat(announce, "HostMessage");
-                    
                     break;
                 case "/lastresult":
                 case "/l":
@@ -1012,7 +1083,11 @@ namespace MoreGamemodes
                         PlayerControl.LocalPlayer.RpcSendMessage(Main.LastResult, "LastResult");
                     break;
                 case "/info":
-                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead) break;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /info now.", "Warning");
+                        break;
+                    }
                     canceled = true;
                     if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.Newsletter)
                     {
@@ -1094,25 +1169,45 @@ namespace MoreGamemodes
                     break;
                 case "/tpout":
                     canceled = true;
-                    if (Main.GameStarted) break;
+                    if (Main.GameStarted)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /tpout during game.", "Warning");
+                        break;
+                    }
                     PlayerControl.LocalPlayer.RpcTeleport(new Vector2(0.1f, 3.8f));
                     break;
                 case "/tpin":
                     canceled = true;
-                    if (Main.GameStarted) break;
+                    if (Main.GameStarted)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /tpin during game.", "Warning");
+                        break;
+                    }
                     PlayerControl.LocalPlayer.RpcTeleport(new Vector2(-0.2f, 1.3f));
                     break;
                 case "/tagcolor":
                     canceled = true;
                     if (args.Length < 2 || !Utils.IsValidHexCode(args[1]))
                     {
-                        PlayerControl.LocalPlayer.RpcSendMessage("Invalid color code. Please provide a valid hex color code.\nUsage: <color=red>/tagColor FF0000</color>", "Warning");
+                        PlayerControl.LocalPlayer.RpcSendMessage("Invalid color code. Please provide a valid hex color code.\nUsage: /tagcolor FF0000", "Warning");
                         break;
                     }
                     var hexColor = args[1];
                     string playerName = Main.StandardNames[PlayerControl.LocalPlayer.PlayerId];
                     string friendCode = PlayerControl.LocalPlayer.Data.FriendCode;
-                    PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor);
+                    PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor, false);
+                    break;
+                case "/hostcolor":
+                    canceled = true;
+                    if (args.Length < 2 || !Utils.IsValidHexCode(args[1]))
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("Invalid color code. Please provide a valid hex color code.\nUsage: /hostcolor FF0000", "Warning");
+                        break;
+                    }
+                    var hexColor2 = args[1];
+                    string playerName2 = Main.StandardNames[PlayerControl.LocalPlayer.PlayerId];
+                    string friendCode2 = PlayerControl.LocalPlayer.Data.FriendCode;
+                    PlayerTagManager.UpdateNameAndTag(playerName2, friendCode2, hexColor2, true);
                     break; 
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;
@@ -1244,10 +1339,24 @@ namespace MoreGamemodes
                 case "/color":
                 case "/colour":
                     canceled = true;
-                    if (!Options.CanUseColorCommand.GetBool() && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle) break;
-                    if (Main.GameStarted && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle) break;
-                    subArgs = args.Length < 2 ? "" : args[1];
-                    switch (subArgs)
+                    if (!Options.CanUseColorCommand.GetBool() && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
+                    {
+                        player.RpcSendMessage("Host disabled usage of this command.", "Warning");
+                        break;
+                    }
+                    if (Main.GameStarted && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
+                    {
+                        player.RpcSendMessage("You can't use /color during game.", "Warning");
+                        break;
+                    }
+                    var color = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        color += subArgs;
+                    }
+                    color = color.ToLower().Replace(" ", "");
+                    switch (color)
                     {
                         case "red":
                             player.RpcSetColor(0);
@@ -1316,14 +1425,23 @@ namespace MoreGamemodes
                     break;
                 case "/name":
                     canceled = true;
-                    if (!Options.CanUseNameCommand.GetBool()) break;
-                    if (Main.GameStarted) break;
+                    if (!Options.CanUseNameCommand.GetBool())
+                    {
+                        player.RpcSendMessage("Host disabled usage of this command.", "Warning");
+                        break;
+                    }
+                    if (Main.GameStarted)
+                    {
+                        player.RpcSendMessage("You can't use /name during game.", "Warning");
+                        break;
+                    }
                     var name = "";
                     for (int i = 1; i <= args.Length; ++i)
                     {
                         subArgs = args.Length < i + 1 ? "" : " " + args[i];
                         name += subArgs;
                     }
+                    name = name[1..];
                     if (name.Length > Options.MaximumNameLength.GetInt()) break;
                     if (Options.EnableNameRepeating.GetBool())
                         player.RpcSetName(name);
@@ -1334,12 +1452,19 @@ namespace MoreGamemodes
                 case "/help":
                     canceled = true;
                     subArgs = args.Length < 2 ? "" : args[1];
+                    subArgs = subArgs.ToLower();
                     switch (subArgs)
                     {
                         case "gm":
                         case "gamemode":
-                            subArgs = args.Length < 3 ? "" : args[2];
-                            switch (subArgs)
+                            var gamemode = "";
+                            for (int i = 2; i <= args.Length; ++i)
+                            {
+                                subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                                gamemode += subArgs;
+                            }
+                            gamemode = gamemode.ToLower().Replace(" ", "");
+                            switch (gamemode)
                             {
                                 case "classic":
                                     player.RpcSendMessage("Classic: Standard among us game.", "Gamemodes");
@@ -1445,8 +1570,14 @@ namespace MoreGamemodes
                             break;
                         case "item":
                         case "i":
-                            subArgs = args.Length < 3 ? "" : args[2];
-                            switch (subArgs)
+                            var item = "";
+                            for (int i = 2; i <= args.Length; ++i)
+                            {
+                                subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                                item += subArgs;
+                            }
+                            item = item.ToLower().Replace(" ", "");
+                            switch (item)
                             {
                                 case "timeslower":
                                     player.RpcSendMessage(RandomItemsGamemode.ItemDescriptionLong(Items.TimeSlower), "Items");
@@ -1533,8 +1664,14 @@ namespace MoreGamemodes
                             break;
                         case "jailbreak":
                         case "j":
-                            subArgs = args.Length < 3 ? "" : args[2];
-                            switch (subArgs)
+                            var map = "";
+                            for (int i = 2; i <= args.Length; ++i)
+                            {
+                                subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                                map += subArgs;
+                            }
+                            map = map.ToLower().Replace(" ", "");
+                            switch (map)
                             {
                                 case "theskeld":
                                 case "dlekseht":
@@ -1553,21 +1690,25 @@ namespace MoreGamemodes
                                         case 3:
                                             player.RpcSendMessage("In the skeld there are 5 forbidden areas, where is illegal for prisoners to be in. These are:\nReactor\nSecurity\nAdmin\nStorage\nNavigation\n\nYour health is regenerating faster in medbay, while not fighting. You can fill spaceship with fuel in lower or upper engine. You can fill your breathing mask with oxygen in o2. In electrical prisoners get 2 resources per second. In storage prisoners get 5 resources per secons. Guards always get 2 dollars per second. There are 3 ways to escape:\n1. Craft spaceship parts with resources. Then craft spaceship with them. Then fill it with fuel, go to storage and you escaped!\n2. Craft breathing mask and pickaxe. Fill your breathing mask with oxygen. Then go to reactor and destroy a wall with your pickaxe. If you do it, you're free!\n3. Prison takeover - prisoners have to work together to beat up every guard fast. Then go to navigation to change ship direction. Changing direction only works when all guards are beaten up. If guard come to navigation, the entire progress of changing direction resets. If you success, every prisoner win!", "Jailbreak");
                                             break;
-                                        case 1:
-                                        case 2:
-                                        case 4:
-                                        case 5:
+                                        default:
                                             player.RpcSendMessage("Jailbreak doesn't work in this map for now. Compatibility will be added in next updates.", "Jailbreak");
                                             break;
                                     }
                                     break;
                             }
                             break;
+                        default:
+                            player.RpcSendMessage("Invalid use of command.\nUsage: /h gm, /h i, /h j", "Warning");
+                            break;
                     }
                     break;
                 case "/stop":
-                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead || !MeetingHud.Instance) break;
                     canceled = true;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted))
+                    {
+                        player.RpcSendMessage("You can't use /stop now.", "Warning");
+                        break;
+                    }
                     if (RandomItemsGamemode.instance.GetItem(player) == Items.Stop)
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);  
@@ -1582,8 +1723,14 @@ namespace MoreGamemodes
                     break;
                 case "/id":
                     canceled = true;
-                    subArgs = args.Length < 2 ? "" : args[1];
-                    switch (subArgs)
+                    var type = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        type += subArgs;
+                    }
+                    type = type.ToLower().Replace(" ", "");
+                    switch (type)
                     {
                         case "players":
                             var player_ids = "";
@@ -1601,6 +1748,9 @@ namespace MoreGamemodes
                         case "colours":
                             player.RpcSendMessage("red - 0\nblue - 1\ngreen - 2\npink - 3\norange - 4\nyellow - 5\nblack - 6\nwhite - 7\npurple - 8\nbrown - 9\ncyan - 10\nlime - 11\nmaroon - 12\nrose - 13\nbanana - 14\ngray - 15\ntan - 16\ncoral - 17\nfortegreen - >17", "Ids");
                             break;
+                        default:
+                            player.RpcSendMessage("Invalid use of command.\nUsage: /id players, /id colors", "Warning");
+                            break;
                     }
                     break;
                 case "/commands":
@@ -1608,7 +1758,7 @@ namespace MoreGamemodes
                     canceled = true;
                     player.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n/now - show active settings\n" +
                         "/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/lastresult - show last game result\n" +
-                        "/tpout - teleports you outside lobby ship\n/tpin - teleports you into lobby ship", "Commands");
+                        "/tpout - teleports you outside lobby ship\n/tpin - teleports you into lobby ship\n/tagcolor - changes color of your tag", "Commands");
                     break;
                 case "/lastresult":
                 case "/l":
@@ -1617,8 +1767,12 @@ namespace MoreGamemodes
                         player.RpcSendMessage(Main.LastResult, "LastResult");
                     break;
                 case "/info":
-                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead) break;
                     canceled = true;
+                    if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || player.Data.IsDead)
+                    {
+                        player.RpcSendMessage("You can't use /info now.", "Warning");
+                        break;
+                    }
                     if (RandomItemsGamemode.instance.GetItem(player) == Items.Newsletter)
                     {
                         int crewmates = 0;
@@ -1699,26 +1853,44 @@ namespace MoreGamemodes
                     break;
                 case "/tpout":
                     canceled = true;
-                    if (Main.GameStarted || !Options.CanUseTpoutCommand.GetBool()) break;
+                    if (Main.GameStarted)
+                    {
+                        player.RpcSendMessage("You can't use /tpout during game.", "Warning");
+                        break;
+                    }
+                    if (!Options.CanUseTpoutCommand.GetBool())
+                    {
+                        player.RpcSendMessage("Host disabled usage of this command.", "Warning");
+                        break;
+                    }
                     player.RpcTeleport(new Vector2(0.1f, 3.8f));
                     break;
                 case "/tpin":
                     canceled = true;
-                    if (Main.GameStarted || !Options.CanUseTpoutCommand.GetBool()) break;
+                    if (Main.GameStarted)
+                    {
+                        player.RpcSendMessage("You can't use /tpin during game.", "Warning");
+                        break;
+                    }
+                    if (!Options.CanUseTpoutCommand.GetBool())
+                    {
+                        player.RpcSendMessage("Host disabled usage of this command.", "Warning");
+                        break;
+                    }
                     player.RpcTeleport(new Vector2(-0.2f, 1.3f));
                     break;
                 case "/tagcolor":
                     canceled = true;
                     if (args.Length < 2 || !Utils.IsValidHexCode(args[1]))
                     {
-                        player.RpcSendMessage("Invalid color code. Please provide a valid hex color code.\nUsage: <color=red>/tagColor FF0000</color>", "Warning");
+                        player.RpcSendMessage("Invalid color code. Please provide a valid hex color code.\nUsage: /tagcolor FF0000", "Warning");
                         break;
                     }
                     var hexColor = args[1];
                     string playerName = Main.StandardNames[player.PlayerId];
                     string friendCode = player.Data.FriendCode;
-                    PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor);
-                    break; 
+                    PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor, false);
+                    break;
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;
                     if (PaintBattleGamemode.instance.HasVoted[player.PlayerId]) break;
@@ -1873,8 +2045,6 @@ namespace MoreGamemodes
                 __result = false;
                 return false;
             }
-            int return_count = PlayerControl.LocalPlayer.name.Count(x => x == '\n');
-            chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
             if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
@@ -1882,6 +2052,11 @@ namespace MoreGamemodes
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 __result = true;
                 return false;
+            }
+            if (!Main.GameStarted)
+            {
+                int return_count = PlayerControl.LocalPlayer.Data.PlayerName.Count(x => x == '\n');
+                chatText = new StringBuilder(chatText).Insert(0, "<size=1.5>\n</size>", return_count).ToString();
             }
             if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);

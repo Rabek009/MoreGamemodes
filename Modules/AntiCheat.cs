@@ -13,7 +13,6 @@ namespace MoreGamemodes
     {
         public static Dictionary<byte, float> TimeSinceLastTask;
         public static List<byte> LobbyDeadBodies;
-        public static Dictionary<byte, int> HasTeleported;
         public static Dictionary<byte, float> TimeSinceRoleChange;
         public static List<byte> ChangedTasks;
         public static List<uint> BannedPlayers;
@@ -26,7 +25,6 @@ namespace MoreGamemodes
         {
             TimeSinceLastTask = new Dictionary<byte, float>();
             LobbyDeadBodies = new List<byte>();
-            HasTeleported = new Dictionary<byte, int>();
             TimeSinceRoleChange = new Dictionary<byte, float>();
             ChangedTasks = new List<byte>();
             BannedPlayers = new List<uint>();
@@ -92,7 +90,7 @@ namespace MoreGamemodes
                         HandleCheat(pc, "CompleteTask Rpc in lobby");
                         return true;
                     }
-                    if (TimeSinceLastTask.ContainsKey(pc.PlayerId) && TimeSinceLastTask[pc.PlayerId] < 0.5f)
+                    if (TimeSinceLastTask.ContainsKey(pc.PlayerId) && TimeSinceLastTask[pc.PlayerId] < 0.1f)
                     {
                         HandleCheat(pc, "Auto complete tasks");
                         return true;
@@ -551,21 +549,11 @@ namespace MoreGamemodes
                         HandleCheat(netTransform.myPlayer, "Teleportation in lobby");
                         return true;
                     }
-                    if (HasTeleported.ContainsKey(netTransform.myPlayer.PlayerId) && !netTransform.myPlayer.inVent && !netTransform.myPlayer.walkingToVent && !CoEnterVentPatch.PlayersToKick.Contains(netTransform.myPlayer.PlayerId) &&
-                        (!TimeSinceVentCancel.ContainsKey(netTransform.myPlayer.PlayerId) || TimeSinceVentCancel[netTransform.myPlayer.PlayerId] > 5f) &&
-                        HasTeleported[netTransform.myPlayer.PlayerId] >= (Options.EnableMidGameChat.GetBool() && GameManager.Instance.LogicOptions.MapId == 4 ? 2 : 1))
-                    {
-                        HandleCheat(netTransform.myPlayer, "Too many teleportations");
-                        return true;
-                    }
                     if (MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating)
                     {
                         HandleCheat(netTransform.myPlayer, "Teleportation during meeting");
                         return true;
                     }
-                    if (!HasTeleported.ContainsKey(netTransform.myPlayer.PlayerId))
-                        HasTeleported.Add(netTransform.myPlayer.PlayerId, 0);
-                    ++HasTeleported[netTransform.myPlayer.PlayerId];
                     break;
             }
             return false;
@@ -695,7 +683,7 @@ namespace MoreGamemodes
                                 HandleCheat(player, "Hack sent clean vent");
                                 return true;
                             }
-                            if (TimeSinceLastStartCleaning.ContainsKey(player.PlayerId) && TimeSinceLastStartCleaning[player.PlayerId].Item2 < 0.5f && TimeSinceLastStartCleaning[player.PlayerId].Item1 != ventId)
+                            if (TimeSinceLastStartCleaning.ContainsKey(player.PlayerId) && TimeSinceLastStartCleaning[player.PlayerId].Item2 < 0.1f && TimeSinceLastStartCleaning[player.PlayerId].Item1 != ventId)
                             {
                                 HandleCheat(player, "Hack sent clean vent");
                                 return true;
@@ -713,7 +701,7 @@ namespace MoreGamemodes
                                 HandleCheat(player, "Boot from vent hack");
                                 return true;
                             }
-                            if (TimeSinceLastBootImpostors.ContainsKey(player.PlayerId) && TimeSinceLastBootImpostors[player.PlayerId].Item2 < 0.5f && TimeSinceLastBootImpostors[player.PlayerId].Item1 != ventId)
+                            if (TimeSinceLastBootImpostors.ContainsKey(player.PlayerId) && TimeSinceLastBootImpostors[player.PlayerId].Item2 < 0.1f && TimeSinceLastBootImpostors[player.PlayerId].Item1 != ventId)
                             {
                                 HandleCheat(player, "Boot from vent hack");
                                 return true;
@@ -764,7 +752,6 @@ namespace MoreGamemodes
 
         public static void OnMeeting()
         {
-            HasTeleported = new Dictionary<byte, int>();
             new LateTask(() => {
                 LobbyDeadBodies = new List<byte>();
                 TimeSinceRoleChange = new Dictionary<byte, float>();

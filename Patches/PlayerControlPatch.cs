@@ -5,6 +5,7 @@ using AmongUs.GameOptions;
 using Hazel;
 using InnerNet;
 using System.Linq;
+using System;
 
 namespace MoreGamemodes
 {
@@ -329,18 +330,14 @@ namespace MoreGamemodes
     class RpcSetRolePatch
     {
         public static Dictionary<byte, bool> RoleAssigned;
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType, [HarmonyArgument(1)] bool canOverrideRole)
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType, [HarmonyArgument(1)] ref bool canOverrideRole)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (RoleAssigned[__instance.PlayerId] && !RoleManager.IsGhostRole(roleType))
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && RoleManager.IsGhostRole(roleType))
                 return false;
-            if (!canOverrideRole)
-            {
-                __instance.RpcSetRole(roleType, true);
-                return false;
-            }
+            canOverrideRole = true;
             if (RoleManager.IsGhostRole(roleType)) return true;
             int assignedRoles = 0;
             int playerCount = 0;
@@ -353,26 +350,35 @@ namespace MoreGamemodes
             }
             if (assignedRoles >= playerCount)
             {
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(-1);
                 RoleAssigned[__instance.PlayerId] = true;
-                new LateTask(() => {
-                    Dictionary<byte, bool> Disconnected = new();
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        Disconnected[pc.PlayerId] = pc.Data.Disconnected;
-                        pc.Data.Disconnected = true;
-                    }
-                    Utils.SendGameData();
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                        pc.Data.Disconnected = Disconnected[pc.PlayerId];
-                }, 0.5f);
-                new LateTask(() => __instance.RpcSetRoleV3(roleType, false), 1f);
-                new LateTask(() => {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-						PlayerNameColor.Set(pc);
-					DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
-					DestroyableSingleton<HudManager>.Instance.HideGameLoader();
-                }, 1.2f);
-                new LateTask(() => Utils.SendGameData(), 1.5f);
+                Dictionary<byte, bool> Disconnected = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    Disconnected[pc.PlayerId] = pc.Data.Disconnected;
+                    pc.Data.Disconnected = true;
+                    writer.StartMessage(1);
+                    writer.WritePacked(pc.Data.NetId);
+                    pc.Data.Serialize(writer, false);
+                    writer.EndMessage();
+                }
+                __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
+                sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)roleType)
+                    .Write(true)
+                    .EndRpc();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    pc.Data.Disconnected = Disconnected[pc.PlayerId];
+                    writer.StartMessage(1);
+                    writer.WritePacked(pc.Data.NetId);
+                    pc.Data.Serialize(writer, false);
+                    writer.EndMessage();
+                }
+                sender.EndMessage();
+                sender.SendMessage();
                 return false;
             }
             RoleAssigned[__instance.PlayerId] = true;
@@ -457,15 +463,47 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckName))]
     class CheckNamePatch
     {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string name)
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] string playerName)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (Options.CanUseNameCommand.GetBool() && Options.EnableNameRepeating.GetBool())
             {
-                __instance.RpcSetName(name);
+                __instance.RpcSetName(playerName);
                 return false;
             }
-            return true;
+            if (!__instance.Data)
+		    {
+			    Debug.LogWarning("CheckName was called while NetworkedPlayerInfo was null");
+			    return false;
+		    }
+		    Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo> allPlayers = GameData.Instance.AllPlayers;
+		    bool flag = allPlayers.ToArray().Any((NetworkedPlayerInfo i) => i.PlayerId != __instance.PlayerId && Main.StandardNames.ContainsKey(i.PlayerId) && Main.StandardNames[i.PlayerId].Equals(playerName, StringComparison.OrdinalIgnoreCase));
+		    if (flag)
+		    {
+			    for (int k = 1; k < 100; k++)
+			    {
+				    string text = playerName + " " + k.ToString();
+				    flag = false;
+				    for (int j = 0; j < allPlayers.Count; j++)
+				    {
+					    if (allPlayers[j].PlayerId != __instance.PlayerId && allPlayers[j].PlayerName.Equals(text, StringComparison.OrdinalIgnoreCase))
+					    {
+						    flag = true;
+						    break;
+					    }
+				    }
+				    if (!flag)
+				    {
+					    playerName = text;
+					    break;
+				    }
+			    }
+		    }
+		    __instance.Data.PlayerName = playerName;
+            __instance.GetClient().UpdatePlayerName(playerName);
+            __instance.Data.MarkDirty();
+		    __instance.RpcSetName(__instance.Data.PlayerName);
+            return false;
         }
     }
 
@@ -477,39 +515,36 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (AntiCheat.BannedPlayers.Contains(__instance.NetId)) return false;
             var friendCode = __instance.Data.FriendCode;
-            /*var host = GameData.Instance.GetHost();
-            if (__instance == host)
-            {
-                var tagsForHost = PlayerTagManager.GetAllPlayersTags(host.FriendCode);
-                if (tagsForHost.Count == 2)
-                {
-                     string formattedTags = string.Join("\n", tagsForHost.Select(t => $"<color=#{t.PreferredColor}>{t.GetFormattedTag()}</color>"));
-                     name = $"{name}\n{formattedTags}";
-                }
-                else
-                {
-                    string hostTag = tagsForHost.FirstOrDefault(t => t.Tag == "#Host")?.GetFormattedTag();
-                    if (hostTag != null)
-                    {
-                        name = $"{name}\n<color=#00ff00>{hostTag}</color>";
-                    }
-                }
-            }
-           */
-            Main.StandardNames[__instance.PlayerId] = name;
+            __instance.RpcSetStandardName(name, -1);
             if (PlayerTagManager.IsPlayerTagged(friendCode))
             {
                 var tag = PlayerTagManager.GetPlayerTag(friendCode);
+                var hostTag = PlayerTagManager.GetHostTag(friendCode);
                 if (tag != null)
                 {
                     Main.Instance.Log.LogInfo("Tag is not null proceeding...");
                     string coloredName = $"<color=#{tag.PreferredColor}>{name}</color>";
                     string coloredTag = tag.GetFormattedTag();
                     string formattedNameWithNewLine = $"{coloredName}\n{coloredTag}";
+                    if (hostTag != null)
+                    {
+                        Main.Instance.Log.LogInfo("Host Tag is not null proceeding...");
+                        formattedNameWithNewLine += "\n" + hostTag.GetFormattedTag();
+                    }
                     
                     name = formattedNameWithNewLine;
                     Main.Instance.Log.LogMessage("Tag Now should be appeared with color");
-              }
+                }
+                else if (hostTag != null)
+                {
+                    Main.Instance.Log.LogInfo("Host Tag is not null proceeding...");
+                    string coloredName = $"<color=#{hostTag.PreferredColor}>{name}</color>";
+                    string coloredTag = hostTag.GetFormattedTag();
+                    string formattedNameWithNewLine = $"{coloredName}\n{coloredTag}";
+                    
+                    name = formattedNameWithNewLine;
+                    Main.Instance.Log.LogMessage("Host Tag Now should be appeared with color");
+                }
             }
             if (AmongUsClient.Instance.AmClient)
 		    {

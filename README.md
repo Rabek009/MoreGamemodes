@@ -300,7 +300,7 @@ Teleports nearest player to you. Everyone can get this item.
 | Enable rope |
 
 ##### Stop
-Type /stop to end meeting immediately with skip result. Impostors can get this item. Depending on options crewmates can get it too.
+Type /stop to end meeting immediately with skip result. You can only use this item during voting time. Impostors can get this item. Depending on options crewmates can get it too.
 
 ###### Game options
 | Name                     |

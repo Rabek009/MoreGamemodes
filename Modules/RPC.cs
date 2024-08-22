@@ -36,6 +36,7 @@ namespace MoreGamemodes
         DestroyTurret,
         SetCanTeleport,
         SetIsDead,
+        SetStandardName
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -94,7 +95,12 @@ namespace MoreGamemodes
                         AmongUsClient.Instance.KickPlayer(__instance.GetClientId(), false);
                     }
                     else
+                    {
                         Main.IsModded[__instance.PlayerId] = true;
+                        int clientId = __instance.GetClientId();
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                            pc.RpcSetStandardName(Main.StandardNames.ContainsKey(pc.PlayerId) ? Main.StandardNames[pc.PlayerId] : "", clientId);
+                    }
                     break;
                 case CustomRPC.SetBomb:
                     __instance.SetBomb(reader.ReadBoolean());
@@ -149,6 +155,9 @@ namespace MoreGamemodes
                 case CustomRPC.SetIsDead:
                     __instance.SetIsDead(reader.ReadBoolean());
                     break;
+                case CustomRPC.SetStandardName:
+                    __instance.SetStandardName(reader.ReadString());
+                    break;
             }
         }
     }
@@ -187,7 +196,8 @@ namespace MoreGamemodes
                     __instance.StartGamemode((Gamemodes)reader.ReadInt32());
                     break;
                 case CustomRPC.AddCustomSettingsChangeMessage:
-                    var optionItem = OptionItem.AllOptions.FirstOrDefault(opt => opt.Id == reader.ReadInt32());
+                    int optionId = reader.ReadInt32();
+                    var optionItem = OptionItem.AllOptions.FirstOrDefault(opt => opt.Id == optionId);
                     if (optionItem == null) break;
                     __instance.AddCustomSettingsChangeMessage(optionItem, reader.ReadString(), reader.ReadBoolean());
                     break;
@@ -455,6 +465,11 @@ namespace MoreGamemodes
             }
         }
 
+        public static void SetStandardName(this PlayerControl player, string name)
+        {
+            Main.StandardNames[player.PlayerId] = name;
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -666,6 +681,15 @@ namespace MoreGamemodes
             player.SetIsDead(isDead);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetIsDead, SendOption.Reliable, -1);
             writer.Write(isDead);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetStandardName(this PlayerControl player, string name, int targetClientId = -1)
+        {
+            if (targetClientId == -1)
+                player.SetStandardName(name);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetStandardName, SendOption.Reliable, targetClientId);
+            writer.Write(name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

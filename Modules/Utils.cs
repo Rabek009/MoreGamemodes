@@ -431,7 +431,7 @@ namespace MoreGamemodes
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
-                new LateTask(() => SetDesyncRoleForPlayer(pc, selfRole, othersRole), 0f);
+                SetDesyncRoleForPlayer(pc, selfRole, othersRole);
         }
 
         public static void SetDesyncRoleForPlayer(PlayerControl player, RoleTypes selfRole, RoleTypes othersRole)
@@ -447,33 +447,58 @@ namespace MoreGamemodes
             }
             if (assignedRoles >= playerCount)
             {
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(-1);
                 RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
-                new LateTask(() => {
-                    Dictionary<byte, bool> Disconnected = new();
-                    foreach (var pc in PlayerControl.AllPlayerControls)
+                Dictionary<byte, bool> Disconnected = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    Disconnected[pc.PlayerId] = pc.Data.Disconnected;
+                    pc.Data.Disconnected = true;
+                    writer.StartMessage(1);
+                    writer.WritePacked(pc.Data.NetId);
+                    pc.Data.Serialize(writer, false);
+                    writer.EndMessage();
+                }
+                sender.EndMessage();
+                if (player.AmOwner)
+                    player.StartCoroutine(player.CoSetRole(selfRole, true));
+                else
+                {
+                    sender.StartMessage(player.GetClientId());
+                    sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                        .Write((ushort)selfRole)
+                        .Write(true)
+                        .EndRpc();
+                    sender.EndMessage();
+                }
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc == player) continue;
+                    if (pc.AmOwner)
+                        player.StartCoroutine(player.CoSetRole(othersRole, true));
+                    else
                     {
-                        Disconnected[pc.PlayerId] = pc.Data.Disconnected;
-                        pc.Data.Disconnected = true;
+                        sender.StartMessage(pc.GetClientId());
+                        sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                            .Write((ushort)othersRole)
+                            .Write(true)
+                            .EndRpc();
+                        sender.EndMessage();
                     }
-                    SendGameData();
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                        pc.Data.Disconnected = Disconnected[pc.PlayerId];
-                }, 0.5f);
-                new LateTask(() => {
-                    player.RpcSetDesyncRoleV2(selfRole, player);
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc == player) continue;
-                        player.RpcSetDesyncRoleV2(othersRole, pc);
-                    }
-                }, 1f);
-                new LateTask(() => {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-						PlayerNameColor.Set(pc);
-					DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
-					DestroyableSingleton<HudManager>.Instance.HideGameLoader();
-                }, 1.2f);
-                new LateTask(() => SendGameData(), 1.5f);
+                }
+                sender.StartMessage(-1);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    pc.Data.Disconnected = Disconnected[pc.PlayerId];
+                    writer.StartMessage(1);
+                    writer.WritePacked(pc.Data.NetId);
+                    pc.Data.Serialize(writer, false);
+                    writer.EndMessage();
+                }
+                sender.EndMessage();
+                sender.SendMessage();
                 return;
             }
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
@@ -617,11 +642,10 @@ namespace MoreGamemodes
         public static bool IsValidHexCode(string hex)
         {
              if (string.IsNullOrWhiteSpace(hex) || (hex.Length != 6 && hex.Length != 3)) return false;
-
              foreach (char c in hex)
              {
-                if (!Uri.IsHexDigit(c)) return false;
-
+                if (!Uri.IsHexDigit(c)) 
+                    return false;
              }
              return true;
         }
@@ -657,7 +681,5 @@ namespace MoreGamemodes
         {
             VentilationSystemDeterioratePatch.SerializeV2(ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>());
         }
-        public static string RemoveHtmlTags(this string str) => System.Text.RegularExpressions.Regex.Replace(str, "<[^>]*?>", string.Empty);
-
     }
 }

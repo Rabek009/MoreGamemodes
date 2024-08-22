@@ -18,6 +18,8 @@ namespace MoreGamemodes
             if (client != null && client.Id == __instance.ClientId)
             {
                 AntiCheat.Init();
+                PlayerTagManager.Initialize();
+                PlayerTagManager.PlayersWithTags.Add(new ModdedPlayerTag(client.FriendCode, "00ff00", "#Host"));
                 return;
             }
             if (client != null && Options.AntiCheat.GetBool() && !Utils.IsValidFriendCode(client.FriendCode) && AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
@@ -70,6 +72,7 @@ namespace MoreGamemodes
             if (!__instance.AmHost)
             {
                 Options.Gamemode.SetValue(0);
+                Main.StandardNames = new Dictionary<byte, string>();
                 new LateTask(() => PlayerControl.LocalPlayer.RpcVersionCheck(Main.CurrentVersion), 2f, "Version Check");
             }     
         }
@@ -106,25 +109,24 @@ namespace MoreGamemodes
         {
             if (__instance.IsGameStarted)
             {
-                new LateTask(() => {
-                    List<byte> winners = new();
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                        winners.Add(pc.PlayerId);
-                    CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
-                }, 0.5f);
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    winners.Add(pc.PlayerId);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
             }
             else
             {
                 AntiCheat.Init();
-                new LateTask(() => {
-                    PlayerControl.LocalPlayer.RpcSendMessage("You are new host! Now this lobby is modded with More Gamemodes v" + Main.CurrentVersion + "!", "Host");
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        if (!pc.AmOwner)
-                            pc.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-                    }
-                    PlayerControl.LocalPlayer.RpcRequestVersionCheck();
-                }, 0.5f);
+                PlayerTagManager.Initialize();
+                PlayerTagManager.PlayersWithTags.Add(new ModdedPlayerTag(PlayerControl.LocalPlayer.GetClient().FriendCode, "00ff00", "#Host"));
+                PlayerControl.LocalPlayer.RpcSendMessage("You are new host! Now this lobby is modded with More Gamemodes v" + Main.CurrentVersion + "!", "Host");
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    pc.RpcSetName(Main.StandardNames[pc.PlayerId]);
+                    if (!pc.AmOwner)
+                        pc.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
+                }
+                PlayerControl.LocalPlayer.RpcRequestVersionCheck();
             }
         }
     }

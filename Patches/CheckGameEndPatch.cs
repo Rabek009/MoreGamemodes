@@ -364,44 +364,42 @@ namespace MoreGamemodes
                 case GameOverReason.HideAndSeek_ByKills: ImpostorWin = true; break;
                 default: ImpostorWin = false; break;
             }
-            new LateTask(() => {
-                foreach (var pc in PlayerControl.AllPlayerControls)
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (winners.Contains(pc.PlayerId))
                 {
-                    if (winners.Contains(pc.PlayerId))
+                    if (ImpostorWin)
+                        SetRole(ToImpostor: true);
+                    else
+                        SetRole(ToImpostor: false);
+                }
+                else
+                {
+                    if (ImpostorWin)
+                        SetRole(ToImpostor: false);
+                    else
+                        SetRole(ToImpostor: true);
+                }
+
+                void SetRole(bool ToImpostor)
+                {
+                    if (ToImpostor)
                     {
-                        if (ImpostorWin)
-                            SetRole(ToImpostor: true);
+                        if (pc.Data.IsDead)
+                            pc.RpcSetRoleV3(RoleTypes.ImpostorGhost, true);
                         else
-                            SetRole(ToImpostor: false);
+                            pc.RpcSetRoleV3(RoleTypes.Impostor, true);
                     }
                     else
                     {
-                        if (ImpostorWin)
-                            SetRole(ToImpostor: false);
+                        if (pc.Data.IsDead)
+                            pc.RpcSetRoleV3(RoleTypes.CrewmateGhost, true);
                         else
-                            SetRole(ToImpostor: true);
-                    }
-
-                    void SetRole(bool ToImpostor)
-                    {
-                        if (ToImpostor)
-                        {
-                            if (pc.Data.IsDead)
-                                pc.RpcSetRoleV3(RoleTypes.ImpostorGhost, true);
-                            else
-                                pc.RpcSetRoleV3(RoleTypes.Impostor, true);
-                        }
-                        else
-                        {
-                            if (pc.Data.IsDead)
-                                pc.RpcSetRoleV3(RoleTypes.CrewmateGhost, true);
-                            else
-                                pc.RpcSetRoleV3(RoleTypes.Crewmate, true);
-                        }
+                            pc.RpcSetRoleV3(RoleTypes.Crewmate, true);
                     }
                 }
-            }, 0.2f);
-            new LateTask(() => GameManager.Instance.RpcEndGame(reason, false), 0.5f, "End Game");
+            }
+            GameManager.Instance.RpcEndGame(reason, false);
         }
     }
 

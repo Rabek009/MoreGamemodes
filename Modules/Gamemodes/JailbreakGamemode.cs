@@ -556,8 +556,10 @@ namespace MoreGamemodes
                     {
                         PlayerHealth[pc.PlayerId] = IsGuard(pc) ? Options.GuardHealth.GetFloat() : Options.PrisonerHealth.GetFloat();
                         pc.RpcSetIsDead(false);
-                        if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3)
-                            pc.MyPhysics.RpcBootFromVent(6);
+                        if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0)
+                            pc.RpcTeleport(new Vector2(-9.0f, -4.0f));
+                        else if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3)
+                            pc.RpcTeleport(new Vector2(9.0f, -4.0f));
                         pc.RpcShapeshift(pc, false);
                         pc.SyncPlayerSettings();
                         RespawnCooldown[pc.PlayerId] = 0f;

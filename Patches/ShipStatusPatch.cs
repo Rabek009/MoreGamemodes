@@ -82,21 +82,6 @@ namespace MoreGamemodes
         }
     }
 
-    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.Begin))]
-    class ShipStatusBeginPatch
-    {
-        public static bool Prefix(ShipStatus __instance)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            if (!HudManager.Instance.IsIntroDisplayed)
-            {
-                new LateTask(() => __instance.Begin(), 2f, "Delayed Task Assign");
-                return false;
-            }
-            return true;
-        }
-    }
-
     [HarmonyPatch(typeof(VentilationSystem), nameof(VentilationSystem.PerformVentOp))]
     class PerformVentOpPatch
     {
