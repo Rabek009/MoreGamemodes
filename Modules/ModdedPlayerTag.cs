@@ -50,7 +50,7 @@ namespace MoreGamemodes
             PlayersWithTags.Add(new(friendCode: "wallstate#7631",  preferredColor: "ff0000",  tag: "#Dev",    isDeveloper: true));
             PlayersWithTags.Add(new(friendCode: "motorstack#2287", preferredColor: "e2bd51",  tag: "#Tester", isDeveloper: false));
             PlayersWithTags.Add(new(friendCode: "leadenjoke#3670", preferredColor: "00ff00",  tag: "#Tester", isDeveloper: false));
-            PlayersWithTags.Add(new(friendCode: "cannylinke#0564", preferredColor: "#ffffff", tag: "#Tester", isDeveloper: false));
+            PlayersWithTags.Add(new(friendCode: "cannylinke#0564", preferredColor: "ffffff", tag: "#Tester", isDeveloper: false));
             PlayersWithTags.Add(new(friendCode: "stiltedgap#2406", preferredColor:  "ffc0cb", tag:"#YT",      isDeveloper:false));
         }
 
