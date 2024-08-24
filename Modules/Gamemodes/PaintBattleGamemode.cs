@@ -95,7 +95,7 @@ namespace MoreGamemodes
         public override void OnIntroDestroy()
         {
             PaintTime = Options.PaintingTime.GetInt();
-            GameManager.Instance.SetPaintActive(true);
+            GameManager.Instance.RpcSetPaintActive(true);
             RoleManager.Instance.SetRole(PlayerControl.LocalPlayer, RoleTypes.Impostor);
             foreach (var pc in PlayerControl.AllPlayerControls)
                 pc.RpcTeleport(GetPaintBattleLocation(pc));

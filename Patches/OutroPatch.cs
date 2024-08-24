@@ -224,7 +224,6 @@ namespace MoreGamemodes
             Main.PlayerKills = new Dictionary<byte, int>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
-            VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
             AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {

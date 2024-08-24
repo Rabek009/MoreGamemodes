@@ -74,6 +74,7 @@ namespace MoreGamemodes
                 case RpcCalls.SendChat:
                     var text = subReader.ReadString();
                     if (!SendChatPatch.OnReceiveChat(__instance, text)) return false;
+                    if (text[0] == '/' && Main.IsModded[__instance.PlayerId]) return false;
                     break;
                 case RpcCalls.UsePlatform:
                     if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive) return false;

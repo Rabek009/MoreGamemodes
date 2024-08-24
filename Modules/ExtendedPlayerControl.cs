@@ -406,8 +406,6 @@ namespace MoreGamemodes
                 return;
             }
             player.RpcSetRoleV2(Main.StandardRoles[player.PlayerId]);
-            player.RpcSetKillTimer(10f);
-            player.RpcResetAbilityCooldown();
             foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
             {
                 if (deadBody.ParentId == player.PlayerId)

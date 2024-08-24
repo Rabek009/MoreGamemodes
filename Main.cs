@@ -52,7 +52,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, uint> RoleFakePlayer;
     public static Dictionary<byte, int> PlayerKills;
 
-    public const string CurrentVersion = "2.0.0 beta6.3";
+    public const string CurrentVersion = "2.0.0 beta6.4";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -120,7 +120,6 @@ public partial class Main : BasePlugin
         ChatUpdatePatch.SendingSystemMessage = false;
         CreateOptionsPickerPatch.SetDleks = false;
         CoEnterVentPatch.PlayersToKick = new List<byte>();
-        VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
         AntiBlackout.Reset();
         PlayerTagManager.Initialize();
 
@@ -191,7 +190,6 @@ public partial class Main : BasePlugin
                 ChatUpdatePatch.SendingSystemMessage = false;
                 CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
                 CoEnterVentPatch.PlayersToKick = new List<byte>();
-                VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
                 AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)

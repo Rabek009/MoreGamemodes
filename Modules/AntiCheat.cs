@@ -193,8 +193,7 @@ namespace MoreGamemodes
 			        MurderResultFlags resultFlags = (MurderResultFlags)sr.ReadInt32();
                     if (!resultFlags.HasFlag(MurderResultFlags.FailedError) && !resultFlags.HasFlag(MurderResultFlags.FailedProtected) && target != null)
                     {
-                        PlayerControl.LocalPlayer.RpcRemoveDeadBody(target.Data);
-                        target.Data.MarkDirty();
+                        new LateTask(() => target.RpcRevive(), 0.1f);
                     }
                     HandleCheat(pc, "Invalid Rpc");
                     return true;
