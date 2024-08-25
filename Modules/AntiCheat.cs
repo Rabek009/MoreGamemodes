@@ -517,11 +517,6 @@ namespace MoreGamemodes
                         HandleCheat(physics.myPlayer, "Petting in vent");
                         return true;
                     }
-                    if (!physics.myPlayer.cosmetics.HasPetEquipped())
-                    {
-                        HandleCheat(physics.myPlayer, "Petting without pet");
-                        return true;
-                    }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
                     {
                         HandleCheat(physics.myPlayer, "Petting during meeting");

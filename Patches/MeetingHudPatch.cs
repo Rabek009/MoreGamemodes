@@ -48,6 +48,8 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return;
             if (Options.EnableMidGameChat.GetBool())
                 new LateTask(() => Utils.SetChatVisible(), 8f, "Set Chat Visible");
+            foreach (var netObject in CustomNetObject.CustomObjects)
+                netObject.RpcTeleport(netObject.Position);
             CustomGamemode.Instance.OnVotingComplete(__instance, states, exiled, tie);
         }
     }

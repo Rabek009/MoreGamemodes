@@ -105,11 +105,11 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
     class MurderPlayerPatch
     {
-        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
+        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] MurderResultFlags resultFlags)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             PlayerControl killer = __instance;
-            if (!target.Data.IsDead) return;
+            if (resultFlags != MurderResultFlags.Succeeded) return;
 
             if (target.GetDeathReason() == DeathReasons.Alive)
                 target.RpcSetDeathReason(DeathReasons.Killed);
@@ -194,7 +194,10 @@ namespace MoreGamemodes
                     pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true), ar, true);  
             }
             foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
-                new LateTask(() => netObject.Despawn(), 0f);
+            {
+                if (netObject.DespawnOnMeeting)
+                    new LateTask(() => netObject.Despawn(), 0f);
+            }
             AntiCheat.OnMeeting();
             return true;
         }
@@ -222,6 +225,7 @@ namespace MoreGamemodes
             if (Main.GameStarted)
             {
                 CustomGamemode.Instance.OnFixedUpdate();
+                ExplosionHole.FixedUpdate();
                 foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
                     netObject.OnFixedUpdate();
             }

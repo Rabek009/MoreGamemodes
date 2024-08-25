@@ -186,8 +186,7 @@ namespace MoreGamemodes
                     {
                         pc.RpcSetDeathReason(DeathReasons.Bombed);
                         pc.RpcMurderPlayer(pc, true);
-                        if (Options.BtShowExplosionAnimation.GetBool())
-                            Utils.RpcCreateExplosion(3f, 1f, pc.transform.position);
+                        Utils.RpcCreateExplosion(3f, 1f, Options.BtExplosionCreatesHole.GetBool(), Options.BtHoleSpeedDecrease.GetInt(), pc.transform.position);
                     }
                 }
                 Main.Timer = 0f;

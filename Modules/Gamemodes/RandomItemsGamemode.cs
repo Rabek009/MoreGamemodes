@@ -290,8 +290,7 @@ namespace MoreGamemodes
                         }
                         pc.RpcSetDeathReason(DeathReasons.Suicide);
                         pc.RpcMurderPlayer(pc, true);
-                        if (Options.RiShowExplosionAnimation.GetBool())
-                            Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, pc.transform.position);
+                        Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, Options.RiExplosionCreatesHole.GetBool(), Options.RiHoleSpeedDecrease.GetInt(), pc.transform.position);
                         pc.RpcSetItem(Items.None);
                         if (Options.NoGameEnd.GetBool()) break;
                         var isSomeoneAlive = false;

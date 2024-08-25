@@ -90,7 +90,8 @@ namespace MoreGamemodes
         public static OptionItem TeleportAfterExplosion;
         public static OptionItem ExplosionDelay;
         public static OptionItem ArrowToNearestNonBombed;
-        public static OptionItem BtShowExplosionAnimation;
+        public static OptionItem BtExplosionCreatesHole;
+        public static OptionItem BtHoleSpeedDecrease;
         public static OptionItem BombAssigment;
         public static OptionItem PlayersWithBomb;
         public static OptionItem MaxPlayersWithBomb;
@@ -147,7 +148,8 @@ namespace MoreGamemodes
         public static OptionItem EnableBomb;
         public static OptionItem BombRadius;
         public static OptionItem CanKillImpostors;
-        public static OptionItem RiShowExplosionAnimation;
+        public static OptionItem RiExplosionCreatesHole;
+        public static OptionItem RiHoleSpeedDecrease;
         public static OptionItem Trap;
         public static OptionItem EnableTrap;
         public static OptionItem TrapWaitTime;
@@ -410,8 +412,12 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             ArrowToNearestNonBombed = BooleanOptionItem.Create(3003, "Arrow to nearest non bombed", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BombTag);
-            BtShowExplosionAnimation = BooleanOptionItem.Create(3004, "Show explosion animation", true, TabGroup.GamemodeSettings, false)
+            BtExplosionCreatesHole = BooleanOptionItem.Create(3004, "Explosion creates hole", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BombTag);
+            BtHoleSpeedDecrease = IntegerOptionItem.Create(3005, "Hole speed decrease", new(0, 95, 5), 0, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.BombTag)
+                .SetValueFormat(OptionFormat.Percent)
+                .SetParent(BtExplosionCreatesHole);
             BombAssigment = TextOptionItem.Create(3010, "Bomb assigment", TabGroup.GamemodeSettings)
                 .SetGamemode(Gamemodes.BombTag)
                 .SetColor(Color.gray);
@@ -565,9 +571,13 @@ namespace MoreGamemodes
             CanKillImpostors = BooleanOptionItem.Create(5053, "Can kill impostors", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetParent(EnableBomb);
-            RiShowExplosionAnimation = BooleanOptionItem.Create(5054, "Show explosion animation", true, TabGroup.GamemodeSettings, false)
+            RiExplosionCreatesHole = BooleanOptionItem.Create(5054, "Explosion creates hole", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetParent(EnableBomb);
+            RiHoleSpeedDecrease = IntegerOptionItem.Create(5055, "Hole speed decrease", new(0, 95, 5), 0, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.RandomItems)
+                .SetValueFormat(OptionFormat.Percent)
+                .SetParent(RiExplosionCreatesHole);
             Trap = TextOptionItem.Create(5060, "Trap", TabGroup.GamemodeSettings)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetColor(Color.red);
@@ -927,10 +937,10 @@ namespace MoreGamemodes
             Levels = TextOptionItem.Create(14030, "Levels", TabGroup.GamemodeSettings)
                 .SetGamemode(Gamemodes.BaseWars)
                 .SetColor(Color.blue);
-            ExpGainInMiddle = IntegerOptionItem.Create(14031, "Exp gain in middle", new(1, 25, 1), 5, TabGroup.GamemodeSettings, false)
+            ExpGainInMiddle = IntegerOptionItem.Create(14031, "Exp gain in middle", new(1, 50, 1), 15, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BaseWars)
                 .SetValueFormat(OptionFormat.ExperiencePerSecond);
-            ExpForKill = IntegerOptionItem.Create(14032, "Exp for kill", new(5, 100, 5), 30, TabGroup.GamemodeSettings, false)
+            ExpForKill = IntegerOptionItem.Create(14032, "Exp for kill", new(5, 250, 5), 90, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BaseWars)
                 .SetValueFormat(OptionFormat.Experience);
             HealthIncrease = FloatOptionItem.Create(14033, "Health increase", new(1f, 50f, 1f), 10f, TabGroup.GamemodeSettings, false)

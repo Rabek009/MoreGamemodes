@@ -258,6 +258,8 @@ namespace MoreGamemodes
         {
             IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV08(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
             opt = CustomGamemode.Instance.BuildGameOptions(player, opt);
+            if (ExplosionHole.LastSpeedDecrease[player.PlayerId] > 0)
+                opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * ((100f - ExplosionHole.LastSpeedDecrease[player.PlayerId]) / 100f));
             if (opt.GetByte(ByteOptionNames.MapId) == 3)
                 opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
@@ -495,14 +497,15 @@ namespace MoreGamemodes
                 player.RawSetOutfit(player.Data.Outfits[PlayerOutfitType.Default], PlayerOutfitType.Shapeshifted);
                 return;
             }
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Shapeshift, SendOption.Reliable, player.GetClientId());
+		    writer.WriteNetObject(PlayerControl.LocalPlayer);
+		    writer.Write(false);
+		    AmongUsClient.Instance.FinishRpcImmediately(writer);
             new LateTask(() => {
+                player.RpcSetNamePrivate(player.BuildPlayerName(player, false), player, true);
                 var outfit = player.Data.Outfits[PlayerOutfitType.Default];
                 var sender = CustomRpcSender.Create("Set Unshift Button", SendOption.None);
                 sender.StartMessage(player.GetClientId());
-                sender.StartRpc(player.NetId, RpcCalls.Shapeshift)
-                    .WriteNetObject(PlayerControl.LocalPlayer)
-                    .Write(false)
-                    .EndRpc();
                 sender.StartRpc(player.NetId, RpcCalls.SetColor)
                     .Write(player.Data.NetId)
                     .Write((byte)outfit.ColorId)
@@ -525,8 +528,7 @@ namespace MoreGamemodes
                     .EndRpc();
                 sender.EndMessage();
                 sender.SendMessage();
-            }, 0f);
-            new LateTask(() => player.RpcSetNamePrivate(player.BuildPlayerName(player, false), player, true), 0.2f);
+            }, 0.2f);
         }
 
         public static void RpcDesyncUpdateSystem(this PlayerControl target, SystemTypes systemType, int amount)

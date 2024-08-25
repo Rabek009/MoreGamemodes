@@ -400,9 +400,10 @@ namespace MoreGamemodes
             return sprite;
         }
 
-        public static Explosion RpcCreateExplosion(float size, float duration, Vector2 position)
+        public static Explosion RpcCreateExplosion(float size, float duration, bool createHole, int holeSpeedDecrease, Vector2 position)
         {
-            return new Explosion(size, duration, position);
+            if (!createHole) holeSpeedDecrease = 0;
+            return new Explosion(size, duration, createHole, holeSpeedDecrease, position);
         }
 
         public static TrapArea RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
@@ -426,6 +427,11 @@ namespace MoreGamemodes
         public static Display RpcCreateDisplay(string text, Vector2 position)
         {
             return new Display(text, position);
+        }
+
+        public static ExplosionHole RpcCreateExplosionHole(float size, int speedDecrease, Vector2 position)
+        {
+            return new ExplosionHole(size, speedDecrease, position);
         }
 
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)

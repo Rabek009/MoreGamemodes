@@ -8,7 +8,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CoStartGame))]
     class CoStartGamePatch
     {
-        public static void Prefix(AmongUsClient __instance)
+        public static void Postfix(AmongUsClient __instance)
         {
             if (!__instance.AmHost)
             {
@@ -35,10 +35,14 @@ namespace MoreGamemodes
             Main.PlayerKills = new Dictionary<byte, int>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
+            VentilationSystemDeterioratePatch.LastClosestVents = new Dictionary<byte, List<int>>();
+            ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
             AntiBlackout.Reset();
             PlayerTagManager.ResetPlayerTags();
+            Main.StandardNames = new Dictionary<byte, string>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
+                Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
                 Main.StandardColors[pc.PlayerId] = (byte)pc.Data.DefaultOutfit.ColorId;
                 Main.StandardHats[pc.PlayerId] = pc.Data.DefaultOutfit.HatId;
                 Main.StandardSkins[pc.PlayerId] = pc.Data.DefaultOutfit.SkinId;
@@ -53,6 +57,7 @@ namespace MoreGamemodes
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
                 Main.RoleFakePlayer[pc.PlayerId] = pc.NetId;
                 Main.PlayerKills[pc.PlayerId] = 0;
+                ExplosionHole.LastSpeedDecrease[pc.PlayerId] = 0;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     Main.LastNotifyNames[(pc.PlayerId, ar.PlayerId)] = Main.StandardNames[pc.PlayerId];
@@ -119,6 +124,10 @@ namespace MoreGamemodes
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
+                List<int> vents = new();
+                foreach (var vent in pc.GetVentsFromClosest())
+                    vents.Add(vent.Id);
+                VentilationSystemDeterioratePatch.LastClosestVents[pc.PlayerId] = vents;
                 if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
                 {
                     Utils.SetAllVentInteractions();

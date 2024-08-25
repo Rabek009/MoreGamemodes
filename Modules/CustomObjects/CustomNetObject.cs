@@ -95,6 +95,7 @@ namespace MoreGamemodes
                 playerControl.PlayerId = 255;
                 playerControl.isNew = false;
                 playerControl.notRealPlayer = true;
+                playerControl.NetTransform.SnapTo(Position);
                 AmongUsClient.Instance.NetIdCnt += 1U;
                 MessageWriter msg = MessageWriter.Get(SendOption.None);
 			    msg.StartMessage(5);
@@ -122,7 +123,6 @@ namespace MoreGamemodes
                 if (PlayerControl.AllPlayerControls.Contains(playerControl))
                     PlayerControl.AllPlayerControls.Remove(playerControl);
                 new LateTask(() => {
-                    playerControl.NetTransform.RpcSnapTo(Position);
                     playerControl.RawSetName(Sprite);
                     var name = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].PlayerName;
                     var colorId = PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default].ColorId;
@@ -331,6 +331,7 @@ namespace MoreGamemodes
         public Vector2 Position;
         public float PlayerControlTimer;
         public CustomObjectTypes Type;
+        public bool DespawnOnMeeting => Type is CustomObjectTypes.TrapArea;
     }
 
     public enum CustomObjectTypes
@@ -340,5 +341,6 @@ namespace MoreGamemodes
         Turret,
         Base,
         Display,
+        ExplosionHole,
     }
 }
