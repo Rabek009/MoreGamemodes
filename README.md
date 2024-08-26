@@ -3,7 +3,7 @@
 ## About the mod
 
 More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
-Among Us version: 2024.3.6<br>
+Among Us version: 2024.8.13<br>
 Join to discord server: https://discord.gg/jJe5kPpbFJ
 
 ## Hotkeys
@@ -33,6 +33,7 @@ Join to discord server: https://discord.gg/jJe5kPpbFJ
 | /kick PLAYER_ID                                 | Kick player from lobby           |
 | /ban PLAYER_ID                                  | Ban player from lobby            |
 | /announce MESSAGE<br>/ac MESSAGE                | Send message even if you're dead |
+| /hostcolor COLOR_HEX                            | Changes color of host tag        |
 
 ### All clients
 | Command                                         | Function                                                |
@@ -52,6 +53,7 @@ Join to discord server: https://discord.gg/jJe5kPpbFJ
 | /h j, /h jailbreak<br>/help j, /help jailbreak  | Show how to play jailbreak gamemode on map              |
 | /tpout                                          | Teleports you outside lobby ship                        |
 | /tpin                                           | Teleports you into lobby ship                           |
+| /tagcolor COLOR_HEX                             | Changes color of your tag (not host tag)                |
 
 ## Game options
 | Name                   |
@@ -72,7 +74,6 @@ Impostors need to kill every single crewmate, crewmate need to do every task. No
 #### Game options
 | Name                            |
 | ------------------------------- |
-| Teleport on start               |
 | Impostors blind time            |
 | Impostors can kill during blind |
 | Impostors can vent              |
@@ -85,7 +86,6 @@ Everyone is engineer or shapeshifter. Impostors need to kill every single crewma
 #### Game options
 | Name                            |
 | ------------------------------- |
-| Teleport on start               |
 | Impostors blind time            |
 | Impostors can kill during blind |
 | Impostors can vent              |
@@ -105,7 +105,8 @@ Everyone is impostor. Rounds last for some seconds. After every round players wi
 | Players with bomb           |
 | Max players with bomb       |
 | Arrow to nearest non bombed |
-| Show explosion animation    |
+| Explosion creates hole      |
+| Hole speed decrease         |
 
 ### Random items
 Crewmates get items by doing tasks, impostors by killing. Items are given randomly. Pet your pet to use item. Some items (knowledge, gun,illusion, finder and rope) works on nearest player. Other rules are just like in classic game. Random items works with special roles.
@@ -238,12 +239,13 @@ Teleports everyone to you. Only impostors can get this item.
 You sacrifice yourself in order to kill everyone nearby. Only impostors can get this item.
 
 ###### Game Options
-| Name                     |
-| ------------------------ |
-| Enable bomb              |
-| Bomb radius              |
-| Can kill impostors       |
-| Show explosion animation |
+| Name                   |
+| ---------------------- |
+| Enable bomb            |
+| Bomb radius            |
+| Can kill impostors     |
+| Explosion creates hole |
+| Hole speed decrease    |
 
 ##### Trap
 Place trap that kills first player touches it. Trap is completely invisible and works after few seconds from placing. Only impostors can get this item.
@@ -468,6 +470,20 @@ Players are divided into two teams, Red and Blue, with the objective of destroyi
 | Health increase         |
 | Damage increase         |
 | Smaller team gets level |
+
+### Freeze tag
+Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.
+
+#### Game options
+| Name                                 |
+| ------------------------------------ |
+| Impostors blind time                 |
+| Impostors can freeze during blind    |
+| Impostors can vent                   |
+| Impostors can close doors            |
+| Unfreeze duration                    |
+| Unfreeze radius                      |
+| Task complete duration during freeze |
 
 ### Additional gamemodes
 Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.

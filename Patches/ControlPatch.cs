@@ -27,7 +27,7 @@ namespace MoreGamemodes
             }
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead &&
-                !(CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.Speedrun or Gamemodes.Jailbreak or Gamemodes.BaseWars))
+                !(CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.Speedrun or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.FreezeTag))
             {
                 PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Command);
                 PlayerControl.LocalPlayer.RpcExileV2();

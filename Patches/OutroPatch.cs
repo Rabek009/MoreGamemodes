@@ -84,8 +84,12 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Color.blue, "★" + Main.StandardNames[playerInfo.PlayerId]) + " - (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
+                    case Gamemodes.FreezeTag:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], CustomGamemode.Instance.Gamemode));
+                        break;
                 }
-                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies)
+                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies or Gamemodes.FreezeTag)
                 {
                     if (!Main.StandardRoles[playerInfo.PlayerId].IsImpostor())
                     {
@@ -160,8 +164,12 @@ namespace MoreGamemodes
                             lastResult += Utils.ColorString(Color.blue, Main.StandardNames[playerInfo.PlayerId]) + " - (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
+                    case Gamemodes.FreezeTag:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], CustomGamemode.Instance.Gamemode));
+                        break;
                 }
-                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies)
+                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies or Gamemodes.FreezeTag)
                 {
                     if (!Main.StandardRoles[playerInfo.PlayerId].IsImpostor())
                     {
@@ -203,6 +211,8 @@ namespace MoreGamemodes
             ZombiesGamemode.instance = null;
             JailbreakGamemode.instance = null;
             DeathrunGamemode.instance = null;
+            BaseWarsGamemode.instance = null;
+            FreezeTagGamemode.instance = null;
             
             if (!AmongUsClient.Instance.AmHost) return;
             Main.AllShapeshifts = new Dictionary<byte, byte>();  

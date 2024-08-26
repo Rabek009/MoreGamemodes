@@ -361,7 +361,7 @@ namespace MoreGamemodes
                 Dictionary<byte, bool> Disconnected = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    Disconnected[pc.PlayerId] = pc.Data.Disconnected;
+                    Disconnected[pc.Data.PlayerId] = pc.Data.Disconnected;
                     pc.Data.Disconnected = true;
                     writer.StartMessage(1);
                     writer.WritePacked(pc.Data.NetId);
@@ -375,7 +375,7 @@ namespace MoreGamemodes
                     .EndRpc();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    pc.Data.Disconnected = Disconnected[pc.PlayerId];
+                    pc.Data.Disconnected = Disconnected[pc.Data.PlayerId];
                     writer.StartMessage(1);
                     writer.WritePacked(pc.Data.NetId);
                     pc.Data.Serialize(writer, false);

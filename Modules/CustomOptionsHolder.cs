@@ -32,7 +32,7 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak", "Deathrun", "Base Wars"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak", "Deathrun", "Base Wars", "Freeze Tag"
         };
 
         public static readonly string[] speedrunBodyTypes =
@@ -297,6 +297,17 @@ namespace MoreGamemodes
         public static OptionItem HealthIncrease;
         public static OptionItem DamageIncrease;
         public static OptionItem SmallerTeamGetsLevel;
+
+        //Freeze tag
+        public static OptionItem Taggers;
+        public static OptionItem FtImpostorsBlindTime;
+        public static OptionItem ImpostorsCanFreezeDuringBlind;
+        public static OptionItem FtImpostorsCanVent;
+        public static OptionItem FtImpostorsCanCloseDoors;
+        public static OptionItem Runners;
+        public static OptionItem UnfreezeDuration;
+        public static OptionItem UnfreezeRadius;
+        public static OptionItem TaskCompleteTimeDuringFreeze;
         
         //Additional gamemodes
         public static OptionItem RandomSpawn;
@@ -951,6 +962,32 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.PerLevel);
             SmallerTeamGetsLevel = BooleanOptionItem.Create(14035, "Smaller team gets level", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BaseWars);
+            
+            //Freeze tag
+            Taggers = TextOptionItem.Create(15000, "Taggers", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.FreezeTag)
+                .SetColor(Color.red);
+            FtImpostorsBlindTime = FloatOptionItem.Create(15001, "Impostors blind time", new(0f, 30f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag)
+                .SetValueFormat(OptionFormat.Seconds);
+            ImpostorsCanFreezeDuringBlind = BooleanOptionItem.Create(15002, "Impostors can freeze during blind", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag);
+            FtImpostorsCanVent = BooleanOptionItem.Create(15003, "Impostors can vent", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag);
+            FtImpostorsCanCloseDoors = BooleanOptionItem.Create(15004, "Impostors can close doors", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag);
+            Runners = TextOptionItem.Create(15010, "Runners", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.FreezeTag)
+                .SetColor(Color.green);
+            UnfreezeDuration = FloatOptionItem.Create(15011, "Unfreeze duration", new(1f, 10f, 0.25f), 3f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag)
+                .SetValueFormat(OptionFormat.Seconds);
+            UnfreezeRadius = FloatOptionItem.Create(15012, "Unfreeze radius", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag)
+                .SetValueFormat(OptionFormat.Multiplier);
+            TaskCompleteTimeDuringFreeze = FloatOptionItem.Create(15013, "Task complete duration during freeze", new(5f, 180f, 2.5f), 60f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag)
+                .SetValueFormat(OptionFormat.Seconds);
             
             //Additional gamemodes
             RandomSpawn = TextOptionItem.Create(100000, "Random spawn", TabGroup.AdditionalGamemodes)

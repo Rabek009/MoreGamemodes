@@ -336,6 +336,7 @@ namespace MoreGamemodes
         public static string RoleToString(RoleTypes role, Gamemodes gamemode = Gamemodes.Classic)
         {
             if (role == RoleTypes.Crewmate && gamemode == Gamemodes.HideAndSeek) return "Hider";
+            if (role == RoleTypes.Crewmate && gamemode == Gamemodes.FreezeTag) return "Runner";
             if (role == RoleTypes.Crewmate) return "Crewmate";
             if (role == RoleTypes.Scientist) return "Scientist";
             if (role == RoleTypes.Engineer && gamemode == Gamemodes.ShiftAndSeek) return "Hider";
@@ -344,6 +345,7 @@ namespace MoreGamemodes
             if (role == RoleTypes.CrewmateGhost && (gamemode == Gamemodes.HideAndSeek || gamemode == Gamemodes.ShiftAndSeek)) return "Hider Ghost";
             if (role == RoleTypes.CrewmateGhost) return "Crewmate Ghost";
             if (role == RoleTypes.Impostor && gamemode == Gamemodes.HideAndSeek) return "Seeker";
+            if (role == RoleTypes.Impostor && gamemode == Gamemodes.FreezeTag) return "Tagger";
             if (role == RoleTypes.Impostor) return "Impostor";
             if (role == RoleTypes.Shapeshifter && gamemode == Gamemodes.ShiftAndSeek) return "Shifter";
             if (role == RoleTypes.Shapeshifter) return "Shapeshifter";
@@ -453,58 +455,50 @@ namespace MoreGamemodes
             }
             if (assignedRoles >= playerCount)
             {
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
-                MessageWriter writer = sender.stream;
-                sender.StartMessage(-1);
-                RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
-                Dictionary<byte, bool> Disconnected = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    Disconnected[pc.PlayerId] = pc.Data.Disconnected;
-                    pc.Data.Disconnected = true;
-                    writer.StartMessage(1);
-                    writer.WritePacked(pc.Data.NetId);
-                    pc.Data.Serialize(writer, false);
-                    writer.EndMessage();
-                }
-                sender.EndMessage();
-                if (player.AmOwner)
-                    player.StartCoroutine(player.CoSetRole(selfRole, true));
-                else
-                {
-                    sender.StartMessage(player.GetClientId());
+                    if (pc.AmOwner)
+                    {
+                        Dictionary<byte, bool> Disconnected = new();
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                        {
+                            Disconnected[ar.PlayerId] = ar.Data.Disconnected;
+                            ar.Data.Disconnected = true;
+                        }
+                        player.StartCoroutine(player.CoSetRole(pc == player ? selfRole : othersRole, true));
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            ar.Data.Disconnected = Disconnected[ar.PlayerId];
+                        continue;
+                    }
+                    CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+                    MessageWriter writer = sender.stream;
+                    sender.StartMessage(pc.GetClientId());
+                    RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
+                    Dictionary<byte, bool> Disconnected2 = new();
+                    foreach (var ar in PlayerControl.AllPlayerControls)
+                    {   
+                        Disconnected2[ar.PlayerId] = ar.Data.Disconnected;
+                        ar.Data.Disconnected = true;
+                        writer.StartMessage(1);
+                        writer.WritePacked(ar.Data.NetId);
+                        ar.Data.Serialize(writer, false);
+                        writer.EndMessage();
+                    }
                     sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
-                        .Write((ushort)selfRole)
+                        .Write((ushort)(pc == player ? selfRole : othersRole))
                         .Write(true)
                         .EndRpc();
-                    sender.EndMessage();
-                }
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (pc == player) continue;
-                    if (pc.AmOwner)
-                        player.StartCoroutine(player.CoSetRole(othersRole, true));
-                    else
+                    foreach (var ar in PlayerControl.AllPlayerControls)
                     {
-                        sender.StartMessage(pc.GetClientId());
-                        sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
-                            .Write((ushort)othersRole)
-                            .Write(true)
-                            .EndRpc();
-                        sender.EndMessage();
+                        ar.Data.Disconnected = Disconnected2[ar.PlayerId];
+                        writer.StartMessage(1);
+                        writer.WritePacked(pc.Data.NetId);
+                        ar.Data.Serialize(writer, false);
+                        writer.EndMessage();
                     }
+                    sender.EndMessage();
+                    sender.SendMessage();
                 }
-                sender.StartMessage(-1);
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    pc.Data.Disconnected = Disconnected[pc.PlayerId];
-                    writer.StartMessage(1);
-                    writer.WritePacked(pc.Data.NetId);
-                    pc.Data.Serialize(writer, false);
-                    writer.EndMessage();
-                }
-                sender.EndMessage();
-                sender.SendMessage();
                 return;
             }
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;

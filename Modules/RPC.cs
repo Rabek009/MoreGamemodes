@@ -36,7 +36,9 @@ namespace MoreGamemodes
         DestroyTurret,
         SetCanTeleport,
         SetIsDead,
-        SetStandardName
+        SetStandardName,
+        SetFrozen,
+        SendNoisemakerAlert,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -158,6 +160,12 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.SetStandardName:
                     __instance.SetStandardName(reader.ReadString());
+                    break;
+                case CustomRPC.SetFrozen:
+                    __instance.SetFrozen(reader.ReadBoolean());
+                    break;
+                case CustomRPC.SendNoisemakerAlert:
+                    __instance.SendNoisemakerAlert();
                     break;
             }
         }
@@ -347,6 +355,8 @@ namespace MoreGamemodes
             ZombiesGamemode.instance = null;
             JailbreakGamemode.instance = null;
             DeathrunGamemode.instance = null;
+            BaseWarsGamemode.instance = null;
+            FreezeTagGamemode.instance = null;
             switch (gamemode)
             {
                 case Gamemodes.Classic:
@@ -400,6 +410,10 @@ namespace MoreGamemodes
                 case Gamemodes.BaseWars:
                     BaseWarsGamemode.instance = new BaseWarsGamemode();
                     CustomGamemode.Instance = BaseWarsGamemode.instance;
+                    break;
+                case Gamemodes.FreezeTag:
+                    FreezeTagGamemode.instance = new FreezeTagGamemode();
+                    CustomGamemode.Instance = FreezeTagGamemode.instance;
                     break;
             }
         }
@@ -469,6 +483,18 @@ namespace MoreGamemodes
         public static void SetStandardName(this PlayerControl player, string name)
         {
             Main.StandardNames[player.PlayerId] = name;
+        }
+
+        public static void SetFrozen(this PlayerControl player, bool frozen)
+        {
+            if (FreezeTagGamemode.instance == null) return;
+            FreezeTagGamemode.instance.PlayerIsFrozen[player.PlayerId] = frozen;
+        }
+
+        public static void SendNoisemakerAlert(this PlayerControl player)
+        {
+            if (player.Data.Role.Role != RoleTypes.Noisemaker) return;
+            player.Data.Role.OnDeath(DeathReason.Kill);
         }
 
         public static void RpcVersionCheck(this PlayerControl player, string version)
@@ -691,6 +717,21 @@ namespace MoreGamemodes
                 player.SetStandardName(name);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetStandardName, SendOption.Reliable, targetClientId);
             writer.Write(name);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetFrozen(this PlayerControl player, bool frozen)
+        {
+            player.SetFrozen(frozen);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetFrozen, SendOption.Reliable, -1);
+            writer.Write(frozen);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSendNoisemakerAlert(this PlayerControl player)
+        {
+            player.SendNoisemakerAlert();
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SendNoisemakerAlert, SendOption.Reliable, -1);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

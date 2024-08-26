@@ -52,7 +52,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, uint> RoleFakePlayer;
     public static Dictionary<byte, int> PlayerKills;
 
-    public const string CurrentVersion = "2.0.0 beta6.4";
+    public const string CurrentVersion = "2.0.0 beta6.5";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -83,6 +83,8 @@ public partial class Main : BasePlugin
         ZombiesGamemode.instance = null;
         JailbreakGamemode.instance = null;
         DeathrunGamemode.instance = null;
+        BaseWarsGamemode.instance = null;
+        FreezeTagGamemode.instance = null;
 
         GameStarted = false;
         Timer = 0f;
@@ -162,6 +164,8 @@ public partial class Main : BasePlugin
                 ZombiesGamemode.instance = null;
                 JailbreakGamemode.instance = null;
                 DeathrunGamemode.instance = null;
+                BaseWarsGamemode.instance = null;
+                FreezeTagGamemode.instance = null;
 
                 Timer = 0f;
                 StandardColors = new Dictionary<byte, byte>();
@@ -229,6 +233,7 @@ public enum Gamemodes
     Jailbreak,
     Deathrun,
     BaseWars,
+    FreezeTag,
     All = int.MaxValue,
 }
 

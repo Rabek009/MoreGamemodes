@@ -77,6 +77,13 @@ namespace MoreGamemodes
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForBaseWars()) return false;
             }
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag)
+            {
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForFreezeTag()) return false;
+                if (CheckAndEndGameForTaskWin()) return false;
+                if (CheckAndEndGameForCrewmateWin()) return false;
+            }
             return false;
         }
 
@@ -345,6 +352,28 @@ namespace MoreGamemodes
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.HumansDisconnect, winners);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForFreezeTag()
+        {
+            bool crewmateRemain = false;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (!pc.Data.Role.IsImpostor && !FreezeTagGamemode.instance.IsFrozen(pc))
+                    crewmateRemain = true;
+            }
+            if (!crewmateRemain)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data.Role.IsImpostor)
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.ImpostorByKill, winners);
                 return true;
             }
             return false;

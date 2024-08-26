@@ -51,7 +51,7 @@ namespace MoreGamemodes
                     __instance.freeChatField.textArea.SetText("");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun) && !PlayerControl.LocalPlayer.Data.IsDead)
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !PlayerControl.LocalPlayer.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -641,6 +641,14 @@ namespace MoreGamemodes
                             Options.Gamemode.SetValue(11);
                             PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is deathrun", "ModesChanger");
                             break;
+                        case "basewars":
+                            Options.Gamemode.SetValue(12);
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is base wars", "ModesChanger");
+                            break;
+                        case "freezetag":
+                            Options.Gamemode.SetValue(13);
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is freeze tag", "ModesChanger");
+                            break;
                         default:
                             PlayerControl.LocalPlayer.RpcSendMessage("Invalid gamemode. Please provide existing gamemode.\nUsage: /gamemode hideandseek", "Warning");
                             break;
@@ -800,6 +808,9 @@ namespace MoreGamemodes
                                 case "basewars":
                                     Utils.SendChat("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
                                     break;
+                                case "freezetag":
+                                    Utils.SendChat("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
+                                    break;
                                 case "randomspawn":
                                     Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
                                     break;
@@ -857,6 +868,9 @@ namespace MoreGamemodes
                                             break;
                                         case Gamemodes.BaseWars:
                                             Utils.SendChat("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
+                                            break;
+                                        case Gamemodes.FreezeTag:
+                                            Utils.SendChat("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
                                             break;
                                     }
                                     break;
@@ -1297,7 +1311,7 @@ namespace MoreGamemodes
                     Utils.SendSpam("Someone tried to send message during comms sabotage");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems) && !player.Data.IsDead)
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !player.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -1506,6 +1520,9 @@ namespace MoreGamemodes
                                 case "basewars":
                                     player.RpcSendMessage("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
                                     break;
+                                case "freezetag":
+                                    player.RpcSendMessage("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
+                                    break;
                                 case "randomspawn":
                                     player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
                                     break;
@@ -1563,6 +1580,9 @@ namespace MoreGamemodes
                                             break;
                                         case Gamemodes.BaseWars:
                                             player.RpcSendMessage("Base Wars: Players are divided into two teams, Red and Blue, with the objective of destroying the opposing team's base while defending their own. Each team has two turrets - Red's in Upper and Lower Engine, and Blue's in Shields and Weapons - that can be attacked by players using the shift button. Depending on the options set by the host, turrets can also slow down enemy players, adding an extra layer of defense. These turrets automatically defend the base and do not require a teammate to be present to activate. Players attack enemy players using the kill button and can earn experience points (EXP) by eliminating opponents and controlling key areas - Storage and Cafeteria. Gaining EXP allows players to level up, enhancing their abilities. Health can be regenerated quickly at the team's base, and depending on options players can also teleport back to their base when needed. The game is won when one team successfully destroys the opposing team's base, securing victory for their side.", "Gamemodes");
+                                            break;
+                                        case Gamemodes.FreezeTag:
+                                            player.RpcSendMessage("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
                                             break;
                                     }
                                     break;
