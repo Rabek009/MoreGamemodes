@@ -52,7 +52,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, uint> RoleFakePlayer;
     public static Dictionary<byte, int> PlayerKills;
 
-    public const string CurrentVersion = "2.0.0 beta6.5";
+    public const string CurrentVersion = "2.0.0 beta6.6";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
