@@ -122,7 +122,7 @@ public partial class Main : BasePlugin
         ChatUpdatePatch.SendingSystemMessage = false;
         CreateOptionsPickerPatch.SetDleks = false;
         CoEnterVentPatch.PlayersToKick = new List<byte>();
-        VentilationSystemDeterioratePatch.LastClosestVents = new Dictionary<byte, List<int>>();
+        VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
         ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
         AntiBlackout.Reset();
         PlayerTagManager.Initialize();
@@ -196,7 +196,7 @@ public partial class Main : BasePlugin
                 ChatUpdatePatch.SendingSystemMessage = false;
                 CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
                 CoEnterVentPatch.PlayersToKick = new List<byte>();
-                VentilationSystemDeterioratePatch.LastClosestVents = new Dictionary<byte, List<int>>();
+                VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
                 ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
                 AntiBlackout.Reset();
             }

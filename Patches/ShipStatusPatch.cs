@@ -146,7 +146,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(VentilationSystem), nameof(VentilationSystem.Deteriorate))]
     class VentilationSystemDeterioratePatch
     {
-        public static Dictionary<byte, List<int>> LastClosestVents;
+        public static Dictionary<byte, int> LastClosestVent;
         public static void Postfix(VentilationSystem __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return;
@@ -155,20 +155,14 @@ namespace MoreGamemodes
             {
                 if (BlockVentInteraction(pc))
                 {
-                    List<Vent> CurrentClosestVents = pc.GetVentsFromClosest();
-                    List<int> CurrentClosestVentIds = new();
-                    foreach (var vent in CurrentClosestVents)
-                        CurrentClosestVentIds.Add(vent.Id);
-                    bool serialize = false;
-                    for (int i = 0; i < LastClosestVents[pc.PlayerId].Count; ++i)
+                    int players = 0;
+                    foreach (var playerInfo in GameData.Instance.AllPlayers)
                     {
-                        if (LastClosestVents[pc.PlayerId][i] != CurrentClosestVentIds[i])
-                        {
-                            serialize = true;
-                            break;
-                        }
+                        if (playerInfo != null && !playerInfo.Disconnected)
+                            ++players;
                     }
-                    if (!serialize) continue;
+                    if (pc.GetClosestVent().Id == LastClosestVent[pc.PlayerId] && players >= 3) continue;
+                    LastClosestVent[pc.PlayerId] = pc.GetClosestVent().Id; 
                     MessageWriter writer = MessageWriter.Get(SendOption.None);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);

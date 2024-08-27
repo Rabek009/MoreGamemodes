@@ -35,7 +35,7 @@ namespace MoreGamemodes
             Main.PlayerKills = new Dictionary<byte, int>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
-            VentilationSystemDeterioratePatch.LastClosestVents = new Dictionary<byte, List<int>>();
+            VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
             AntiBlackout.Reset();
             PlayerTagManager.ResetPlayerTags();
@@ -122,17 +122,20 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.Data.RpcSetTasks(new byte[0]);
             }
+            
+            bool shouldPerformVentInteractions = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                List<int> vents = new();
-                foreach (var vent in pc.GetVentsFromClosest())
-                    vents.Add(vent.Id);
-                VentilationSystemDeterioratePatch.LastClosestVents[pc.PlayerId] = vents;
+                VentilationSystemDeterioratePatch.LastClosestVent[pc.PlayerId] = pc.GetVentsFromClosest()[0].Id;
                 if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
                 {
-                    Utils.SetAllVentInteractions();
-                    break;
+                    VentilationSystemDeterioratePatch.LastClosestVent[pc.PlayerId] = pc.GetVentsFromClosest()[0].Id;
+                    shouldPerformVentInteractions = true;
                 }
+            }
+            if (shouldPerformVentInteractions)
+            {
+                Utils.SetAllVentInteractions();
             }
         }
     }

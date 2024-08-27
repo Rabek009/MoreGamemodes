@@ -211,8 +211,11 @@ namespace MoreGamemodes
                         {
                             CompleteTaskTimer[pc.PlayerId] -= Options.TaskCompleteTimeDuringFreeze.GetFloat();
                             List<uint> TasksRemain = new();
-                            foreach (var task in pc.myTasks)
-                                TasksRemain.Add(task.Id);
+                            foreach (var task in pc.Data.Tasks)
+                            {
+                                if (!task.Complete)
+                                    TasksRemain.Add(task.Id);
+                            }
                             var rand = new System.Random();
                             pc.RpcCompleteTask(TasksRemain[rand.Next(0, TasksRemain.Count)]);
                         }
