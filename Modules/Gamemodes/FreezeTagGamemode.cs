@@ -97,7 +97,7 @@ namespace MoreGamemodes
 
         public override void OnBeginCrewmatePostfix(IntroCutscene __instance)
         {
-            __instance.TeamTitle.text = "Hider";
+            __instance.TeamTitle.text = "Runner";
             __instance.TeamTitle.color = Color.green;
             __instance.BackgroundBar.material.color = Color.green;
             __instance.ImpostorText.text = "";
@@ -112,7 +112,7 @@ namespace MoreGamemodes
         {
             if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Crewmate)
             {
-                __instance.RoleText.text = "Hider";
+                __instance.RoleText.text = "Runner";
                 __instance.RoleBlurbText.text = "Don't get frozen and do tasks";
             }
             else if (PlayerControl.LocalPlayer.Data.Role.Role == RoleTypes.Impostor)
@@ -172,6 +172,20 @@ namespace MoreGamemodes
                 SendNoisemakerAlert(target);
             new LateTask(() => target.RpcTeleport(target.transform.position), 0.2f);
             return false;
+        }
+
+        public override void OnShapeshift(PlayerControl shapeshifter, PlayerControl target)
+        {
+            if (target.Data.Role.IsImpostor)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    Main.NameColors[(shapeshifter.PlayerId, pc.PlayerId)] = Color.red;
+            }
+            else
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                    Main.NameColors[(shapeshifter.PlayerId, pc.PlayerId)] = IsFrozen(target) ? Color.cyan : Color.green;
+            }
         }
 
         public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
@@ -256,6 +270,29 @@ namespace MoreGamemodes
             if (IsFrozen(player) && !player.Data.Role.IsImpostor)
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
             return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            if (Options.ShowDangerMeter.GetBool() && player == seer)
+            {
+                var impostor = player.GetClosestImpostor();
+                if (impostor == null) return name;
+                var distance = Vector2.Distance(player.transform.position, impostor.transform.position);
+                if (distance <= 2f)
+                    name += "\n<#ff1313>■■■■■</color>";
+                else if (distance <= 4.5f)
+                    name += "\n<#ff6a00>■■■■</color><#aaaaaa>■</color>";
+                else if (distance <= 7f)
+                    name += "\n<#ffaa00>■■■</color><#aaaaaa>■■</color>";
+                else if (distance <= 10f)
+                    name += "\n<#ffea00>■■</color><#aaaaaa>■■■</color>";
+                else if (distance <= 13f)
+                    name += "\n<#ffff00>■</color><#aaaaaa>■■■■</color>";
+                else
+                    name += "\n<#aaaaaa>■■■■■</color>";
+            }
+            return name;
         }
 
         public bool IsFrozen(PlayerControl player)

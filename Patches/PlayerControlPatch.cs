@@ -354,35 +354,37 @@ namespace MoreGamemodes
             }
             if (assignedRoles >= playerCount)
             {
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
-                MessageWriter writer = sender.stream;
-                sender.StartMessage(-1);
-                RoleAssigned[__instance.PlayerId] = true;
-                Dictionary<byte, bool> Disconnected = new();
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    Disconnected[pc.Data.PlayerId] = pc.Data.Disconnected;
-                    pc.Data.Disconnected = true;
-                    writer.StartMessage(1);
-                    writer.WritePacked(pc.Data.NetId);
-                    pc.Data.Serialize(writer, false);
-                    writer.EndMessage();
-                }
-                __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
-                sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetRole)
-                    .Write((ushort)roleType)
-                    .Write(true)
-                    .EndRpc();
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    pc.Data.Disconnected = Disconnected[pc.Data.PlayerId];
-                    writer.StartMessage(1);
-                    writer.WritePacked(pc.Data.NetId);
-                    pc.Data.Serialize(writer, false);
-                    writer.EndMessage();
-                }
-                sender.EndMessage();
-                sender.SendMessage();
+                new LateTask(() => {
+                    CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+                    MessageWriter writer = sender.stream;
+                    sender.StartMessage(-1);
+                    RoleAssigned[__instance.PlayerId] = true;
+                    Dictionary<byte, bool> Disconnected = new();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        Disconnected[pc.Data.PlayerId] = pc.Data.Disconnected;
+                        pc.Data.Disconnected = true;
+                        writer.StartMessage(1);
+                        writer.WritePacked(pc.Data.NetId);
+                        pc.Data.Serialize(writer, false);
+                        writer.EndMessage();
+                    }
+                    __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
+                    sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetRole)
+                        .Write((ushort)roleType)
+                        .Write(true)
+                        .EndRpc();
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        pc.Data.Disconnected = Disconnected[pc.Data.PlayerId];
+                        writer.StartMessage(1);
+                        writer.WritePacked(pc.Data.NetId);
+                        pc.Data.Serialize(writer, false);
+                        writer.EndMessage();
+                    }
+                    sender.EndMessage();
+                    sender.SendMessage();
+                }, 0.5f);
                 return false;
             }
             RoleAssigned[__instance.PlayerId] = true;

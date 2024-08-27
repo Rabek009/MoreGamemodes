@@ -308,6 +308,7 @@ namespace MoreGamemodes
         public static OptionItem UnfreezeDuration;
         public static OptionItem UnfreezeRadius;
         public static OptionItem TaskCompleteTimeDuringFreeze;
+        public static OptionItem ShowDangerMeter;
         
         //Additional gamemodes
         public static OptionItem RandomSpawn;
@@ -988,6 +989,8 @@ namespace MoreGamemodes
             TaskCompleteTimeDuringFreeze = FloatOptionItem.Create(15013, "Task complete duration during freeze", new(5f, 180f, 2.5f), 60f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.FreezeTag)
                 .SetValueFormat(OptionFormat.Seconds);
+            ShowDangerMeter = BooleanOptionItem.Create(15014, "Show danger meter", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.FreezeTag);
             
             //Additional gamemodes
             RandomSpawn = TextOptionItem.Create(100000, "Random spawn", TabGroup.AdditionalGamemodes)
