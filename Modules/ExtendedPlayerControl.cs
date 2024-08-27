@@ -423,9 +423,9 @@ namespace MoreGamemodes
 
         public static bool HasTask(this PlayerControl player, TaskTypes taskType)
         {
-            foreach (var task in player.myTasks)
+            foreach (var task in player.Data.Tasks)
             {
-                if (task.TaskType == taskType)
+                if (task.TypeId == (byte)taskType)
                     return true;
             }
             return false;

@@ -192,10 +192,10 @@ namespace MoreGamemodes
             {
                 var tasksCompleted = 0;
                 var totalTasks = 0;
-                foreach (var task in pc.myTasks)
+                foreach (var task in pc.Data.Tasks)
                 {
                     ++totalTasks;
-                    if (task.IsComplete)
+                    if (task.Complete)
                         ++tasksCompleted;
                 }
                 if (Options.CurrentBodyType == SpeedrunBodyTypes.Ghost)

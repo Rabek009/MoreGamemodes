@@ -1,6 +1,7 @@
 using Il2CppSystem.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -75,7 +76,9 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     pc.RpcSetDeathReason(DeathReasons.Command);
-                    pc.RpcSetRole(RoleTypes.GuardianAngel, true);
+                    pc.Die(DeathReason.Exile, false);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(pc.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }       
             }
         }
@@ -102,14 +105,12 @@ namespace MoreGamemodes
         {
             var tasksCompleted = 0;
             var totalTasks = 0;
-            foreach (var task in player.myTasks)
+            foreach (var task in player.Data.Tasks)
             {
                 ++totalTasks;
-                if (task.IsComplete)
+                if (task.Complete)
                     ++tasksCompleted;
             }
-            if (Options.CurrentBodyType == SpeedrunBodyTypes.Ghost)
-                --totalTasks;
             if (player == seer || Options.TasksVisibleToOthers.GetBool())
                 name += Utils.ColorString(Color.yellow, "(" + tasksCompleted + "/" + totalTasks + ")");
             return name;

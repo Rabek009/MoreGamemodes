@@ -493,7 +493,7 @@ namespace MoreGamemodes
                         {
                             ar.Data.Disconnected = Disconnected2[ar.PlayerId];
                             writer.StartMessage(1);
-                            writer.WritePacked(pc.Data.NetId);
+                            writer.WritePacked(ar.Data.NetId);
                             ar.Data.Serialize(writer, false);
                             writer.EndMessage();
                         }
