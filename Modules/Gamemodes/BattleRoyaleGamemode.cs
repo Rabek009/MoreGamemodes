@@ -118,7 +118,6 @@ namespace MoreGamemodes
             opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
-            opt.SetFloat(FloatOptionNames.KillCooldown, Main.RealOptions.GetFloat(FloatOptionNames.KillCooldown));
             return opt;
         }
 

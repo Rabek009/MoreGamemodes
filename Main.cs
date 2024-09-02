@@ -51,8 +51,12 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, bool> IsModded;
     public static Dictionary<byte, uint> RoleFakePlayer;
     public static Dictionary<byte, int> PlayerKills;
+    public static Dictionary<byte, float> KillCooldowns;
+    public static Dictionary<byte, float> OptionKillCooldowns;
+    public static Dictionary<byte, float> ProtectCooldowns;
+    public static Dictionary<byte, float> OptionProtectCooldowns;
 
-    public const string CurrentVersion = "2.0.0 beta6.7";
+    public const string CurrentVersion = "2.0.0 beta6.8";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -106,8 +110,6 @@ public partial class Main : BasePlugin
             "Shapeshifter", "Sword", "Treasure", "Your dream", "Celebrity", "Fungus", "City", "Spaceship", "Toilet", "Tree", "Abstraction"
         };
         MessagesToSend = new List<(string, byte, string)>();
-        CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
-        CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
         LastResult = "";
         StandardRoles = new Dictionary<byte, RoleTypes>();
         DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
@@ -116,6 +118,10 @@ public partial class Main : BasePlugin
         IsModded = new Dictionary<byte, bool>();
         RoleFakePlayer = new Dictionary<byte, uint>();
         PlayerKills = new Dictionary<byte, int>();
+        KillCooldowns = new Dictionary<byte, float>();
+        OptionKillCooldowns = new Dictionary<byte, float>();
+        ProtectCooldowns = new Dictionary<byte, float>();
+        OptionProtectCooldowns = new Dictionary<byte, float>();
         CustomNetObject.CustomObjects = new List<CustomNetObject>();
         CustomNetObject.MaxId = -1;
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
@@ -182,14 +188,16 @@ public partial class Main : BasePlugin
                 MessagesToSend = new List<(string, byte, string)>();
                 StandardRoles = new Dictionary<byte, RoleTypes>();
                 DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
-                CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
-                CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
                 ProximityMessages = new Dictionary<byte, List<(string, float)>>();
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
                 RoleFakePlayer = new Dictionary<byte, uint>();
                 PlayerKills = new Dictionary<byte, int>();
+                KillCooldowns = new Dictionary<byte, float>();
+                OptionKillCooldowns = new Dictionary<byte, float>();
+                ProtectCooldowns = new Dictionary<byte, float>();
+                OptionProtectCooldowns = new Dictionary<byte, float>();
                 CustomNetObject.CustomObjects = new List<CustomNetObject>();
                 CustomNetObject.MaxId = -1;
                 RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
@@ -213,8 +221,6 @@ class ModManagerLateUpdatePatch
     {
         __instance.ShowModStamp();
         LateTask.Update(Time.fixedDeltaTime / 2f);
-        CheckMurderPatch.Update();
-        CheckProtectPatch.Update();
     }
 }
 

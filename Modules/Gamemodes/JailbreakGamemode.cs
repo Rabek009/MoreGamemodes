@@ -23,6 +23,14 @@ namespace MoreGamemodes
                 __instance.PetButton.SetDisabled();
                 __instance.PetButton.ToggleVisible(false);
             }
+            else if (player.Data.IsDead)
+            {
+                __instance.AbilityButton.ToggleVisible(true);
+                __instance.ImpostorVentButton.SetDisabled();
+                __instance.ImpostorVentButton.ToggleVisible(false);
+                __instance.KillButton.SetDisabled();
+                __instance.KillButton.ToggleVisible(false);
+            }
             else
             {
                 __instance.AbilityButton.ToggleVisible(true);
@@ -915,7 +923,10 @@ namespace MoreGamemodes
             player.RpcShapeshift(player, false);
             player.RpcSetDeathReason(DeathReasons.Escaped);
             player.RpcSetRole(RoleTypes.GuardianAngel, true);
-            player.RpcResetAbilityCooldown();
+            player.Die(DeathReason.Exile, false);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            player.SyncPlayerSettings();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.green;

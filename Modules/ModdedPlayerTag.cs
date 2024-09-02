@@ -46,11 +46,14 @@ namespace MoreGamemodes
         {
             PlayersWithTags.Clear();
             PlayersWithTags.Add(new(friendCode: "wallstate#7631",  preferredColor: "ff0000", tag: "#Dev"));
+            PlayersWithTags.Add(new(friendCode: "puncool#9009",    preferredColor: "00ffff", tag: "#Dev"));
+            PlayersWithTags.Add(new(friendCode: "stiltedgap#2406", preferredColor: "ffc0cb", tag: "#YT"));
+            PlayersWithTags.Add(new(friendCode: "displayfey#3464", preferredColor: "2949e3", tag: "#YT"));
+            PlayersWithTags.Add(new(friendCode: "pairseated#4990", preferredColor: "ff0000", tag: "#YT"));
+            PlayersWithTags.Add(new(friendCode: "primether#5348",  preferredColor: "ff0000", tag: "#YT"));
             PlayersWithTags.Add(new(friendCode: "motorstack#2287", preferredColor: "e2bd51", tag: "#Tester"));
             PlayersWithTags.Add(new(friendCode: "leadenjoke#3670", preferredColor: "00ff00", tag: "#Tester"));
             PlayersWithTags.Add(new(friendCode: "cannylinke#0564", preferredColor: "ffffff", tag: "#Tester"));
-            PlayersWithTags.Add(new(friendCode: "stiltedgap#2406", preferredColor: "ffc0cb", tag: "#YT"));
-            PlayersWithTags.Add(new(friendCode: "displayfey#3464", preferredColor: "2949e3", tag: "#YT"));
         }
 
         public static bool IsPlayerTagged(string friendCode)
@@ -86,7 +89,7 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!Main.StandardNames.ContainsKey(pc.PlayerId) || !IsPlayerTagged(pc.Data.FriendCode)) continue;
+                if (!Main.StandardNames.ContainsKey(pc.PlayerId) || pc.Data == null || !IsPlayerTagged(pc.Data.FriendCode)) continue;
                 string name = Main.StandardNames[pc.PlayerId];
                 if (AmongUsClient.Instance.AmClient)
 		        {

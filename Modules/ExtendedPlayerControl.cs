@@ -6,7 +6,7 @@ using AmongUs.GameOptions;
 using Il2CppInterop.Runtime.InteropTypes;
 using System.Collections.Generic;
 using System.Data;
-using System;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 using Object = UnityEngine.Object;
 
@@ -66,7 +66,7 @@ namespace MoreGamemodes
                 player.StartCoroutine(player.CoSetRole(role, true));
                 return;
             }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, seer.GetClientId());
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, seer.GetClientId());
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -76,6 +76,8 @@ namespace MoreGamemodes
                 Main.DesyncRoles.Add((player.PlayerId, seer.PlayerId), role);
             player.RpcSetVentInteraction();
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
+            if (player == seer)
+                Main.KillCooldowns[player.PlayerId] = 10f;
         }
 
         public static void RpcSetDesyncRoleV2(this PlayerControl player, RoleTypes role, PlayerControl seer)
@@ -86,10 +88,12 @@ namespace MoreGamemodes
                 player.StartCoroutine(player.CoSetRole(role, true));
                 return;
             }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, seer.GetClientId());
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, seer.GetClientId());
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
+            if (player == seer)
+                Main.KillCooldowns[player.PlayerId] = 10f;
         }
 
         public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
@@ -132,6 +136,7 @@ namespace MoreGamemodes
                 writer.Write(0);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
             }
+            Main.ProtectCooldowns[target.PlayerId] = Main.OptionProtectCooldowns[target.PlayerId];
         }
 
         public static PlayerControl GetClosestPlayer(this PlayerControl player, bool forTarget = false)
@@ -171,12 +176,47 @@ namespace MoreGamemodes
         public static void RpcUnmoddedSetKillTimer(this PlayerControl player, float time)
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage(6);
+            writer.Write(AmongUsClient.Instance.GameId);
+            writer.WritePacked(player.GetClientId());
             if (time != float.MaxValue)
             {
-                var opt = player.BuildGameOptions(time * 2);
-                Utils.SyncSettings(opt, player.GetClientId());
+                var opt = player.BuildGameOptions(time * 2f);
+                Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(GameManager.Instance.NetId);
+                    writer.StartMessage(GameManager.Instance.TryCast<NormalGameManager>() ? (byte)4 : (byte)5);
+				    writer.WriteBytesAndSize(byteArray);
+				    writer.EndMessage();
+                }
+                writer.EndMessage();
             }
-            player.RpcGuardAndKill(player);
+            writer.StartMessage(2);
+            {
+                writer.WritePacked(player.NetId);
+                writer.Write((byte)RpcCalls.MurderPlayer);
+                writer.WriteNetObject(player);
+                writer.Write((int)MurderResultFlags.FailedProtected);
+            }
+            writer.EndMessage();
+            if (time != float.MaxValue)
+            {
+                var opt = player.BuildGameOptions();
+                Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(GameManager.Instance.NetId);
+                    writer.StartMessage(GameManager.Instance.TryCast<NormalGameManager>() ? (byte)4 : (byte)5);
+				    writer.WriteBytesAndSize(byteArray);
+				    writer.EndMessage();
+                }
+                writer.EndMessage();
+            }
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
 
         public static void RpcExileV2(this PlayerControl player)
@@ -184,15 +224,6 @@ namespace MoreGamemodes
             player.Exiled();
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
-        }
-
-        public static void RpcFixedMurderPlayer(this PlayerControl killer, PlayerControl target)
-        {
-            new LateTask(() => 
-            {
-                killer.RpcMurderPlayer(target, true);
-                killer.MyPhysics.RpcCancelPet();
-            }, 0.01f, "Late Murder");
         }
 
         public static void RpcUnmoddedReactorFlash(this PlayerControl pc, float duration)
@@ -312,6 +343,8 @@ namespace MoreGamemodes
             }
             else
                 Utils.SyncSettings(opt, player.GetClientId());
+            Main.OptionKillCooldowns[player.PlayerId] = opt.GetFloat(FloatOptionNames.KillCooldown);
+            Main.OptionProtectCooldowns[player.PlayerId] = opt.GetFloat(FloatOptionNames.GuardianAngelCooldown);
         }
 
         public static void RpcSetOutfit(this PlayerControl player, byte colorId, string hatId, string skinId, string petId, string visorId)
@@ -328,7 +361,7 @@ namespace MoreGamemodes
             if (player == null) return;
             Main.StandardRoles[player.PlayerId] = role;
             player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, -1);
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -339,6 +372,7 @@ namespace MoreGamemodes
             }
             new LateTask(() => player.RpcSetVentInteraction(), 0.1f);
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
+            Main.KillCooldowns[player.PlayerId] = 10f;
         }
 
         public static void RpcSetRoleV3(this PlayerControl player, RoleTypes role, bool forEndGame)
@@ -348,10 +382,11 @@ namespace MoreGamemodes
                 RoleManager.Instance.SetRole(player, role);
             else
                 player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, -1);
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
+            Main.KillCooldowns[player.PlayerId] = 10f;
         }
 
         public static PlainShipRoom GetPlainShipRoom(this PlayerControl pc)
@@ -423,9 +458,9 @@ namespace MoreGamemodes
 
         public static bool HasTask(this PlayerControl player, TaskTypes taskType)
         {
-            foreach (var task in player.Data.Tasks)
+            foreach (var task in player.myTasks)
             {
-                if (task.TypeId == (byte)taskType)
+                if (task.TaskType == taskType)
                     return true;
             }
             return false;

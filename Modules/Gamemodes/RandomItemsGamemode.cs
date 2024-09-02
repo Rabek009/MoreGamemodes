@@ -167,11 +167,11 @@ namespace MoreGamemodes
                     case Items.Gun:
                         if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
                         if (target.Data.Role.IsImpostor)
-                            pc.RpcFixedMurderPlayer(target);
+                            pc.RpcMurderPlayer(target, true);
                         else
                         {
                             if (Options.CanKillCrewmate.GetBool())
-                                pc.RpcFixedMurderPlayer(target);
+                                pc.RpcMurderPlayer(target, true);
                             else
                             {
                                 pc.RpcSetDeathReason(DeathReasons.Misfire);

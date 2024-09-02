@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AmongUs.GameOptions;
 using UnityEngine;
+using System;
 
 namespace MoreGamemodes
 {
@@ -27,18 +28,20 @@ namespace MoreGamemodes
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             Main.DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
-            CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
-            CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
             Main.PlayerKills = new Dictionary<byte, int>();
+            Main.KillCooldowns = new Dictionary<byte, float>();
+            Main.OptionKillCooldowns = new Dictionary<byte, float>();
+            Main.ProtectCooldowns = new Dictionary<byte, float>();
+            Main.OptionProtectCooldowns = new Dictionary<byte, float>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
-            AntiBlackout.Reset();
             PlayerTagManager.ResetPlayerTags();
+            AntiBlackout.Reset();
             Main.StandardNames = new Dictionary<byte, string>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -51,12 +54,14 @@ namespace MoreGamemodes
                 Main.StandardNamePlates[pc.PlayerId] = pc.Data.DefaultOutfit.NamePlateId;
                 Main.AllShapeshifts[pc.PlayerId] = pc.PlayerId;
                 pc.RpcSetDeathReason(DeathReasons.Alive);
-                CheckMurderPatch.TimeSinceLastKill[pc.PlayerId] = 0f;
-                CheckProtectPatch.TimeSinceLastProtect[pc.PlayerId] = 0f;
                 Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
                 Main.RoleFakePlayer[pc.PlayerId] = pc.NetId;
                 Main.PlayerKills[pc.PlayerId] = 0;
+                Main.KillCooldowns[pc.PlayerId] = 0f;
+                Main.OptionKillCooldowns[pc.PlayerId] = 0f;
+                Main.ProtectCooldowns[pc.PlayerId] = 0f;
+                Main.OptionProtectCooldowns[pc.PlayerId] = 0f;
                 ExplosionHole.LastSpeedDecrease[pc.PlayerId] = 0;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
@@ -97,6 +102,8 @@ namespace MoreGamemodes
             PlayerControl.LocalPlayer.GetComponent<CircleCollider2D>().enabled = true;
             if (!AmongUsClient.Instance.AmHost) return;
             Main.Timer = 0f;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                Main.KillCooldowns[pc.PlayerId] = Math.Min(10f, Main.OptionKillCooldowns[pc.PlayerId]);
             if (Options.EnableRandomSpawn.GetBool() && !(CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.Jailbreak or Gamemodes.BaseWars))
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)

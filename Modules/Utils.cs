@@ -137,31 +137,24 @@ namespace MoreGamemodes
 
         public static void SyncSettings(IGameOptions opt, int targetClientId = -1)
         {
-            for (int i = 0; i < GameManager.Instance.LogicComponents.Count; ++i)
+            Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage(targetClientId == -1 ? Tags.GameData : Tags.GameDataTo);
             {
-                if (GameManager.Instance.LogicComponents[i].TryCast<LogicOptions>(out var _))
+                writer.Write(AmongUsClient.Instance.GameId);
+                if (targetClientId != -1) writer.WritePacked(targetClientId);
+                writer.StartMessage(1);
                 {
-                    Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
-                    MessageWriter writer = MessageWriter.Get(SendOption.None);
-                    writer.StartMessage(targetClientId == -1 ? Tags.GameData : Tags.GameDataTo);
-                    {
-                        writer.Write(AmongUsClient.Instance.GameId);
-                        if (targetClientId != -1) writer.WritePacked(targetClientId);
-                        writer.StartMessage(1);
-                        {
-                            writer.WritePacked(GameManager.Instance.NetId);
-                            writer.StartMessage((byte)i);
-				            writer.WriteBytesAndSize(byteArray);
-				            writer.EndMessage();
-                        }
-                        writer.EndMessage();
-                    }
-                    writer.EndMessage();
-
-                    AmongUsClient.Instance.SendOrDisconnect(writer);
-                    writer.Recycle();
+                    writer.WritePacked(GameManager.Instance.NetId);
+                    writer.StartMessage(GameManager.Instance.TryCast<NormalGameManager>() ? (byte)4 : (byte)5);
+				    writer.WriteBytesAndSize(byteArray);
+				    writer.EndMessage();
                 }
+                writer.EndMessage();
             }
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
 
         public static void SyncAllSettings()

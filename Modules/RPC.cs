@@ -626,6 +626,7 @@ namespace MoreGamemodes
 
         public static void RpcSetKillTimer(this PlayerControl player, float time = float.MaxValue)
         {
+            Main.KillCooldowns[player.PlayerId] = time != float.MaxValue ? time : Main.OptionKillCooldowns[player.PlayerId] / 2f;
             if (player.AmOwner)
             {
                 player.SetKillTimer(time != float.MaxValue ? time : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.KillCooldown) / 2f);

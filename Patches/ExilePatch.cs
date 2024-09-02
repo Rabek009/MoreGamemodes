@@ -80,4 +80,14 @@ namespace MoreGamemodes
             __instance.Player.cosmetics.hat.transform.localPosition = new(-0.2f, 0.6f, 1.1f);
         }
     }
+
+    [HarmonyPatch(typeof(ExileController), nameof(ExileController.ReEnableGameplay))]
+    class ReEnableGameplayPatch
+    {
+        public static void Postfix()
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                Main.KillCooldowns[pc.PlayerId] = Main.OptionKillCooldowns[pc.PlayerId];
+        }
+    }
 }

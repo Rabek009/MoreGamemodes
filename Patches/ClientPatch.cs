@@ -10,7 +10,7 @@ namespace MoreGamemodes
         public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return;
-            if (client != null && client.FriendCode == "silkyvase#1350" || client.FriendCode == "sablewire#9833" || client.FriendCode == "rallybrass#1326")
+            if (client != null && client.FriendCode == "silkyvase#1350" || client.FriendCode == "sablewire#9833"/* || client.FriendCode == "rallybrass#1326"*/)
             {
                 AmongUsClient.Instance.KickPlayer(client.Id, true);
                 return;

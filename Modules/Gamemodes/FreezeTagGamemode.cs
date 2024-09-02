@@ -277,7 +277,7 @@ namespace MoreGamemodes
 
         public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
         {
-            if (Options.ShowDangerMeter.GetBool() && player == seer)
+            if (Options.ShowDangerMeter.GetBool() && !player.Data.Role.IsImpostor && player == seer)
             {
                 var impostor = player.GetClosestImpostor();
                 if (impostor == null) return name;

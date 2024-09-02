@@ -222,8 +222,6 @@ namespace MoreGamemodes
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             Main.DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
-            CheckMurderPatch.TimeSinceLastKill = new Dictionary<byte, float>();
-            CheckProtectPatch.TimeSinceLastProtect = new Dictionary<byte, float>();
             Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.IsModded = new Dictionary<byte, bool>();
@@ -232,6 +230,10 @@ namespace MoreGamemodes
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
             Main.PlayerKills = new Dictionary<byte, int>();
+            Main.KillCooldowns = new Dictionary<byte, float>();
+            Main.OptionKillCooldowns = new Dictionary<byte, float>();
+            Main.ProtectCooldowns = new Dictionary<byte, float>();
+            Main.OptionProtectCooldowns = new Dictionary<byte, float>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             AntiBlackout.Reset();

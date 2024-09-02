@@ -12,32 +12,14 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckProtect))]
     class CheckProtectPatch 
     {
-        public static Dictionary<byte, float> TimeSinceLastProtect;
-        public static void Update()
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            for (byte i = 0; i < 15; i++)
-            {
-                if (TimeSinceLastProtect.ContainsKey(i))
-                {
-                    TimeSinceLastProtect[i] += Time.deltaTime;
-                    if (15f < TimeSinceLastProtect[i]) TimeSinceLastProtect.Remove(i);
-                }
-            }
-        }
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             PlayerControl guardian = __instance;
             if (!CheckForInvalidProtection(guardian, target))
                 return false;
-            
             if (CustomGamemode.Instance.OnCheckProtect(guardian, target))
-            {
-                guardian.SyncPlayerSettings();
-                guardian.RpcProtectPlayer(target, guardian.Data.DefaultOutfit.ColorId);
-            }     
-
+                guardian.RpcProtectPlayer(target, guardian.Data.DefaultOutfit.ColorId); 
             return false;
         }
         public static bool CheckForInvalidProtection(PlayerControl guardian, PlayerControl target)
@@ -47,29 +29,25 @@ namespace MoreGamemodes
 		    if (!target || guardian.Data.Disconnected) return false;
 		    NetworkedPlayerInfo data = target.Data;
 		    if (data == null || data.IsDead) return false;
-            float minTime = Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f);
-            if (TimeSinceLastProtect.TryGetValue(guardian.PlayerId, out var time) && time < minTime) return false;
-            TimeSinceLastProtect[guardian.PlayerId] = 0f;
+            if (Main.ProtectCooldowns[guardian.PlayerId] > 0f) return false;
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.ProtectPlayer))]
+    class ProtectPlayerPatch
+    {
+        public static void Postfix(PlayerControl __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            PlayerControl guardian = __instance;
+            Main.ProtectCooldowns[guardian.PlayerId] = Main.OptionProtectCooldowns[guardian.PlayerId];
         }
     }
 
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))]
     class CheckMurderPatch 
     {
-        public static Dictionary<byte, float> TimeSinceLastKill;
-        public static void Update()
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            for (byte i = 0; i < 15; i++)
-            {
-                if (TimeSinceLastKill.ContainsKey(i))
-                {
-                    TimeSinceLastKill[i] += Time.deltaTime;
-                    if (15f < TimeSinceLastKill[i]) TimeSinceLastKill.Remove(i);
-                }
-            }
-        }
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target) 
         {
             if (!AmongUsClient.Instance.AmHost) return true;
@@ -95,9 +73,7 @@ namespace MoreGamemodes
 		    NetworkedPlayerInfo data = target.Data;
 		    if (data == null || data.IsDead || target.inVent || target.MyPhysics.Animations.IsPlayingEnterVentAnimation() || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.inMovingPlat) return false;
 		    if (MeetingHud.Instance) return false;
-            float minTime = Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f);
-            if (TimeSinceLastKill.TryGetValue(killer.PlayerId, out var time) && time < minTime) return false;
-            TimeSinceLastKill[killer.PlayerId] = 0f;
+            if (Main.KillCooldowns[killer.PlayerId] > 0f) return false;
             return true;
         }
     }
@@ -109,8 +85,13 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             PlayerControl killer = __instance;
-            if (resultFlags != MurderResultFlags.Succeeded) return;
+            
+            if (resultFlags == MurderResultFlags.Succeeded)
+                Main.KillCooldowns[killer.PlayerId] = Main.OptionKillCooldowns[killer.PlayerId];
+            else if (resultFlags == MurderResultFlags.FailedProtected)
+                Main.KillCooldowns[killer.PlayerId] = Main.OptionKillCooldowns[killer.PlayerId] / 2f;
 
+            if (resultFlags != MurderResultFlags.Succeeded) return;
             if (target.GetDeathReason() == DeathReasons.Alive)
                 target.RpcSetDeathReason(DeathReasons.Killed);
             CustomGamemode.Instance.OnMurderPlayer(killer, target);
@@ -176,6 +157,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     shapeshifter.RpcSetNamePrivate(shapeshifter.BuildPlayerName(pc, false), pc, true);
             }, 1.2f, "Set Shapeshift Appearance");
+            new LateTask(() => shapeshifter.Data.MarkDirty(), 1.3f, "Fix chat name");
             CustomGamemode.Instance.OnShapeshift(shapeshifter, target);
         }
     }
@@ -220,6 +202,15 @@ namespace MoreGamemodes
                 {
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, false);
+                    if ((pc.moveable || pc.petting) && !pc.inVent && !pc.shapeshifting && !ExileController.Instance)
+                    {
+                        Main.KillCooldowns[pc.PlayerId] -= Time.fixedDeltaTime;
+                        if (Main.KillCooldowns[pc.PlayerId] < 0f)
+                            Main.KillCooldowns[pc.PlayerId] = 0f;
+                        Main.ProtectCooldowns[pc.PlayerId] -= Time.fixedDeltaTime;
+                        if (Main.ProtectCooldowns[pc.PlayerId] < 0f)
+                            Main.ProtectCooldowns[pc.PlayerId] = 0f;
+                    }
                 }
             }
             if (Main.GameStarted)
@@ -401,8 +392,6 @@ namespace MoreGamemodes
             MurderResultFlags murderResultFlags = didSucceed ? MurderResultFlags.Succeeded : MurderResultFlags.FailedError;
             if (murderResultFlags == MurderResultFlags.Succeeded && target.protectedByGuardianId > -1)
                 murderResultFlags = MurderResultFlags.FailedProtected;
-            if (murderResultFlags != MurderResultFlags.FailedError)
-                __instance.SyncPlayerSettings();
             if (AmongUsClient.Instance.AmClient)
 		    {
 		    	__instance.MurderPlayer(target, murderResultFlags);
@@ -595,7 +584,6 @@ namespace MoreGamemodes
             PlayerControl phantom = __instance;
             if (CustomGamemode.Instance.OnCheckVanish(phantom))
             {
-                phantom.SyncPlayerSettings();
 			    phantom.SetRoleInvisibility(true, true, true);
                 phantom.RpcVanish();
             }

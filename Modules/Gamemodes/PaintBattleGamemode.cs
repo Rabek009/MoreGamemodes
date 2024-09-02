@@ -104,6 +104,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     pc.RpcTeleport(GetPaintBattleLocation(pc));
+                    pc.RpcShapeshift(pc, false);
                     new LateTask(() => pc.RpcSetWeirdRole(RoleTypes.Impostor, false, pc), 0f);
                 }
                 new LateTask(() => {
