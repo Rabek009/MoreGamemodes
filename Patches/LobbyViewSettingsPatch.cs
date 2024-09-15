@@ -62,13 +62,19 @@ namespace MoreGamemodes
         [HarmonyPostfix]
         public static void SetTabPatch(LobbyViewSettingsPane __instance)
         {   
+            var MGButtonPassive = GameObject.Find("MGButton").GetComponent<PassiveButton>();
+    
             if (__instance.currentTab == (StringNames)ModGameOptionsMenu.TabIndex)
             {   
                 __instance.rolesTabButton.SelectButton(false);
                 __instance.taskTabButton.SelectButton(false);
+                MGButtonPassive.SelectButton(true);
 
-                DrawOptions(__instance);
-               
+                DrawOptions(__instance);         
+            }
+            else
+            {
+               MGButtonPassive.SelectButton(false);
             }
         }
 
@@ -89,6 +95,8 @@ namespace MoreGamemodes
 
             float num = 1.44f;
             float num2;
+
+            instance.gameModeText.text = "MG Settings";
 
             foreach (var option in OptionItem.AllOptions)
             {
