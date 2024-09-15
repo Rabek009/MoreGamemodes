@@ -56,7 +56,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> ProtectCooldowns;
     public static Dictionary<byte, float> OptionProtectCooldowns;
 
-    public const string CurrentVersion = "2.0.0 beta6.8";
+    public const string CurrentVersion = "2.0.0 beta6.9";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
