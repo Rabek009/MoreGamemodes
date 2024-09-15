@@ -280,7 +280,7 @@ public static class GameOptionsMenuPatch
         }
     }
 
-    private static BaseGameSetting GetSetting(OptionItem item)
+    public static BaseGameSetting GetSetting(OptionItem item)
     {
         BaseGameSetting baseGameSetting = null;
 
