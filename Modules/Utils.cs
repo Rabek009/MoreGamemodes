@@ -632,7 +632,6 @@ namespace MoreGamemodes
              }
              return true;
         }
-
         public static string GetOptionNameSCM(this OptionItem optionItem)
         {
             if (optionItem.Name == "Enable")
