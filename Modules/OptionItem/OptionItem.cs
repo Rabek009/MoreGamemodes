@@ -144,7 +144,7 @@ namespace MoreGamemodes
 
         public string ApplyFormat(string value)
         {
-            if (ValueFormat == OptionFormat.Players) return value + "players";
+            if (ValueFormat == OptionFormat.Players) return value + " players";
             if (ValueFormat == OptionFormat.Seconds) return value + "s";
             if (ValueFormat == OptionFormat.Percent) return value + "%";
             if (ValueFormat == OptionFormat.Multiplier) return value + "x";

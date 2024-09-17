@@ -622,6 +622,7 @@ namespace MoreGamemodes
             }
             return true;
         }
+        
         public static bool IsValidHexCode(string hex)
         {
              if (string.IsNullOrWhiteSpace(hex) || (hex.Length != 6 && hex.Length != 3)) return false;
@@ -632,6 +633,7 @@ namespace MoreGamemodes
              }
              return true;
         }
+        
         public static string GetOptionNameSCM(this OptionItem optionItem)
         {
             if (optionItem.Name == "Enable")
