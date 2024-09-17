@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
-using Sentry.Unity.NativeUtils;
 
 namespace MoreGamemodes
 {
@@ -236,7 +235,6 @@ namespace MoreGamemodes
             Main.OptionProtectCooldowns = new Dictionary<byte, float>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
-            AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
                 var hours = (int)Main.Timer / 3600;

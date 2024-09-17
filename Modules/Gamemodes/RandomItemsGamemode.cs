@@ -11,7 +11,7 @@ namespace MoreGamemodes
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
             NoItemTimer = 10f;
-            if (exiled != null)
+            if (exiled != null && exiled.Object != null)
                 exiled.Object.RpcSetItem(Items.None); 
         }
 
@@ -134,7 +134,7 @@ namespace MoreGamemodes
 
         public override void OnPet(PlayerControl pc)
         {
-            if ((!IsHackActive || (pc.Data.Role.IsImpostor && Options.HackAffectsImpostors.GetBool() == false)) && NoItemTimer == 0f)
+            if ((!IsHackActive || (pc.Data.Role.IsImpostor && Options.HackAffectsImpostors.GetBool() == false)) && NoItemTimer <= 0f)
             {
                 PlayerControl target = pc.GetClosestPlayer(true);
                 switch (GetItem(pc))
@@ -422,7 +422,7 @@ namespace MoreGamemodes
                 foreach (var playerId in PlayersDiedThisRound)
                 {
                     var player = Utils.GetPlayerById(playerId);
-                    if (player != null && !player.Data.Disconnected && !player.Data.IsDead)
+                    if (player != null && !player.Data.Disconnected)
                         DestroyableSingleton<RoleManager>.Instance.AssignRoleOnDeath(player, true);
                 }
                 PlayersDiedThisRound.Clear();

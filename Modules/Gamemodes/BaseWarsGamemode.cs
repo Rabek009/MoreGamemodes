@@ -197,7 +197,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 SpawnPlayer(pc);
-                pc.RpcSetUnshiftButton();
+                new LateTask(() => pc.RpcSetUnshiftButton(), 0.5f);
                 pc.RpcResetAbilityCooldown();
                 PlayerHealth[pc.PlayerId] = Options.StartingHealth.GetFloat();
                 if (Options.CanTeleportToBase.GetBool())

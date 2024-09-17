@@ -41,4 +41,14 @@ namespace MoreGamemodes
             else return true;
         }
     }
+
+    [HarmonyPatch(typeof(LogicGameFlowNormal), nameof(LogicGameFlowNormal.IsGameOverDueToDeath))]
+    class AntiBlackoutPatch
+    {
+        public static bool Prefix(LogicGameFlow __instance, ref bool __result)
+        {
+            __result = false;
+            return false;
+        }
+    }
 }

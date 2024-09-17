@@ -9,9 +9,7 @@ namespace MoreGamemodes
     {
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-                pc.RpcSetKillTimer();
-            PaintTime = Options.PaintingTime.GetInt() + 0.5f;
+            PaintTime = Options.PaintingTime.GetInt();
         }
 
         public override void OnHudUpate(HudManager __instance)
@@ -23,20 +21,18 @@ namespace MoreGamemodes
             __instance.SabotageButton.ToggleVisible(false);
             __instance.ImpostorVentButton.SetDisabled();
             __instance.ImpostorVentButton.ToggleVisible(false);
+            __instance.KillButton.SetDisabled();
+            __instance.KillButton.ToggleVisible(false);
             __instance.MapButton.gameObject.SetActive(false);
             if (IsPaintActive)
             {
-                __instance.KillButton.ToggleVisible(true);
-                __instance.KillButton.OverrideText("Paint");
-                if (player.IsKillTimerEnabled || player.ForceKillTimerContinue)
-                    __instance.KillButton.SetTarget(player);
-                else
-                    __instance.KillButton.SetTarget(null);
+                __instance.AbilityButton.ToggleVisible(true);
+                __instance.AbilityButton.OverrideText("Paint");
             }
             else
             {
-                __instance.KillButton.SetDisabled();
-                __instance.KillButton.ToggleVisible(false);
+                __instance.AbilityButton.SetDisabled();
+                __instance.AbilityButton.ToggleVisible(false);
             }
         }
 
@@ -51,24 +47,17 @@ namespace MoreGamemodes
             __instance.taskText.text = Utils.ColorString(Color.gray, "Painter:\nPaint something in theme.\nThe theme is " + Theme + ".");
         }
 
+        public override void OnShowNormalMap(MapBehaviour __instance)
+        {
+            __instance.Close();
+        }
+
         public override void OnShowSabotageMap(MapBehaviour __instance)
         {
             __instance.Close();
         }
 
-        public override void OnToggleHighlight(PlayerControl __instance)
-        {
-            __instance.cosmetics.currentBodySprite.BodySprite.material.SetColor("_OutlineColor", Color.clear);
-        }
-
-        public override Il2CppSystem.Collections.Generic.List<PlayerControl> OnBeginCrewmatePrefix(IntroCutscene __instance)
-        {
-            var Team = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
-            Team.Add(PlayerControl.LocalPlayer);
-            return Team;
-        }
-
-        public override void OnBeginCrewmatePostfix(IntroCutscene __instance)
+        public override void OnBeginImpostorPostfix(IntroCutscene __instance)
         {
             __instance.TeamTitle.text = "Painter";
             __instance.TeamTitle.color = Color.gray;
@@ -87,8 +76,7 @@ namespace MoreGamemodes
 
         public override bool OnSelectRolesPrefix()
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-                pc.RpcSetRole(RoleTypes.Crewmate, true);
+            Utils.RpcSetDesyncRoles(RoleTypes.Shapeshifter, RoleTypes.Crewmate);
             return false;
         }
 
@@ -96,23 +84,11 @@ namespace MoreGamemodes
         {
             PaintTime = Options.PaintingTime.GetInt();
             GameManager.Instance.RpcSetPaintActive(true);
-            RoleManager.Instance.SetRole(PlayerControl.LocalPlayer, RoleTypes.Impostor);
             foreach (var pc in PlayerControl.AllPlayerControls)
-                pc.RpcTeleport(GetPaintBattleLocation(pc));
-            new LateTask(() =>
             {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    pc.RpcTeleport(GetPaintBattleLocation(pc));
-                    pc.RpcShapeshift(pc, false);
-                    new LateTask(() => pc.RpcSetWeirdRole(RoleTypes.Impostor, false, pc), 0f);
-                }
-                new LateTask(() => {
-                    SetKillInteraction();
-                    LastPosition = PlayerControl.LocalPlayer.transform.position;
-                }, 0.5f);
-                PaintTime = Options.PaintingTime.GetInt() + 0.5f;
-            }, 5f, "Set Dead");
+                pc.RpcTeleport(GetPaintBattleLocation(pc.PlayerId));
+                new LateTask(() => pc.RpcSetUnshiftButton(), 0.5f);
+            }
             var rand = new System.Random();
             GameManager.Instance.RpcSetTheme(Main.PaintBattleThemes[rand.Next(0, Main.PaintBattleThemes.Count)]);
             Utils.SendChat("Start painting! The theme is " + Theme + "! Remember to evalute less paintings that are not in theme!", "Theme");
@@ -120,16 +96,13 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (IsPaintActive && Vector2.Distance(killer.transform.position, GetPaintBattleLocation(killer)) < 5f)
-            {
-                Utils.RpcCreateDeadBody(killer.transform.position, (byte)killer.CurrentOutfit.ColorId, killer);
-                killer.RpcSetKillTimer();
-            }
             return false;
         }
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
+            if (IsPaintActive && Vector2.Distance(shapeshifter.transform.position, GetPaintBattleLocation(shapeshifter.PlayerId)) < 5f)
+                Utils.RpcCreateDeadBody(shapeshifter.transform.position, (byte)shapeshifter.CurrentOutfit.ColorId, shapeshifter);
             return false;
         }
 
@@ -145,18 +118,15 @@ namespace MoreGamemodes
                 PaintTime -= Time.fixedDeltaTime;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(pc)) > 5f)
-                        pc.RpcTeleport(GetPaintBattleLocation(pc));
-                }
-                if (LastPosition != Vector2.zero && Vector2.Distance(PlayerControl.LocalPlayer.transform.position, LastPosition) >= 2f)
-                {
-                    LastPosition = PlayerControl.LocalPlayer.transform.position;
-                    SetKillInteraction();
+                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(pc.PlayerId)) > 5f)
+                        pc.RpcTeleport(GetPaintBattleLocation(pc.PlayerId));
                 }
                 if (PaintTime <= 0f)
                 {
                     PaintTime = 0f;
                     GameManager.Instance.RpcSetPaintActive(false);
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                        pc.RpcSetRoleV2(RoleTypes.Crewmate);
                 }
             }
             else
@@ -170,8 +140,8 @@ namespace MoreGamemodes
                 }
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(Utils.GetPlayerById(VotingPlayerId))) > 5f)
-                        pc.RpcTeleport(GetPaintBattleLocation(Utils.GetPlayerById(VotingPlayerId)));
+                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(VotingPlayerId)) > 5f)
+                        pc.RpcTeleport(GetPaintBattleLocation(VotingPlayerId));
                 }
                 PaintBattleVotingTime -= Time.fixedDeltaTime;
                 if (PaintBattleVotingTime <= 0f)
@@ -219,8 +189,8 @@ namespace MoreGamemodes
             opt.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
             opt.SetFloat(FloatOptionNames.CrewLightMod, 100f);
             opt.SetFloat(FloatOptionNames.ImpostorLightMod, 100f);
-            opt.SetInt(Int32OptionNames.KillDistance, 2);
-            opt.SetFloat(FloatOptionNames.KillCooldown, 1f);
+            opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, 0.001f);
+            opt.SetFloat(FloatOptionNames.KillCooldown, 1000000f);
             return opt;
         }
 
@@ -231,19 +201,6 @@ namespace MoreGamemodes
             if (player == seer && !IsPaintActive)
                 name = Utils.ColorString(Color.magenta, "<font=\"VCR SDF\"><size=8>Rate " + Main.StandardNames[VotingPlayerId] + "'s painting!</size><size=17>\n\n</size></font>") + name + "<font=\"VCR SDF\"><size=25>\n\n<size=0>.";
             return name;
-        }
-
-        public void SetKillInteraction()
-        {
-            ++LastSequenceId;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.AmOwner || Main.IsModded[pc.PlayerId] || Main.RoleFakePlayer[pc.PlayerId] == pc.NetId) continue;
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Main.RoleFakePlayer[pc.PlayerId] + 2U, (byte)RpcCalls.SnapTo, SendOption.None, pc.GetClientId());
-                NetHelpers.WriteVector2(PlayerControl.LocalPlayer.transform.position, writer);
-                writer.Write(LastSequenceId);
-                AmongUsClient.Instance.FinishRpcImmediately(writer);
-            }
         }
 
         public void EndPaintBattleGame()
@@ -269,18 +226,18 @@ namespace MoreGamemodes
             CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByTask, winners);
         }
 
-        public Vector2 GetPaintBattleLocation(PlayerControl player)
+        public Vector2 GetPaintBattleLocation(byte playerId)
         {
             int x, y;
-            if (player.PlayerId < 8)
+            if (playerId < 8)
             {
-                x = (player.PlayerId % 4 * -12) - 8;
-                y = (player.PlayerId / 4 * -12) - 30;
+                x = (playerId % 4 * -12) - 8;
+                y = (playerId / 4 * -12) - 30;
             }
             else
             {
-                x = (player.PlayerId % 4 * 12) - 8;
-                y = (player.PlayerId / 4 * 12) + 10;
+                x = (playerId % 4 * 12) - 8;
+                y = (playerId / 4 * 12) + 10;
             }
             return new Vector2(x, y);
         }
@@ -297,8 +254,6 @@ namespace MoreGamemodes
             HasVoted = new Dictionary<byte, bool>();
             PlayerVotes = new Dictionary<byte, (int, int)>();
             Theme = "";
-            LastPosition = Vector2.zero;
-            LastSequenceId = 10;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 HasVoted[pc.PlayerId] = false;
@@ -314,7 +269,5 @@ namespace MoreGamemodes
         public Dictionary<byte, bool> HasVoted;
         public Dictionary<byte, (int, int)> PlayerVotes;
         public string Theme;
-        public Vector2 LastPosition;
-        ushort LastSequenceId;
     }
 }

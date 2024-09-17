@@ -730,7 +730,7 @@ namespace MoreGamemodes
                             PlayerControl.LocalPlayer.RpcSetColor(18);
                             break;
                         default:
-                            PlayerControl.LocalPlayer.RpcSetColor(byte.Parse(subArgs));  
+                            PlayerControl.LocalPlayer.RpcSetColor(byte.Parse(color));  
                             break;
                     }        
                     break;
@@ -1353,7 +1353,7 @@ namespace MoreGamemodes
                 case "/color":
                 case "/colour":
                     canceled = true;
-                    if (!Options.CanUseColorCommand.GetBool() && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
+                    if (!Options.CanUseColorCommand.GetBool() && (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle))
                     {
                         player.RpcSendMessage("Host disabled usage of this command.", "Warning");
                         break;
@@ -1432,8 +1432,8 @@ namespace MoreGamemodes
                                 player.RpcSetColor(18);
                             break;
                         default:
-                            if (byte.Parse(subArgs) < 18 || Options.EnableFortegreen.GetBool() || (Main.GameStarted && CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle))
-                                player.RpcSetColor(byte.Parse(subArgs));  
+                            if (byte.Parse(color) < 18 || Options.EnableFortegreen.GetBool() || (Main.GameStarted && CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle))
+                                player.RpcSetColor(byte.Parse(color));  
                             break;
                     }        
                     break;

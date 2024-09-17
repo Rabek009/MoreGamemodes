@@ -35,6 +35,14 @@ namespace MoreGamemodes
                 else if (client != null)
                     __instance.KickPlayer(client.Id, false);
             }, 2f, "Welcome Message");
+            new LateTask(() => 
+            {
+                if (client != null && client.Character != null && (client.Character.Data == null || client.Character.Data.IsIncomplete))
+                {
+                    client.Character.Despawn();
+                    __instance.KickPlayer(client.Id, false);
+                }
+            }, 3f, "Kick Fortegreen");
         }
     }
 
@@ -50,7 +58,6 @@ namespace MoreGamemodes
                 if (client.Character.GetDeathReason() == DeathReasons.Alive)
                     client.Character.RpcSetDeathReason(DeathReasons.Disconnected);
             }
-            AntiBlackout.OnDisconnect(client.Character.Data);
             new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {

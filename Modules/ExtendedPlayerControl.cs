@@ -77,7 +77,7 @@ namespace MoreGamemodes
             player.RpcSetVentInteraction();
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
             if (player == seer)
-                Main.KillCooldowns[player.PlayerId] = 10f;
+                Main.KillCooldowns[player.PlayerId] = 0f;
         }
 
         public static void RpcSetDesyncRoleV2(this PlayerControl player, RoleTypes role, PlayerControl seer)
@@ -93,7 +93,7 @@ namespace MoreGamemodes
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             if (player == seer)
-                Main.KillCooldowns[player.PlayerId] = 10f;
+                Main.KillCooldowns[player.PlayerId] = 0f;
         }
 
         public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
@@ -372,7 +372,7 @@ namespace MoreGamemodes
             }
             new LateTask(() => player.RpcSetVentInteraction(), 0.1f);
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
-            Main.KillCooldowns[player.PlayerId] = 10f;
+            Main.KillCooldowns[player.PlayerId] = 0f;
         }
 
         public static void RpcSetRoleV3(this PlayerControl player, RoleTypes role, bool forEndGame)
@@ -386,7 +386,7 @@ namespace MoreGamemodes
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
-            Main.KillCooldowns[player.PlayerId] = 10f;
+            Main.KillCooldowns[player.PlayerId] = 0f;
         }
 
         public static PlainShipRoom GetPlainShipRoom(this PlayerControl pc)
@@ -578,7 +578,7 @@ namespace MoreGamemodes
         public static RoleTypes GetSelfRole(this PlayerControl player)
         {
             if (CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale) return RoleTypes.Impostor;
-            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) return RoleTypes.Shapeshifter;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) return RoleTypes.Shapeshifter;
             return Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
         }
 

@@ -28,7 +28,6 @@ namespace MoreGamemodes
         public static void Postfix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            AntiBlackout.SetIsDead();
             
             if (RandomItemsGamemode.instance != null)
                 RandomItemsGamemode.instance.CamouflageTimer = -1f;
@@ -67,33 +66,6 @@ namespace MoreGamemodes
                 __instance.RpcClearVote(voter.GetClientId());
             }
             return !canceled;
-        }
-    }
-
-    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.RpcVotingComplete))]
-    class RpcVotingCompletePatch
-    {
-        public static bool Prefix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] NetworkedPlayerInfo exiled, [HarmonyArgument(2)] bool tie)
-        {
-            if (AntiBlackout.OverrideExiledPlayer)
-            {
-                if (AmongUsClient.Instance.AmClient)
-		        {
-			        __instance.VotingComplete(states, null, true);
-		        }
-		        MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, 23, SendOption.Reliable);
-		        messageWriter.WritePacked(states.Length);
-		        foreach (MeetingHud.VoterState voterState in states)
-		        {
-		        	voterState.Serialize(messageWriter);
-		        }
-		        messageWriter.Write(byte.MaxValue);
-		        messageWriter.Write(true);
-		        messageWriter.EndMessage();
-                ExileControllerWrapUpPatch.AntiBlackout_LastExiled = exiled;
-                return false;
-            }
-            return true;
         }
     }
 }

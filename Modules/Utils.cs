@@ -233,66 +233,55 @@ namespace MoreGamemodes
         {
             if (deadBodyParent == null || !Main.GameStarted) return;
             CreateDeadBody(position, colorId, deadBodyParent);
-            PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
-            playerControl.PlayerId = deadBodyParent.PlayerId;
-            playerControl.isNew = false;
-            playerControl.notRealPlayer = true;
-            AmongUsClient.Instance.NetIdCnt += 1U;
-            MessageWriter msg = MessageWriter.Get(SendOption.None);
-			msg.StartMessage(5);
-			msg.Write(AmongUsClient.Instance.GameId);
-			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
-			msg.EndMessage();
-			msg.StartMessage(6);
-			msg.Write(AmongUsClient.Instance.GameId);
-			msg.WritePacked(int.MaxValue);
-			for (uint i = 1; i <= 3; ++i)
-			{
-			    msg.StartMessage(4);
-			    msg.WritePacked(2U);
-			    msg.WritePacked(-2);
-			    msg.Write((byte)SpawnFlags.None);
-			    msg.WritePacked(1);
-		        msg.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-			    msg.StartMessage(1);
-			    msg.EndMessage();
-			    msg.EndMessage();
-			}
-			msg.EndMessage();
-			AmongUsClient.Instance.SendOrDisconnect(msg);
-			msg.Recycle();
-            if (PlayerControl.AllPlayerControls.Contains(playerControl))
-                PlayerControl.AllPlayerControls.Remove(playerControl);
-            new LateTask(() => {
-                byte colorId2 = (byte)PlayerControl.LocalPlayer.CurrentOutfit.ColorId;
-                var sender = CustomRpcSender.Create("Create Dead Body", SendOption.None);
-                MessageWriter writer = sender.stream;
-                sender.StartMessage(-1);
+            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.None);
+            MessageWriter writer = sender.stream;
+            sender.StartMessage(-1);
+            sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
+                .Write(deadBodyParent.Data.NetId)
+                .Write(colorId)
+                .EndRpc();
+            PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 328;
+            sender.StartRpc(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                .WriteVector2(position)
+                .Write((ushort)(PlayerControl.LocalPlayer.NetTransform.lastSequenceId + 8))
+                .EndRpc();
+            if (deadBodyParent != PlayerControl.LocalPlayer)
+            {
                 writer.StartMessage(1);
-                writer.WritePacked(playerControl.Data.NetId);
-                playerControl.Data.Serialize(writer, false);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.NetId);
+                    writer.Write(deadBodyParent.PlayerId);
+                }
                 writer.EndMessage();
-                sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SetColor)
-                    .Write(playerControl.Data.NetId)
-                    .Write(colorId)
-                    .EndRpc();
-                sender.StartRpc(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                    .WriteVector2(position)
-                    .Write((ushort)10)
-                    .EndRpc();
-                sender.StartRpc(playerControl.NetId, (byte)RpcCalls.MurderPlayer)
-                    .WriteNetObject(playerControl)
-                    .Write((int)MurderResultFlags.Succeeded)
-                    .EndRpc();
-                sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SetColor)
-                    .Write(playerControl.Data.NetId)
-                    .Write(colorId2)
-                    .EndRpc();
-                sender.EndMessage();
-                sender.SendMessage();
-            }, 0.1f);
-            new LateTask(() => playerControl.Data.MarkDirty(), 0.3f);
-            new LateTask(() => playerControl.Despawn(), 0.5f);
+            }
+            sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.MurderPlayer)
+                .WriteNetObject(PlayerControl.LocalPlayer)
+                .Write((int)MurderResultFlags.Succeeded)
+                .EndRpc();
+            if (deadBodyParent != PlayerControl.LocalPlayer)
+            {
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(PlayerControl.LocalPlayer.NetId);
+                    writer.Write(PlayerControl.LocalPlayer.PlayerId);
+                } 
+                writer.EndMessage();
+            }
+            sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetRole)
+                .Write((ushort)RoleTypes.Crewmate)
+                .Write(true)
+                .EndRpc();
+            PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 328;
+            sender.StartRpc(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                .WriteVector2(PlayerControl.LocalPlayer.transform.position)
+                .Write((ushort)(PlayerControl.LocalPlayer.NetTransform.lastSequenceId + 8))
+                .EndRpc();
+            sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
+                .Write(deadBodyParent.Data.NetId)
+                .Write(deadBodyParent.CurrentOutfit.ColorId)
+                .EndRpc();
+            sender.EndMessage();
+            sender.SendMessage();
         }
 
         public static string GetArrow(Vector3 from, Vector3 to)
@@ -376,7 +365,6 @@ namespace MoreGamemodes
 
         public static void SetChatVisible()
         {
-            if (GameManager.Instance.LogicFlow.IsGameOverDueToDeath()) return;
             MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
             MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
             AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);

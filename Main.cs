@@ -56,7 +56,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> ProtectCooldowns;
     public static Dictionary<byte, float> OptionProtectCooldowns;
 
-    public const string CurrentVersion = "2.0.0 beta6.8";
+    public const string CurrentVersion = "2.0.0 beta6.9";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -130,7 +130,6 @@ public partial class Main : BasePlugin
         CoEnterVentPatch.PlayersToKick = new List<byte>();
         VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
         ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
-        AntiBlackout.Reset();
         PlayerTagManager.Initialize();
 
         Instance.Log.LogMessage($"Sucessfully Loaded MoreGamemodes With Version {CurrentVersion} Is Dev Version: {isDev} Is Beta Version: {isBeta}");
@@ -206,7 +205,6 @@ public partial class Main : BasePlugin
                 CoEnterVentPatch.PlayersToKick = new List<byte>();
                 VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
                 ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
-                AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)
                 IsModded[__instance.PlayerId] = false;

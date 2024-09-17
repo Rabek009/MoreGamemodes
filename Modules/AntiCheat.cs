@@ -181,7 +181,7 @@ namespace MoreGamemodes
                                 break;
                             }
                         }
-                        if (!bodyExists && !LobbyDeadBodies.Contains(targetId) && !RemovedBodies.Contains(targetId))
+                        if (!bodyExists && !LobbyDeadBodies.Contains(targetId) && !RemovedBodies.Contains(targetId) && targetId != pc.PlayerId && (!MeetingHud.Instance || MeetingHud.Instance.state != MeetingHud.VoteStates.Animating))
                         {
                             HandleCheat(pc, "Reporting non existing body");
                             return true;
@@ -246,13 +246,14 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Using kill button in lobby");
                         return true;
                     }
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle) break;
                     if (target2 != null && target2 == pc)
                     {
                         HandleCheat(pc, "Using kill button on self");
                         return true;
                     }
                     if (target2 == null) break;
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.PaintBattle or  Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     var targetRole = Main.DesyncRoles.ContainsKey((target2.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(target2.PlayerId, pc.PlayerId)] : Main.StandardRoles[target2.PlayerId];
                     if (!pc.GetSelfRole().IsImpostor())
                     {
@@ -291,7 +292,6 @@ namespace MoreGamemodes
                         return true;
                     }
                     if (target3 == null) break;
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) break;
                     if (pc.Data.Role.Role != RoleTypes.GuardianAngel)
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
