@@ -146,12 +146,13 @@ namespace MoreGamemodes
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
             {
-                if (!p.Data.IsDead && p != player && (!forTarget || !(p.inVent || p.MyPhysics.Animations.IsPlayingEnterVentAnimation() || p.onLadder || p.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || p.inMovingPlat || (p.Data.Role.Role == RoleTypes.Phantom && (p.Data.Role as PhantomRole).IsInvisible))))
+                if (!p.Data.IsDead && p != player && (!forTarget || !(p.inVent || p.MyPhysics.Animations.IsPlayingEnterVentAnimation() || p.onLadder || p.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || p.inMovingPlat)))
                 {
                     dis = Vector2.Distance(playerpos, p.transform.position);
                     pcdistance.Add(p, dis);
                 }
             }
+            if (pcdistance.Count == 0) return null;
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;
@@ -231,8 +232,8 @@ namespace MoreGamemodes
             if (pc == null) return;
             int clientId = pc.GetClientId();
             byte reactorId = 3;
-            if (GameOptionsManager.Instance.currentNormalGameOptions.MapId == 2) reactorId = 21;
-            if (GameOptionsManager.Instance.currentNormalGameOptions.MapId == 4) reactorId = 58;
+            if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 2) reactorId = 21;
+            if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 4) reactorId = 58;
 
             MessageWriter SabotageWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
             SabotageWriter.Write(reactorId);
@@ -249,7 +250,7 @@ namespace MoreGamemodes
                 AmongUsClient.Instance.FinishRpcImmediately(SabotageFixWriter);
             }, duration, "Fix Desync Reactor");
 
-            if (GameOptionsManager.Instance.currentNormalGameOptions.MapId == 4)
+            if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 4)
                 new LateTask(() =>
                 {
                     MessageWriter SabotageFixWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
@@ -293,6 +294,8 @@ namespace MoreGamemodes
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * ((100f - ExplosionHole.LastSpeedDecrease[player.PlayerId]) / 100f));
             if (opt.GetByte(ByteOptionNames.MapId) == 3)
                 opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
+            if (!Main.ModdedProtocol.Value)
+                opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
             return opt;
         }
@@ -453,6 +456,7 @@ namespace MoreGamemodes
                 }
             }
             player.RpcSetPet(Main.StandardPets[player.PlayerId]);
+            player.RpcSetDeathReason(DeathReasons.Alive);
             PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
         }
 

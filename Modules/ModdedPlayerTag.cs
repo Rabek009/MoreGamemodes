@@ -54,7 +54,7 @@ namespace MoreGamemodes
             PlayersWithTags.Add(new(friendCode: "motorstack#2287", preferredColor: "e2bd51", tag: "#Tester"));
             PlayersWithTags.Add(new(friendCode: "leadenjoke#3670", preferredColor: "00ff00", tag: "#Tester"));
             PlayersWithTags.Add(new(friendCode: "cannylinke#0564", preferredColor: "ffffff", tag: "#Tester"));
-            PlayersWithTags.Add(new(friendCode: "goodsnake#3231",  preferredColor:"ff0000", tag:"#Tester"));
+            PlayersWithTags.Add(new(friendCode: "goodsnake#3231",  preferredColor: "ff0000", tag: "#Tester"));
         }
 
         public static bool IsPlayerTagged(string friendCode)

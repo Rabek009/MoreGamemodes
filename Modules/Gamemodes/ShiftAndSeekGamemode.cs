@@ -191,7 +191,7 @@ namespace MoreGamemodes
             opt.RoleOptions.SetRoleRate(RoleTypes.Noisemaker, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             opt.RoleOptions.SetRoleRate(RoleTypes.Tracker, 0, 0);
-            if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
+            if (Main.Timer < Options.SnSImpostorsBlindTime.GetFloat() && player.Data.Role != null && player.Data.Role.IsImpostor)
             {
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);

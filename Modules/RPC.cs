@@ -159,7 +159,9 @@ namespace MoreGamemodes
                     __instance.SetIsDead(reader.ReadBoolean());
                     break;
                 case CustomRPC.SetStandardName:
-                    __instance.SetStandardName(reader.ReadString());
+                    PlayerControl player = Utils.GetPlayerById(reader.ReadByte());
+                    if (player == null) break;
+                    player.SetStandardName(reader.ReadString());
                     break;
                 case CustomRPC.SetFrozen:
                     __instance.SetFrozen(reader.ReadBoolean());
@@ -229,7 +231,6 @@ namespace MoreGamemodes
             switch (rpcType)
             {
                 case RpcCalls.SnapTo:
-                    var text = subReader.ReadString();
                     if (CoEnterVentPatch.PlayersToKick.Contains(__instance.myPlayer.PlayerId) || (AntiCheat.TimeSinceVentCancel.ContainsKey(__instance.myPlayer.PlayerId) && AntiCheat.TimeSinceVentCancel[__instance.myPlayer.PlayerId] <= 1f)) return false;
                     break;
             }
@@ -716,7 +717,8 @@ namespace MoreGamemodes
         {
             if (targetClientId == -1)
                 player.SetStandardName(name);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetStandardName, SendOption.Reliable, targetClientId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetStandardName, SendOption.Reliable, targetClientId);
+            writer.Write(player.PlayerId);
             writer.Write(name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }

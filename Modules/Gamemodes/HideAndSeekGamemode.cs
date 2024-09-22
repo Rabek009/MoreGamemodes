@@ -191,7 +191,7 @@ namespace MoreGamemodes
         public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
         {
             opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
-            if (Main.Timer < Options.HnSImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
+            if (Main.Timer < Options.HnSImpostorsBlindTime.GetFloat() && player.Data.Role != null && player.Data.Role.IsImpostor)
             {
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);

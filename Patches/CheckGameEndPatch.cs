@@ -381,8 +381,6 @@ namespace MoreGamemodes
 
         public static void StartEndGame(GameOverReason reason, List<byte> winners)
         {
-            if (!GameManager.Instance.ShouldCheckForGameEnd) return;
-            GameManager.Instance.ShouldCheckForGameEnd = false;
             var ImpostorWin = false;
             switch (reason)
             {

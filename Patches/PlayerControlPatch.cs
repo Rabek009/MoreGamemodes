@@ -325,61 +325,16 @@ namespace MoreGamemodes
     class RpcSetRolePatch
     {
         public static Dictionary<byte, bool> RoleAssigned;
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType, [HarmonyArgument(1)] ref bool canOverrideRole)
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (RoleAssigned[__instance.PlayerId] && !RoleManager.IsGhostRole(roleType))
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && RoleManager.IsGhostRole(roleType))
                 return false;
-            canOverrideRole = true;
             if (RoleManager.IsGhostRole(roleType)) return true;
-            int assignedRoles = 0;
-            int playerCount = 0;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc == __instance) continue;
-                ++playerCount;
-                if (pc.Data != null && (RoleAssigned[pc.PlayerId] || pc.Data.Disconnected))
-                    ++assignedRoles;
-            }
-            if (assignedRoles >= playerCount)
-            {
-                new LateTask(() => {
-                    CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
-                    MessageWriter writer = sender.stream;
-                    sender.StartMessage(-1);
-                    RoleAssigned[__instance.PlayerId] = true;
-                    Dictionary<byte, bool> Disconnected = new();
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        Disconnected[pc.Data.PlayerId] = pc.Data.Disconnected;
-                        pc.Data.Disconnected = true;
-                        writer.StartMessage(1);
-                        writer.WritePacked(pc.Data.NetId);
-                        pc.Data.Serialize(writer, false);
-                        writer.EndMessage();
-                    }
-                    __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
-                    sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetRole)
-                        .Write((ushort)roleType)
-                        .Write(true)
-                        .EndRpc();
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        pc.Data.Disconnected = Disconnected[pc.Data.PlayerId];
-                        writer.StartMessage(1);
-                        writer.WritePacked(pc.Data.NetId);
-                        pc.Data.Serialize(writer, false);
-                        writer.EndMessage();
-                    }
-                    sender.EndMessage();
-                    sender.SendMessage();
-                }, 0.5f);
-                return false;
-            }
-            RoleAssigned[__instance.PlayerId] = true;
-            return true;
+            Utils.SetDesyncRoleForPlayer(__instance, roleType, roleType);
+            return false;
         }
     }
 
@@ -545,10 +500,20 @@ namespace MoreGamemodes
 		    {
 			    __instance.SetName(name);
 		    }
-		    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
-		    writer.Write(__instance.Data.NetId);
-            writer.Write(name);
-		    AmongUsClient.Instance.FinishRpcImmediately(writer);
+            if (Main.ModdedProtocol.Value)
+            {
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+		        writer.Write(__instance.Data.NetId);
+                writer.Write(name);
+		        AmongUsClient.Instance.FinishRpcImmediately(writer);
+            }
+            else
+            {
+                MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SetName, SendOption.Reliable);
+		        writer.Write(__instance.Data.NetId);
+		        writer.Write(name);
+		        writer.EndMessage();
+            }
             return false;
         }
     }
@@ -600,6 +565,28 @@ namespace MoreGamemodes
                 sender.EndMessage();
                 sender.SendMessage();
             }
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckMurder))]
+    class CmdCheckMurderPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
+        {
+            if (!AmongUsClient.Instance.AmHost || Main.ModdedProtocol.Value) return true;
+            __instance.CheckMurder(target);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckProtect))]
+    class CmdCheckProtectPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
+        {
+            if (!AmongUsClient.Instance.AmHost || Main.ModdedProtocol.Value) return true;
+            __instance.CheckProtect(target);
             return false;
         }
     }

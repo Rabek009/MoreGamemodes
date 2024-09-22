@@ -31,6 +31,7 @@ namespace MoreGamemodes
         [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.Normal)]
         public static void StartPostfix(MainMenuManager __instance)
         {
+            Application.targetFrameRate = Main.UnlockFPS.Value ? 165 : 60;
             if (rightpanel == null) rightpanel = __instance.gameModeButtons.transform.parent;
             if (template == null) template = __instance.quitButton;
             if (rightpanel == null || template == null) return;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System;
+using InnerNet;
 
 using Object = UnityEngine.Object;
 
@@ -18,7 +19,7 @@ namespace MoreGamemodes
 
             if (!AmongUsClient.Instance.AmHost) return;
             
-            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.L, KeyCode.LeftShift }) && Main.GameStarted)
+            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.L, KeyCode.LeftShift }) && AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started)
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -39,13 +40,13 @@ namespace MoreGamemodes
                 MeetingHud.Instance.RpcClose();
             }
 
-            if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)
+            if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown && Main.ModdedProtocol.Value)
                 GameStartManager.Instance.ResetStartState();
 
-            if (Input.GetKeyDown(KeyCode.LeftShift) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)
+            if (Input.GetKeyDown(KeyCode.LeftShift) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown && Main.ModdedProtocol.Value)
                 GameStartManager.Instance.countDownTimer = 0f;
 
-            if (GetKeysDown(new[] { KeyCode.LeftControl, KeyCode.Delete }) && !Main.GameStarted)
+            if (GetKeysDown(new[] { KeyCode.LeftControl, KeyCode.Delete }) && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
             {
                 OptionItem.AllOptions.ToArray().Where(x => x.Id > 0).Do(x => x.CurrentValue = x.DefaultValue);
                 var menu = Object.FindObjectOfType<GameOptionsMenu>();

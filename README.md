@@ -556,7 +556,8 @@ When you set players to 16 or higher, still max 15 players can join.
 If you set cooldown to 0 or lower, you disable this function. 0 second cooldown don't working. Set this value to 0,001 seconds, if you want no kill cooldown.
 
 ### People not joining lobby
-Due to au sever changes people can't find your lobby with find game option. Players can only join to your lobby using code. (PLEASE INNERSLOTH FIX IT)
+If you want people to join your lobby open settings, click MGM options and disable "Modded protocol". You have to do it in game menu! (not in game)
+Now people can see your lobby and join! Remember that phantom role, /tpout and /tping commands are disabled in public lobbies.
 
 ## Credits
 1. Using some code from Town of Host
@@ -571,3 +572,6 @@ https://github.com/0xDrMoe/TownofHost-Enhanced
 
 4. Game options menu from TOHY
 https://github.com/Yumenopai/TownOfHost_Y
+
+
+This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.

@@ -81,7 +81,7 @@ namespace MoreGamemodes
                 Options.Gamemode.SetValue(0);
                 Main.StandardNames = new Dictionary<byte, string>();
                 new LateTask(() => PlayerControl.LocalPlayer.RpcVersionCheck(Main.CurrentVersion), 2f, "Version Check");
-            }     
+            }
         }
     }
 

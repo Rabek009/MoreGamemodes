@@ -16,7 +16,7 @@ public class InnerNetClientPatch
     [HarmonyPrefix]
     public static bool SendInitialDataPrefix(InnerNetClient __instance, int clientId)
     {
-        if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
+        if (!Main.ModdedProtocol.Value || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
         // We make sure other stuffs like playercontrol and Lobby behavior is spawned properly
         // Then we spawn networked data for new clients
         MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
@@ -54,6 +54,7 @@ public class InnerNetClientPatch
 
     private static void DelaySpawnPlayerInfo(InnerNetClient __instance, int clientId)
     {
+        if (!Main.ModdedProtocol.Value) return;
         List<NetworkedPlayerInfo> players = GameData.Instance.AllPlayers.ToArray().ToList();
         //Logging Stuff
         Main.Instance.Log.LogInfo(players);
@@ -86,7 +87,7 @@ public class InnerNetClientPatch
     [HarmonyPrefix]
     public static bool SendAllStreamedObjectsPrefix(InnerNetClient __instance, ref bool __result)
     {
-        if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
+        if (!Main.ModdedProtocol.Value || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
         // Bypass all NetworkedData here.
         __result = false;
         Il2CppSystem.Collections.Generic.List<InnerNetObject> obj = __instance.allObjects;
@@ -144,7 +145,7 @@ public class InnerNetClientPatch
     public static void FixedUpdatePostfix(InnerNetClient __instance)
     {
         // Send a networked data pre 2 fixed update should be a good practice?
-        if (!__instance.AmHost || __instance.Streams == null || __instance.NetworkMode != NetworkModes.OnlineGame) return;
+        if (!__instance.AmHost || __instance.Streams == null || __instance.NetworkMode != NetworkModes.OnlineGame || !Main.ModdedProtocol.Value) return;
 
         if (timer == 0)
         {

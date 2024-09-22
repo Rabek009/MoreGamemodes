@@ -6,6 +6,8 @@ using UnityEngine;
 using System;
 using Assets.CoreScripts;
 using System.Text;
+using AmongUs.Data;
+using InnerNet;
 
 using Object = UnityEngine.Object;
 
@@ -27,7 +29,8 @@ namespace MoreGamemodes
                 return false;
             }
             if (!AmongUsClient.Instance.AmHost) return true;
-            __instance.timeSinceLastMessage = 3f;
+            if (Main.ModdedProtocol.Value || Main.GameStarted)
+                __instance.timeSinceLastMessage = 3f;
             if (__instance.quickChatField.Visible)
             {
                 return true;
@@ -151,7 +154,7 @@ namespace MoreGamemodes
                             break;
                         case "impostors":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumImpostors, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.NumImpostors, int.Parse(subArgs));
                             break;
                         case "players":
                             subArgs = args.Length < 3 ? "" : args[2];
@@ -176,16 +179,16 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetBool(BoolOptionNames.ConfirmImpostor, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ConfirmImpostor, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetBool(BoolOptionNames.ConfirmImpostor, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.ConfirmImpostor, false);
                                     break;
                             }
                             break;
                         case "emergencymeetings":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.NumEmergencyMeetings, int.Parse(subArgs));
                             break;
                         case "anonymousvotes":
                             subArgs = args.Length < 3 ? "" : args[2];
@@ -193,40 +196,40 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "on":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetBool(BoolOptionNames.AnonymousVotes, true);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.AnonymousVotes, true);
                                     break;
                                 case "off":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetBool(BoolOptionNames.AnonymousVotes, false);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetBool(BoolOptionNames.AnonymousVotes, false);
                                     break;
                             }
                             break;
                         case "emergencycooldown":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.EmergencyCooldown, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.EmergencyCooldown, int.Parse(subArgs));
                             break;
                         case "discussiontime":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.DiscussionTime, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.DiscussionTime, int.Parse(subArgs));
                             break;
                         case "votingtime":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.VotingTime, int.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.VotingTime, int.Parse(subArgs));
                             break;
                         case "playerspeed":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetFloat(FloatOptionNames.PlayerSpeedMod, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.PlayerSpeedMod, float.Parse(subArgs));
                             break;
                         case "crewmatevision":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetFloat(FloatOptionNames.CrewLightMod, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.CrewLightMod, float.Parse(subArgs));
                             break;
                         case "impostorvision":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetFloat(FloatOptionNames.ImpostorLightMod, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ImpostorLightMod, float.Parse(subArgs));
                             break;
                         case "killcooldown":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.SetFloat(FloatOptionNames.KillCooldown, float.Parse(subArgs));
+                            GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.KillCooldown, float.Parse(subArgs));
                             break;
                         case "killdistance":
                             subArgs = args.Length < 3 ? "" : args[2];
@@ -234,17 +237,17 @@ namespace MoreGamemodes
                             switch (subArgs)
                             {
                                 case "short":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.KillDistance, 0);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.KillDistance, 0);
                                     break;
                                 case "medium":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.KillDistance, 1);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.KillDistance, 1);
                                     break;
                                 case "long":
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.KillDistance, 2);
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.KillDistance, 2);
                                     break;
                                 case "custom":
                                     subArgs = args.Length < 4 ? "" : args[3];
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.KillDistance, int.Parse(subArgs));
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.KillDistance, int.Parse(subArgs));
                                     break;
                             }
                             break;
@@ -264,7 +267,7 @@ namespace MoreGamemodes
                                     break;
                                 case "custom":
                                     subArgs = args.Length < 4 ? "" : args[3];
-                                    GameOptionsManager.Instance.currentNormalGameOptions.SetInt(Int32OptionNames.TaskBarMode, int.Parse(subArgs));
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetInt(Int32OptionNames.TaskBarMode, int.Parse(subArgs));
                                     break;
                             }
                             break;
@@ -311,7 +314,7 @@ namespace MoreGamemodes
                             break;
                         case "engineercount":
                             subArgs = args.Length < 3 ? "" : args[2];
-                            GameOptionsManager.Instance.currentNormalGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Engineer));
+                            GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.SetRoleRate(RoleTypes.Engineer, int.Parse(subArgs), GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Engineer));
                             break;
                         case "engineerchance":
                             subArgs = args.Length < 3 ? "" : args[2];
@@ -1878,7 +1881,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can't use /tpout during game.", "Warning");
                         break;
                     }
-                    if (!Options.CanUseTpoutCommand.GetBool())
+                    if (!Options.CanUseTpoutCommand.GetBool() || !Main.ModdedProtocol.Value)
                     {
                         player.RpcSendMessage("Host disabled usage of this command.", "Warning");
                         break;
@@ -1892,7 +1895,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can't use /tpin during game.", "Warning");
                         break;
                     }
-                    if (!Options.CanUseTpoutCommand.GetBool())
+                    if (!Options.CanUseTpoutCommand.GetBool() || !Main.ModdedProtocol.Value)
                     {
                         player.RpcSendMessage("Host disabled usage of this command.", "Warning");
                         break;
@@ -1982,8 +1985,27 @@ namespace MoreGamemodes
     class ChatUpdatePatch
     {
         public static bool SendingSystemMessage = false;
+        public static void Prefix()
+        {
+            if (AmongUsClient.Instance.AmHost && DataManager.Settings.Multiplayer.ChatMode == InnerNet.QuickChatModes.QuickChatOnly)
+                DataManager.Settings.Multiplayer.ChatMode = InnerNet.QuickChatModes.FreeChatOrQuickChat;
+        }
         public static void Postfix(ChatController __instance)
         {
+            if (Main.DarkTheme.Value)
+            {
+                __instance.freeChatField.background.color = new Color32(40, 40, 40, byte.MaxValue);
+                __instance.freeChatField.textArea.compoText.Color(Color.white);
+                __instance.freeChatField.textArea.outputText.color = Color.white;
+
+                __instance.quickChatField.background.color = new Color32(40, 40, 40, byte.MaxValue);
+                __instance.quickChatField.text.color = Color.white;
+            }
+            else
+            {
+                __instance.freeChatField.textArea.outputText.color = Color.black;
+            }
+
             if (!AmongUsClient.Instance.AmHost || Main.MessagesToSend.Count < 1 || (Main.MessagesToSend[0].Item2 == byte.MaxValue && 1f > __instance.timeSinceLastMessage)) return;
             var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
             if (player == null) return;
@@ -1991,6 +2013,99 @@ namespace MoreGamemodes
             Main.MessagesToSend.RemoveAt(0);
             int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo).GetClientId();
             var name = player.Data.PlayerName;
+            if (!Main.ModdedProtocol.Value && !Main.GameStarted)
+            {
+                if (clientId == AmongUsClient.Instance.ClientId || clientId < 0)
+                {
+                    player.SetName(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title));
+                    SendingSystemMessage = true;
+                    DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
+                    SendingSystemMessage = false;
+                    player.SetName(name);
+                    if (clientId == AmongUsClient.Instance.ClientId)
+                        return;
+                }
+                PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
+                playerControl.PlayerId = PlayerControl.LocalPlayer.PlayerId;
+                playerControl.isNew = false;
+                playerControl.notRealPlayer = true;
+                playerControl.NetTransform.SnapTo(new Vector2(100f, 100f));
+                AmongUsClient.Instance.NetIdCnt += 1U;
+                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                if (clientId < 0)
+                {
+                    writer.StartMessage(5);
+			        writer.Write(AmongUsClient.Instance.GameId);
+                }
+                else
+                {
+                    writer.StartMessage(6);
+			        writer.Write(AmongUsClient.Instance.GameId);
+                    writer.WritePacked(clientId);
+                }
+			    AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, writer);
+			    writer.EndMessage();
+			    writer.StartMessage(6);
+			    writer.Write(AmongUsClient.Instance.GameId);
+			    writer.WritePacked(int.MaxValue);
+			    for (uint i = 1; i <= 3; ++i)
+			    {
+			        writer.StartMessage(4);
+			        writer.WritePacked(2U);
+			        writer.WritePacked(-2);
+			        writer.Write((byte)SpawnFlags.None);
+			        writer.WritePacked(1);
+			        writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+			        writer.StartMessage(1);
+			        writer.EndMessage();
+			        writer.EndMessage();
+			    }
+			    writer.EndMessage();
+			    AmongUsClient.Instance.SendOrDisconnect(writer);
+			    writer.Recycle();
+                if (PlayerControl.AllPlayerControls.Contains(playerControl))
+                    PlayerControl.AllPlayerControls.Remove(playerControl);
+                new LateTask(() => {
+                    var sender = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                    var writer = sender.stream;
+                    sender.StartMessage(clientId);
+                    sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetName)
+                        .Write(PlayerControl.LocalPlayer.Data.NetId)
+                        .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
+                        .EndRpc();
+                    sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SendChat)
+                        .Write(msg)
+                        .EndRpc();
+                    sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetName)
+                        .Write(PlayerControl.LocalPlayer.Data.NetId)
+                        .Write(name)
+                        .EndRpc();
+                    sender.EndMessage();
+                    sender.SendMessage();
+                }, 0.2f);
+                new LateTask(() => {
+                    MessageWriter writer = MessageWriter.Get(SendOption.None);
+                    if (clientId < 0)
+                    {
+                        writer.StartMessage(5);
+			            writer.Write(AmongUsClient.Instance.GameId);
+                    }
+                    else
+                    {
+                        writer.StartMessage(6);
+			            writer.Write(AmongUsClient.Instance.GameId);
+                        writer.WritePacked(clientId);
+                    }
+                    writer.StartMessage(5);
+			        writer.WritePacked(playerControl.NetId);
+			        writer.EndMessage();
+                    writer.EndMessage();
+			        AmongUsClient.Instance.RemoveNetObject(playerControl);
+                    playerControl.DespawnOnDestroy = false;
+                    Object.Destroy(playerControl.gameObject);
+                }, 0.5f);
+                return;
+            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 var clientId2 = pc.GetClientId();
@@ -1998,36 +2113,37 @@ namespace MoreGamemodes
                 {
                     if (pc.AmOwner)
                     {
-                        player.Data.PlayerName = Utils.ColorString(Color.blue, "MGM.SystemMessage." + title);
+                        player.SetName(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title));
                         SendingSystemMessage = true;
                         DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
                         SendingSystemMessage = false;
-                        player.Data.PlayerName = name;
+                        player.SetName(name);
                     }
-                    else
+                    else if (Main.GameStarted || Main.ModdedProtocol.Value)
                     {
                         new LateTask(() =>
                         {
                             var sender = CustomRpcSender.Create("MessagesToSend", SendOption.None);
                             var writer = sender.stream;
                             sender.StartMessage(clientId2);
-                            player.Data.PlayerName = Utils.ColorString(Color.blue, "MGM.SystemMessage." + title);
-                            writer.StartMessage(1);
-                            writer.WritePacked(player.Data.NetId);
-                            player.Data.Serialize(writer, false);
-                            writer.EndMessage();
+                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(player.Data.NetId)
+                                .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
+                                .EndRpc();
                             sender.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
                                 .Write(msg)
                                 .EndRpc();
-                            player.Data.PlayerName = Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name;
-                            writer.StartMessage(1);
-                            writer.WritePacked(player.Data.NetId);
-                            player.Data.Serialize(writer, false);
-                            writer.EndMessage();
-                            player.Data.PlayerName = name;
+                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(player.Data.NetId)
+                                .Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name)
+                                .EndRpc();
                             sender.EndMessage();
                             sender.SendMessage();
                         }, 0f, "Send Message");
+                    }
+                    else
+                    {
+                        
                     }
                 }
             }
@@ -2041,17 +2157,34 @@ namespace MoreGamemodes
         {
             int length = __instance.textArea.text.Length;
 		    __instance.charCountText.text = length + "/" + __instance.textArea.characterLimit;
-		    if (length < (AmongUsClient.Instance.AmHost ? 750 : 225))
-		    {
-		    	__instance.charCountText.color = Color.black;
-		    	return;
-		    }
-		    if (length < (AmongUsClient.Instance.AmHost ? 1000 : 300))
-		    {
-		    	__instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
-		    	return;
-		    }
-		    __instance.charCountText.color = Color.red;
+            if (Main.ModdedProtocol.Value || Main.GameStarted)
+            {
+                if (length < (AmongUsClient.Instance.AmHost ? 750 : 225))
+		        {
+		    	    __instance.charCountText.color = Color.black;
+		    	    return;
+		        }
+		        if (length < (AmongUsClient.Instance.AmHost ? 1000 : 300))
+		        {
+		    	    __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
+		    	    return;
+		        }
+		        __instance.charCountText.color = Color.red;
+            }
+		    else
+            {
+                if (length < 90)
+		        {
+		    	    __instance.charCountText.color = Color.black;
+		    	    return;
+		        }
+		        if (length < 118)
+		        {
+		    	    __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
+		    	    return;
+		        }
+		        __instance.charCountText.color = Color.red;
+            }
         }
     }
 
@@ -2065,6 +2198,13 @@ namespace MoreGamemodes
                 __result = false;
                 return false;
             }
+            if (!Main.GameStarted && Main.ModdedProtocol.Value)
+            {
+                chatText = chatText.Replace("[", "【");
+                chatText = chatText.Replace("]", "】");
+                chatText = chatText.Replace("<", " ");
+                chatText = chatText.Replace(">", " ");
+            }
             if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
@@ -2073,10 +2213,15 @@ namespace MoreGamemodes
                 __result = true;
                 return false;
             }
-            if (!Main.GameStarted)
+            if (!Main.GameStarted && Main.ModdedProtocol.Value)
             {
                 int return_count = PlayerControl.LocalPlayer.Data.PlayerName.Count(x => x == '\n');
                 chatText = new StringBuilder(chatText).Insert(0, "<size=1.5>\n</size>", return_count).ToString();
+            }
+            else if (!Main.GameStarted)
+            {
+                int return_count = PlayerControl.LocalPlayer.Data.PlayerName.Count(x => x == '\n');
+                chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
             }
             if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
@@ -2107,7 +2252,10 @@ namespace MoreGamemodes
     {
         public static void Postfix(ChatController __instance)
         {
-            __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 1000 : 300;
+            if (Main.ModdedProtocol.Value || Main.GameStarted)
+                __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 1000 : 300;
+            else
+                __instance.freeChatField.textArea.characterLimit = 118;
 
             if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.C))
                 ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
@@ -2160,6 +2308,22 @@ namespace MoreGamemodes
                 return false;
             }
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(ChatBubble), nameof(ChatBubble.SetName))]
+    class ChatBubbleSetNamePatch
+    {
+        public static void Postfix(ChatBubble __instance, [HarmonyArgument(1)] bool isDead, [HarmonyArgument(2)] bool voted)
+        {
+            if (Main.DarkTheme.Value)
+            {
+                if (isDead)
+                    __instance.Background.color = new Color(0.0f, 0.0f, 0.0f, 0.6f);
+                else
+                    __instance.Background.color = Color.black;
+                __instance.TextArea.color = Color.white;
+            }
         }
     }
 }

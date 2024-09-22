@@ -265,7 +265,7 @@ namespace MoreGamemodes
         {
             opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
             opt.SetFloat(FloatOptionNames.KillCooldown, 0.001f);
-            if (Main.Timer < Options.FtImpostorsBlindTime.GetFloat() && player.Data.Role.IsImpostor)
+            if (Main.Timer < Options.FtImpostorsBlindTime.GetFloat() && player.Data.Role != null && player.Data.Role.IsImpostor)
             {
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);

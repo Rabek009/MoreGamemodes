@@ -7,6 +7,8 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PingTracker), nameof(PingTracker.Update))]
     public static class PingShowerPatch
     {
+        private static float FPSUpdateDelay = 0f;
+        private static int FPSGame = 60;
         public static void Postfix(PingTracker __instance)
         {
             __instance.text.alignment = TextAlignmentOptions.Right;
@@ -28,6 +30,16 @@ namespace MoreGamemodes
             else
             {
                 __instance.aspectPosition.DistanceFromEdge = new Vector3(offset_x, offset_y, 0f);
+            }
+            if (Main.ShowFPS.Value)
+            {
+                FPSUpdateDelay += Time.deltaTime;
+                if (FPSUpdateDelay > 1f)
+                {
+                    FPSGame = (int)(1.0f / Time.deltaTime);
+                    FPSUpdateDelay -= 1f;
+                }
+                __instance.text.text += Utils.ColorString(Color.yellow, "\nFPS: " + FPSGame);
             }
             __instance.text.text += Utils.ColorString(Color.green, "\nMore Gamemodes v" + Main.CurrentVersion);
         }

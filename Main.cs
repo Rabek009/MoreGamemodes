@@ -30,6 +30,12 @@ public partial class Main : BasePlugin
     public static bool GameStarted;
     public static float Timer;
 
+    public static ConfigEntry<bool> ModdedProtocol { get; private set; }
+    public static ConfigEntry<bool> UnlockFPS { get; private set; }
+    public static ConfigEntry<bool> ShowFPS { get; private set; }
+    public static ConfigEntry<bool> DarkTheme { get; private set; }
+    public static ConfigEntry<bool> DisableLobbyMusic { get; private set; }
+
     public static Dictionary<byte, byte> StandardColors;
     public static Dictionary<byte, string> StandardNames;
     public static Dictionary<byte, string> StandardHats;
@@ -73,6 +79,12 @@ public partial class Main : BasePlugin
         Preset8 = Config.Bind("Preset Name Options", "Preset8", "Preset 8");
         Preset9 = Config.Bind("Preset Name Options", "Preset9", "Preset 9");
         Preset10 = Config.Bind("Preset Name Options", "Preset10", "Preset 10");
+
+        ModdedProtocol = Config.Bind("Client Options", "ModdedProtocol", true);
+        UnlockFPS = Config.Bind("Client Options", "UnlockFPS", true);
+        ShowFPS = Config.Bind("Client Options", "ShowFPS", true);
+        DarkTheme = Config.Bind("Client Options", "DarkTheme", false);
+        DisableLobbyMusic = Config.Bind("Client Options", "DisableLobbyMusic", false);
 
         CustomGamemode.Instance = null;
         ClassicGamemode.instance = null;
