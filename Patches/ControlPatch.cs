@@ -49,6 +49,7 @@ namespace MoreGamemodes
             if (GetKeysDown(new[] { KeyCode.LeftControl, KeyCode.Delete }) && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
             {
                 OptionItem.AllOptions.ToArray().Where(x => x.Id > 0).Do(x => x.CurrentValue = x.DefaultValue);
+                GameManager.Instance.RpcSyncCustomOptions();
                 var menu = Object.FindObjectOfType<GameOptionsMenu>();
                 if (menu)
                 {
@@ -69,6 +70,13 @@ namespace MoreGamemodes
                                 stringOption.Value = option.GetInt();
                         }
                     }
+                }
+                var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
+                if (viewSettingsPane != null)
+                {
+                    if (viewSettingsPane.currentTab != StringNames.OverviewCategory && viewSettingsPane.currentTab != StringNames.RolesCategory)
+                        viewSettingsPane.RefreshTab();
+                    viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
                 }
             }
         }

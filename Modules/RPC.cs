@@ -193,6 +193,13 @@ namespace MoreGamemodes
                         if (co.Id >= 1000 && co.IsHiddenOn(Options.CurrentGamemode)) continue;
                         co.SetValue(reader.ReadInt32());
                     }
+                    var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
+                    if (viewSettingsPane != null)
+                    {
+                        if (viewSettingsPane.currentTab != StringNames.OverviewCategory && viewSettingsPane.currentTab != StringNames.RolesCategory)
+                            viewSettingsPane.RefreshTab();
+                        viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
+                    }
                     break;
                 case CustomRPC.SetHackActive:
                     __instance.SetHackActive(reader.ReadBoolean());

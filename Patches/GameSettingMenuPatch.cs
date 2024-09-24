@@ -21,6 +21,7 @@ public class GameSettingMenuPatch
     [HarmonyPriority(Priority.First)]
     public static void StartPostfix(GameSettingMenu __instance)
     {
+        if (GameManager.Instance.IsHideAndSeek()) return;
         ModSettingsButtons = new();
         var gamepreset = __instance.GamePresetsButton;
 
@@ -186,6 +187,7 @@ public class GameSettingMenuPatch
     [HarmonyPatch(nameof(GameSettingMenu.OnEnable)), HarmonyPrefix]
     private static bool OnEnablePrefix(GameSettingMenu __instance)
     {
+        if (GameManager.Instance.IsHideAndSeek()) return true;
         if (templateGameOptionsMenu == null)
         {
             templateGameOptionsMenu = Object.Instantiate(__instance.GameSettingsTab, __instance.GameSettingsTab.transform.parent);
@@ -207,6 +209,7 @@ public class GameSettingMenuPatch
 
         return false;
     }
+
     [HarmonyPatch(nameof(GameSettingMenu.Close)), HarmonyPostfix]
     private static void ClosePostfix(GameSettingMenu __instance)
     {

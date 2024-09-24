@@ -7,157 +7,230 @@ using Object = UnityEngine.Object;
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(LobbyViewSettingsPane))]
-    public static class LobbyViewPatch
+    public class LobbyViewPatch
     {
+        private static GameObject ModSettingsButton = null;
+        private static GameObject GamemodeSettingsButton = null;
+        private static GameObject AdditionalGamemodesButton = null;
+        
         [HarmonyPatch(nameof(LobbyViewSettingsPane.Awake))]
         [HarmonyPostfix]
         public static void AwakePostfix(LobbyViewSettingsPane __instance)
         {
-            RemoveRoleTab();
-            string buttonName = "MGButton";
-            var OverviewButton = GameObject.Find("OverviewTab"); 
+            if (GameManager.Instance.IsHideAndSeek()) return;
+            __instance.gameModeText.DestroyTranslator();
+            __instance.gameModeText.text = Options.Gamemode.GetString();
+            
+            var OverviewButton = __instance.taskTabButton.gameObject;
             OverviewButton.transform.localScale = new Vector3(0.5f * OverviewButton.transform.localScale.x, OverviewButton.transform.localScale.y, OverviewButton.transform.localScale.z);
             OverviewButton.transform.localPosition += new Vector3(-1.1f, 0f, 0f);
-            OverviewButton.transform.Find("FontPlacer").transform.localScale = new Vector3(1.35f, 1f, 1f);
-            OverviewButton.transform.Find("FontPlacer").transform.localPosition = new Vector3(-0.6f, -0.1f, 0f);
-            var MGButton = GameObject.Find(buttonName);
-            if (MGButton == null)
+
+            var RolesButton = __instance.rolesTabButton.gameObject;
+            RolesButton.transform.localScale = new Vector3(0.5f * RolesButton.transform.localScale.x, RolesButton.transform.localScale.y, RolesButton.transform.localScale.z);
+            RolesButton.transform.localPosition = OverviewButton.transform.localPosition + Vector3.right * 1.75f * 1f;
+
+            ModSettingsButton = GameObject.Find("ModTab");
+            if (ModSettingsButton == null)
             {
-                MGButton = GameObject.Instantiate(OverviewButton, OverviewButton.transform.parent);
-                MGButton.transform.localPosition += Vector3.right * 1.75f * 1f;
-                MGButton.name = buttonName;
-                var fontPlacer = MGButton.transform.Find("FontPlacer");
-                if (fontPlacer != null)
+                ModSettingsButton = Object.Instantiate(OverviewButton, OverviewButton.transform.parent);
+                ModSettingsButton.transform.localPosition += Vector3.right * 3.5f * 1f;
+                ModSettingsButton.name = "ModTab";
+                var fontPlacer2 = ModSettingsButton.transform.Find("FontPlacer");
+                if (fontPlacer2 != null)
                 {
-                    var textMeshPro = fontPlacer.GetComponentInChildren<TextMeshPro>();
+                    var textMeshPro = fontPlacer2.GetComponentInChildren<TextMeshPro>();
                     if (textMeshPro != null)
                     {
                         __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
-                            textMeshPro.text = "View MG Settings";
+                            textMeshPro.text = "Mod Settings";
                         })));
                     }
                 }
-                var passiveButton = MGButton.GetComponent<PassiveButton>();
-                passiveButton.OnClick.RemoveAllListeners();
-                passiveButton.OnClick.AddListener((Action)(() => {
-                    __instance.ChangeTab((StringNames)ModGameOptionsMenu.TabIndex);
-                    __instance.scrollBar.ScrollToTop();
-                    Main.Instance.Log.LogMessage("MG Tab View");
+                var passiveButton2 = ModSettingsButton.GetComponent<PassiveButton>();
+                passiveButton2.OnClick.RemoveAllListeners();
+                passiveButton2.OnClick.AddListener((Action)(() => {
+                    __instance.ChangeTab(0);
+                }));
+            }
+
+            GamemodeSettingsButton = GameObject.Find("GamemodeTab");
+            if (GamemodeSettingsButton == null)
+            {
+                GamemodeSettingsButton = Object.Instantiate(OverviewButton, OverviewButton.transform.parent);
+                GamemodeSettingsButton.transform.localPosition += Vector3.right * 5.25f * 1f;
+                GamemodeSettingsButton.name = "GamemodeTab";
+                var fontPlacer2 = GamemodeSettingsButton.transform.Find("FontPlacer");
+                if (fontPlacer2 != null)
+                {
+                    var textMeshPro = fontPlacer2.GetComponentInChildren<TextMeshPro>();
+                    if (textMeshPro != null)
+                    {
+                        __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
+                            textMeshPro.text = "Gamemode Settings";
+                        })));
+                    }
+                }
+                var passiveButton2 = GamemodeSettingsButton.GetComponent<PassiveButton>();
+                passiveButton2.OnClick.RemoveAllListeners();
+                passiveButton2.OnClick.AddListener((Action)(() => {
+                    __instance.ChangeTab((StringNames)1);
+                }));
+            }
+
+            AdditionalGamemodesButton = GameObject.Find("AdditionalTab");
+            if (AdditionalGamemodesButton == null)
+            {
+                AdditionalGamemodesButton = Object.Instantiate(OverviewButton, OverviewButton.transform.parent);
+                AdditionalGamemodesButton.transform.localPosition += Vector3.right * 7f * 1f;
+                AdditionalGamemodesButton.name = "AdditionalTab";
+                var fontPlacer2 = AdditionalGamemodesButton.transform.Find("FontPlacer");
+                if (fontPlacer2 != null)
+                {
+                    var textMeshPro = fontPlacer2.GetComponentInChildren<TextMeshPro>();
+                    if (textMeshPro != null)
+                    {
+                        __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
+                            textMeshPro.text = "Additional Gamemodes";
+                        })));
+                    }
+                }
+                var passiveButton2 = AdditionalGamemodesButton.GetComponent<PassiveButton>();
+                passiveButton2.OnClick.RemoveAllListeners();
+                passiveButton2.OnClick.AddListener((Action)(() => {
+                    __instance.ChangeTab((StringNames)2);
                 }));
             }
         }
 
-        [HarmonyPatch(nameof(LobbyViewSettingsPane.ChangeTab))]
-        [HarmonyPostfix]
-        public static void ChangeTabPatch(LobbyViewSettingsPane __instance, StringNames category)
-        {
-            if (__instance.currentTab == (StringNames)ModGameOptionsMenu.TabIndex)
-            {
-                DrawOptions(__instance);
-               
-            }
-        }
-
         [HarmonyPatch(nameof(LobbyViewSettingsPane.SetTab))]
-        [HarmonyPostfix]
-        public static void SetTabPatch(LobbyViewSettingsPane __instance)
-        {   
-            var MGButtonPassive = GameObject.Find("MGButton").GetComponent<PassiveButton>();
-    
-            if (__instance.currentTab == (StringNames)ModGameOptionsMenu.TabIndex)
-            {   
-                __instance.rolesTabButton.SelectButton(false);
+        [HarmonyPrefix]
+        public static bool SetTabPatch(LobbyViewSettingsPane __instance)
+        {
+            if (ModSettingsButton == null || GamemodeSettingsButton == null || AdditionalGamemodesButton == null) return true;
+            var passiveButton = ModSettingsButton.GetComponent<PassiveButton>();
+            var passiveButton2 = GamemodeSettingsButton.GetComponent<PassiveButton>();
+            var passiveButton3 = AdditionalGamemodesButton.GetComponent<PassiveButton>();
+            if (__instance.currentTab == StringNames.OverviewCategory || __instance.currentTab == StringNames.RolesCategory)
+            {
+                passiveButton.SelectButton(false);
+                passiveButton2.SelectButton(false);
+                passiveButton3.SelectButton(false);
+                return true;
+            }
+            if (__instance.currentTab == 0)
+            {
+                passiveButton.SelectButton(true);
                 __instance.taskTabButton.SelectButton(false);
-                MGButtonPassive.SelectButton(true);
-
-                DrawOptions(__instance);         
+		        __instance.rolesTabButton.SelectButton(false);
+                passiveButton2.SelectButton(false);
+                passiveButton3.SelectButton(false);
+                DrawOptions(__instance, TabGroup.ModSettings);
             }
-            else
+            else if (__instance.currentTab == (StringNames)1)
             {
-               MGButtonPassive.SelectButton(false);
+                passiveButton2.SelectButton(true);
+                __instance.taskTabButton.SelectButton(false);
+		        __instance.rolesTabButton.SelectButton(false);
+                passiveButton.SelectButton(false);
+                passiveButton3.SelectButton(false);
+                DrawOptions(__instance, TabGroup.GamemodeSettings);
             }
+            else if (__instance.currentTab == (StringNames)2)
+            {
+                passiveButton3.SelectButton(true);
+                __instance.taskTabButton.SelectButton(false);
+		        __instance.rolesTabButton.SelectButton(false);
+                passiveButton.SelectButton(false);
+                passiveButton2.SelectButton(false);
+                DrawOptions(__instance, TabGroup.AdditionalGamemodes);
+            }
+            return false;
         }
 
-        public static void RemoveRoleTab()
+        public static void DrawOptions(LobbyViewSettingsPane __instance, TabGroup tab)
         {
-            var roleTab = GameObject.Find("RolesTabs");
-            Object.Destroy(roleTab.gameObject);
-        }
-
-        public static void DrawOptions(LobbyViewSettingsPane instance)
-        {
-            
-            foreach (var info in instance.settingsInfo)
-            {
-                Object.Destroy(info.gameObject);
-            }
-            instance.settingsInfo.Clear();
-
-            float num = 1.44f;
-            float num2;
-
-            instance.gameModeText.text = "MG Settings";
-
+            float num = 2.03f;
+            int settingsCount = 0;
             foreach (var option in OptionItem.AllOptions)
             {
-                if (option.IsHiddenOn(Options.CurrentGamemode)) continue;
-
+                if (option.IsHiddenOn(Options.CurrentGamemode) || option.Tab != tab || (option.Parent != null && (option.Parent.IsHiddenOn(Options.CurrentGamemode) || !option.Parent.GetBool()))) continue;
+                if (option.IsHeader || option is TextOptionItem)
+                {
+                    num -= 0.59f;
+                    CategoryHeaderMasked categoryHeaderMasked = Object.Instantiate(__instance.categoryHeaderOrigin);
+			        categoryHeaderMasked.SetHeader(StringNames.None, 61);
+			        categoryHeaderMasked.transform.SetParent(__instance.settingsContainer);
+			        categoryHeaderMasked.transform.localScale = Vector3.one;
+			        categoryHeaderMasked.transform.localPosition = new Vector3(-9.77f, num, -2f);
+			        __instance.settingsInfo.Add(categoryHeaderMasked.gameObject);
+			        num -= 0.85f;
+                    categoryHeaderMasked.DestroyTranslator();
+                    categoryHeaderMasked.Title.text = option.GetName();
+                    settingsCount = 0;
+                }
                 if (option is TextOptionItem) continue;
 
-                var basegameSetting = GameOptionsMenuPatch.GetSetting(option);
+                ViewSettingsInfoPanel viewSettingsInfoPanel = Object.Instantiate(__instance.infoPanelOrigin);
+				viewSettingsInfoPanel.transform.SetParent(__instance.settingsContainer);
+				viewSettingsInfoPanel.transform.localScale = Vector3.one;
+				float num2;
+				if (settingsCount % 2 == 0)
+				{
+					num2 = -8.95f;
+					if (settingsCount > 0)
+					{
+						num -= 0.59f;
+					}
+				}
+				else
+				{
+					num2 = -3f;
+				}
+				viewSettingsInfoPanel.transform.localPosition = new Vector3(num2, num, -2f);
 
-                if (option.IsHeader)
+                if (option is BooleanOptionItem)
                 {
-                    CategoryHeaderMasked categoryHeaderMasked = Object.Instantiate(instance.categoryHeaderOrigin);
-                    categoryHeaderMasked.SetHeader((StringNames)ModGameOptionsMenu.TabIndex, 20);
-                    categoryHeaderMasked.transform.SetParent(instance.settingsContainer);
-                    categoryHeaderMasked.transform.localScale = Vector3.one;
-                    categoryHeaderMasked.transform.localPosition = new Vector3(-9.77f, num, -2f);
-                    categoryHeaderMasked.Title.text = option.GetName();
-                    categoryHeaderMasked.Title.outlineWidth = 0.2f;
-                    instance.settingsInfo.Add(categoryHeaderMasked.gameObject);  
-                    num -= 0.85f;
-                    continue;
+                    viewSettingsInfoPanel.SetInfoCheckbox(StringNames.None, 61, option.GetBool());
                 }
-
-                num2 = instance.settingsInfo.Count % 2 == 0 ? -8.95f : -3f;
-
-                ViewSettingsInfoPanel viewSettingsInfoPanel = Object.Instantiate(instance.infoPanelOrigin);
-                viewSettingsInfoPanel.transform.SetParent(instance.settingsContainer);
-                viewSettingsInfoPanel.transform.localScale = Vector3.one;
-                viewSettingsInfoPanel.transform.localPosition = new Vector3(num2, num, -2f);
-
-                if (basegameSetting != null)
+                else if (option is IntegerOptionItem)
                 {
-                    switch (basegameSetting.Type)
-                    {
-                        case OptionTypes.Checkbox:
-                            viewSettingsInfoPanel.SetInfoCheckbox(basegameSetting.Title, 61, option.GetBool());
-                            break;
-
-                        case OptionTypes.Int:
-                            viewSettingsInfoPanel.SetInfo(basegameSetting.Title, option.GetInt().ToString(), 61);
-                            break;
-
-                        case OptionTypes.Float:
-                            viewSettingsInfoPanel.SetInfo(basegameSetting.Title, option.GetFloat().ToString(), 61);
-                            break;
-
-                        case OptionTypes.String:
-                            viewSettingsInfoPanel.SetInfo(basegameSetting.Title, option.GetString(), 61);
-                            break;
-
-                        default:
-                            viewSettingsInfoPanel.SetInfo(basegameSetting.Title, option.GetValue().ToString(), 61);
-                            break;
-                    }
+                    viewSettingsInfoPanel.SetInfo(StringNames.None, option.ApplyFormat(option.GetInt().ToString()), 61);
+                }
+                else if (option is FloatOptionItem)
+                {
+                    viewSettingsInfoPanel.SetInfo(StringNames.None, option.ApplyFormat(option.GetFloat().ToString()), 61);
+                }
+                else if (option is StringOptionItem || option is PresetOptionItem)
+                {
+                    viewSettingsInfoPanel.SetInfo(StringNames.None, option.GetString(), 61);
                 }
                 viewSettingsInfoPanel.titleText.text = option.GetName();
-                instance.settingsInfo.Add(viewSettingsInfoPanel.gameObject);
 
-                if (instance.settingsInfo.Count % 2 == 0) num -= 0.59f;
+                if (option.Parent?.Parent?.Parent != null)
+                {
+                    viewSettingsInfoPanel.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().color = new(0.7f, 0.5f, 0.5f);
+                }
+                else if (option.Parent?.Parent != null)
+                {
+                    viewSettingsInfoPanel.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().color = new(0.5f, 0.5f, 0.7f);
+                }
+                else if (option.Parent != null)
+                {
+                    viewSettingsInfoPanel.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().color = new(0.5f, 0.7f, 0.5f);
+                }
+
+                __instance.settingsInfo.Add(viewSettingsInfoPanel.gameObject);
+                ++settingsCount;
             }
-            instance.scrollBar.CalculateAndSetYBounds(instance.settingsInfo.Count + 10, 2f, 6f, 0.59f);
+            __instance.scrollBar.SetYBoundsMax(-num);
+        }
+
+        [HarmonyPatch(nameof(LobbyViewSettingsPane.OnEnable))]
+        [HarmonyPostfix]
+        public static void OnEnablePostfix(LobbyViewSettingsPane __instance)
+        {
+            if (GameManager.Instance.IsHideAndSeek()) return;
+            __instance.gameModeText.text = Options.Gamemode.GetString();
         }
     }
 }

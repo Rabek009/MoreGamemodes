@@ -238,9 +238,17 @@ public static class GameOptionsMenuPatch
                                 stringOption.Value = option2.GetInt();
                         }
                     }
+                    var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
+                    if (viewSettingsPane != null)
+                        viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
                 }
                 else if (item.Id == 2)
+                {
                     ReCreateSettings(__instance, TabGroup.GamemodeSettings);
+                    var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
+                    if (viewSettingsPane != null)
+                        viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
+                }
                 else if (item.Children.Count > 0)
                     ReCreateSettings(__instance, (TabGroup)(ModGameOptionsMenu.TabIndex - 3));
             }
