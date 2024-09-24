@@ -97,6 +97,11 @@ namespace MoreGamemodes
                         Utils.SendChat(__instance.Data.PlayerName + " was kicked for having other version of More Gamemodes.", "AutoKick");
                         AmongUsClient.Instance.KickPlayer(__instance.GetClientId(), false);
                     }
+                    else if (reader.ReadBoolean() != Main.ModdedProtocol.Value)
+                    {
+                        Utils.SendChat(__instance.Data.PlayerName + " was kicked for having wrong protocol in his settings.", "AutoKick");
+                        AmongUsClient.Instance.KickPlayer(__instance.GetClientId(), false);
+                    }
                     else
                     {
                         Main.IsModded[__instance.PlayerId] = true;
@@ -509,6 +514,7 @@ namespace MoreGamemodes
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
             writer.Write(version);
+            writer.Write(Main.ModdedProtocol.Value);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
