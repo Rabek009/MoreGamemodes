@@ -79,7 +79,6 @@ Impostors need to kill every single crewmate, crewmate need to do every task. No
 | Impostors can vent              |
 | Impostors can close doors       |
 | Impostors are visible           |
-| Infection mode                  |
 
 ### Shift and seek
 Everyone is engineer or shapeshifter. Impostors need to kill every single crewmate, crewmate need to do every task. No reports, emergiences and sabotages. Depending on options impostors can vent and closing doors. Impostors are visible to others or not. Impostors must shapeshift into person they want to kill.
@@ -93,7 +92,6 @@ Everyone is engineer or shapeshifter. Impostors need to kill every single crewma
 | Impostors can close doors       |
 | Impostors are visible           |
 | Instant shapeshift              |
-| Infection mode                  |
 
 ### Bomb tag
 Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!
