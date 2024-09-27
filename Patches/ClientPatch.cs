@@ -151,24 +151,4 @@ namespace MoreGamemodes
             return false;
         }
     }
-
-    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HostGame))]
-    class HostGamePatch
-    {
-        public static bool Prefix(InnerNetClient __instance, [HarmonyArgument(0)] IGameOptions settings, [HarmonyArgument(1)] GameFilterOptions filterOpts)
-        {
-            __instance.IsGamePublic = false;
-			MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
-			messageWriter.StartMessage(0);
-            IGameOptions options = new NormalGameOptionsV08(new UnityLogger().Cast<ILogger>()).Cast<IGameOptions>();
-            options.SetRecommendations(1, true);
-			messageWriter.WriteBytesAndSize(__instance.gameOptionsFactory.ToBytes(options, AprilFoolsMode.IsAprilFoolsModeToggledOn));
-			messageWriter.Write(CrossplayMode.GetCrossplayFlags());
-			filterOpts.Serialize(messageWriter);
-			messageWriter.EndMessage();
-			__instance.SendOrDisconnect(messageWriter);
-			messageWriter.Recycle();
-            return false;
-        }
-    }
 }
