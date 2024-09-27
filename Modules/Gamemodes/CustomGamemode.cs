@@ -187,6 +187,11 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual void OnDisconnect(PlayerControl player)
+        {
+            
+        }
+
         public virtual IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
         {
             return opt;

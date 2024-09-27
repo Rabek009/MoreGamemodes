@@ -290,6 +290,7 @@ namespace MoreGamemodes
                     pcdistance.Add(p, dis);
                 }
             }
+            if (pcdistance.Count == 0) return null;
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;

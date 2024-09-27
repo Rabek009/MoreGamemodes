@@ -84,6 +84,10 @@ namespace MoreGamemodes
                 if (CheckAndEndGameForTaskWin()) return false;
                 if (CheckAndEndGameForCrewmateWin()) return false;
             }
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.ColorWars)
+            {
+                if (CheckAndEndGameForColorWars()) return false;
+            }
             return false;
         }
 
@@ -371,6 +375,34 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.Data.Role.IsImpostor)
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.ImpostorByKill, winners);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForColorWars()
+        {
+            List<byte> leaders = new();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (ColorWarsGamemode.instance.IsLeader(pc) && !pc.Data.IsDead && !leaders.Contains(ColorWarsGamemode.instance.GetTeam(pc)))
+                    leaders.Add(ColorWarsGamemode.instance.GetTeam(pc));
+            }
+            if (leaders.Count == 0)
+            {
+                List<byte> winners = new();
+                StartEndGame(GameOverReason.ImpostorByKill, winners);
+                return true;
+            }
+            if (leaders.Count == 1)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (ColorWarsGamemode.instance.GetTeam(pc) == leaders[0])
                         winners.Add(pc.PlayerId);
                 }
                 StartEndGame(GameOverReason.ImpostorByKill, winners);

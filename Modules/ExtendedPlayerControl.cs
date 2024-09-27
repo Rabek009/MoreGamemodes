@@ -281,6 +281,7 @@ namespace MoreGamemodes
                 dis = Vector2.Distance(playerpos, vent.transform.position);
                 ventdistance.Add(vent, dis);
             }
+            if (ventdistance.Count == 0) return null;
             var min = ventdistance.OrderBy(c => c.Value).FirstOrDefault();
             Vent target = min.Key;
             return target;
@@ -294,8 +295,6 @@ namespace MoreGamemodes
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * ((100f - ExplosionHole.LastSpeedDecrease[player.PlayerId]) / 100f));
             if (opt.GetByte(ByteOptionNames.MapId) == 3)
                 opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
-            if (!Main.ModdedProtocol.Value)
-                opt.RoleOptions.SetRoleRate(RoleTypes.Phantom, 0, 0);
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
             return opt;
         }
@@ -435,7 +434,7 @@ namespace MoreGamemodes
                 }
                 return;
             }
-            else if (Options.CurrentGamemode == Gamemodes.BattleRoyale)
+            else if (Options.CurrentGamemode is Gamemodes.BattleRoyale or Gamemodes.ColorWars)
             {
                 player.RpcSetDesyncRole(RoleTypes.Impostor, player);
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -581,7 +580,7 @@ namespace MoreGamemodes
 
         public static RoleTypes GetSelfRole(this PlayerControl player)
         {
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale) return RoleTypes.Impostor;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.BattleRoyale or Gamemodes.ColorWars) return RoleTypes.Impostor;
             if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) return RoleTypes.Shapeshifter;
             return Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
         }
@@ -614,6 +613,7 @@ namespace MoreGamemodes
                     pcdistance.Add(p, dis);
                 }
             }
+            if (pcdistance.Count == 0) return null;
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;

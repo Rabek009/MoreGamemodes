@@ -79,6 +79,7 @@ Impostors need to kill every single crewmate, crewmate need to do every task. No
 | Impostors can vent              |
 | Impostors can close doors       |
 | Impostors are visible           |
+| Infection mode                  |
 
 ### Shift and seek
 Everyone is engineer or shapeshifter. Impostors need to kill every single crewmate, crewmate need to do every task. No reports, emergiences and sabotages. Depending on options impostors can vent and closing doors. Impostors are visible to others or not. Impostors must shapeshift into person they want to kill.
@@ -92,6 +93,7 @@ Everyone is engineer or shapeshifter. Impostors need to kill every single crewma
 | Impostors can close doors       |
 | Impostors are visible           |
 | Instant shapeshift              |
+| Infection mode                  |
 
 ### Bomb tag
 Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!
@@ -485,6 +487,25 @@ Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors 
 | Unfreeze radius                      |
 | Task complete duration during freeze |
 
+### Color wars
+At start there are few leaders with their own color, everyone else is gray. Gray people are slow and have low vision. Leaders can use kill button on gray person to recruit this player to their team. Use kill button to enemy to kill this player. Leaders have multiple lives and other players have only 1. The goal is to protect leader and attack enemies. If leader dies, entire team die and lose. Player can respawn after few seconds, if his leader is alive. Depending on options players see arrow to their leader and nearest enemy leader. Last remaining team wins!
+
+#### Game options
+| Name                          |
+| ----------------------------- |
+| Leaders amount                |
+| Leader lives                  |
+| Lives visible to enemies      |
+| Leader cooldown               |
+| Grace period                  |
+| Player kill cooldown          |
+| Player can respawn            |
+| Respawn cooldown              |
+| Arrow to leader               |
+| Arrow to nearest enemy leader |
+| Non team speed                |
+| Non team vision               |
+
 ### Additional gamemodes
 Additional gamemodes works with every gamemode. You can turn on as many additional gamemodes as you want.
 
@@ -554,10 +575,6 @@ When you set players to 16 or higher, still max 15 players can join.
 
 ### Bugged cooldown
 If you set cooldown to 0 or lower, you disable this function. 0 second cooldown don't working. Set this value to 0,001 seconds, if you want no kill cooldown.
-
-### People not joining lobby
-If you want people to join your lobby open settings, click MGM options and disable "Modded protocol". You have to do it in game menu! (not in game)
-Now people can see your lobby and join! Remember that phantom role, /tpout and /tping commands are disabled in public lobbies.
 
 ## Credits
 1. Using some code from Town of Host

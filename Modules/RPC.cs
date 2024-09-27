@@ -39,6 +39,7 @@ namespace MoreGamemodes
         SetStandardName,
         SetFrozen,
         SendNoisemakerAlert,
+        SetColorWarsTeam,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -95,11 +96,6 @@ namespace MoreGamemodes
                     if (reader.ReadString() != Main.CurrentVersion)
                     {
                         Utils.SendChat(__instance.Data.PlayerName + " was kicked for having other version of More Gamemodes.", "AutoKick");
-                        AmongUsClient.Instance.KickPlayer(__instance.GetClientId(), false);
-                    }
-                    else if (reader.ReadBoolean() != Main.ModdedProtocol.Value)
-                    {
-                        Utils.SendChat(__instance.Data.PlayerName + " was kicked for having wrong protocol in his settings.", "AutoKick");
                         AmongUsClient.Instance.KickPlayer(__instance.GetClientId(), false);
                     }
                     else
@@ -164,15 +160,16 @@ namespace MoreGamemodes
                     __instance.SetIsDead(reader.ReadBoolean());
                     break;
                 case CustomRPC.SetStandardName:
-                    PlayerControl player = Utils.GetPlayerById(reader.ReadByte());
-                    if (player == null) break;
-                    player.SetStandardName(reader.ReadString());
+                    __instance.SetStandardName(reader.ReadString());
                     break;
                 case CustomRPC.SetFrozen:
                     __instance.SetFrozen(reader.ReadBoolean());
                     break;
                 case CustomRPC.SendNoisemakerAlert:
                     __instance.SendNoisemakerAlert();
+                    break;
+                case CustomRPC.SetColorWarsTeam:
+                    __instance.SetColorWarsTeam(reader.ReadByte(), reader.ReadBoolean());
                     break;
             }
         }
@@ -370,6 +367,7 @@ namespace MoreGamemodes
             DeathrunGamemode.instance = null;
             BaseWarsGamemode.instance = null;
             FreezeTagGamemode.instance = null;
+            ColorWarsGamemode.instance = null;
             switch (gamemode)
             {
                 case Gamemodes.Classic:
@@ -427,6 +425,10 @@ namespace MoreGamemodes
                 case Gamemodes.FreezeTag:
                     FreezeTagGamemode.instance = new FreezeTagGamemode();
                     CustomGamemode.Instance = FreezeTagGamemode.instance;
+                    break;
+                case Gamemodes.ColorWars:
+                    ColorWarsGamemode.instance = new ColorWarsGamemode();
+                    CustomGamemode.Instance = ColorWarsGamemode.instance;
                     break;
             }
         }
@@ -490,6 +492,9 @@ namespace MoreGamemodes
                 case Gamemodes.BaseWars:
                     BaseWarsGamemode.instance.IsDead[player.PlayerId] = isDead;
                     break;
+                case Gamemodes.ColorWars:
+                    ColorWarsGamemode.instance.IsDead[player.PlayerId] = isDead;
+                    break;
             }
         }
 
@@ -510,11 +515,17 @@ namespace MoreGamemodes
             player.Data.Role.OnDeath(DeathReason.Kill);
         }
 
+        public static void SetColorWarsTeam(this PlayerControl player, byte team, bool isLeader)
+        {
+            if (ColorWarsGamemode.instance == null) return;
+            ColorWarsGamemode.instance.Team[player.PlayerId] = team;
+            ColorWarsGamemode.instance.PlayerIsLeader[player.PlayerId] = isLeader;
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
             writer.Write(version);
-            writer.Write(Main.ModdedProtocol.Value);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -730,8 +741,7 @@ namespace MoreGamemodes
         {
             if (targetClientId == -1)
                 player.SetStandardName(name);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetStandardName, SendOption.Reliable, targetClientId);
-            writer.Write(player.PlayerId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetStandardName, SendOption.Reliable, targetClientId);
             writer.Write(name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
@@ -748,6 +758,15 @@ namespace MoreGamemodes
         {
             player.SendNoisemakerAlert();
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SendNoisemakerAlert, SendOption.Reliable, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetColorWarsTeam(this PlayerControl player, byte team, bool isLeader)
+        {
+            player.SetColorWarsTeam(team, isLeader);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetColorWarsTeam, SendOption.Reliable, -1);
+            writer.Write(team);
+            writer.Write(isLeader);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

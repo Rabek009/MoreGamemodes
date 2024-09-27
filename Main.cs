@@ -30,7 +30,6 @@ public partial class Main : BasePlugin
     public static bool GameStarted;
     public static float Timer;
 
-    public static ConfigEntry<bool> ModdedProtocol { get; private set; }
     public static ConfigEntry<bool> UnlockFPS { get; private set; }
     public static ConfigEntry<bool> ShowFPS { get; private set; }
     public static ConfigEntry<bool> DarkTheme { get; private set; }
@@ -62,7 +61,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> ProtectCooldowns;
     public static Dictionary<byte, float> OptionProtectCooldowns;
 
-    public const string CurrentVersion = "2.0.0 beta6.9";
+    public const string CurrentVersion = "2.0.0";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -80,7 +79,6 @@ public partial class Main : BasePlugin
         Preset9 = Config.Bind("Preset Name Options", "Preset9", "Preset 9");
         Preset10 = Config.Bind("Preset Name Options", "Preset10", "Preset 10");
 
-        ModdedProtocol = Config.Bind("Client Options", "ModdedProtocol", true);
         UnlockFPS = Config.Bind("Client Options", "UnlockFPS", true);
         ShowFPS = Config.Bind("Client Options", "ShowFPS", true);
         DarkTheme = Config.Bind("Client Options", "DarkTheme", false);
@@ -101,6 +99,7 @@ public partial class Main : BasePlugin
         DeathrunGamemode.instance = null;
         BaseWarsGamemode.instance = null;
         FreezeTagGamemode.instance = null;
+        ColorWarsGamemode.instance = null;
 
         GameStarted = false;
         Timer = 0f;
@@ -183,6 +182,7 @@ public partial class Main : BasePlugin
                 DeathrunGamemode.instance = null;
                 BaseWarsGamemode.instance = null;
                 FreezeTagGamemode.instance = null;
+                ColorWarsGamemode.instance = null;
 
                 Timer = 0f;
                 StandardColors = new Dictionary<byte, byte>();
@@ -250,6 +250,7 @@ public enum Gamemodes
     Deathrun,
     BaseWars,
     FreezeTag,
+    ColorWars,
     All = int.MaxValue,
 }
 

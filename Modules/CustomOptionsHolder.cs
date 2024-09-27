@@ -32,7 +32,7 @@ namespace MoreGamemodes
 
         public static readonly string[] gameModes =
         {
-            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak", "Deathrun", "Base Wars", "Freeze Tag"
+            "Classic", "Hide And Seek", "Shift And Seek", "Bomb Tag", "Random Items", "Battle Royale", "Speedrun", "Paint Battle", "Kill Or Die", "Zombies", "Jailbreak", "Deathrun", "Base Wars", "Freeze Tag", "Color Wars"
         };
 
         public static readonly string[] speedrunBodyTypes =
@@ -188,7 +188,7 @@ namespace MoreGamemodes
         public static OptionItem Lives;
         public static OptionItem LivesVisibleToOthers;
         public static OptionItem ArrowToNearestPlayer;
-        public static OptionItem GracePeriod;
+        public static OptionItem BrGracePeriod;
 
         //Speedrun
         public static OptionItem Speedrun;
@@ -309,6 +309,22 @@ namespace MoreGamemodes
         public static OptionItem UnfreezeRadius;
         public static OptionItem TaskCompleteTimeDuringFreeze;
         public static OptionItem ShowDangerMeter;
+
+        //Color wars
+        public static OptionItem Leaders;
+        public static OptionItem LeadersAmount;
+        public static OptionItem LeaderLives;
+        public static OptionItem LivesVisibleToEnemies;
+        public static OptionItem LeaderCooldown;
+        public static OptionItem CwGracePeriod;
+        public static OptionItem Players;
+        public static OptionItem PlayerKillCooldown;
+        public static OptionItem PlayerCanRespawn;
+        public static OptionItem CwRespawnCooldown;
+        public static OptionItem ArrowToLeader;
+        public static OptionItem ArrowToNearestEnemyLeader;
+        public static OptionItem NonTeamSpeed;
+        public static OptionItem NonTeamVision;
         
         //Additional gamemodes
         public static OptionItem RandomSpawn;
@@ -688,7 +704,7 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.BattleRoyale);
             ArrowToNearestPlayer = BooleanOptionItem.Create(7003, "Arrow to nearest player", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BattleRoyale);
-            GracePeriod = FloatOptionItem.Create(7004, "Grace period", new(0f, 60f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
+            BrGracePeriod = FloatOptionItem.Create(7004, "Grace period", new(0f, 60f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.BattleRoyale)
                 .SetValueFormat(OptionFormat.Seconds);
 
@@ -991,6 +1007,46 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             ShowDangerMeter = BooleanOptionItem.Create(15014, "Show danger meter", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.FreezeTag);
+            
+            //Color wars
+            Leaders = TextOptionItem.Create(16000, "Leaders", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetColor(Color.yellow);
+            LeadersAmount = IntegerOptionItem.Create(16001, "Leaders amount", new(2, 15, 1), 4, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetValueFormat(OptionFormat.Players);
+            LeaderLives = IntegerOptionItem.Create(16002, "Leader lives", new(1, 99, 1), 3, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars);
+            LivesVisibleToEnemies = BooleanOptionItem.Create(16003, "Lives visible to enemies", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars);
+            LeaderCooldown = FloatOptionItem.Create(16004, "Leader cooldown", new(1f, 60f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetValueFormat(OptionFormat.Seconds);
+            CwGracePeriod = FloatOptionItem.Create(16005, "Grace period", new(0f, 60f, 0.5f), 10f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetValueFormat(OptionFormat.Seconds);
+            Players = TextOptionItem.Create(16010, "Players", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetColor(Color.green);
+            PlayerKillCooldown = FloatOptionItem.Create(16011, "Player kill cooldown", new FloatValueRule(1f, 60f, 0.5f), 15f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetValueFormat(OptionFormat.Seconds);
+            PlayerCanRespawn = BooleanOptionItem.Create(16012, "Player can respawn", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars);
+            CwRespawnCooldown = FloatOptionItem.Create(16013, "Respawn cooldown", new(5f, 60f, 2.5f), 20f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetValueFormat(OptionFormat.Seconds)
+                .SetParent(PlayerCanRespawn);
+            ArrowToLeader = BooleanOptionItem.Create(16014, "Arrow to leader", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars);
+            ArrowToNearestEnemyLeader = BooleanOptionItem.Create(16015, "Arrow to nearest enemy leader", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars);
+            NonTeamSpeed = FloatOptionItem.Create(16016, "Non team speed", new(0.1f, 3f, 0.05f), 0.4f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetValueFormat(OptionFormat.Multiplier);
+            NonTeamVision = FloatOptionItem.Create(16017, "Non team vision", new(0.05f, 5f, 0.05f), 0.2f, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ColorWars)
+                .SetValueFormat(OptionFormat.Multiplier);
             
             //Additional gamemodes
             RandomSpawn = TextOptionItem.Create(100000, "Random spawn", TabGroup.AdditionalGamemodes)

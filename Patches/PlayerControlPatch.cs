@@ -95,7 +95,7 @@ namespace MoreGamemodes
             if (target.GetDeathReason() == DeathReasons.Alive)
                 target.RpcSetDeathReason(DeathReasons.Killed);
             CustomGamemode.Instance.OnMurderPlayer(killer, target);
-            if (Main.StandardRoles[target.PlayerId].IsImpostor() && CustomGamemode.Instance.Gamemode != Gamemodes.BombTag && CustomGamemode.Instance.Gamemode != Gamemodes.BattleRoyale && CustomGamemode.Instance.Gamemode != Gamemodes.KillOrDie)
+            if (Main.StandardRoles[target.PlayerId].IsImpostor() && CustomGamemode.Instance.Gamemode != Gamemodes.BombTag && CustomGamemode.Instance.Gamemode != Gamemodes.BattleRoyale && CustomGamemode.Instance.Gamemode != Gamemodes.KillOrDie && CustomGamemode.Instance.Gamemode != Gamemodes.ColorWars)
                 target.RpcSetRole(RoleTypes.ImpostorGhost, true);
             if (killer != target)
                 ++Main.PlayerKills[killer.PlayerId];
@@ -500,20 +500,10 @@ namespace MoreGamemodes
 		    {
 			    __instance.SetName(name);
 		    }
-            if (Main.ModdedProtocol.Value)
-            {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
-		        writer.Write(__instance.Data.NetId);
-                writer.Write(name);
-		        AmongUsClient.Instance.FinishRpcImmediately(writer);
-            }
-            else
-            {
-                MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SetName, SendOption.Reliable);
-		        writer.Write(__instance.Data.NetId);
-		        writer.Write(name);
-		        writer.EndMessage();
-            }
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+		    writer.Write(__instance.Data.NetId);
+            writer.Write(name);
+		    AmongUsClient.Instance.FinishRpcImmediately(writer);
             return false;
         }
     }
@@ -565,28 +555,6 @@ namespace MoreGamemodes
                 sender.EndMessage();
                 sender.SendMessage();
             }
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckMurder))]
-    class CmdCheckMurderPatch
-    {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
-        {
-            if (!AmongUsClient.Instance.AmHost || Main.ModdedProtocol.Value) return true;
-            __instance.CheckMurder(target);
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckProtect))]
-    class CmdCheckProtectPatch
-    {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
-        {
-            if (!AmongUsClient.Instance.AmHost || Main.ModdedProtocol.Value) return true;
-            __instance.CheckProtect(target);
             return false;
         }
     }

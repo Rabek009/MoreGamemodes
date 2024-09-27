@@ -29,7 +29,14 @@ namespace MoreGamemodes
             }
             Main.Timer = 0f;
             Utils.SyncAllSettings();
-            Utils.SetAllVentInteractions();
+            new LateTask(() => {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (IsZombie(pc) && GetZombieType(pc) != ZombieTypes.Dead && (exiled == null || exiled.Object == null || pc != exiled.Object))
+                        pc.RpcSetDesyncRole(RoleTypes.Impostor, pc);
+                }
+                Utils.SetAllVentInteractions();
+            }, 1f);
         }
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
@@ -100,9 +107,16 @@ namespace MoreGamemodes
                 if (GetZombieType(pc) == ZombieTypes.JustTurned)
                     pc.RpcSetZombieType(ZombieTypes.FullZombie);
                 if (IsZombie(pc) && GetZombieType(pc) != ZombieTypes.Dead)
+                {
                     pc.Data.IsDead = false;
+                    new LateTask(() => pc.RpcSetDesyncRole(RoleTypes.Crewmate, pc), 0.5f);
+                }
             }
             Utils.SendGameData();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+
+            }
             if (exiled != null && exiled.Object != null && !Main.StandardRoles[exiled.PlayerId].IsImpostor() && GetKillsRemain(exiled.Object) > 0)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -361,6 +375,7 @@ namespace MoreGamemodes
                     pcdistance.Add(p, dis);
                 }
             }
+            if (pcdistance.Count == 0) return null;
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;

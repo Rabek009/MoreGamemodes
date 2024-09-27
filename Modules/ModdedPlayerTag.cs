@@ -90,7 +90,7 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!Main.StandardNames.ContainsKey(pc.PlayerId) || pc.Data == null || !IsPlayerTagged(pc.Data.FriendCode)) continue;
+                if (pc == null || !Main.StandardNames.ContainsKey(pc.PlayerId) || pc.Data == null || !IsPlayerTagged(pc.Data.FriendCode)) continue;
                 string name = Main.StandardNames[pc.PlayerId];
                 if (AmongUsClient.Instance.AmClient)
 		        {

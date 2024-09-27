@@ -103,7 +103,7 @@ namespace MoreGamemodes
             Main.Timer = 0f;
             foreach (var pc in PlayerControl.AllPlayerControls)
                 Main.KillCooldowns[pc.PlayerId] = Math.Min(10f, Main.OptionKillCooldowns[pc.PlayerId]);
-            if (Options.EnableRandomSpawn.GetBool() && !(CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.Jailbreak or Gamemodes.BaseWars))
+            if ((Options.EnableRandomSpawn.GetBool() && !(CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.Jailbreak or Gamemodes.BaseWars)) || CustomGamemode.Instance.Gamemode == Gamemodes.ColorWars)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.RpcRandomVentTeleport();

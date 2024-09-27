@@ -29,8 +29,7 @@ namespace MoreGamemodes
                 return false;
             }
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (Main.ModdedProtocol.Value || Main.GameStarted)
-                __instance.timeSinceLastMessage = 3f;
+            __instance.timeSinceLastMessage = 3f;
             if (__instance.quickChatField.Visible)
             {
                 return true;
@@ -652,10 +651,15 @@ namespace MoreGamemodes
                             Options.Gamemode.SetValue(13);
                             PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is freeze tag", "ModesChanger");
                             break;
+                        case "colorwars":
+                            Options.Gamemode.SetValue(14);
+                            PlayerControl.LocalPlayer.RpcSendMessage("Now gamemode is color wars", "ModesChanger");
+                            break;
                         default:
                             PlayerControl.LocalPlayer.RpcSendMessage("Invalid gamemode. Please provide existing gamemode.\nUsage: /gamemode hideandseek", "Warning");
                             break;
                     }
+                    GameManager.Instance.RpcSyncCustomOptions();
                     break;       
                 case "/color":
                 case "/colour":
@@ -793,7 +797,7 @@ namespace MoreGamemodes
                                     Utils.SendChat("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                     break;
                                 case "paintbattle":
-                                    Utils.SendChat("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                    Utils.SendChat("Paint Battle: Type /color COLOR command to change paint color. Click shift button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
                                     Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -813,6 +817,9 @@ namespace MoreGamemodes
                                     break;
                                 case "freezetag":
                                     Utils.SendChat("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
+                                    break;
+                                case "colorwars":
+                                    Utils.SendChat("Color Wars: At start there are few leaders with their own color, everyone else is gray. Gray people are slow and have low vision. Leaders can use kill button on gray person to recruit this player to their team. Use kill button to enemy to kill this player. Leaders have multiple lives and other players have only 1. The goal is to protect leader and attack enemies. If leader dies, entire team die and lose. Player can respawn after few seconds, if his leader is alive. Depending on options players see arrow to their leader and nearest enemy leader. Last remaining team wins!", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     Utils.SendChat("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -854,7 +861,7 @@ namespace MoreGamemodes
                                             Utils.SendChat("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                             break;
                                         case Gamemodes.PaintBattle:
-                                            Utils.SendChat("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                            Utils.SendChat("Paint Battle: Type /color COLOR command to change paint color. Click shift button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
                                             Utils.SendChat("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -874,6 +881,9 @@ namespace MoreGamemodes
                                             break;
                                         case Gamemodes.FreezeTag:
                                             Utils.SendChat("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
+                                            break;
+                                        case Gamemodes.ColorWars:
+                                            Utils.SendChat("Color Wars: At start there are few leaders with their own color, everyone else is gray. Gray people are slow and have low vision. Leaders can use kill button on gray person to recruit this player to their team. Use kill button to enemy to kill this player. Leaders have multiple lives and other players have only 1. The goal is to protect leader and attack enemies. If leader dies, entire team die and lose. Player can respawn after few seconds, if his leader is alive. Depending on options players see arrow to their leader and nearest enemy leader. Last remaining team wins!", "Gamemodes");
                                             break;
                                     }
                                     break;
@@ -1505,7 +1515,7 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                     break;
                                 case "paintbattle":
-                                    player.RpcSendMessage("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                    player.RpcSendMessage("Paint Battle: Type /color COLOR command to change paint color. Click shift button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                     break;
                                 case "killordie":
                                     player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -1525,6 +1535,9 @@ namespace MoreGamemodes
                                     break;
                                 case "freezetag":
                                     player.RpcSendMessage("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
+                                    break;
+                                case "colorwars":
+                                    player.RpcSendMessage("Color Wars: At start there are few leaders with their own color, everyone else is gray. Gray people are slow and have low vision. Leaders can use kill button on gray person to recruit this player to their team. Use kill button to enemy to kill this player. Leaders have multiple lives and other players have only 1. The goal is to protect leader and attack enemies. If leader dies, entire team die and lose. Player can respawn after few seconds, if his leader is alive. Depending on options players see arrow to their leader and nearest enemy leader. Last remaining team wins!", "Gamemodes");
                                     break;
                                 case "randomspawn":
                                     player.RpcSendMessage("Random Spawn: At start teleports everyone to random vent. Depending on options it teleports after meeting too.", "Gamemodes");
@@ -1566,7 +1579,7 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("Speedrun: Finish your tasks first to win! No impostors. meetings and sabotages. You can play alone - just do your tasks as fast as you can!", "Gamemodes");
                                             break;
                                         case Gamemodes.PaintBattle:
-                                            player.RpcSendMessage("Paint Battle: Type /color COLOR command to change paint color. Click kill button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
+                                            player.RpcSendMessage("Paint Battle: Type /color COLOR command to change paint color. Click shift button to paint. Paint something in specified theme. After painting time you can rate others paint by typing number from 1 to 10.", "Gamemodes");
                                             break;
                                         case Gamemodes.KillOrDie:
                                             player.RpcSendMessage("Kill Or Die: Game lasts for few round. Random player become killer every round. Killer need to kill someone before timer runs out. If killer doesn't kill, he dies. The round ends after killer kill someone or die. Red player is killer. Depending on options killer gets arrow to nearest survivor. Last standing alive wins!", "Gamemodes");
@@ -1586,6 +1599,9 @@ namespace MoreGamemodes
                                             break;
                                         case Gamemodes.FreezeTag:
                                             player.RpcSendMessage("Freeze Tag: Crewmates are green, impostors are red and frozen crewmates are cyan. Impostors can use kill button to freeze crewmates. When all crewmates are frozen, impostors win. Crewmates can unfreeze others by standing near them. Crewmates win by completing all tasks. Reporting, sabotages and meetings are disabled. When crewmate is frozen his tasks will slowly complete automatically. Frozen crewmates can't move, but can see and do task, if there is nearby. Most roles work like in classic, but noisemaker sends alert when frozen.", "Gamemodes");
+                                            break;
+                                        case Gamemodes.ColorWars:
+                                            player.RpcSendMessage("Color Wars: At start there are few leaders with their own color, everyone else is gray. Gray people are slow and have low vision. Leaders can use kill button on gray person to recruit this player to their team. Use kill button to enemy to kill this player. Leaders have multiple lives and other players have only 1. The goal is to protect leader and attack enemies. If leader dies, entire team die and lose. Player can respawn after few seconds, if his leader is alive. Depending on options players see arrow to their leader and nearest enemy leader. Last remaining team wins!", "Gamemodes");
                                             break;
                                     }
                                     break;
@@ -1881,7 +1897,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can't use /tpout during game.", "Warning");
                         break;
                     }
-                    if (!Options.CanUseTpoutCommand.GetBool() || !Main.ModdedProtocol.Value)
+                    if (!Options.CanUseTpoutCommand.GetBool())
                     {
                         player.RpcSendMessage("Host disabled usage of this command.", "Warning");
                         break;
@@ -1895,7 +1911,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can't use /tpin during game.", "Warning");
                         break;
                     }
-                    if (!Options.CanUseTpoutCommand.GetBool() || !Main.ModdedProtocol.Value)
+                    if (!Options.CanUseTpoutCommand.GetBool())
                     {
                         player.RpcSendMessage("Host disabled usage of this command.", "Warning");
                         break;
@@ -2013,99 +2029,6 @@ namespace MoreGamemodes
             Main.MessagesToSend.RemoveAt(0);
             int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo).GetClientId();
             var name = player.Data.PlayerName;
-            if (!Main.ModdedProtocol.Value && !Main.GameStarted)
-            {
-                if (clientId == AmongUsClient.Instance.ClientId || clientId < 0)
-                {
-                    player.SetName(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title));
-                    SendingSystemMessage = true;
-                    DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
-                    SendingSystemMessage = false;
-                    player.SetName(name);
-                    if (clientId == AmongUsClient.Instance.ClientId)
-                        return;
-                }
-                PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
-                playerControl.PlayerId = PlayerControl.LocalPlayer.PlayerId;
-                playerControl.isNew = false;
-                playerControl.notRealPlayer = true;
-                playerControl.NetTransform.SnapTo(new Vector2(100f, 100f));
-                AmongUsClient.Instance.NetIdCnt += 1U;
-                MessageWriter writer = MessageWriter.Get(SendOption.None);
-                if (clientId < 0)
-                {
-                    writer.StartMessage(5);
-			        writer.Write(AmongUsClient.Instance.GameId);
-                }
-                else
-                {
-                    writer.StartMessage(6);
-			        writer.Write(AmongUsClient.Instance.GameId);
-                    writer.WritePacked(clientId);
-                }
-			    AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, writer);
-			    writer.EndMessage();
-			    writer.StartMessage(6);
-			    writer.Write(AmongUsClient.Instance.GameId);
-			    writer.WritePacked(int.MaxValue);
-			    for (uint i = 1; i <= 3; ++i)
-			    {
-			        writer.StartMessage(4);
-			        writer.WritePacked(2U);
-			        writer.WritePacked(-2);
-			        writer.Write((byte)SpawnFlags.None);
-			        writer.WritePacked(1);
-			        writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-			        writer.StartMessage(1);
-			        writer.EndMessage();
-			        writer.EndMessage();
-			    }
-			    writer.EndMessage();
-			    AmongUsClient.Instance.SendOrDisconnect(writer);
-			    writer.Recycle();
-                if (PlayerControl.AllPlayerControls.Contains(playerControl))
-                    PlayerControl.AllPlayerControls.Remove(playerControl);
-                new LateTask(() => {
-                    var sender = CustomRpcSender.Create("MessagesToSend", SendOption.None);
-                    var writer = sender.stream;
-                    sender.StartMessage(clientId);
-                    sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetName)
-                        .Write(PlayerControl.LocalPlayer.Data.NetId)
-                        .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
-                        .EndRpc();
-                    sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SendChat)
-                        .Write(msg)
-                        .EndRpc();
-                    sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetName)
-                        .Write(PlayerControl.LocalPlayer.Data.NetId)
-                        .Write(name)
-                        .EndRpc();
-                    sender.EndMessage();
-                    sender.SendMessage();
-                }, 0.2f);
-                new LateTask(() => {
-                    MessageWriter writer = MessageWriter.Get(SendOption.None);
-                    if (clientId < 0)
-                    {
-                        writer.StartMessage(5);
-			            writer.Write(AmongUsClient.Instance.GameId);
-                    }
-                    else
-                    {
-                        writer.StartMessage(6);
-			            writer.Write(AmongUsClient.Instance.GameId);
-                        writer.WritePacked(clientId);
-                    }
-                    writer.StartMessage(5);
-			        writer.WritePacked(playerControl.NetId);
-			        writer.EndMessage();
-                    writer.EndMessage();
-			        AmongUsClient.Instance.RemoveNetObject(playerControl);
-                    playerControl.DespawnOnDestroy = false;
-                    Object.Destroy(playerControl.gameObject);
-                }, 0.5f);
-                return;
-            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 var clientId2 = pc.GetClientId();
@@ -2119,7 +2042,7 @@ namespace MoreGamemodes
                         SendingSystemMessage = false;
                         player.SetName(name);
                     }
-                    else if (Main.GameStarted || Main.ModdedProtocol.Value)
+                    else
                     {
                         new LateTask(() =>
                         {
@@ -2141,10 +2064,6 @@ namespace MoreGamemodes
                             sender.SendMessage();
                         }, 0f, "Send Message");
                     }
-                    else
-                    {
-                        
-                    }
                 }
             }
         }
@@ -2157,34 +2076,17 @@ namespace MoreGamemodes
         {
             int length = __instance.textArea.text.Length;
 		    __instance.charCountText.text = length + "/" + __instance.textArea.characterLimit;
-            if (Main.ModdedProtocol.Value || Main.GameStarted)
-            {
-                if (length < (AmongUsClient.Instance.AmHost ? 750 : 225))
-		        {
-		    	    __instance.charCountText.color = Color.black;
-		    	    return;
-		        }
-		        if (length < (AmongUsClient.Instance.AmHost ? 1000 : 300))
-		        {
-		    	    __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
-		    	    return;
-		        }
-		        __instance.charCountText.color = Color.red;
-            }
-		    else
-            {
-                if (length < 90)
-		        {
-		    	    __instance.charCountText.color = Color.black;
-		    	    return;
-		        }
-		        if (length < 118)
-		        {
-		    	    __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
-		    	    return;
-		        }
-		        __instance.charCountText.color = Color.red;
-            }
+            if (length < (AmongUsClient.Instance.AmHost ? 750 : 225))
+		    {
+		        __instance.charCountText.color = Color.black;
+		        return;
+		    }
+		    if (length < (AmongUsClient.Instance.AmHost ? 1000 : 300))
+		    {
+		        __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
+		        return;
+		    }
+		    __instance.charCountText.color = Color.red;
         }
     }
 
@@ -2198,13 +2100,6 @@ namespace MoreGamemodes
                 __result = false;
                 return false;
             }
-            if (!Main.GameStarted && Main.ModdedProtocol.Value)
-            {
-                chatText = chatText.Replace("[", "【");
-                chatText = chatText.Replace("]", "】");
-                chatText = chatText.Replace("<", " ");
-                chatText = chatText.Replace(">", " ");
-            }
             if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
@@ -2213,15 +2108,10 @@ namespace MoreGamemodes
                 __result = true;
                 return false;
             }
-            if (!Main.GameStarted && Main.ModdedProtocol.Value)
+            if (!Main.GameStarted)
             {
                 int return_count = PlayerControl.LocalPlayer.Data.PlayerName.Count(x => x == '\n');
                 chatText = new StringBuilder(chatText).Insert(0, "<size=1.5>\n</size>", return_count).ToString();
-            }
-            else if (!Main.GameStarted)
-            {
-                int return_count = PlayerControl.LocalPlayer.Data.PlayerName.Count(x => x == '\n');
-                chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
             }
             if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
@@ -2252,11 +2142,7 @@ namespace MoreGamemodes
     {
         public static void Postfix(ChatController __instance)
         {
-            if (Main.ModdedProtocol.Value || Main.GameStarted)
-                __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 1000 : 300;
-            else
-                __instance.freeChatField.textArea.characterLimit = 118;
-
+            __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 1000 : 300;
             if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.C))
                 ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
 

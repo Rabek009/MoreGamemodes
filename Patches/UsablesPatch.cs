@@ -102,7 +102,8 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.BombTag ||
                 (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.IsHackActive) || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun ||
                 CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && ZombiesGamemode.instance.IsZombie(pc.Object)) ||
-                CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak || (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun && Options.DisableMeetings.GetBool()) || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag)
+                CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak || (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun && Options.DisableMeetings.GetBool()) || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag || 
+                CustomGamemode.Instance.Gamemode == Gamemodes.ColorWars)
             {
                 if (__instance.MinigamePrefab.TryCast<EmergencyMinigame>())
                     return false;
@@ -110,6 +111,22 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
                 return false;
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(EmergencyMinigame), nameof(EmergencyMinigame.Update))]
+    class EmergencyMinigameUpdatePatch
+    {
+        public static void Postfix(EmergencyMinigame __instance)
+        {
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.BombTag ||
+                (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.IsHackActive) || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun ||
+                CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && ZombiesGamemode.instance.IsZombie(PlayerControl.LocalPlayer)) ||
+                CustomGamemode.Instance.Gamemode == Gamemodes.Jailbreak || (CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun && Options.DisableMeetings.GetBool()) || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag || 
+                CustomGamemode.Instance.Gamemode == Gamemodes.ColorWars)
+            {
+                __instance.Close();
+            }
         }
     }
 }

@@ -365,6 +365,7 @@ namespace MoreGamemodes
 
         public static void SetChatVisible()
         {
+            if (GameManager.Instance.LogicFlow.IsGameOverDueToDeath()) return;
             MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
             MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
             AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);

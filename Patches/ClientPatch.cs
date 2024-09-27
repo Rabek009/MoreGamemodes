@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
 using InnerNet;
 using System.Collections.Generic;
+using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -58,6 +60,7 @@ namespace MoreGamemodes
                 if (client.Character.GetDeathReason() == DeathReasons.Alive)
                     client.Character.RpcSetDeathReason(DeathReasons.Disconnected);
             }
+            CustomGamemode.Instance.OnDisconnect(client.Character);
             new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -145,6 +148,26 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             new LateTask(() => __instance.SetDirtyBit(1U), 0.5f);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HostGame))]
+    class HostGamePatch
+    {
+        public static bool Prefix(InnerNetClient __instance, [HarmonyArgument(0)] IGameOptions settings, [HarmonyArgument(1)] GameFilterOptions filterOpts)
+        {
+            __instance.IsGamePublic = false;
+			MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
+			messageWriter.StartMessage(0);
+            IGameOptions options = new NormalGameOptionsV08(new UnityLogger().Cast<ILogger>()).Cast<IGameOptions>();
+            options.SetRecommendations(1, true);
+			messageWriter.WriteBytesAndSize(__instance.gameOptionsFactory.ToBytes(options, AprilFoolsMode.IsAprilFoolsModeToggledOn));
+			messageWriter.Write(CrossplayMode.GetCrossplayFlags());
+			filterOpts.Serialize(messageWriter);
+			messageWriter.EndMessage();
+			__instance.SendOrDisconnect(messageWriter);
+			messageWriter.Recycle();
             return false;
         }
     }

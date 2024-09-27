@@ -129,7 +129,7 @@ namespace MoreGamemodes
             {
                 if (HasBomb(pc))
                 {
-                     pc.RpcSetColor(6);
+                    pc.RpcSetColor(6);
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.black;
                 }   
@@ -297,6 +297,7 @@ namespace MoreGamemodes
                     pcdistance.Add(p, dis);
                 }
             }
+            if (pcdistance.Count == 0) return null;
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;

@@ -19,7 +19,7 @@ namespace MoreGamemodes
 			    NetworkedPlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
 			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
 			    {
-                    if (!((CustomGamemode.Instance.Gamemode == Gamemodes.BombTag || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || CustomGamemode.Instance.Gamemode == Gamemodes.Zombies) && playerInfo.Disconnected))
+                    if (!((CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.Speedrun or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Zombies or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars) && playerInfo.Disconnected))
                     {
                         EndGameResult.CachedWinners.Add(new CachedPlayerData(playerInfo));
                         winners.Add(playerInfo.PlayerId);
@@ -86,6 +86,10 @@ namespace MoreGamemodes
                     case Gamemodes.FreezeTag:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], CustomGamemode.Instance.Gamemode)) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
+                        break;
+                    case Gamemodes.ColorWars:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[ColorWarsGamemode.instance.Team[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                 }
@@ -167,6 +171,10 @@ namespace MoreGamemodes
                     case Gamemodes.FreezeTag:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(Main.StandardRoles[playerInfo.PlayerId], CustomGamemode.Instance.Gamemode)) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
+                        break;
+                    case Gamemodes.ColorWars:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[ColorWarsGamemode.instance.Team[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                 }

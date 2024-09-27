@@ -221,43 +221,29 @@ public static class GameOptionsMenuPatch
                     GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetString(), true);
                 if (item.Id == 0)
                 {
-                    foreach (var tab in Enum.GetValues<TabGroup>())
-                        ReCreateSettings(__instance, tab);
-                    for (int index2 = 0; index2 < OptionItem.AllOptions.Count; index2++)
-                    {
-                        var option2 = OptionItem.AllOptions[index2];
-                        if (option2 != null && option2 is not TextOptionItem && ModGameOptionsMenu.BehaviourList.TryGetValue(index2, out var optionBehaviour))
-                        {
-                            if (option2 is IntegerOptionItem && optionBehaviour.TryCast<NumberOption>(out var numberOption))
-                                numberOption.Value = option2.GetInt();
-                            else if (option2 is FloatOptionItem && optionBehaviour.TryCast<NumberOption>(out var numberOption2))
-                                numberOption2.Value = option2.GetFloat();
-                            else if (option2 is BooleanOptionItem && optionBehaviour.TryCast<ToggleOption>(out var toggleOption))
-                                toggleOption.CheckMark.enabled = option2.GetBool();
-                            else if ((option2 is StringOptionItem || option2 is PresetOptionItem) && optionBehaviour.TryCast<StringOption>(out var stringOption))
-                                stringOption.Value = option2.GetInt();
-                        }
-                    }
+                    ReOpenSettingMenu();
                     var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
                     if (viewSettingsPane != null)
                         viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
                 }
                 else if (item.Id == 2)
                 {
-                    ReCreateSettings(__instance, TabGroup.GamemodeSettings);
+                    ReOpenSettingMenu();
                     var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
                     if (viewSettingsPane != null)
                         viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
                 }
                 else if (item.Children.Count > 0)
-                    ReCreateSettings(__instance, (TabGroup)(ModGameOptionsMenu.TabIndex - 3));
+                    ReCreateSettings(__instance);
             }
         }
         return false;
     }
-    public static void ReCreateSettings(GameOptionsMenu __instance, TabGroup modTab)
+    private static void ReCreateSettings(GameOptionsMenu __instance)
     {
         if (ModGameOptionsMenu.TabIndex < 3) return;
+        var modTab = (TabGroup)(ModGameOptionsMenu.TabIndex - 3);
+
         float num = 2.0f;
         for (int index = 0; index < OptionItem.AllOptions.Count; index++)
         {
@@ -279,13 +265,11 @@ public static class GameOptionsMenuPatch
                 if (enabled) num -= 0.45f;
             }
         }
-        if (ModGameOptionsMenu.TabIndex - 3 == (int)modTab)
-        {
-            __instance.ControllerSelectable.Clear();
-            foreach (var x in __instance.scrollBar.GetComponentsInChildren<UiElement>())
-                __instance.ControllerSelectable.Add(x);
-            __instance.scrollBar.SetYBoundsMax(-num - 1.65f);
-        }
+
+        __instance.ControllerSelectable.Clear();
+        foreach (var x in __instance.scrollBar.GetComponentsInChildren<UiElement>())
+            __instance.ControllerSelectable.Add(x);
+        __instance.scrollBar.SetYBoundsMax(-num - 1.65f);
     }
 
     public static BaseGameSetting GetSetting(OptionItem item)
@@ -354,6 +338,27 @@ public static class GameOptionsMenuPatch
         }
 
         return baseGameSetting;
+    }
+
+    public static void ReOpenSettingMenu()
+    {
+        var tab = ModGameOptionsMenu.TabIndex;
+        if (GameSettingMenu.Instance == null) return;
+        GameSettingMenu.Instance.Close();
+        OptionsConsole optionsConsole = null;
+        foreach (var console in Object.FindObjectsOfType<OptionsConsole>())
+        {
+            if (console.HostOnly)
+                optionsConsole = console;
+        }
+        if (optionsConsole == null) return;
+        GameObject gameObject = Object.Instantiate(optionsConsole.MenuPrefab);
+		gameObject.transform.SetParent(Camera.main.transform, false);
+		gameObject.transform.localPosition = optionsConsole.CustomPosition;
+        new LateTask(() => {
+		    if (GameSettingMenu.Instance == null) return;
+            GameSettingMenu.Instance.ChangeTab(tab, false);
+        }, 0.01f);
     }
 }
 
