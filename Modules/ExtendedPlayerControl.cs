@@ -14,6 +14,12 @@ namespace MoreGamemodes
 {
     static class ExtendedPlayerControl
     {
+        public static CustomRole GetRole(this PlayerControl player)
+        {
+            if (ClassicGamemode.instance == null || !ClassicGamemode.instance.AllPlayersRole.ContainsKey(player.PlayerId)) return null;
+            return ClassicGamemode.instance.AllPlayersRole[player.PlayerId];
+        }
+
         public static void RpcTeleport(this PlayerControl player, Vector2 position)
         {
             if (MeetingHud.Instance) return;
@@ -131,12 +137,70 @@ namespace MoreGamemodes
                 PlayerControl.LocalPlayer.Data.Role.SetCooldown();
             else
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.ProtectPlayer, SendOption.None, target.GetClientId());
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.ProtectPlayer, SendOption.Reliable, target.GetClientId());
                 writer.WriteNetObject(target);
                 writer.Write(0);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
             }
             Main.ProtectCooldowns[target.PlayerId] = Main.OptionProtectCooldowns[target.PlayerId];
+        }
+
+        public static void RpcSetAbilityCooldown(this PlayerControl target, float time)
+        {
+            if (PlayerControl.LocalPlayer == target)
+            {
+                var options = target.BuildGameOptions(abilityCooldown: time);
+                foreach (var com in GameManager.Instance.LogicComponents)
+                {
+                    if (com.TryCast<LogicOptions>(out var lo))
+                        lo.SetGameOptions(options);
+                }
+                GameOptionsManager.Instance.CurrentGameOptions = options;
+                PlayerControl.LocalPlayer.Data.Role.SetCooldown();
+                var options2 = target.BuildGameOptions();
+                foreach (var com in GameManager.Instance.LogicComponents)
+                {
+                    if (com.TryCast<LogicOptions>(out var lo))
+                        lo.SetGameOptions(options2);
+                }
+                GameOptionsManager.Instance.CurrentGameOptions = options2;
+                return;
+            }
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage(6);
+            writer.Write(AmongUsClient.Instance.GameId);
+            writer.WritePacked(target.GetClientId());
+            var opt = target.BuildGameOptions(abilityCooldown: time);
+            Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
+            writer.StartMessage(1);
+            {
+                writer.WritePacked(GameManager.Instance.NetId);
+                writer.StartMessage(GameManager.Instance.TryCast<NormalGameManager>() ? (byte)4 : (byte)5);
+			    writer.WriteBytesAndSize(byteArray);
+			    writer.EndMessage();
+            }
+            writer.EndMessage();
+            writer.StartMessage(2);
+            {
+                writer.WritePacked(target.NetId);
+                writer.Write((byte)RpcCalls.ProtectPlayer);
+                writer.WriteNetObject(target);
+                writer.Write(0);
+            }
+            writer.EndMessage();
+            var opt2 = target.BuildGameOptions();
+            Il2CppStructArray<byte> byteArray2 = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt2, false);
+            writer.StartMessage(1);
+            {
+                writer.WritePacked(GameManager.Instance.NetId);
+                writer.StartMessage(GameManager.Instance.TryCast<NormalGameManager>() ? (byte)4 : (byte)5);
+			    writer.WriteBytesAndSize(byteArray2);
+			    writer.EndMessage();
+            }
+            writer.EndMessage();
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
 
         public static PlayerControl GetClosestPlayer(this PlayerControl player, bool forTarget = false)
@@ -183,7 +247,7 @@ namespace MoreGamemodes
             writer.WritePacked(player.GetClientId());
             if (time != float.MaxValue)
             {
-                var opt = player.BuildGameOptions(time * 2f);
+                var opt = player.BuildGameOptions(killCooldown: time * 2f);
                 Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
                 writer.StartMessage(1);
                 {
@@ -287,7 +351,7 @@ namespace MoreGamemodes
             return target;
         }
 
-        public static IGameOptions BuildGameOptions(this PlayerControl player, float killCooldown = -1f)
+        public static IGameOptions BuildGameOptions(this PlayerControl player, float killCooldown = -1f, float abilityCooldown = -1f)
         {
             IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV08(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
             opt = CustomGamemode.Instance.BuildGameOptions(player, opt);
@@ -296,6 +360,16 @@ namespace MoreGamemodes
             if (opt.GetByte(ByteOptionNames.MapId) == 3)
                 opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
+            if (abilityCooldown >= 0)
+            {
+                opt.SetFloat(FloatOptionNames.EngineerCooldown, abilityCooldown);
+                opt.SetFloat(FloatOptionNames.GuardianAngelCooldown, abilityCooldown);
+                opt.SetFloat(FloatOptionNames.ShapeshifterCooldown, abilityCooldown);
+                opt.SetFloat(FloatOptionNames.PhantomCooldown, abilityCooldown);
+                opt.SetFloat(FloatOptionNames.TrackerCooldown, abilityCooldown);
+                opt.SetFloat(FloatOptionNames.ProtectionDurationSeconds, 1f);
+                opt.SetBool(BoolOptionNames.ImpostorsCanSeeProtect, false);
+            }
             return opt;
         }
 
@@ -306,12 +380,20 @@ namespace MoreGamemodes
                 name = Main.StandardNames[player.PlayerId];
             if (Main.NameColors[(player.PlayerId, seer.PlayerId)] != Color.clear)
                 name = Utils.ColorString(Main.NameColors[(player.PlayerId, seer.PlayerId)], name);
-            if (isMeeting) return name;
-            name = CustomGamemode.Instance.BuildPlayerName(player, seer, name);
-            if (Options.EnableMidGameChat.GetBool() && Options.ProximityChat.GetBool() && player == seer)
+            if (isMeeting)
             {
-                foreach (var message in Main.ProximityMessages[player.PlayerId])
-                    name += "\n" + Utils.ColorString(Color.white, message.Item1);
+                if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+                {
+                    if (seer.GetRole().Role == CustomRoles.EvilGuesser)
+                        name = Utils.ColorString(seer.GetRole().Color, player.PlayerId.ToString()) + " " + name;
+                }
+                return name;
+            }
+            name = CustomGamemode.Instance.BuildPlayerName(player, seer, name);
+            if (player == seer)
+            {
+                foreach (var message in Main.NameMessages[player.PlayerId])
+                    name += "\n" + message.Item1;
             }
             if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 5 && Utils.IsActive(SystemTypes.MushroomMixupSabotage) && player != seer && !seer.Data.Role.IsImpostor)
                 name = Utils.ColorString(Color.clear, "Player");
@@ -326,7 +408,7 @@ namespace MoreGamemodes
                 if (Vector2.Distance(player.transform.position, pc.transform.position) <= Options.MessagesRadius.GetFloat() * 2.5f && pc != player)
                 {
                     if (player.Data.IsDead && !pc.Data.IsDead) continue;
-                    Main.ProximityMessages[pc.PlayerId].Add((toSend, 0f));
+                    pc.Notify(Utils.ColorString(Color.white, toSend));
                 }
             }
         }
@@ -533,6 +615,7 @@ namespace MoreGamemodes
             if (player.AmOwner)
             {
                 player.RawSetOutfit(player.Data.Outfits[PlayerOutfitType.Default], PlayerOutfitType.Shapeshifted);
+                player.RpcSetNamePrivate(player.BuildPlayerName(player, false), player, true);
                 return;
             }
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Shapeshift, SendOption.Reliable, player.GetClientId());
@@ -581,7 +664,8 @@ namespace MoreGamemodes
         public static RoleTypes GetSelfRole(this PlayerControl player)
         {
             if (CustomGamemode.Instance.Gamemode is Gamemodes.BattleRoyale or Gamemodes.ColorWars) return RoleTypes.Impostor;
-            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) return RoleTypes.Shapeshifter;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak) return RoleTypes.Shapeshifter;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.BaseWars) return RoleTypes.Phantom;
             return Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
         }
 
@@ -617,6 +701,46 @@ namespace MoreGamemodes
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
             return target;
+        }
+
+        public static void Notify(this PlayerControl player, string message)
+        {
+            Main.NameMessages[player.PlayerId].Add((message, 0f));
+        }
+
+        public static void RpcResetInvisibility(this PlayerControl player)
+        {
+            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic || player == null) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (!pc.AmOwner && !pc.GetRole().IsImpostor() && pc != player)
+                {
+                    CustomRpcSender sender = CustomRpcSender.Create("ResetInvisibility", SendOption.None);
+                    sender.StartMessage(pc.GetClientId());
+                    ushort num = (ushort)(player.NetTransform.lastSequenceId + 10);
+                    sender.StartRpc(player.NetId, (byte)RpcCalls.Exiled)
+                        .EndRpc();
+                    var role = Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, pc.PlayerId)] : Main.StandardRoles[player.PlayerId];
+                    sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                        .Write((ushort)role)
+                        .Write(true)
+                        .EndRpc();
+                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                        .WriteVector2(Utils.GetOutsideMapPosition())
+                        .Write(num)
+                        .EndRpc();
+                    sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.EnterVent)
+                        .WritePacked(0)
+                        .EndRpc();
+                    sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.EnterVent)
+                        .WritePacked(127)
+                        .EndRpc();
+                    sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
+                        .EndRpc();
+                    sender.EndMessage();
+                    sender.SendMessage();
+                }
+            }
         }
     }
 }

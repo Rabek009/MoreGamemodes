@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using HarmonyLib;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace MoreGamemodes
 {
@@ -49,6 +50,9 @@ namespace MoreGamemodes
         {
             "Warn Host", "Warn Everyone", "Kick", "Ban"
         };
+
+        public static Dictionary<CustomRoles, OptionItem> RolesChance;
+        public static Dictionary<CustomRoles, OptionItem> RolesCount;
 
         //Main settings
         public static OptionItem Basic;
@@ -350,50 +354,65 @@ namespace MoreGamemodes
         public static OptionItem DisableZipline;
         public static OptionItem EnableDisableZipline;
 
+        //Crewmates
+        public static OptionItem CrewmateInvestigative;
+        public static OptionItem CrewmateKilling;
+        public static OptionItem CrewmateProtective;
+        public static OptionItem CrewmateSupport;
+
+        //Impostors
+        public static OptionItem Impostors;
+        public static OptionItem SeeTeammateRoles;
+        public static OptionItem ImpostorConcealing;
+        public static OptionItem ImpostorKilling;
+        public static OptionItem ImpostorSupport;
+
+        //Neutrals
+        public static OptionItem Neutrals;
+        public static OptionItem MinKillingNeutrals;
+        public static OptionItem MaxKillingNeutrals;
+        public static OptionItem MinEvilNeutrals;
+        public static OptionItem MaxEvilNeutrals;
+        public static OptionItem MinBenignNeutrals;
+        public static OptionItem MaxBenignNeutrals;
+        public static OptionItem NeutralBenign;
+        public static OptionItem NeutralEvil;
+        public static OptionItem NeutralKilling;
+
         public static bool IsLoaded = false;
 
         public static void Load()
         {
             if (IsLoaded) return;
+            RolesChance = new Dictionary<CustomRoles, OptionItem>();
+            RolesCount = new Dictionary<CustomRoles, OptionItem>();
+
             _ = PresetOptionItem.Create(0, TabGroup.ModSettings)
                 .SetColor(new Color32(204, 204, 0, 255))
-                .SetHeader(true)
-                .SetGamemode(Gamemodes.All);
+                .SetHeader(true);
 
             //Main settings
             Basic = TextOptionItem.Create(1, "Basic", TabGroup.ModSettings)
-                .SetGamemode(Gamemodes.All)
                 .SetColor(Color.yellow);
             Gamemode = StringOptionItem.Create(2, "Gamemode", gameModes, 0, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All)
                 .SetColor(Color.green);
             NoGameEnd = BooleanOptionItem.Create(3, "No game end", false, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All)
                 .SetColor(Color.red);
             AntiCheat = BooleanOptionItem.Create(4, "Anti Cheat", true, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All)
                 .SetColor(Color.blue);
             CheatingPenalty = StringOptionItem.Create(5, "Cheating Penalty", cheatingPenalties, 3, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All)
                 .SetParent(AntiCheat);
             Commands = TextOptionItem.Create(10, "Commands", TabGroup.ModSettings)
-                .SetGamemode(Gamemodes.All)
                 .SetColor(Color.cyan);
-            CanUseColorCommand = BooleanOptionItem.Create(11, "Can use /color command", false, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All);
+            CanUseColorCommand = BooleanOptionItem.Create(11, "Can use /color command", false, TabGroup.ModSettings, false);
             EnableFortegreen = BooleanOptionItem.Create(12, "Enable fortegreen", false, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseColorCommand);
-            CanUseNameCommand = BooleanOptionItem.Create(13, "Can use /name command", false, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All);
+            CanUseNameCommand = BooleanOptionItem.Create(13, "Can use /name command", false, TabGroup.ModSettings, false);
             EnableNameRepeating = BooleanOptionItem.Create(14, "Enable name repeating", false, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseNameCommand);
             MaximumNameLength = IntegerOptionItem.Create(15, "Maximum name length", new(10, 94, 1), 25, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All)
                 .SetParent(CanUseNameCommand);
-            CanUseTpoutCommand = BooleanOptionItem.Create(16, "Can use /tpout command", true, TabGroup.ModSettings, false)
-                .SetGamemode(Gamemodes.All);
+            CanUseTpoutCommand = BooleanOptionItem.Create(16, "Can use /tpout command", true, TabGroup.ModSettings, false);
 
             //Hide and seek
             Seekers = TextOptionItem.Create(1000, "Seekers", TabGroup.GamemodeSettings)
@@ -1049,67 +1068,93 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Multiplier);
             
             //Additional gamemodes
-            RandomSpawn = TextOptionItem.Create(100000, "Random spawn", TabGroup.AdditionalGamemodes)
-                .SetGamemode(Gamemodes.All)
+            RandomSpawn = TextOptionItem.Create(50000, "Random spawn", TabGroup.AdditionalGamemodes)
                 .SetColor(Color.yellow);
-            EnableRandomSpawn = BooleanOptionItem.Create(100001, "Enable", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All);
-            TeleportAfterMeeting = BooleanOptionItem.Create(100002, "Teleport after meeting", true, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            EnableRandomSpawn = BooleanOptionItem.Create(50001, "Enable", false, TabGroup.AdditionalGamemodes, false);
+            TeleportAfterMeeting = BooleanOptionItem.Create(50002, "Teleport after meeting", true, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableRandomSpawn);
-            RandomMap = TextOptionItem.Create(100100, "Random map", TabGroup.AdditionalGamemodes)
-                .SetGamemode(Gamemodes.All)
+            RandomMap = TextOptionItem.Create(50100, "Random map", TabGroup.AdditionalGamemodes)
                 .SetColor(Color.gray);
-            EnableRandomMap = BooleanOptionItem.Create(100101, "Enable", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All);
-            AddTheSkeld = BooleanOptionItem.Create(100102, "Add the skeld", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            EnableRandomMap = BooleanOptionItem.Create(50101, "Enable", false, TabGroup.AdditionalGamemodes, false);
+            AddTheSkeld = BooleanOptionItem.Create(50102, "Add the skeld", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableRandomMap);
-            AddMiraHQ = BooleanOptionItem.Create(100103, "Add mira HQ", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            AddMiraHQ = BooleanOptionItem.Create(50103, "Add mira HQ", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableRandomMap);
-            AddPolus = BooleanOptionItem.Create(100104, "Add polus", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            AddPolus = BooleanOptionItem.Create(50104, "Add polus", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableRandomMap);
-            AddDleksEht = BooleanOptionItem.Create(100105, "Add dleks eht", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            AddDleksEht = BooleanOptionItem.Create(50105, "Add dleks eht", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableRandomMap);
-            AddTheAirship = BooleanOptionItem.Create(100106, "Add the airship", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            AddTheAirship = BooleanOptionItem.Create(50106, "Add the airship", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableRandomMap);
-            AddTheFungle = BooleanOptionItem.Create(100107, "Add the fungle", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            AddTheFungle = BooleanOptionItem.Create(50107, "Add the fungle", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableRandomMap);
-            DisableGapPlatform = TextOptionItem.Create(100200, "Disable gap platform", TabGroup.AdditionalGamemodes)
-                .SetGamemode(Gamemodes.All)
+            DisableGapPlatform = TextOptionItem.Create(50200, "Disable gap platform", TabGroup.AdditionalGamemodes)
                 .SetColor(Color.red);
-            EnableDisableGapPlatform = BooleanOptionItem.Create(100201, "Enable", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All);
-            MidGameChat = TextOptionItem.Create(100300, "Mid game chat", TabGroup.AdditionalGamemodes)
-                .SetGamemode(Gamemodes.All)
+            EnableDisableGapPlatform = BooleanOptionItem.Create(50201, "Enable", false, TabGroup.AdditionalGamemodes, false);
+            MidGameChat = TextOptionItem.Create(50300, "Mid game chat", TabGroup.AdditionalGamemodes)
                 .SetColor(Color.green);
-            EnableMidGameChat = BooleanOptionItem.Create(100301, "Enable", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All);
-            ProximityChat = BooleanOptionItem.Create(100302, "Proximity chat", true, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            EnableMidGameChat = BooleanOptionItem.Create(50301, "Enable", false, TabGroup.AdditionalGamemodes, false);
+            ProximityChat = BooleanOptionItem.Create(50302, "Proximity chat", true, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableMidGameChat);
-            MessagesRadius = FloatOptionItem.Create(100303, "Messages radius", new(0.5f, 5f, 0.1f), 1f, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            MessagesRadius = FloatOptionItem.Create(50303, "Messages radius", new(0.5f, 5f, 0.1f), 1f, TabGroup.AdditionalGamemodes, false)
                 .SetParent(ProximityChat);
-            ImpostorRadio = BooleanOptionItem.Create(100304, "Impostor radio", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            ImpostorRadio = BooleanOptionItem.Create(50304, "Impostor radio", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(ProximityChat);
-            FakeShapeshiftAppearance = BooleanOptionItem.Create(100305, "Fake shapeshift appearance", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            FakeShapeshiftAppearance = BooleanOptionItem.Create(50305, "Fake shapeshift appearance", false, TabGroup.AdditionalGamemodes, false)
                 .SetParent(ProximityChat);
-            DisableDuringCommsSabotage = BooleanOptionItem.Create(100306, "Disable during comms sabotage", true, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All)
+            DisableDuringCommsSabotage = BooleanOptionItem.Create(50306, "Disable during comms sabotage", true, TabGroup.AdditionalGamemodes, false)
                 .SetParent(EnableMidGameChat);
-            DisableZipline = TextOptionItem.Create(100400, "Disable zipline", TabGroup.AdditionalGamemodes)
-                .SetGamemode(Gamemodes.All)
+            DisableZipline = TextOptionItem.Create(50400, "Disable zipline", TabGroup.AdditionalGamemodes)
                 .SetColor(Color.red);
-            EnableDisableZipline = BooleanOptionItem.Create(100401, "Enable", false, TabGroup.AdditionalGamemodes, false)
-                .SetGamemode(Gamemodes.All);
+            EnableDisableZipline = BooleanOptionItem.Create(50401, "Enable", false, TabGroup.AdditionalGamemodes, false);
+
+            //Crewmate roles
+            CrewmateInvestigative = TextOptionItem.Create(100000, "Crewmate investigative", TabGroup.CrewmateRoles)
+                .SetColor(Palette.CrewmateBlue);
+            Investigator.SetupOptionItem();
+            CrewmateKilling = TextOptionItem.Create(200000, "Crewmate killing", TabGroup.CrewmateRoles)
+                .SetColor(Palette.CrewmateBlue);
+            Sheriff.SetupOptionItem();
+            CrewmateProtective = TextOptionItem.Create(300000, "Crewmate protective", TabGroup.CrewmateRoles)
+                .SetColor(Palette.CrewmateBlue);
+            Immortal.SetupOptionItem();
+            CrewmateSupport = TextOptionItem.Create(400000, "Crewmate support", TabGroup.CrewmateRoles)
+                .SetColor(Palette.CrewmateBlue);
+            SecurityGuard.SetupOptionItem();
+
+            //Impostor roles
+            Impostors = TextOptionItem.Create(500000, "Impostors", TabGroup.ImpostorRoles)
+                .SetColor(Palette.ImpostorRed);
+            SeeTeammateRoles = BooleanOptionItem.Create(500001, "See teammate roles", true, TabGroup.ImpostorRoles, false);
+            ImpostorConcealing = TextOptionItem.Create(500010, "Impostor concealing", TabGroup.ImpostorRoles)
+                .SetColor(Palette.ImpostorRed);
+            TimeFreezer.SetupOptionItem();
+            ImpostorKilling = TextOptionItem.Create(600000, "Impostor killing", TabGroup.ImpostorRoles)
+                .SetColor(Palette.ImpostorRed);
+            EvilGuesser.SetupOptionItem();
+            ImpostorSupport = TextOptionItem.Create(700000, "Impostor support", TabGroup.ImpostorRoles)
+                .SetColor(Palette.ImpostorRed);
+            Trapster.SetupOptionItem();
+
+            //Neutral roles
+            Neutrals = TextOptionItem.Create(800000, "Neutrals", TabGroup.NeutralRoles)
+                .SetColor(Color.gray);
+            MinKillingNeutrals = IntegerOptionItem.Create(800001, "Min Killing neutrals", new(0, 15, 1), 0, TabGroup.NeutralRoles, false);
+            MaxKillingNeutrals = IntegerOptionItem.Create(800002, "Max Killing neutrals", new(0, 15, 1), 0, TabGroup.NeutralRoles, false);
+            MinEvilNeutrals = IntegerOptionItem.Create(800003, "Min Evil neutrals", new(0, 15, 1), 0, TabGroup.NeutralRoles, false);
+            MaxEvilNeutrals = IntegerOptionItem.Create(800004, "Max Evil neutrals", new(0, 15, 1), 0, TabGroup.NeutralRoles, false);
+            MinBenignNeutrals = IntegerOptionItem.Create(800005, "Min Benign neutrals", new(0, 15, 1), 0, TabGroup.NeutralRoles, false);
+            MaxBenignNeutrals = IntegerOptionItem.Create(800006, "Max Benign neutrals", new(0, 15, 1), 0, TabGroup.NeutralRoles, false);
+            NeutralBenign = TextOptionItem.Create(800010, "Neutral benign", TabGroup.NeutralRoles)
+                .SetColor(Color.gray);
+            Opportunist.SetupOptionItem();
+            NeutralEvil = TextOptionItem.Create(900010, "Neutral evil", TabGroup.NeutralRoles)
+                .SetColor(Color.gray);
+            Jester.SetupOptionItem();
+            NeutralKilling = TextOptionItem.Create(1000010, "Neutral killing", TabGroup.NeutralRoles)
+                .SetColor(Color.gray);
+            SerialKiller.SetupOptionItem();
+
             IsLoaded = true;
         }
     }

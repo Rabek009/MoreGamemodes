@@ -17,7 +17,7 @@ namespace MoreGamemodes
             }
             IUsable usableVent = __instance.Cast<IUsable>();
             float actualDistance = float.MaxValue;
-            couldUse = GameManager.Instance.LogicUsables.CanUse(usableVent, playerControl) && (!playerControl.MustCleanVent(__instance.Id) || (playerControl.inVent && Vent.currentVent == __instance)) && !playerControl.Data.IsDead && (playerControl.CanMove || playerControl.inVent);
+            couldUse = GameManager.Instance.LogicUsables.CanUse(usableVent, playerControl) && pc.Role.CanUse(__instance.Cast<IUsable>()) && (!playerControl.MustCleanVent(__instance.Id) || (playerControl.inVent && Vent.currentVent == __instance)) && !playerControl.Data.IsDead && (playerControl.CanMove || playerControl.inVent);
             if (ShipStatus.Instance.Systems.TryGetValue(SystemTypes.Ventilation, out var systemType))
             {
                 VentilationSystem ventilationSystem = systemType.TryCast<VentilationSystem>();
@@ -39,12 +39,85 @@ namespace MoreGamemodes
         }
     }
 
+    [HarmonyPatch(typeof(Vent), nameof(Vent.SetButtons))]
+    class SetButtonsPatch
+    {
+        public static bool Prefix(Vent __instance, [HarmonyArgument(0)] bool enabled)
+        {
+            if (!enabled) return true;
+            Vent[] nearbyVents = __instance.NearbyVents;
+		    Vector2 vector;
+		    if (__instance.Right && __instance.Left)
+		    {
+			    vector = (__instance.Right.transform.position + __instance.Left.transform.position) / 2f - __instance.transform.position;
+		    }
+		    else
+		    {
+		    	vector = Vector2.zero;
+		    }
+		    for (int i = 0; i < __instance.Buttons.Length; i++)
+		    {
+			    ButtonBehavior buttonBehavior = __instance.Buttons[i];
+				Vent vent = nearbyVents[i];
+				if (vent)
+				{
+					VentilationSystem ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
+					bool ventBeingCleaned = ventilationSystem != null && (ventilationSystem.IsVentCurrentlyBeingCleaned(vent.Id) || !CustomGamemode.Instance.OnEnterVent(PlayerControl.LocalPlayer, vent.Id));
+					buttonBehavior.gameObject.SetActive(true);
+					__instance.ToggleNeighborVentBeingCleaned(ventBeingCleaned, buttonBehavior, __instance.CleaningIndicators[i]);
+				    Vector3 vector2 = vent.transform.position - __instance.transform.position;
+				    Vector3 vector3 = vector2.normalized * (0.7f + __instance.spreadShift);
+				    vector3.x *= Mathf.Sign(ShipStatus.Instance.transform.localScale.x);
+				    vector3.y -= 0.08f;
+				    vector3.z = -10f;
+				    buttonBehavior.transform.localPosition = vector3;
+				    buttonBehavior.transform.LookAt2d(vent.transform);
+				    vector3 = vector3.RotateZ((vector.AngleSigned(vector2) > 0f) ? __instance.spreadAmount : (-__instance.spreadAmount));
+				    buttonBehavior.transform.localPosition = vector3;
+				    buttonBehavior.transform.Rotate(0f, 0f, (vector.AngleSigned(vector2) > 0f) ? __instance.spreadAmount : (-__instance.spreadAmount));
+			    }
+			    else
+			    {
+				    buttonBehavior.gameObject.SetActive(false);
+			    }
+            }
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Vent), nameof(Vent.UpdateArrows))]
+    class UpdateArrowsPatch
+    {
+        public static bool Prefix(Vent __instance, [HarmonyArgument(0)] VentilationSystem ventSystem)
+        {
+            if (__instance != Vent.currentVent || ventSystem == null)
+		    {
+			    return false;
+		    }
+		    Vent[] nearbyVents = __instance.NearbyVents;
+		    for (int i = 0; i < nearbyVents.Length; i++)
+		    {
+			    Vent vent = nearbyVents[i];
+			    if (vent)
+			    {
+			    	bool ventBeingCleaned = ventSystem.IsVentCurrentlyBeingCleaned(vent.Id) || !CustomGamemode.Instance.OnEnterVent(PlayerControl.LocalPlayer, vent.Id);
+			    	ButtonBehavior b = __instance.Buttons[i];
+			    	GameObject c = __instance.CleaningIndicators[i];
+			    	__instance.ToggleNeighborVentBeingCleaned(ventBeingCleaned, b, c);
+			    }
+		    }
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(Console), nameof(Console.CanUse))]
     class ConsoleCanUsePatch
     {
         public static bool Prefix(Console __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ((!pc.Object.GetRole().IsCrewmate() && ! __instance.AllowImpostor) || ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId]))
+                return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle)
@@ -59,6 +132,10 @@ namespace MoreGamemodes
         public static bool Prefix(PlatformConsole __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
+                return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && (PlayerControl.LocalPlayer.shouldAppearInvisible || PlayerControl.LocalPlayer.invisibilityAlpha < 1f))
+                return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
                 return false;
             if (Options.EnableDisableGapPlatform.GetBool())
@@ -73,6 +150,10 @@ namespace MoreGamemodes
         public static bool Prefix(ZiplineConsole __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
+                return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && (PlayerControl.LocalPlayer.shouldAppearInvisible || PlayerControl.LocalPlayer.invisibilityAlpha < 1f))
+                return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
                 return false;
             if (Options.EnableDisableZipline.GetBool())
@@ -87,6 +168,8 @@ namespace MoreGamemodes
         public static bool Prefix(MapConsole __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
+                return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
                 return false;
             return true;
@@ -99,6 +182,8 @@ namespace MoreGamemodes
         public static bool Prefix(SystemConsole __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
+                return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.BombTag ||
                 (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.IsHackActive) || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun ||
                 CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && ZombiesGamemode.instance.IsZombie(pc.Object)) ||
@@ -119,6 +204,8 @@ namespace MoreGamemodes
     {
         public static void Postfix(EmergencyMinigame __instance)
         {
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
+                __instance.Close();
             if (CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.BombTag ||
                 (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && RandomItemsGamemode.instance.IsHackActive) || CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale || CustomGamemode.Instance.Gamemode == Gamemodes.Speedrun ||
                 CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle || CustomGamemode.Instance.Gamemode == Gamemodes.KillOrDie || (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && ZombiesGamemode.instance.IsZombie(PlayerControl.LocalPlayer)) ||

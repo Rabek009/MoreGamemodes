@@ -96,7 +96,6 @@ namespace MoreGamemodes
                     {
                         var player = Utils.GetPlayerById(playerId);
                         if (player == null) return false;
-                        AntiCheat.TimeSinceVentCancel[playerId] = 0f;
                         seqBuffer.BumpSid();
 		                Vector2 vector = Utils.GetVentById(ventId).transform.position;
 		                vector -= player.Collider.offset;
@@ -114,6 +113,9 @@ namespace MoreGamemodes
                         seqBuffer.BumpSid();
                         return false;
                     }
+                    var player2 = Utils.GetPlayerById(playerId);
+                    if (player2 != null && !CustomGamemode.Instance.OnEnterVent(player2, ventId))
+                        player2.MyPhysics.RpcBootFromVent(ventId);
                     break;
             }
             return true;
@@ -292,6 +294,24 @@ namespace MoreGamemodes
                     writer.Recycle();
                 }
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(ElectricTask), nameof(ElectricTask.Initialize))]
+    public static class ElectricTaskInitializePatch
+    {
+        public static void Postfix()
+        {
+            Utils.SyncAllSettings();
+        }
+    }
+
+    [HarmonyPatch(typeof(ElectricTask), nameof(ElectricTask.Complete))]
+    public static class ElectricTaskCompletePatch
+    {
+        public static void Postfix()
+        {
+            Utils.SyncAllSettings();
         }
     }
 }

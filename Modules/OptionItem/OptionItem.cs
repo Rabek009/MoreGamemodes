@@ -228,6 +228,10 @@ namespace MoreGamemodes
         ModSettings,
         GamemodeSettings,
         AdditionalGamemodes,
+        CrewmateRoles,
+        ImpostorRoles,
+        NeutralRoles,
+        AddOns,
     }
     
     public enum OptionFormat

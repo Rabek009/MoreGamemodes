@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Hazel;
 
 namespace MoreGamemodes
 {
@@ -28,7 +27,7 @@ namespace MoreGamemodes
         public static void Postfix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            
+            AntiBlackout.SetIsDead();
             if (RandomItemsGamemode.instance != null)
                 RandomItemsGamemode.instance.CamouflageTimer = -1f;
             if (Options.EnableRandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
@@ -45,8 +44,6 @@ namespace MoreGamemodes
         public static void Postfix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] NetworkedPlayerInfo exiled, [HarmonyArgument(2)] bool tie)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (Options.EnableMidGameChat.GetBool())
-                new LateTask(() => Utils.SetChatVisible(), 8f, "Set Chat Visible");
             foreach (var netObject in CustomNetObject.CustomObjects)
                 netObject.RpcTeleport(netObject.Position);
             CustomGamemode.Instance.OnVotingComplete(__instance, states, exiled, tie);

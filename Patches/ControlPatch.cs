@@ -4,9 +4,9 @@ using System.Linq;
 using UnityEngine;
 using System;
 using InnerNet;
-using AmongUs.GameOptions;
 
 using Object = UnityEngine.Object;
+using AmongUs.GameOptions;
 
 namespace MoreGamemodes
 {
@@ -17,6 +17,9 @@ namespace MoreGamemodes
         {
             if (Input.GetKeyDown(KeyCode.LeftControl) && !Main.GameStarted)
                 PlayerControl.LocalPlayer.GetComponent<CircleCollider2D>().enabled = !PlayerControl.LocalPlayer.gameObject.GetComponent<CircleCollider2D>().enabled;
+            
+            if (Input.GetKeyDown(KeyCode.Q) && Main.GameStarted && !PlayerControl.LocalPlayer.GetRole().CanUseKillButton() && PlayerControl.LocalPlayer.GetRole().ForceKillButton() && HudManager.Instance.KillButton.isActiveAndEnabled)
+                HudManager.Instance.KillButton.DoClick();
 
             if (!AmongUsClient.Instance.AmHost) return;
             
@@ -25,7 +28,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     winners.Add(pc.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners, CustomWinners.Terminated);
             }
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead &&
@@ -61,6 +64,24 @@ namespace MoreGamemodes
                         viewSettingsPane.RefreshTab();
                     viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
                 }
+            }
+
+            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.N, KeyCode.LeftShift }) && Main.GameStarted)
+            {
+                CustomRpcSender sender = CustomRpcSender.Create("test", Hazel.SendOption.None);
+                sender.StartMessage(-1);
+                sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)RoleTypes.Phantom)
+                    .Write(true)
+                    .EndRpc();
+                sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.StartVanish)
+                    .EndRpc();
+                sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)RoleTypes.Crewmate)
+                    .Write(true)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
             }
         }
 

@@ -1,8 +1,9 @@
 ﻿using HarmonyLib;
 using InnerNet;
 using System.Collections.Generic;
-using AmongUs.GameOptions;
+using System.Linq;
 using Hazel;
+using UnityEngine;
 
 namespace MoreGamemodes
 {
@@ -51,7 +52,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerLeft))]
     class OnPlayerLeftPatch
     {
-        public static void Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
+        public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return;
             if (__instance.GameState != InnerNetClient.GameStates.Started) return;
@@ -71,6 +72,7 @@ namespace MoreGamemodes
                     }
                 }
             }, 0.2f);
+            AntiBlackout.OnDisconnect(client.Character.Data);
         }
     }
 
@@ -149,6 +151,151 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             new LateTask(() => __instance.SetDirtyBit(1U), 0.5f);
             return false;
+        }
+    }
+
+    // https://github.com/Gurge44/EndlessHostRoles/blob/main/Patches/ClientPatch.cs
+    static class InnerNetClientPatch
+    {
+        private static byte Timer;
+
+        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendInitialData))]
+        [HarmonyPrefix]
+        public static bool SendInitialDataPrefix(InnerNetClient __instance, int clientId)
+        {
+            if (!Constants.IsVersionModded() || AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
+            MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
+            messageWriter.StartMessage(6);
+            messageWriter.Write(__instance.GameId);
+            messageWriter.WritePacked(clientId);
+            Il2CppSystem.Collections.Generic.List<InnerNetObject> obj = __instance.allObjects;
+            lock (obj)
+            {
+                HashSet<GameObject> hashSet = new();
+                for (int i = 0; i < __instance.allObjects.Count; i++)
+                {
+                    InnerNetObject innerNetObject = __instance.allObjects[i];
+                    if (innerNetObject && (innerNetObject.OwnerId != -4 || __instance.AmModdedHost) && hashSet.Add(innerNetObject.gameObject))
+                    {
+                        GameManager gameManager = innerNetObject as GameManager;
+                        if (gameManager != null)
+                        {
+                            __instance.SendGameManager(clientId, gameManager);
+                        }
+                        else
+                        {
+                            if (innerNetObject is not NetworkedPlayerInfo)
+                                __instance.WriteSpawnMessage(innerNetObject, innerNetObject.OwnerId, innerNetObject.SpawnFlags, messageWriter);
+                        }
+                    }
+                }
+            
+                messageWriter.EndMessage();
+                __instance.SendOrDisconnect(messageWriter);
+                messageWriter.Recycle();
+            }
+
+            DelaySpawnPlayerInfo(__instance, clientId);
+            return false;
+        }
+
+        private static void DelaySpawnPlayerInfo(InnerNetClient __instance, int clientId)
+        {
+            var players = GameData.Instance.AllPlayers.ToArray();
+
+            foreach (var batch in players.Chunk(5))
+            {
+                MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
+                messageWriter.StartMessage(6);
+                messageWriter.Write(__instance.GameId);
+                messageWriter.WritePacked(clientId);
+
+                batch.DoIf(p => p != null && p.ClientId != clientId && !p.Disconnected, p => __instance.WriteSpawnMessage(p, p.OwnerId, p.SpawnFlags, messageWriter));
+
+                messageWriter.EndMessage();
+                __instance.SendOrDisconnect(messageWriter);
+                messageWriter.Recycle();
+            }
+        }
+
+        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendAllStreamedObjects))]
+        [HarmonyPrefix]
+        public static bool SendAllStreamedObjectsPrefix(InnerNetClient __instance, ref bool __result)
+        {
+            if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
+            __result = false;
+            Il2CppSystem.Collections.Generic.List<InnerNetObject> obj = __instance.allObjects;
+            lock (obj)
+            {
+                for (int i = 0; i < __instance.allObjects.Count; i++)
+                {
+                    InnerNetObject innerNetObject = __instance.allObjects[i];
+                    if (innerNetObject && innerNetObject is not NetworkedPlayerInfo && innerNetObject.IsDirty && (innerNetObject.AmOwner || (innerNetObject.OwnerId == -2 && __instance.AmHost)))
+                    {
+                        MessageWriter messageWriter = __instance.Streams[(int)innerNetObject.sendMode];
+                        messageWriter.StartMessage(1);
+                        messageWriter.WritePacked(innerNetObject.NetId);
+                        if (innerNetObject.Serialize(messageWriter, false)) messageWriter.EndMessage();
+                        else messageWriter.CancelMessage();
+
+                        if (innerNetObject.Chunked && innerNetObject.IsDirty)
+                            __result = true;
+                    }
+                }
+            }
+
+            for (int j = 0; j < __instance.Streams.Length; j++)
+            {
+                MessageWriter messageWriter2 = __instance.Streams[j];
+                if (messageWriter2.HasBytes(7))
+                {
+                    messageWriter2.EndMessage();
+                    __instance.SendOrDisconnect(messageWriter2);
+                    messageWriter2.Clear((SendOption)j);
+                    messageWriter2.StartMessage(5);
+                    messageWriter2.Write(__instance.GameId);
+                }
+            }
+
+            return false;
+        }
+
+        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.FixedUpdate))]
+        [HarmonyPostfix]
+        public static void FixedUpdatePostfix(InnerNetClient __instance)
+        {
+            if (!Constants.IsVersionModded() || AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started || !__instance.AmHost || __instance.Streams == null || __instance.NetworkMode != NetworkModes.OnlineGame) return;
+
+            if (Timer == 0)
+            {
+                Timer = 1;
+                return;
+            }
+
+            var player = GameData.Instance.AllPlayers.ToArray().FirstOrDefault(x => x.IsDirty);
+            if (player != null)
+            {
+                Timer = 0;
+                MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
+                messageWriter.StartMessage(5);
+                messageWriter.Write(__instance.GameId);
+                messageWriter.StartMessage(1);
+                messageWriter.WritePacked(player.NetId);
+                if (player.Serialize(messageWriter, false))
+                {
+                    messageWriter.EndMessage();
+                }
+                else
+                {
+                    messageWriter.CancelMessage();
+                    player.ClearDirtyBits();
+                    return;
+                }
+
+                messageWriter.EndMessage();
+                __instance.SendOrDisconnect(messageWriter);
+                messageWriter.Recycle();
+            }
         }
     }
 }

@@ -19,7 +19,6 @@ namespace MoreGamemodes
         public static List<byte> RemovedBodies;
         public static Dictionary<byte, (byte, float)> TimeSinceLastStartCleaning;
         public static Dictionary<byte, (byte, float)> TimeSinceLastBootImpostors;
-        public static Dictionary<byte, float> TimeSinceVentCancel;
 
         public static void Init()
         {
@@ -31,7 +30,6 @@ namespace MoreGamemodes
             RemovedBodies = new List<byte>();
             TimeSinceLastStartCleaning = new Dictionary<byte, (byte, float)>();
             TimeSinceLastBootImpostors = new Dictionary<byte, (byte, float)>();
-            TimeSinceVentCancel = new Dictionary<byte, float>();
         }
 
         public static bool PlayerControlReceiveRpc(PlayerControl pc, byte callId, MessageReader reader)
@@ -375,12 +373,6 @@ namespace MoreGamemodes
                         HandleCheat(pc, "Using vanish button in lobby");
                         return true;
                     }
-                    PhantomRole phantomRole2 = pc.Data.Role as PhantomRole;
-                    if (phantomRole2 != null && phantomRole2.IsInvisible)
-                    {
-                        HandleCheat(pc, "Vanishing while invisible");
-                        return true;
-                    }
                     if (pc.GetSelfRole() != RoleTypes.Phantom)
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
@@ -397,12 +389,6 @@ namespace MoreGamemodes
                     if (!gameStarted)
                     {
                         HandleCheat(pc, "Using appear button in lobby");
-                        return true;
-                    }
-                    PhantomRole phantomRole3 = pc.Data.Role as PhantomRole;
-                    if (phantomRole3 != null && !phantomRole3.IsInvisible)
-                    {
-                        HandleCheat(pc, "Appearing while invisible");
                         return true;
                     }
                     if (pc.GetSelfRole() != RoleTypes.Phantom)

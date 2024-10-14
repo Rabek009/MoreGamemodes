@@ -43,4 +43,14 @@ namespace MoreGamemodes
             else return true;
         }
     }
+
+    [HarmonyPatch(typeof(LogicGameFlowNormal), nameof(LogicGameFlowNormal.IsGameOverDueToDeath))]
+    class IsGameOverDueToDeathPatch
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
+        }
+    }
 }

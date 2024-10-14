@@ -25,8 +25,22 @@ namespace MoreGamemodes
         static void WrapUpPostfix(NetworkedPlayerInfo exiled)
         {
             if (!AmongUsClient.Instance.AmHost) return;
+            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
+            {
+                CustomGamemode.Instance.OnExile(exiled);
+                if (exiled == null || exiled.Object == null) return;
+                if (exiled.Object.GetDeathReason() == DeathReasons.Alive)
+                    exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
+                return;
+            }
+            AntiBlackout.RestoreIsDead(doSend: false);
+            if (exiled != null)
+                exiled.IsDead = true;
+            if (Options.EnableMidGameChat.GetBool() || (AntiBlackout.ShowDoubleAnimation && exiled != null))
+                Utils.SetChatVisible();
+            new LateTask(() => Utils.SendGameData(), 0.5f);
             CustomGamemode.Instance.OnExile(exiled);
-
+            
             if (exiled == null || exiled.Object == null) return;
             if (exiled.Object.GetDeathReason() == DeathReasons.Alive)
                 exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);

@@ -65,71 +65,70 @@ namespace MoreGamemodes
 
         public static bool IsActive(SystemTypes type)
         {
-            int mapId = Main.RealOptions.GetByte(ByteOptionNames.MapId);
-            switch (type)
-            {
-                case SystemTypes.Electrical:
+        if (!ShipStatus.Instance.Systems.ContainsKey(type))
+        {
+            return false;
+        }
+
+        int mapId = Main.RealOptions.GetByte(ByteOptionNames.MapId);
+        switch (type)
+        {
+            case SystemTypes.Electrical:
+                {
+                    if (mapId == 5) return false;
+                    var SwitchSystem = ShipStatus.Instance.Systems[type].Cast<SwitchSystem>();
+                    return SwitchSystem != null && SwitchSystem.IsActive;
+                }
+            case SystemTypes.Reactor:
+                {
+                    if (mapId == 2) return false; 
+                    else
                     {
-                        if (mapId >= 5) return false;
-                        var SwitchSystem = ShipStatus.Instance.Systems[type].Cast<SwitchSystem>();
-                        return SwitchSystem != null && SwitchSystem.IsActive;
-                    }
-                case SystemTypes.Reactor:
-                    {
-                        if (mapId == 2 || mapId == 4) return false;
-                        else if (mapId == 4)
-                        {
-                            var HeliSabotageSystem = ShipStatus.Instance.Systems[type].Cast<HeliSabotageSystem>();
-                            return HeliSabotageSystem != null && HeliSabotageSystem.IsActive;
-                        }
-                        else
-                        {
-                            var ReactorSystemType = ShipStatus.Instance.Systems[type].Cast<ReactorSystemType>();
-                            return ReactorSystemType != null && ReactorSystemType.IsActive;
-                        }
-                    }
-                case SystemTypes.Laboratory:
-                    {
-                        if (mapId != 2) return false;
                         var ReactorSystemType = ShipStatus.Instance.Systems[type].Cast<ReactorSystemType>();
                         return ReactorSystemType != null && ReactorSystemType.IsActive;
                     }
-                case SystemTypes.LifeSupp:
+                }
+            case SystemTypes.Laboratory:
+                {
+                    if (mapId != 2) return false;
+                    var ReactorSystemType = ShipStatus.Instance.Systems[type].Cast<ReactorSystemType>();
+                    return ReactorSystemType != null && ReactorSystemType.IsActive;
+                }
+            case SystemTypes.LifeSupp:
+                {
+                    if (mapId is 2 or 4 or 5) return false;
+                    var LifeSuppSystemType = ShipStatus.Instance.Systems[type].Cast<LifeSuppSystemType>();
+                    return LifeSuppSystemType != null && LifeSuppSystemType.IsActive;
+                }
+            case SystemTypes.HeliSabotage:
+                {
+                    if (mapId != 4) return false;
+                    var HeliSabotageSystem = ShipStatus.Instance.Systems[type].Cast<HeliSabotageSystem>();
+                    return HeliSabotageSystem != null && HeliSabotageSystem.IsActive;
+                }
+            case SystemTypes.Comms:
+                {
+                    if (mapId is 1 or 5)
                     {
-                        if (mapId is 2 or 4) return false;
-                        var LifeSuppSystemType = ShipStatus.Instance.Systems[type].Cast<LifeSuppSystemType>();
-                        return LifeSuppSystemType != null && LifeSuppSystemType.IsActive;
+                        var HqHudSystemType = ShipStatus.Instance.Systems[type].Cast<HqHudSystemType>();
+                        return HqHudSystemType != null && HqHudSystemType.IsActive;
                     }
-                case SystemTypes.Comms:
+                    else
                     {
-                        if (mapId == 1 || mapId >= 5)
-                        {
-                            var HqHudSystemType = ShipStatus.Instance.Systems[type].Cast<HqHudSystemType>();
-                            return HqHudSystemType != null && HqHudSystemType.IsActive;
-                        }
-                        else
-                        {
-                            var HudOverrideSystemType = ShipStatus.Instance.Systems[type].Cast<HudOverrideSystemType>();
-                            return HudOverrideSystemType != null && HudOverrideSystemType.IsActive;
-                        }
+                        var HudOverrideSystemType = ShipStatus.Instance.Systems[type].Cast<HudOverrideSystemType>();
+                        return HudOverrideSystemType != null && HudOverrideSystemType.IsActive;
                     }
-                case SystemTypes.MushroomMixupSabotage:
-                    {
-                        if (mapId < 5) return false;
-                        var MushroomMixupSabotageSystemType = ShipStatus.Instance.Systems[type].Cast<MushroomMixupSabotageSystem>();
-                        return MushroomMixupSabotageSystemType != null && MushroomMixupSabotageSystemType.IsActive;
-                    }
-                case SystemTypes.HeliSabotage:
-                    {
-                        if (mapId != 4) return false;
-                        var HeliSabotageSystemType = ShipStatus.Instance.Systems[type].Cast<HeliSabotageSystem>();
-                        return HeliSabotageSystemType != null && HeliSabotageSystemType.IsActive;
-                    }
-                default:
-                    return false;
-            }
+                }
+            case SystemTypes.MushroomMixupSabotage:
+                {
+                    if (mapId != 5) return false;
+                    var MushroomMixupSabotageSystem = ShipStatus.Instance.Systems[type].TryCast<MushroomMixupSabotageSystem>();
+                    return MushroomMixupSabotageSystem != null && MushroomMixupSabotageSystem.IsActive;
+                }
+            default:
+                return false;
         }
-
+    }
         public static bool IsSabotage()
         {
             return IsActive(SystemTypes.LifeSupp) || IsActive(SystemTypes.Reactor) || IsActive(SystemTypes.Laboratory) || IsActive(SystemTypes.Electrical) || IsActive(SystemTypes.Comms) || IsActive(SystemTypes.MushroomMixupSabotage) || IsActive(SystemTypes.HeliSabotage);
@@ -175,19 +174,19 @@ namespace MoreGamemodes
             Main.MessagesToSend.Add((message, 255, title));
         }
 
-        public static void SendSpam(string message)
+        public static void SendSpam()
         {
             if (!AmongUsClient.Instance.AmHost) return;
             var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
             if (player == null) return;
             for (int i = 1; i <= 20; ++i)
             {
-                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, message);
+                DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, "");
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc == PlayerControl.LocalPlayer) continue;
                     MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None, pc.GetClientId());
-                    writer.Write(message);
+                    writer.Write("");
                     AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
             }
@@ -195,19 +194,23 @@ namespace MoreGamemodes
 
         public static void SendGameData()
         {
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
-            writer.StartMessage(5);
-            writer.Write(AmongUsClient.Instance.GameId);
-            foreach (var playerInfo in GameData.Instance.AllPlayers)
+            foreach (var playerinfo in GameData.Instance.AllPlayers)
             {
-                writer.StartMessage(1);
-                writer.WritePacked(playerInfo.NetId);
-                playerInfo.Serialize(writer, false);
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+                writer.StartMessage(5);
+                {
+                    writer.Write(AmongUsClient.Instance.GameId);
+                    writer.StartMessage(1);
+                    {
+                        writer.WritePacked(playerinfo.NetId);
+                        playerinfo.Serialize(writer, true);
+                    }
+                    writer.EndMessage();
+                }
                 writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
             }
-            writer.EndMessage();
-            AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
         }
 
         public static void CreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent)
@@ -310,6 +313,14 @@ namespace MoreGamemodes
                     return "Gamemode Settings";
                 case TabGroup.AdditionalGamemodes:
                     return "Additional Gamemodes";
+                case TabGroup.CrewmateRoles:
+                    return "Crewmate Roles";
+                case TabGroup.ImpostorRoles:
+                    return "Impostor Roles";
+                case TabGroup.NeutralRoles:
+                    return "Neutral Roles";
+                case TabGroup.AddOns:
+                    return "Add Ons";
                 default:
                     return "";
             }
@@ -351,6 +362,7 @@ namespace MoreGamemodes
             if (reason == DeathReasons.Suicide) return "Suicide";
             if (reason == DeathReasons.Trapped) return "Trapped";
             if (reason == DeathReasons.Escaped) return "Escaped";
+            if (reason == DeathReasons.Guessed) return "Guessed";
             return "???";
         }
 
@@ -365,11 +377,10 @@ namespace MoreGamemodes
 
         public static void SetChatVisible()
         {
-            if (GameManager.Instance.LogicFlow.IsGameOverDueToDeath()) return;
             MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
             MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
             AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);
-            MeetingHud.Instance.RpcClose();
+            new LateTask(() => MeetingHud.Instance.RpcClose(), 0.5f);
         }
 
         public static Sprite LoadSprite(string path, float pixelsPerUnit = 1f)
@@ -494,6 +505,77 @@ namespace MoreGamemodes
             }
         }
 
+        public static void SetDesyncRoleForPlayers(PlayerControl player, List<PlayerControl> list, RoleTypes listRole, RoleTypes othersRole)
+        {
+            int assignedRoles = 0;
+            int playerCount = 0;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc == player) continue;
+                ++playerCount;
+                if (pc.Data != null && (RpcSetRolePatch.RoleAssigned[pc.PlayerId] || pc.Data.Disconnected))
+                    ++assignedRoles;
+            }
+            if (assignedRoles >= playerCount)
+            {
+                new LateTask(() => {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc.AmOwner)
+                        {
+                            Dictionary<byte, bool> Disconnected = new();
+                            foreach (var ar in PlayerControl.AllPlayerControls)
+                            {
+                                Disconnected[ar.PlayerId] = ar.Data.Disconnected;
+                                ar.Data.Disconnected = true;
+                            }
+                            player.StartCoroutine(player.CoSetRole(list.Contains(pc) ? listRole : othersRole, true));
+                            foreach (var ar in PlayerControl.AllPlayerControls)
+                                ar.Data.Disconnected = Disconnected[ar.PlayerId];
+                            continue;
+                        }
+                        CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+                        MessageWriter writer = sender.stream;
+                        sender.StartMessage(pc.GetClientId());
+                        RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
+                        Dictionary<byte, bool> Disconnected2 = new();
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                        {   
+                            Disconnected2[ar.PlayerId] = ar.Data.Disconnected;
+                            ar.Data.Disconnected = true;
+                            writer.StartMessage(1);
+                            writer.WritePacked(ar.Data.NetId);
+                            ar.Data.Serialize(writer, false);
+                            writer.EndMessage();
+                        }
+                        sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                            .Write((ushort)(list.Contains(pc) ? listRole : othersRole))
+                            .Write(true)
+                            .EndRpc();
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                        {
+                            ar.Data.Disconnected = Disconnected2[ar.PlayerId];
+                            writer.StartMessage(1);
+                            writer.WritePacked(ar.Data.NetId);
+                            ar.Data.Serialize(writer, false);
+                            writer.EndMessage();
+                        }
+                        sender.EndMessage();
+                        sender.SendMessage();
+                    }
+                }, 0.5f);
+                return;
+            }
+            RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (list.Contains(pc))
+                    player.RpcSetDesyncRoleV2(listRole, pc);
+                else
+                    player.RpcSetDesyncRoleV2(othersRole, pc);
+            }
+        }
+
         public static void DestroyTranslator(this GameObject obj)
         {
             var translator = obj.GetComponent<TextTranslatorTMP>();
@@ -549,6 +631,8 @@ namespace MoreGamemodes
             }
             foreach (var tab in Enum.GetValues<TabGroup>())
             {
+                if (tab == TabGroup.GamemodeSettings && Options.CurrentGamemode == Gamemodes.Classic) continue;
+                if ((tab is TabGroup.CrewmateRoles or TabGroup.ImpostorRoles or TabGroup.NeutralRoles or TabGroup.AddOns) && Options.CurrentGamemode != Gamemodes.Classic) continue;
                 Messages[tab] = "<b><size=125%>" + GetTabName(tab) + "</size></b>\n\n" + Messages[tab];
                 if (player == null)
                     SendChat(Messages[tab], "Options");
@@ -665,6 +749,24 @@ namespace MoreGamemodes
         public static void SetAllVentInteractions()
         {
             VentilationSystemDeterioratePatch.SerializeV2(ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>());
+        }
+
+        public static void BootEveryoneFromVent(byte ventId)
+        {
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+		    {
+			    if (ventilationSystem.PlayersInsideVents.ContainsKey(pc.PlayerId) && ventilationSystem.PlayersInsideVents[pc.PlayerId] == ventId)
+			    {
+					ventilationSystem.PlayersInsideVents.Remove(pc.PlayerId);
+					ventilationSystem.BootImpostorFromVent(ventId, pc.PlayerId);
+					ventilationSystem.IsDirty = true;
+			    }
+		    }
+		    if (ventilationSystem.IsDirty)
+		    {
+			    ventilationSystem.UpdateVentArrows();
+		    }
         }
     }
 }

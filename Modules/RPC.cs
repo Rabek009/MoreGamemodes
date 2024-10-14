@@ -40,6 +40,12 @@ namespace MoreGamemodes
         SetFrozen,
         SendNoisemakerAlert,
         SetColorWarsTeam,
+        SetCustomRole,
+        SetRoleblock,
+        SyncCustomWinner,
+        SetAbilityUses,
+        BlockVent,
+        SetPetAbilityCooldown,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -80,7 +86,12 @@ namespace MoreGamemodes
                     if (text[0] == '/' && Main.IsModded[__instance.PlayerId]) return false;
                     break;
                 case RpcCalls.UsePlatform:
-                    if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive) return false;
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[__instance.PlayerId])
+                        return false;
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
+                        return false;
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && (__instance.shouldAppearInvisible || __instance.invisibilityAlpha < 1f))
+                        return false;
                     if (Options.DisableGapPlatform.GetBool()) return false;
                     break;
             }
@@ -171,6 +182,18 @@ namespace MoreGamemodes
                 case CustomRPC.SetColorWarsTeam:
                     __instance.SetColorWarsTeam(reader.ReadByte(), reader.ReadBoolean());
                     break;
+                case CustomRPC.SetCustomRole:
+                    __instance.SetCustomRole((CustomRoles)reader.ReadInt32());
+                    break;
+                case CustomRPC.SetRoleblock:
+                    __instance.SetRoleblock(reader.ReadBoolean());
+                    break;
+                case CustomRPC.SetAbilityUses:
+                    __instance.SetAbilityUses(reader.ReadSingle());
+                    break;
+                case CustomRPC.SetPetAbilityCooldown:
+                    __instance.SetPetAbilityCooldown(reader.ReadBoolean());
+                    break;
             }
         }
     }
@@ -224,6 +247,17 @@ namespace MoreGamemodes
                 case CustomRPC.DestroyTurret:
                     __instance.DestroyTurret((SystemTypes)reader.ReadByte());
                     break;
+                case CustomRPC.SyncCustomWinner:
+                    if (ClassicGamemode.instance == null) break;
+                    ClassicGamemode.instance.Winner = (CustomWinners)reader.ReadInt32();
+                    ClassicGamemode.instance.AdditionalWinners.Clear();
+                    int num = reader.ReadInt32();
+                    for (int i = 0; i < num; ++i)
+                        ClassicGamemode.instance.AdditionalWinners.Add((AdditionalWinners)reader.ReadInt32());
+                    break;
+                case CustomRPC.BlockVent:
+                    __instance.BlockVent(reader.ReadInt32());
+                    break;
             }
         }
     }
@@ -240,7 +274,7 @@ namespace MoreGamemodes
             switch (rpcType)
             {
                 case RpcCalls.SnapTo:
-                    if (CoEnterVentPatch.PlayersToKick.Contains(__instance.myPlayer.PlayerId) || (AntiCheat.TimeSinceVentCancel.ContainsKey(__instance.myPlayer.PlayerId) && AntiCheat.TimeSinceVentCancel[__instance.myPlayer.PlayerId] <= 1f)) return false;
+                    if (CoEnterVentPatch.PlayersToKick.Contains(__instance.myPlayer.PlayerId)) return false;
                     break;
             }
             return true;
@@ -522,6 +556,32 @@ namespace MoreGamemodes
             ColorWarsGamemode.instance.PlayerIsLeader[player.PlayerId] = isLeader;
         }
 
+        public static void SetRoleblock(this PlayerControl player, bool roleblock)
+        {
+            if (ClassicGamemode.instance == null) return;
+            ClassicGamemode.instance.IsRoleblocked[player.PlayerId] = roleblock;
+        }
+
+        public static void SetAbilityUses(this PlayerControl player, float uses)
+        {
+            if (ClassicGamemode.instance == null) return;
+            player.GetRole().AbilityUses = uses;
+        }
+
+        public static void BlockVent(this GameManager manager, int ventId)
+        {
+            if (ClassicGamemode.instance == null) return;
+            ClassicGamemode.instance.BlockedVents.Add(ventId);
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
+            ventilationSystem.UpdateVentArrows();
+        }
+
+        public static void SetPetAbilityCooldown(this PlayerControl player, bool onCooldown)
+        {
+            if (ClassicGamemode.instance == null) return;
+            ClassicGamemode.instance.IsOnPetAbilityCooldown[player.PlayerId] = onCooldown;
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -767,6 +827,57 @@ namespace MoreGamemodes
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetColorWarsTeam, SendOption.Reliable, -1);
             writer.Write(team);
             writer.Write(isLeader);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetCustomRole(this PlayerControl player, CustomRoles role)
+        {
+            player.SetCustomRole(role);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetCustomRole, SendOption.Reliable, -1);
+            writer.Write((int)role);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetRoleblock(this PlayerControl player, bool roleblock)
+        {
+            player.SetRoleblock(roleblock);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetRoleblock, SendOption.Reliable, -1);
+            writer.Write(roleblock);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetAbilityUses(this PlayerControl player, float uses)
+        {
+            player.SetAbilityUses(uses);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetAbilityUses, SendOption.Reliable, -1);
+            writer.Write(uses);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSyncCustomWinner(this GameManager manager)
+        {
+            if (ClassicGamemode.instance == null) return;
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SyncCustomWinner, SendOption.Reliable, -1);
+            writer.Write((int)ClassicGamemode.instance.Winner);
+            writer.Write(ClassicGamemode.instance.AdditionalWinners.Count);
+            for (int i = 0; i < ClassicGamemode.instance.AdditionalWinners.Count; ++i)
+                writer.Write((int)ClassicGamemode.instance.AdditionalWinners[i]);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcBlockVent(this GameManager manager, int ventId)
+        {
+            manager.BlockVent(ventId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.BlockVent, SendOption.Reliable, -1);
+            writer.Write(ventId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetPetAbilityCooldown(this PlayerControl player, bool onCooldown)
+        {
+            player.SetPetAbilityCooldown(onCooldown);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetPetAbilityCooldown, SendOption.Reliable, -1);
+            writer.Write(onCooldown);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

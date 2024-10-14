@@ -19,7 +19,7 @@ namespace MoreGamemodes
 			    NetworkedPlayerInfo playerInfo = GameData.Instance.AllPlayers[i];
 			    if (playerInfo != null && playerInfo.Role.DidWin(gameOverReason))
 			    {
-                    if (!((CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.Speedrun or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Zombies or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars) && playerInfo.Disconnected))
+                    if (!((CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.Speedrun or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Zombies or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars) && playerInfo.Disconnected))
                     {
                         EndGameResult.CachedWinners.Add(new CachedPlayerData(playerInfo));
                         winners.Add(playerInfo.PlayerId);
@@ -37,6 +37,11 @@ namespace MoreGamemodes
                 switch (CustomGamemode.Instance.Gamemode)
                 {
                     case Gamemodes.Classic:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
+                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText()) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
+                        break;
                     case Gamemodes.HideAndSeek:
                     case Gamemodes.ShiftAndSeek:
                     case Gamemodes.RandomItems:
@@ -89,11 +94,14 @@ namespace MoreGamemodes
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.ColorWars:
-                        lastResult += Utils.ColorString(Palette.PlayerColors[ColorWarsGamemode.instance.Team[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        if (ColorWarsGamemode.instance.Team[playerInfo.PlayerId] == byte.MaxValue)
+                            lastResult += Utils.ColorString(Color.gray, "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        else
+                            lastResult += Utils.ColorString(Palette.PlayerColors[ColorWarsGamemode.instance.Team[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                 }
-                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies or Gamemodes.FreezeTag)
+                if (CustomGamemode.Instance.Gamemode is Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies or Gamemodes.FreezeTag)
                 {
                     if (!Main.StandardRoles[playerInfo.PlayerId].IsImpostor())
                     {
@@ -122,6 +130,11 @@ namespace MoreGamemodes
                 switch (CustomGamemode.Instance.Gamemode)
                 {
                     case Gamemodes.Classic:
+                        lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
+                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText()) + " (";
+                        lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
+                        break;
                     case Gamemodes.HideAndSeek:
                     case Gamemodes.ShiftAndSeek:
                     case Gamemodes.RandomItems:
@@ -174,11 +187,14 @@ namespace MoreGamemodes
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.ColorWars:
-                        lastResult += Utils.ColorString(Palette.PlayerColors[ColorWarsGamemode.instance.Team[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        if (ColorWarsGamemode.instance.Team[playerInfo.PlayerId] == byte.MaxValue)
+                            lastResult += Utils.ColorString(Color.gray, Main.StandardNames[playerInfo.PlayerId]) + " (";
+                        else
+                            lastResult += Utils.ColorString(Palette.PlayerColors[ColorWarsGamemode.instance.Team[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                 }
-                if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies or Gamemodes.FreezeTag)
+                if (CustomGamemode.Instance.Gamemode is Gamemodes.HideAndSeek or Gamemodes.ShiftAndSeek or Gamemodes.RandomItems or Gamemodes.Speedrun or Gamemodes.Zombies or Gamemodes.FreezeTag)
                 {
                     if (!Main.StandardRoles[playerInfo.PlayerId].IsImpostor())
                     {
@@ -207,6 +223,61 @@ namespace MoreGamemodes
         public static void Postfix(EndGameManager __instance)
         {
             Main.GameStarted = false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+            {
+                var WinnerTextObject = Object.Instantiate(__instance.WinText.gameObject);
+                WinnerTextObject.transform.position = new(__instance.WinText.transform.position.x, __instance.WinText.transform.position.y - 0.5f, __instance.WinText.transform.position.z);
+                WinnerTextObject.transform.localScale = new(0.6f, 0.6f, 0.6f);
+                var WinnerText = WinnerTextObject.GetComponent<TMPro.TextMeshPro>();
+                WinnerText.fontSizeMin = 3f;
+                WinnerText.color = Color.white;
+                WinnerText.text = "";
+                switch (ClassicGamemode.instance.Winner)
+                {
+                    case CustomWinners.Terminated:
+                        WinnerText.text += Utils.ColorString(Color.gray, "Host terminated game");
+                        __instance.BackgroundBar.material.color = Color.gray;
+                        break;
+                    case CustomWinners.NoOne:
+                        WinnerText.text += Utils.ColorString(Color.red, "Everyone died");
+                        __instance.BackgroundBar.material.color = Color.red;
+                        break;
+                    case CustomWinners.Crewmates:
+                        WinnerText.text += Utils.ColorString(Palette.CrewmateBlue, "Crewmates ");
+                        __instance.BackgroundBar.material.color = Palette.CrewmateBlue;
+                        break;
+                    case CustomWinners.Impostors:
+                        WinnerText.text += Utils.ColorString(Palette.ImpostorRed, "Impostors ");
+                        __instance.BackgroundBar.material.color = Palette.ImpostorRed;
+                        break;
+                    case CustomWinners.Jester:
+                        ColorUtility.TryParseHtmlString("#db72e0", out Color jesterColor);
+                        WinnerText.text += Utils.ColorString(jesterColor, "Jester ");
+                        __instance.BackgroundBar.material.color = jesterColor;
+                        break;
+                    case CustomWinners.SerialKiller:
+                        ColorUtility.TryParseHtmlString("#63188f", out Color serialKillerColor);
+                        WinnerText.text += Utils.ColorString(serialKillerColor, "Serial Killer ");
+                        __instance.BackgroundBar.material.color = serialKillerColor;
+                        break;
+                }
+                if (!(ClassicGamemode.instance.Winner is CustomWinners.None or CustomWinners.Terminated or CustomWinners.NoOne))
+                {
+                    foreach (var winner in ClassicGamemode.instance.AdditionalWinners)
+                    {
+                        WinnerText.text += "& ";
+                        switch (winner)
+                        {
+                            case AdditionalWinners.Opportunist:
+                                ColorUtility.TryParseHtmlString("#1dde16", out Color opportunistColor);
+                                WinnerText.text += Utils.ColorString(opportunistColor, "Opportunist ");
+                                break;
+                        }
+                    }
+                    WinnerText.text += "win!";
+                }
+            }
+
             CustomGamemode.Instance = null;
             ClassicGamemode.instance = null;
             HideAndSeekGamemode.instance = null;
@@ -231,7 +302,7 @@ namespace MoreGamemodes
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             Main.DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
-            Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
+            Main.NameMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.IsModded = new Dictionary<byte, bool>();
             CustomNetObject.CustomObjects = new List<CustomNetObject>();
@@ -243,6 +314,7 @@ namespace MoreGamemodes
             Main.OptionKillCooldowns = new Dictionary<byte, float>();
             Main.ProtectCooldowns = new Dictionary<byte, float>();
             Main.OptionProtectCooldowns = new Dictionary<byte, float>();
+            Main.TimeSinceLastPet = new Dictionary<byte, float>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)

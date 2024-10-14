@@ -7,7 +7,6 @@ using System;
 using Assets.CoreScripts;
 using System.Text;
 using AmongUs.Data;
-using InnerNet;
 
 using Object = UnityEngine.Object;
 
@@ -64,9 +63,9 @@ namespace MoreGamemodes
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
                         if (PlayerControl.LocalPlayer != pc && pc.Data.Role.IsImpostor)
-                            Main.ProximityMessages[pc.PlayerId].Add(("[Radio] " + Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + ": " + message, 0f));
+                            pc.Notify(Utils.ColorString(Palette.ImpostorRed, "[Radio] " + Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + ": " + message));
                     }
-                    Utils.SendSpam("Someone sent proximity message");
+                    Utils.SendSpam();
                     __instance.freeChatField.textArea.Clear();
                     __instance.freeChatField.textArea.SetText("");
                     return false;
@@ -87,7 +86,7 @@ namespace MoreGamemodes
                             appearance = "???";
                     }
                     PlayerControl.LocalPlayer.SendProximityMessage(appearance, message);
-                    Utils.SendSpam("Someone sent proximity message");
+                    Utils.SendSpam();
                     __instance.freeChatField.textArea.Clear();
                     __instance.freeChatField.textArea.SetText("");
                     return false;
@@ -1034,7 +1033,7 @@ namespace MoreGamemodes
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);    
                         PlayerControl.LocalPlayer.RpcSetItem(Items.None);
-                        Utils.SendSpam("Someone used /stop command!");
+                        Utils.SendSpam();
                     }
                     break;
                 case "/n":
@@ -1235,7 +1234,88 @@ namespace MoreGamemodes
                     string playerName2 = Main.StandardNames[PlayerControl.LocalPlayer.PlayerId];
                     string friendCode2 = PlayerControl.LocalPlayer.Data.FriendCode;
                     PlayerTagManager.UpdateNameAndTag(playerName2, friendCode2, hexColor2, true);
-                    break; 
+                    break;
+                case "/myrole":
+                case "/m":
+                    canceled = true;
+                    if (!Main.GameStarted)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /myrole in lobby.", "Warning");
+                        break;
+                    }
+                    if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can only use /myrole in classic gamemode.", "Warning");
+                        break;
+                    }
+                    PlayerControl.LocalPlayer.RpcSendMessage(PlayerControl.LocalPlayer.GetRole().RoleDescriptionLong, "Role");
+                    break;
+                case "/guess":
+                case "/shoot":
+                case "/bet":
+                case "/bt":
+                case "/gs":
+                    canceled = true;
+                    if (!Main.GameStarted)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /guess in lobby.", "Warning");
+                        break;
+                    }
+                    if (PlayerControl.LocalPlayer.Data.IsDead)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can only use /guess when you're alive.", "Warning");
+                        break;
+                    }
+                    if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can only use /guess in classic gamemode.", "Warning");
+                        break;
+                    }
+                    subArgs = args.Length < 2 ? "" : args[1];
+                    byte playerId = byte.Parse(subArgs);
+                    var role = "";
+                    for (int i = 2; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        role += subArgs;
+                    }
+                    role = role.ToLower().Replace(" ", "");
+                    if (!CustomRolesHelper.RoleNames.ContainsKey(role))
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("This role doesn't exist!", "Warning");
+                        break;
+                    }
+                    if (Utils.GetPlayerById(playerId) == null)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("This player doesn't exist!", "Warning");
+                        break;
+                    }
+                    if (!PlayerControl.LocalPlayer.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.RoleNames[role]))
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't guess this player!", "Warning");
+                        break;
+                    }
+                    if (!Utils.GetPlayerById(playerId).GetRole().CanBeGuessed(PlayerControl.LocalPlayer))
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("Target can't be guessed!", "Warning");
+                        break;
+                    }
+                    if (Utils.GetPlayerById(playerId).GetRole().Role == CustomRolesHelper.RoleNames[role])
+                    {
+                        Utils.GetPlayerById(playerId).RpcSetDeathReason(DeathReasons.Guessed);
+                        Utils.GetPlayerById(playerId).RpcExileV2();
+                        Utils.SendSpam();
+                        ++Main.PlayerKills[PlayerControl.LocalPlayer.PlayerId];
+                        new LateTask(() => Utils.SendChat(Main.StandardNames[playerId] + " was guessed", "Guesser"), 1f);
+                    }
+                    else
+                    {
+                        PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Misfire);
+                        PlayerControl.LocalPlayer.RpcExileV2();
+                        Utils.SendSpam();
+                        new LateTask(() => Utils.SendChat(Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + " was guessed", "Guesser"), 1f);
+                    }
+                    break;
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;
                     if (PaintBattleGamemode.instance.HasVoted[PlayerControl.LocalPlayer.PlayerId]) break;
@@ -1314,14 +1394,14 @@ namespace MoreGamemodes
             string subArgs = "";
             if (!Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
             {
-                Utils.SendSpam("Someone alive tried to send message during round");
+                Utils.SendSpam();
                 return false;
             }
             if (Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
-                    Utils.SendSpam("Someone tried to send message during comms sabotage");
+                    Utils.SendSpam();
                     return false;
                 }
                 if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !player.Data.IsDead)
@@ -1335,9 +1415,9 @@ namespace MoreGamemodes
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
                         if (player != pc && pc.Data.Role.IsImpostor)
-                            Main.ProximityMessages[pc.PlayerId].Add(("[Radio] " + Main.StandardNames[player.PlayerId] + ": " + message, 0f));
+                            pc.Notify(Utils.ColorString(Palette.ImpostorRed, "[Radio] " + Main.StandardNames[player.PlayerId] + ": " + message));
                     }
-                    Utils.SendSpam("Someone sent proximity message");
+                    Utils.SendSpam();
                     return false;
                 }
                 if (Options.ProximityChat.GetBool())
@@ -1356,7 +1436,7 @@ namespace MoreGamemodes
                             appearance = "???";
                     }
                     player.SendProximityMessage(appearance, message);
-                    Utils.SendSpam("Someone sent proximity message");
+                    Utils.SendSpam();
                     return false;
                 }
                 return true;
@@ -1752,7 +1832,7 @@ namespace MoreGamemodes
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);  
                         player.RpcSetItem(Items.None);
-                        Utils.SendSpam("Someone used /stop command!");
+                        Utils.SendSpam();
                     }
                     break;
                 case "/n":
@@ -1929,6 +2009,87 @@ namespace MoreGamemodes
                     string playerName = Main.StandardNames[player.PlayerId];
                     string friendCode = player.Data.FriendCode;
                     PlayerTagManager.UpdateNameAndTag(playerName, friendCode, hexColor, false);
+                    break;
+                case "/myrole":
+                case "/m":
+                    canceled = true;
+                    if (!Main.GameStarted)
+                    {
+                        player.RpcSendMessage("You can't use /myrole in lobby.", "Warning");
+                        break;
+                    }
+                    if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
+                    {
+                        player.RpcSendMessage("You can only use /myrole in classic gamemode.", "Warning");
+                        break;
+                    }
+                    player.RpcSendMessage(player.GetRole().RoleDescriptionLong, "Role");
+                    break;
+                case "/guess":
+                case "/shoot":
+                case "/bet":
+                case "/bt":
+                case "/gs":
+                    canceled = true;
+                    if (!Main.GameStarted)
+                    {
+                        player.RpcSendMessage("You can't use /guess in lobby.", "Warning");
+                        break;
+                    }
+                    if (player.Data.IsDead)
+                    {
+                        player.RpcSendMessage("You can only use /guess when you're alive.", "Warning");
+                        break;
+                    }
+                    if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
+                    {
+                        player.RpcSendMessage("You can only use /guess in classic gamemode.", "Warning");
+                        break;
+                    }
+                    subArgs = args.Length < 2 ? "" : args[1];
+                    byte playerId = byte.Parse(subArgs);
+                    var role = "";
+                    for (int i = 2; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        role += subArgs;
+                    }
+                    role = role.ToLower().Replace(" ", "");
+                    if (!CustomRolesHelper.RoleNames.ContainsKey(role))
+                    {
+                        player.RpcSendMessage("This role doesn't exist!", "Warning");
+                        break;
+                    }
+                    if (Utils.GetPlayerById(playerId) == null)
+                    {
+                        player.RpcSendMessage("This player doesn't exist!", "Warning");
+                        break;
+                    }
+                    if (!player.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.RoleNames[role]))
+                    {
+                        player.RpcSendMessage("You can't guess this player!", "Warning");
+                        break;
+                    }
+                    if (!Utils.GetPlayerById(playerId).GetRole().CanBeGuessed(player))
+                    {
+                        player.RpcSendMessage("Target can't be guessed!", "Warning");
+                        break;
+                    }
+                    if (Utils.GetPlayerById(playerId).GetRole().Role == CustomRolesHelper.RoleNames[role])
+                    {
+                        Utils.GetPlayerById(playerId).RpcSetDeathReason(DeathReasons.Guessed);
+                        Utils.GetPlayerById(playerId).RpcExileV2();
+                        ++Main.PlayerKills[player.PlayerId];
+                        Utils.SendSpam();
+                        new LateTask(() => Utils.SendChat(Main.StandardNames[playerId] + " was guessed", "Guesser"), 1f);
+                    }
+                    else
+                    {
+                        player.RpcSetDeathReason(DeathReasons.Misfire);
+                        player.RpcExileV2();
+                        Utils.SendSpam();
+                        new LateTask(() => Utils.SendChat(Main.StandardNames[player.PlayerId] + " was guessed", "Guesser"), 1f);
+                    }
                     break;
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;

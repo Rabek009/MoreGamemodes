@@ -28,7 +28,7 @@ namespace MoreGamemodes
             Main.MessagesToSend = new List<(string, byte, string)>();
             Main.StandardRoles = new Dictionary<byte, RoleTypes>();
             Main.DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
-            Main.ProximityMessages = new Dictionary<byte, List<(string, float)>>();
+            Main.NameMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
             Main.RoleFakePlayer = new Dictionary<byte, uint>();
             Main.PlayerKills = new Dictionary<byte, int>();
@@ -36,6 +36,7 @@ namespace MoreGamemodes
             Main.OptionKillCooldowns = new Dictionary<byte, float>();
             Main.ProtectCooldowns = new Dictionary<byte, float>();
             Main.OptionProtectCooldowns = new Dictionary<byte, float>();
+            Main.TimeSinceLastPet = new Dictionary<byte, float>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
@@ -53,7 +54,7 @@ namespace MoreGamemodes
                 Main.StandardNamePlates[pc.PlayerId] = pc.Data.DefaultOutfit.NamePlateId;
                 Main.AllShapeshifts[pc.PlayerId] = pc.PlayerId;
                 pc.RpcSetDeathReason(DeathReasons.Alive);
-                Main.ProximityMessages[pc.PlayerId] = new List<(string, float)>();
+                Main.NameMessages[pc.PlayerId] = new List<(string, float)>();
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
                 Main.RoleFakePlayer[pc.PlayerId] = pc.NetId;
                 Main.PlayerKills[pc.PlayerId] = 0;
@@ -61,6 +62,7 @@ namespace MoreGamemodes
                 Main.OptionKillCooldowns[pc.PlayerId] = 0f;
                 Main.ProtectCooldowns[pc.PlayerId] = 0f;
                 Main.OptionProtectCooldowns[pc.PlayerId] = 0f;
+                Main.TimeSinceLastPet[pc.PlayerId] = 0f;
                 ExplosionHole.LastSpeedDecrease[pc.PlayerId] = 0;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
@@ -111,7 +113,6 @@ namespace MoreGamemodes
             CustomGamemode.Instance.OnIntroDestroy();
             if (Options.EnableMidGameChat.GetBool() || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle)
                 Utils.SetChatVisible();
-            Utils.SendGameData();
             if (CustomGamemode.Instance.PetAction)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -120,13 +121,17 @@ namespace MoreGamemodes
                     {
                         pc.RpcSetPet("pet_clank");
                         Main.StandardPets[pc.PlayerId] = "pet_clank";
+                        new LateTask(() => pc.RpcShapeshift(pc, false), 0.2f);
                     }  
                 }
             }
             if (CustomGamemode.Instance.DisableTasks)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
+                {
                     pc.Data.RpcSetTasks(new byte[0]);
+                    pc.Data.MarkDirty();
+                }
             }
             
             bool shouldPerformVentInteractions = false;

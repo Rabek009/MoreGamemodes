@@ -51,7 +51,7 @@ public partial class Main : BasePlugin
     public static string LastResult;
     public static Dictionary<byte, RoleTypes> StandardRoles;
     public static Dictionary<(byte, byte), RoleTypes> DesyncRoles;
-    public static Dictionary<byte, List<(string, float)>> ProximityMessages;
+    public static Dictionary<byte, List<(string, float)>> NameMessages;
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
     public static Dictionary<byte, uint> RoleFakePlayer;
@@ -60,6 +60,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> OptionKillCooldowns;
     public static Dictionary<byte, float> ProtectCooldowns;
     public static Dictionary<byte, float> OptionProtectCooldowns;
+    public static Dictionary<byte, float> TimeSinceLastPet;
 
     public const string CurrentVersion = "2.0.0";
     public bool isDev = CurrentVersion.Contains("dev");
@@ -124,7 +125,7 @@ public partial class Main : BasePlugin
         LastResult = "";
         StandardRoles = new Dictionary<byte, RoleTypes>();
         DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
-        ProximityMessages = new Dictionary<byte, List<(string, float)>>();
+        NameMessages = new Dictionary<byte, List<(string, float)>>();
         NameColors = new Dictionary<(byte, byte), Color>();
         IsModded = new Dictionary<byte, bool>();
         RoleFakePlayer = new Dictionary<byte, uint>();
@@ -133,6 +134,7 @@ public partial class Main : BasePlugin
         OptionKillCooldowns = new Dictionary<byte, float>();
         ProtectCooldowns = new Dictionary<byte, float>();
         OptionProtectCooldowns = new Dictionary<byte, float>();
+        TimeSinceLastPet = new Dictionary<byte, float>();
         CustomNetObject.CustomObjects = new List<CustomNetObject>();
         CustomNetObject.MaxId = -1;
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
@@ -199,7 +201,7 @@ public partial class Main : BasePlugin
                 MessagesToSend = new List<(string, byte, string)>();
                 StandardRoles = new Dictionary<byte, RoleTypes>();
                 DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
-                ProximityMessages = new Dictionary<byte, List<(string, float)>>();
+                NameMessages = new Dictionary<byte, List<(string, float)>>();
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
@@ -209,6 +211,7 @@ public partial class Main : BasePlugin
                 OptionKillCooldowns = new Dictionary<byte, float>();
                 ProtectCooldowns = new Dictionary<byte, float>();
                 OptionProtectCooldowns = new Dictionary<byte, float>();
+                TimeSinceLastPet = new Dictionary<byte, float>();
                 CustomNetObject.CustomObjects = new List<CustomNetObject>();
                 CustomNetObject.MaxId = -1;
                 RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
@@ -230,7 +233,7 @@ class ModManagerLateUpdatePatch
     public static void Prefix(ModManager __instance)
     {
         __instance.ShowModStamp();
-        LateTask.Update(Time.fixedDeltaTime / 2f);
+        LateTask.Update(Time.deltaTime);
     }
 }
 
@@ -266,4 +269,20 @@ public enum DeathReasons
     Suicide,
     Trapped,
     Escaped,
+    Guessed,
+}
+
+public enum BaseRoles
+{
+    Crewmate,
+    Scientist,
+    Engineer,
+    Noisemaker,
+    Tracker,
+    Impostor,
+    Shapeshifter,
+    Phantom,
+    DesyncImpostor,
+    DesyncShapeshifter,
+    DesyncPhantom,
 }

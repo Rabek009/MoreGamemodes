@@ -1,7 +1,6 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using AmongUs.GameOptions;
-using Hazel;
 
 namespace MoreGamemodes
 {
@@ -15,9 +14,17 @@ namespace MoreGamemodes
             if (TutorialManager.InstanceExists) return true;
             if (Options.NoGameEnd.GetBool()) return false;
 
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems)
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
             {
-                return true;
+                if (CheckAndEndGameForEveryoneDied()) return false;
+                if (CheckAndEndGameForCrewmateWinClassic()) return false;
+                if (CheckAndEndGameForImpostorWinClassic()) return false;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().CheckEndCriteria()) return false;
+                }
+                if (CheckAndEndGameForSabotageWin()) return false;
+                if (CheckAndEndGameForTaskWinClassic()) return false;
             }
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek)
             {
@@ -37,6 +44,10 @@ namespace MoreGamemodes
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
                 if (CheckAndEndGameForBattleRoyale()) return false;   
+            }
+            else if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems)
+            {
+                return true;
             }
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.BattleRoyale)
             {
@@ -93,6 +104,7 @@ namespace MoreGamemodes
 
         private static bool CheckAndEndGameForTaskWin()
         {
+            if (GameData.Instance.TotalTasks <= 0) return false;
             if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
             {
                 List<byte> winners = new();
@@ -104,6 +116,117 @@ namespace MoreGamemodes
                 StartEndGame(GameOverReason.HumansByTask, winners);
                 return true;
             }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForTaskWinClassic()
+        {
+            if (GameData.Instance.TotalTasks <= 0) return false;
+            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().IsCrewmate())
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.HumansByTask, winners, CustomWinners.Crewmates);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForCrewmateWinClassic()
+        {
+            bool isKillerAlive = false;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if ((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling()) && !pc.Data.IsDead)
+                    isKillerAlive = true;
+            }
+            if (!isKillerAlive)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().IsCrewmate())
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.HumansByVote, winners, CustomWinners.Crewmates);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForImpostorWinClassic()
+        {
+            int impostors = 0;
+            int playerCount = 0;
+            bool isKillerAlive = false;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.GetRole().IsImpostor() && !pc.Data.IsDead)
+                    ++impostors;
+                if (pc.GetRole().IsNeutralKilling() && !pc.Data.IsDead)
+                    isKillerAlive = true;
+                if (!pc.Data.IsDead)
+                    ++playerCount;
+            }
+            if (!isKillerAlive && impostors * 2 >= playerCount)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().IsImpostor())
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.Impostors);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool CheckAndEndGameForSabotageWin()
+        {
+            if (ShipStatus.Instance.Systems == null) return false;
+            var systems = ShipStatus.Instance.Systems;
+            LifeSuppSystemType LifeSupp;
+            if (systems.ContainsKey(SystemTypes.LifeSupp) &&
+                (LifeSupp = systems[SystemTypes.LifeSupp].TryCast<LifeSuppSystemType>()) != null &&
+                LifeSupp.Countdown < 0f)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().IsImpostor())
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.ImpostorBySabotage, winners, CustomWinners.Impostors);
+                LifeSupp.Countdown = 10000f;
+                return true;
+            }
+
+            ISystemType sys = null;
+            if (systems.ContainsKey(SystemTypes.Reactor)) sys = systems[SystemTypes.Reactor];
+            else if (systems.ContainsKey(SystemTypes.Laboratory)) sys = systems[SystemTypes.Laboratory];
+            else if (systems.ContainsKey(SystemTypes.HeliSabotage)) sys = systems[SystemTypes.HeliSabotage];
+
+            ICriticalSabotage critical;
+            if (sys != null &&
+                (critical = sys.TryCast<ICriticalSabotage>()) != null && 
+                critical.Countdown < 0f)
+            {
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().IsImpostor())
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.ImpostorBySabotage, winners, CustomWinners.Impostors);
+                critical.ClearSabotage();
+                return true;
+            }
+
             return false;
         }
 
@@ -124,7 +247,7 @@ namespace MoreGamemodes
                     if (!pc.Data.Role.IsImpostor)
                         winners.Add(pc.PlayerId);
                 }
-                StartEndGame(GameOverReason.HumansByVote, winners);
+                StartEndGame(GameOverReason.HumansByVote, winners, CustomWinners.Crewmates);
                 return true;
             }
             return false;
@@ -147,7 +270,7 @@ namespace MoreGamemodes
                     if (pc.Data.Role.IsImpostor)
                         winners.Add(pc.PlayerId);
                 }
-                StartEndGame(GameOverReason.ImpostorByKill, winners);
+                StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.Impostors);
                 return true;
             }
             return false;
@@ -184,7 +307,7 @@ namespace MoreGamemodes
             if (AllAlivePlayers.Count == 0)
             {
                 List<byte> winners = new();
-                StartEndGame(GameOverReason.ImpostorByKill, winners);
+                StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.NoOne);
                 return true;
             }
             return false;
@@ -237,7 +360,7 @@ namespace MoreGamemodes
                     reason = GameOverReason.ImpostorByVote;
                 if (GameData.LastDeathReason == DeathReason.Disconnect)
                     reason = GameOverReason.HumansDisconnect;
-                StartEndGame(reason, winners);
+                StartEndGame(reason, winners, CustomWinners.Impostors);
                 return true;
             }
             return false;
@@ -260,7 +383,7 @@ namespace MoreGamemodes
                     if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc))
                         winners.Add(pc.PlayerId);
                 }
-                StartEndGame(GameOverReason.HumansByVote, winners);
+                StartEndGame(GameOverReason.HumansByVote, winners, CustomWinners.Crewmates);
                 return true;
             }
             return false;
@@ -279,7 +402,7 @@ namespace MoreGamemodes
                 if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc))
                     winners.Add(pc.PlayerId);
             }
-            StartEndGame(GameOverReason.HumansByTask, winners);
+            StartEndGame(GameOverReason.HumansByTask, winners, CustomWinners.Crewmates);
             return true;
         }
 
@@ -377,7 +500,7 @@ namespace MoreGamemodes
                     if (pc.Data.Role.IsImpostor)
                         winners.Add(pc.PlayerId);
                 }
-                StartEndGame(GameOverReason.ImpostorByKill, winners);
+                StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.Impostors);
                 return true;
             }
             return false;
@@ -411,8 +534,27 @@ namespace MoreGamemodes
             return false;
         }
 
-        public static void StartEndGame(GameOverReason reason, List<byte> winners)
+        public static void StartEndGame(GameOverReason reason, List<byte> winners, CustomWinners winner = CustomWinners.None)
         {
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+            {
+                ClassicGamemode.instance.Winner = winner;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    switch (pc.GetRole().Role)
+                    {
+                        case CustomRoles.Opportunist:
+                            if (!pc.Data.IsDead && !winners.Contains(pc.PlayerId))
+                            {
+                                if (!ClassicGamemode.instance.AdditionalWinners.Contains(AdditionalWinners.Opportunist))
+                                    ClassicGamemode.instance.AdditionalWinners.Add(AdditionalWinners.Opportunist);
+                                winners.Add(pc.PlayerId);
+                            }
+                            break;
+                    }
+                }
+                GameManager.Instance.RpcSyncCustomWinner();
+            }
             var ImpostorWin = false;
             switch (reason)
             {
@@ -472,6 +614,16 @@ namespace MoreGamemodes
             if (TutorialManager.InstanceExists) return true;
             if (Options.NoGameEnd.GetBool()) return false;
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.CheckTaskCompletion))]
+    class CheckTaskCompletionPatch
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
         }
     }
 }

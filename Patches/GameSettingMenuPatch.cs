@@ -23,70 +23,29 @@ public class GameSettingMenuPatch
     {
         if (GameManager.Instance.IsHideAndSeek()) return;
         ModSettingsButtons = new();
-        var gamepreset = __instance.GamePresetsButton;
 
-        var gamesettings = __instance.GameSettingsButton;
-        __instance.GameSettingsButton.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
-        __instance.GameSettingsButton.transform.localPosition = new Vector3(gamesettings.transform.localPosition.x, gamepreset.transform.localPosition.y + 0.1f, gamesettings.transform.localPosition.z);
+        int tabNum = 0;
+        foreach (var tab in Enum.GetValues<TabGroup>())
+        {
+            if (tab == TabGroup.GamemodeSettings && Options.CurrentGamemode == Gamemodes.Classic) continue;
+            if ((tab is TabGroup.CrewmateRoles or TabGroup.ImpostorRoles or TabGroup.NeutralRoles or TabGroup.AddOns) && Options.CurrentGamemode != Gamemodes.Classic) continue;
+            var button = Object.Instantiate(templateGameSettingsButton, __instance.GameSettingsButton.transform.parent);
+            button.gameObject.SetActive(true);
+            button.name = "Button_" + Utils.GetTabName(tab);
+            var label = button.GetComponentInChildren<TextMeshPro>();
+            label.DestroyTranslator();
+            label.text = Utils.GetTabName(tab);
 
-        var rolesettings = __instance.RoleSettingsButton;
-        __instance.RoleSettingsButton.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
-        __instance.RoleSettingsButton.transform.localPosition = new Vector3(rolesettings.transform.localPosition.x, gamesettings.transform.localPosition.y - 0.4f, rolesettings.transform.localPosition.z);
+            Vector3 offset = new (0.0f, 0.5f * (tabNum / 2), 0.0f);
+            button.transform.localPosition = ((tabNum % 2 == 0) ? new Vector3(-3.9f, -0.9f, 0f) : new Vector3(-2.4f, -0.9f, 0f)) - offset;
+            button.transform.localScale = new(0.45f, 0.6f, 1f);
 
-        //button 1
-        GameObject template = gamepreset.gameObject;
-        GameObject targetBox = Object.Instantiate(template, gamepreset.transform);
-        targetBox.name = "Mod Settings";
-        targetBox.transform.localScale = new Vector3(0.59f, 0.59f, 1f);
-        targetBox.transform.localPosition = new Vector3(targetBox.transform.localPosition.x + 2.95f, rolesettings.transform.localPosition.y - 0.1f, targetBox.transform.localPosition.z);
-
-        var ModConfButton = targetBox.GetComponent<PassiveButton>();
-        ModConfButton.OnClick.RemoveAllListeners();
-        ModConfButton.OnClick.AddListener((Action)(() =>
-            __instance.ChangeTab(3, false)
-        )); 
-        var label = ModConfButton.transform.Find("FontPlacer/Text_TMP").GetComponent<TextMeshPro>();
-        label.DestroyTranslator();
-        label.text = "Mod Settings";
-        ModSettingsButtons.Add(TabGroup.ModSettings, ModConfButton);
-
-        //button 2
-        GameObject template2 = targetBox.gameObject;
-        GameObject targetBox2 = Object.Instantiate(template2, targetBox.transform);
-        targetBox2.name = "Gamemode Settings";
-        targetBox2.transform.localScale = new Vector3(1f, 1f, 1f);
-        targetBox2.transform.localPosition = new Vector3(targetBox2.transform.localPosition.x, targetBox.transform.localPosition.y, targetBox2.transform.localPosition.z);
-
-        var GamemodeButton = targetBox2.GetComponent<PassiveButton>();
-        GamemodeButton.OnClick.RemoveAllListeners();
-        GamemodeButton.OnClick.AddListener((Action)(() =>
-            __instance.ChangeTab(4, false)
-        )); 
-        var label2 = GamemodeButton.transform.Find("FontPlacer/Text_TMP").GetComponent<TextMeshPro>();
-        label2.DestroyTranslator();
-        label2.text = "Gamemode Settings"; 
-        ModSettingsButtons.Add(TabGroup.GamemodeSettings, GamemodeButton);
-
-        //button 3
-        GameObject template3 = targetBox2.gameObject;
-        GameObject targetBox3 = Object.Instantiate(template3, targetBox2.transform);
-        targetBox3.name = "Additional Gamemodes";
-        targetBox3.transform.localScale = new Vector3(1f, 1f, 1f);
-        targetBox3.transform.localPosition = new Vector3(targetBox3.transform.localPosition.x, targetBox2.transform.localPosition.y, targetBox3.transform.localPosition.z);
-
-        var AdditionalButton = targetBox3.GetComponent<PassiveButton>();
-        AdditionalButton.OnClick.RemoveAllListeners();
-        AdditionalButton.OnClick.AddListener((Action)(() => 
-            __instance.ChangeTab(5, false)
-        )); 
-        var label3 = AdditionalButton.transform.Find("FontPlacer/Text_TMP").GetComponent<TextMeshPro>();
-        label3.DestroyTranslator();
-        label3.text = "Additional Gamemodes";
-        ModSettingsButtons.Add(TabGroup.AdditionalGamemodes, AdditionalButton);
-
-        targetBox.transform.parent = null;
-        gamepreset.gameObject.SetActive(false);
-        targetBox.transform.parent = __instance.transform.Find("LeftPanel");
+            var buttonComponent = button.GetComponent<PassiveButton>();
+            buttonComponent.OnClick = new();
+            buttonComponent.OnClick.AddListener((Action)(() => __instance.ChangeTab((int)tab + 3, false)));
+            ModSettingsButtons.Add(tab, button);
+            ++tabNum;
+        }
 
         ModGameOptionsMenu.OptionList = new();
         ModGameOptionsMenu.BehaviourList = new();
@@ -109,6 +68,22 @@ public class GameSettingMenuPatch
                 __instance.ControllerSelectable.Add(button);
             }
         }
+    }
+    private static void SetDefaultButton(GameSettingMenu __instance)
+    {
+        var gamepreset = __instance.GamePresetsButton;
+        gamepreset.gameObject.SetActive(false);
+
+        var gamesettings = __instance.GameSettingsButton;
+        gamesettings.transform.localScale = new Vector3(0.45f, 0.6f, 1f);
+        gamesettings.transform.localPosition = new Vector3(-3.9f, -0.4f, 0f);
+
+        var rolesettings = __instance.RoleSettingsButton;
+        rolesettings.transform.localScale = new Vector3(0.45f, 0.6f, 1f);
+        rolesettings.transform.localPosition = new(-2.4f, -0.4f, 0f);
+        var label = rolesettings.GetComponentInChildren<TextMeshPro>();
+        label.DestroyTranslator();
+        label.text = "Vanilla Roles";
     }
 
     [HarmonyPatch(nameof(GameSettingMenu.ChangeTab)), HarmonyPrefix]
@@ -165,6 +140,18 @@ public class GameSettingMenuPatch
                     case TabGroup.AdditionalGamemodes:
                         __instance.MenuDescriptionText.text = "Add additional gamemodes to your game";
                         break;
+                    case TabGroup.CrewmateRoles:
+                        __instance.MenuDescriptionText.text = "Add special role for crewmate team";
+                        break;
+                    case TabGroup.ImpostorRoles:
+                        __instance.MenuDescriptionText.text = "Add special roles for impostor team";
+                        break;
+                    case TabGroup.NeutralRoles:
+                        __instance.MenuDescriptionText.text = "Add special roles that work on their own";
+                        break;
+                    case TabGroup.AddOns:
+                        __instance.MenuDescriptionText.text = "Give players extra abilities by add ons";
+                        break;
                 }
             }
         }
@@ -198,6 +185,8 @@ public class GameSettingMenuPatch
             templateGameSettingsButton = Object.Instantiate(__instance.GameSettingsButton, __instance.GameSettingsButton.transform.parent);
             templateGameSettingsButton.gameObject.SetActive(false);
         }
+
+        SetDefaultButton(__instance);
 
         ControllerManager.Instance.OpenOverlayMenu(__instance.name, __instance.BackButton, __instance.DefaultButtonSelected, __instance.ControllerSelectable, false);
         DestroyableSingleton<HudManager>.Instance.menuNavigationPrompts.SetActive(false);

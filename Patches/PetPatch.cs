@@ -36,17 +36,13 @@ namespace MoreGamemodes
             if (callId != 49 && callId != 85) return true;
 
             PlayerControl pc = __instance.myPlayer;
-            if (pc.Data.IsDead || MeetingHud.Instance) return true;
-            if (JailbreakGamemode.instance != null)
-            {
-                if (JailbreakGamemode.instance.ChangeRecipeCooldown[pc.PlayerId] > 0f)
-                    return true;
-            }
+            if (pc.Data.IsDead || MeetingHud.Instance || Main.TimeSinceLastPet[pc.PlayerId] < 0.5f) return true;
             if (CustomGamemode.Instance.PetAction)
             {
                 if (callId == 49)
                     AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.None, -1));
                 CustomGamemode.Instance.OnPet(pc);
+                Main.TimeSinceLastPet[pc.PlayerId] = 0f;
                 return false;
             }
             return true;
