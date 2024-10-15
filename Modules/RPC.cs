@@ -571,7 +571,7 @@ namespace MoreGamemodes
 				{
 				}
 			}
-            if (AmongUsClient.Instance.AmHost)
+            if (AmongUsClient.Instance.AmHost && !Main.IsModded[player.PlayerId])
             {
                 if (roleblock)
                     player.RpcDesyncUpdateSystem(SystemTypes.Comms, 128);
