@@ -98,7 +98,7 @@ namespace MoreGamemodes
                 playerControl.PlayerId = 255;
                 playerControl.isNew = false;
                 playerControl.notRealPlayer = true;
-                playerControl.NetTransform.SnapTo(Position);
+                playerControl.NetTransform.SnapTo(new Vector2(50f, 50f));
                 AmongUsClient.Instance.NetIdCnt += 1U;
                 MessageWriter msg = MessageWriter.Get(SendOption.None);
 			    msg.StartMessage(5);
@@ -126,6 +126,7 @@ namespace MoreGamemodes
                 if (PlayerControl.AllPlayerControls.Contains(playerControl))
                     PlayerControl.AllPlayerControls.Remove(playerControl);
                 new LateTask(() => {
+                    playerControl.NetTransform.RpcSnapTo(Position);
                     var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.inVent && !x.walkingToVent).FirstOrDefault();
                     if (player == null) player = PlayerControl.LocalPlayer;
                     playerControl.RawSetName(Sprite);
@@ -221,7 +222,7 @@ namespace MoreGamemodes
             playerControl.PlayerId = 255;
             playerControl.isNew = false;
             playerControl.notRealPlayer = true;
-            playerControl.NetTransform.SnapTo(position);
+            playerControl.NetTransform.SnapTo(new Vector2(50f, 50f));
             AmongUsClient.Instance.NetIdCnt += 1U;
             MessageWriter msg = MessageWriter.Get(SendOption.None);
 			msg.StartMessage(5);
@@ -249,6 +250,7 @@ namespace MoreGamemodes
             if (PlayerControl.AllPlayerControls.Contains(playerControl))
                 PlayerControl.AllPlayerControls.Remove(playerControl);
             new LateTask(() => {
+                playerControl.NetTransform.RpcSnapTo(position);
                 var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.inVent && !x.walkingToVent).FirstOrDefault();
                 if (player == null) player = PlayerControl.LocalPlayer;
                 playerControl.RawSetName(sprite);

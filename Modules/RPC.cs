@@ -560,6 +560,29 @@ namespace MoreGamemodes
         {
             if (ClassicGamemode.instance == null) return;
             ClassicGamemode.instance.IsRoleblocked[player.PlayerId] = roleblock;
+            if (roleblock && Minigame.Instance)
+			{
+				try
+				{
+					Minigame.Instance.Close();
+					Minigame.Instance.Close();
+				}
+				catch
+				{
+				}
+			}
+            if (AmongUsClient.Instance.AmHost)
+            {
+                if (roleblock)
+                    player.RpcDesyncUpdateSystem(SystemTypes.Comms, 128);
+                else if (!Utils.IsActive(SystemTypes.Comms))
+                {
+                    player.RpcDesyncUpdateSystem(SystemTypes.Comms, 16);
+                    if (Main.RealOptions.GetByte(ByteOptionNames.MapId) is 1 or 5)
+                        player.RpcDesyncUpdateSystem(SystemTypes.Comms, 17);
+                }
+            }
+                
         }
 
         public static void SetAbilityUses(this PlayerControl player, float uses)
@@ -572,8 +595,9 @@ namespace MoreGamemodes
         {
             if (ClassicGamemode.instance == null) return;
             ClassicGamemode.instance.BlockedVents.Add(ventId);
-            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
-            ventilationSystem.UpdateVentArrows();
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
+            if (ventilationSystem != null)
+                ventilationSystem.UpdateVentArrows();
         }
 
         public static void SetPetAbilityCooldown(this PlayerControl player, bool onCooldown)

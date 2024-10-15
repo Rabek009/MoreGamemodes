@@ -36,8 +36,7 @@ namespace MoreGamemodes
             player.GetRole().OnHudUpate(__instance);
             if (IsRoleblocked[player.PlayerId])
             {
-                if (!(player.Data.Role.Role is RoleTypes.Scientist or RoleTypes.Tracker))
-                    __instance.AbilityButton.SetDisabled();
+                __instance.AbilityButton.SetDisabled();
                 __instance.AdminButton.SetDisabled();
                 __instance.ImpostorVentButton.SetDisabled();
                 __instance.KillButton.SetDisabled();
@@ -473,6 +472,7 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
+                bool syncSettings = false;
                 if (IsFrozen[pc.PlayerId] && FreezeTimer[pc.PlayerId] > 0f)
                 {
                     FreezeTimer[pc.PlayerId] -= Time.fixedDeltaTime;
@@ -481,7 +481,7 @@ namespace MoreGamemodes
                 {
                     FreezeTimer[pc.PlayerId] = 0f;
                     IsFrozen[pc.PlayerId] = false;
-                    pc.SyncPlayerSettings();
+                    syncSettings = true;
                 }
                 if (IsBlinded[pc.PlayerId] && BlindTimer[pc.PlayerId] > 0f)
                 {
@@ -491,7 +491,7 @@ namespace MoreGamemodes
                 {
                     BlindTimer[pc.PlayerId] = 0f;
                     IsBlinded[pc.PlayerId] = false;
-                    pc.SyncPlayerSettings();
+                    syncSettings = true;
                 }
                 if (IsRoleblocked[pc.PlayerId] && RoleblockTimer[pc.PlayerId] > 0f)
                 {
@@ -501,29 +501,11 @@ namespace MoreGamemodes
                 {
                     RoleblockTimer[pc.PlayerId] = 0f;
                     pc.RpcSetRoleblock(false);
+                    syncSettings = true;
                     pc.RpcSetVentInteraction();
                 }
-
-                // https://github.com/ykundesu/SuperNewRoles/blob/master/SuperNewRoles/Mode/SuperHostRoles/BlockTool.cs
-                DesyncCommsFrame = DesyncCommsFrame == 3 ? 0 : ++DesyncCommsFrame;
-                if (DesyncCommsFrame == 0)
-                {
-                    if (IsRoleblocked[pc.PlayerId] && !MeetingHud.Instance && !ExileController.Instance && !pc.AmOwner && !Main.IsModded[pc.PlayerId])
-                    {
-                        if (!DesyncComms.Contains(pc.PlayerId))
-                            DesyncComms.Add(pc.PlayerId);
-
-                        pc.RpcDesyncUpdateSystem(SystemTypes.Comms, 128);
-                    }
-                    else if (!Utils.IsActive(SystemTypes.Comms) && DesyncComms.Contains(pc.PlayerId))
-                    {
-                        DesyncComms.Remove(pc.PlayerId);
-                        pc.RpcDesyncUpdateSystem(SystemTypes.Comms, 16);
-
-                        if (Main.RealOptions.GetByte(ByteOptionNames.MapId) is 1 or 5)
-                            pc.RpcDesyncUpdateSystem(SystemTypes.Comms, 17);
-                    }
-                }
+                if (syncSettings)
+                    pc.SyncPlayerSettings();
                 
                 if (pc.Data.IsDead) continue;
                 pc.GetRole().OnFixedUpdate();
@@ -641,8 +623,6 @@ namespace MoreGamemodes
             IsRoleblocked = new Dictionary<byte, bool>();
             BlockedVents = new List<int>();
             IsOnPetAbilityCooldown = new Dictionary<byte, bool>();
-            DesyncComms = new List<byte>();
-            DesyncCommsFrame = 0;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 FreezeTimer[pc.PlayerId] = 0f;
@@ -667,7 +647,5 @@ namespace MoreGamemodes
         public Dictionary<byte, bool> IsRoleblocked;
         public List<int> BlockedVents;
         public Dictionary<byte, bool> IsOnPetAbilityCooldown;
-        private List<byte> DesyncComms;
-        private int DesyncCommsFrame;
     }
 }

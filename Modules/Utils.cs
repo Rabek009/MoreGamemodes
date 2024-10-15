@@ -65,66 +65,52 @@ namespace MoreGamemodes
 
         public static bool IsActive(SystemTypes type)
         {
-        if (!ShipStatus.Instance.Systems.ContainsKey(type))
-        {
-            return false;
-        }
+            if (!ShipStatus.Instance.Systems.ContainsKey(type))
+            {
+                return false;
+            }
 
-        int mapId = Main.RealOptions.GetByte(ByteOptionNames.MapId);
-        switch (type)
-        {
-            case SystemTypes.Electrical:
-                {
+            int mapId = Main.RealOptions.GetByte(ByteOptionNames.MapId);
+            switch (type)
+            {
+                case SystemTypes.Electrical:
                     if (mapId == 5) return false;
-                    var SwitchSystem = ShipStatus.Instance.Systems[type].Cast<SwitchSystem>();
+                    var SwitchSystem = ShipStatus.Instance.Systems[type].TryCast<SwitchSystem>();
                     return SwitchSystem != null && SwitchSystem.IsActive;
-                }
-            case SystemTypes.Reactor:
-                {
+                case SystemTypes.Reactor:
                     if (mapId == 2) return false; 
                     else
                     {
-                        var ReactorSystemType = ShipStatus.Instance.Systems[type].Cast<ReactorSystemType>();
+                        var ReactorSystemType = ShipStatus.Instance.Systems[type].TryCast<ReactorSystemType>();
                         return ReactorSystemType != null && ReactorSystemType.IsActive;
                     }
-                }
-            case SystemTypes.Laboratory:
-                {
+                case SystemTypes.Laboratory:
                     if (mapId != 2) return false;
-                    var ReactorSystemType = ShipStatus.Instance.Systems[type].Cast<ReactorSystemType>();
-                    return ReactorSystemType != null && ReactorSystemType.IsActive;
-                }
-            case SystemTypes.LifeSupp:
-                {
+                    var ReactorSystemType2 = ShipStatus.Instance.Systems[type].TryCast<ReactorSystemType>();
+                    return ReactorSystemType2 != null && ReactorSystemType2.IsActive;
+                case SystemTypes.LifeSupp:
                     if (mapId is 2 or 4 or 5) return false;
-                    var LifeSuppSystemType = ShipStatus.Instance.Systems[type].Cast<LifeSuppSystemType>();
+                    var LifeSuppSystemType = ShipStatus.Instance.Systems[type].TryCast<LifeSuppSystemType>();
                     return LifeSuppSystemType != null && LifeSuppSystemType.IsActive;
-                }
-            case SystemTypes.HeliSabotage:
-                {
+                case SystemTypes.HeliSabotage:
                     if (mapId != 4) return false;
-                    var HeliSabotageSystem = ShipStatus.Instance.Systems[type].Cast<HeliSabotageSystem>();
+                    var HeliSabotageSystem = ShipStatus.Instance.Systems[type].TryCast<HeliSabotageSystem>();
                     return HeliSabotageSystem != null && HeliSabotageSystem.IsActive;
-                }
-            case SystemTypes.Comms:
-                {
+                case SystemTypes.Comms:
                     if (mapId is 1 or 5)
                     {
-                        var HqHudSystemType = ShipStatus.Instance.Systems[type].Cast<HqHudSystemType>();
+                        var HqHudSystemType = ShipStatus.Instance.Systems[type].TryCast<HqHudSystemType>();
                         return HqHudSystemType != null && HqHudSystemType.IsActive;
                     }
                     else
                     {
-                        var HudOverrideSystemType = ShipStatus.Instance.Systems[type].Cast<HudOverrideSystemType>();
+                        var HudOverrideSystemType = ShipStatus.Instance.Systems[type].TryCast<HudOverrideSystemType>();
                         return HudOverrideSystemType != null && HudOverrideSystemType.IsActive;
                     }
-                }
-            case SystemTypes.MushroomMixupSabotage:
-                {
+                case SystemTypes.MushroomMixupSabotage:
                     if (mapId != 5) return false;
                     var MushroomMixupSabotageSystem = ShipStatus.Instance.Systems[type].TryCast<MushroomMixupSabotageSystem>();
                     return MushroomMixupSabotageSystem != null && MushroomMixupSabotageSystem.IsActive;
-                }
             default:
                 return false;
         }
@@ -748,25 +734,9 @@ namespace MoreGamemodes
 
         public static void SetAllVentInteractions()
         {
-            VentilationSystemDeterioratePatch.SerializeV2(ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>());
-        }
-
-        public static void BootEveryoneFromVent(byte ventId)
-        {
-            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
-            foreach (var pc in PlayerControl.AllPlayerControls)
-		    {
-			    if (ventilationSystem.PlayersInsideVents.ContainsKey(pc.PlayerId) && ventilationSystem.PlayersInsideVents[pc.PlayerId] == ventId)
-			    {
-					ventilationSystem.PlayersInsideVents.Remove(pc.PlayerId);
-					ventilationSystem.BootImpostorFromVent(ventId, pc.PlayerId);
-					ventilationSystem.IsDirty = true;
-			    }
-		    }
-		    if (ventilationSystem.IsDirty)
-		    {
-			    ventilationSystem.UpdateVentArrows();
-		    }
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
+            if (ventilationSystem != null)
+                VentilationSystemDeterioratePatch.SerializeV2(ventilationSystem);
         }
     }
 }

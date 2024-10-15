@@ -61,7 +61,7 @@ namespace MoreGamemodes
 				Vent vent = nearbyVents[i];
 				if (vent)
 				{
-					VentilationSystem ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
+					VentilationSystem ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
 					bool ventBeingCleaned = ventilationSystem != null && (ventilationSystem.IsVentCurrentlyBeingCleaned(vent.Id) || !CustomGamemode.Instance.OnEnterVent(PlayerControl.LocalPlayer, vent.Id));
 					buttonBehavior.gameObject.SetActive(true);
 					__instance.ToggleNeighborVentBeingCleaned(ventBeingCleaned, buttonBehavior, __instance.CleaningIndicators[i]);

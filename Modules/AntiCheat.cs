@@ -634,7 +634,8 @@ namespace MoreGamemodes
                     }
                     break;
                 case SystemTypes.Ventilation:
-                    VentilationSystem ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
+                    VentilationSystem ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
+                    if (ventilationSystem == null) break;
                     --reader.Position;
                     ushort num = reader.ReadUInt16();
 		            VentilationSystem.Operation operation = (VentilationSystem.Operation)reader.ReadByte();

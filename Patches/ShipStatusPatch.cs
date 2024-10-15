@@ -135,13 +135,66 @@ namespace MoreGamemodes
                 if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
                     cancel = true;
             }
-            var ventilationSystem = __instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>();
+
+            var hudOverrideSystem = __instance.Systems[SystemTypes.Comms].TryCast<HudOverrideSystemType>();
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && hudOverrideSystem != null && hudOverrideSystem.IsDirty)
+            {
+                SerializeHudOverrideSystemV2(hudOverrideSystem);
+                hudOverrideSystem.IsDirty = false;
+            }
+            var hqHudSystem = __instance.Systems[SystemTypes.Comms].TryCast<HqHudSystemType>();
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && hqHudSystem != null && hqHudSystem.IsDirty)
+            {
+                SerializeHqHudSystemV2(hqHudSystem);
+                hqHudSystem.IsDirty = false;
+            }
+
+            var ventilationSystem = __instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
             if (cancel && ventilationSystem != null && ventilationSystem.IsDirty)
             {
                 Utils.SetAllVentInteractions();
                 ventilationSystem.IsDirty = false;
             }
-                
+        }
+        public static void SerializeHudOverrideSystemV2(HudOverrideSystemType __instance)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsRoleblocked[pc.PlayerId]) continue;
+                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                writer.StartMessage(6);
+                writer.Write(AmongUsClient.Instance.GameId);
+                writer.WritePacked(pc.GetClientId());
+                writer.StartMessage(1);
+                writer.WritePacked(ShipStatus.Instance.NetId);
+                writer.StartMessage((byte)SystemTypes.Comms);
+				__instance.Serialize(writer, false);
+			    writer.EndMessage();
+                writer.EndMessage();
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
+            }
+        }
+        public static void SerializeHqHudSystemV2(HqHudSystemType __instance)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsFrozen[pc.PlayerId]) continue;
+                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                writer.StartMessage(6);
+                writer.Write(AmongUsClient.Instance.GameId);
+                writer.WritePacked(pc.GetClientId());
+                writer.StartMessage(1);
+                writer.WritePacked(ShipStatus.Instance.NetId);
+                writer.StartMessage((byte)SystemTypes.Comms);
+				__instance.Serialize(writer, false);
+			    writer.EndMessage();
+                writer.EndMessage();
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
+            }
         }
     }
 
@@ -302,6 +355,7 @@ namespace MoreGamemodes
     {
         public static void Postfix()
         {
+            if (!AmongUsClient.Instance.AmHost) return;
             Utils.SyncAllSettings();
         }
     }
@@ -311,6 +365,7 @@ namespace MoreGamemodes
     {
         public static void Postfix()
         {
+            if (!AmongUsClient.Instance.AmHost) return;
             Utils.SyncAllSettings();
         }
     }

@@ -591,7 +591,4 @@ https://github.com/Yumenopai/TownOfHost_Y
 5. Delayed spawn from EHR
 https://github.com/Gurge44/EndlessHostRoles
 
-6. Desync comms from Super New Roles
-https://github.com/SuperNewRoles/SuperNewRoles
-
 This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.

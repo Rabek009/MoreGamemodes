@@ -681,7 +681,9 @@ namespace MoreGamemodes
 
         public static void RpcSetVentInteraction(this PlayerControl player)
         {
-            VentilationSystemDeterioratePatch.SerializeV2(ShipStatus.Instance.Systems[SystemTypes.Ventilation].Cast<VentilationSystem>(), player);
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
+            if (ventilationSystem != null)
+                VentilationSystemDeterioratePatch.SerializeV2(ventilationSystem, player);
         }
 
         public static PlayerControl GetClosestImpostor(this PlayerControl player)
@@ -717,7 +719,6 @@ namespace MoreGamemodes
                 {
                     CustomRpcSender sender = CustomRpcSender.Create("ResetInvisibility", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
-                    ushort num = (ushort)(player.NetTransform.lastSequenceId + 10);
                     sender.StartRpc(player.NetId, (byte)RpcCalls.Exiled)
                         .EndRpc();
                     var role = Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, pc.PlayerId)] : Main.StandardRoles[player.PlayerId];
@@ -726,16 +727,28 @@ namespace MoreGamemodes
                         .Write(true)
                         .EndRpc();
                     sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(Utils.GetOutsideMapPosition())
-                        .Write(num)
+                        .WriteVector2(new Vector2(50f, 50f))
+                        .Write(player.NetTransform.lastSequenceId)
                         .EndRpc();
-                    sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.EnterVent)
-                        .WritePacked(0)
+                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                        .WriteVector2(new Vector2(50f, 50f))
+                        .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
                         .EndRpc();
-                    sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.EnterVent)
-                        .WritePacked(127)
+                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                        .WriteVector2(new Vector2(50f, 50f))
+                        .Write((ushort)(player.NetTransform.lastSequenceId + 32767))
                         .EndRpc();
-                    sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
+                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                        .WriteVector2(new Vector2(50f, 50f))
+                        .Write((ushort)(player.NetTransform.lastSequenceId + 32767 + 16383))
+                        .EndRpc();
+                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                        .WriteVector2(new Vector2(50f, 50f))
+                        .Write(player.NetTransform.lastSequenceId)
+                        .EndRpc();
+                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                        .WriteVector2(new Vector2(50f, 50f))
+                        .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
                         .EndRpc();
                     sender.EndMessage();
                     sender.SendMessage();

@@ -102,7 +102,7 @@ namespace MoreGamemodes
             ProtectionAfterCompletingTaskDuration = FloatOptionItem.Create(300102, "Protection after completing task duration", new(0f, 30f, 1f), 10f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 3, TabGroup.CrewmateRoles, false)
+            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Immortal] = Chance;
             Options.RolesCount[CustomRoles.Immortal] = Count;

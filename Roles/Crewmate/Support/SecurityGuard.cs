@@ -47,7 +47,9 @@ namespace MoreGamemodes
                 Player.Notify(Utils.ColorString(Color.red, "(!) This vent is already blocked (!)"));
                 return;
             }
-            Utils.BootEveryoneFromVent((byte)vent.Id);
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
+            if (ventilationSystem != null)
+                ventilationSystem.BootImpostorsFromVent(vent.Id);
             Player.RpcSetAbilityUses(AbilityUses - 1f);
             Utils.RpcCreateDisplay("<size=2><line-height=97%><cspace=0.16em><mark=#8f6647>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W<br>W</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W<br>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W<br>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W<br>W</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W<br>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W", vent.transform.position);
             GameManager.Instance.RpcBlockVent(vent.Id);

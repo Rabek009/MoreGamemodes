@@ -43,6 +43,7 @@ namespace MoreGamemodes
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
             PlayerTagManager.ResetPlayerTags();
             Main.StandardNames = new Dictionary<byte, string>();
+            SetHudActivePatch.IsActive = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 Main.StandardNames[pc.PlayerId] = pc.Data.PlayerName;
