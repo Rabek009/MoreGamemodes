@@ -464,6 +464,13 @@ namespace MoreGamemodes
                         Utils.SetAllVentInteractions();
                     }
                 }, 0.01f);
+                new LateTask(() => {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true, true), ar, true);
+                    }
+                }, 0.5f);
             }
             return report;
         }
@@ -579,7 +586,7 @@ namespace MoreGamemodes
             string prefix = "";
             string postfix = "";
             if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
-                prefix += Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n";
+                prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "</size>\n";
             if (player == seer && !player.Data.IsDead)
                 postfix += player.GetRole().GetNamePostfix();
             return prefix + name + postfix;

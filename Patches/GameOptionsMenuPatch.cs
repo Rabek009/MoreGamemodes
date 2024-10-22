@@ -224,14 +224,14 @@ public static class GameOptionsMenuPatch
                     ReOpenSettingMenu();
                     var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
                     if (viewSettingsPane != null)
-                        viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
+                        LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                 }
                 else if (item.Id == 2)
                 {
                     ReOpenSettingMenu();
                     var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
                     if (viewSettingsPane != null)
-                        viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
+                        LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                 }
                 else if (item.Children.Count > 0)
                     ReCreateSettings(__instance);

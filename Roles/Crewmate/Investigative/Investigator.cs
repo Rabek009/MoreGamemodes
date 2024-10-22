@@ -146,13 +146,13 @@ namespace MoreGamemodes
             if (Main.IsModded[Player.PlayerId]) return "";
             if (BaseRole == BaseRoles.Crewmate)
             {
-                return Utils.ColorString(Color, "\nMode: Task\n<size=65%>") + Utils.ColorString(Color.magenta, "(") +
+                return Utils.ColorString(Color, "\n<size=1.8>Mode: Task\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>\n") +
-                    Utils.ColorString(Color.red, "Investigate cooldown: " + (int)(Cooldown + 0.99f) + "s");
+                    Utils.ColorString(Color.red, "<size=1.8>Investigate cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {
-                return Utils.ColorString(Color, "\nMode: Investigate\n<size=65%>") + Utils.ColorString(Color.magenta, "(") +
+                return Utils.ColorString(Color, "\n<size=1.8>Mode: Investigate\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>");
             }
             return "";
@@ -172,7 +172,7 @@ namespace MoreGamemodes
             ColorUtility.TryParseHtmlString("#118385", out Color);
             RoleName = "Investigator";
             RoleDescription = "See if someone is good or evil";
-            RoleDescriptionLong = "Investigator (Crewmate): You can use pet button to switch between task and investigate mode. In task mode you can do tasks. In investigate mode you have kill button. If players is good, his name will become green. But if player is evil then his name will turn red. But some roles that are good can show as evil, also sometimes evil roles show as good. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed, you don't have task and investigate mode. You can do tasks and investigate at the same time.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Investigator];
             AbilityUses = InitialAbilityUseLimit.GetInt();
             Cooldown = 10f;
         }

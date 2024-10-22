@@ -2,6 +2,7 @@ using System;
 using TMPro;
 using HarmonyLib;
 using UnityEngine;
+using System.Collections.Generic;
 using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
@@ -9,9 +10,8 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(LobbyViewSettingsPane))]
     public class LobbyViewPatch
     {
-        private static GameObject ModSettingsButton = null;
-        private static GameObject GamemodeSettingsButton = null;
-        private static GameObject AdditionalGamemodesButton = null;
+        private static Dictionary<TabGroup, GameObject> ViewSettingsButtons = new();
+        private static float num;
         
         [HarmonyPatch(nameof(LobbyViewSettingsPane.Awake))]
         [HarmonyPostfix]
@@ -22,83 +22,37 @@ namespace MoreGamemodes
             __instance.gameModeText.text = Options.Gamemode.GetString();
             
             var OverviewButton = __instance.taskTabButton.gameObject;
-            OverviewButton.transform.localScale = new Vector3(0.5f * OverviewButton.transform.localScale.x, OverviewButton.transform.localScale.y, OverviewButton.transform.localScale.z);
+            OverviewButton.transform.localScale = new Vector3(Options.CurrentGamemode == Gamemodes.Classic ? 0.4f : 0.5f, 1f, 1f);
             OverviewButton.transform.localPosition += new Vector3(-1.1f, 0f, 0f);
 
             var RolesButton = __instance.rolesTabButton.gameObject;
-            RolesButton.transform.localScale = new Vector3(0.5f * RolesButton.transform.localScale.x, RolesButton.transform.localScale.y, RolesButton.transform.localScale.z);
-            RolesButton.transform.localPosition = OverviewButton.transform.localPosition + Vector3.right * 1.75f * 1f;
+            RolesButton.transform.localScale = new Vector3(Options.CurrentGamemode == Gamemodes.Classic ? 0.4f : 0.5f, 1f, 1f);
+            num = Options.CurrentGamemode == Gamemodes.Classic ? 1.4f : 1.75f;
+            RolesButton.transform.localPosition = OverviewButton.transform.localPosition + Vector3.right * num * 1f;
+            var label = RolesButton.transform.Find("FontPlacer").GetComponentInChildren<TextMeshPro>();
+            label.DestroyTranslator();
+            label.text = "Vanilla Roles";
 
-            ModSettingsButton = GameObject.Find("ModTab");
-            if (ModSettingsButton == null)
+            ViewSettingsButtons = new();
+            num = Options.CurrentGamemode == Gamemodes.Classic ? 2.8f : 3.5f;
+            foreach (var tab in Enum.GetValues<TabGroup>())
             {
-                ModSettingsButton = Object.Instantiate(OverviewButton, OverviewButton.transform.parent);
-                ModSettingsButton.transform.localPosition += Vector3.right * 3.5f * 1f;
-                ModSettingsButton.name = "ModTab";
-                var fontPlacer2 = ModSettingsButton.transform.Find("FontPlacer");
-                if (fontPlacer2 != null)
-                {
-                    var textMeshPro = fontPlacer2.GetComponentInChildren<TextMeshPro>();
-                    if (textMeshPro != null)
-                    {
-                        __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
-                            textMeshPro.text = "Mod Settings";
-                        })));
-                    }
-                }
-                var passiveButton2 = ModSettingsButton.GetComponent<PassiveButton>();
-                passiveButton2.OnClick.RemoveAllListeners();
-                passiveButton2.OnClick.AddListener((Action)(() => {
-                    __instance.ChangeTab(0);
+                if (tab == TabGroup.GamemodeSettings && Options.CurrentGamemode == Gamemodes.Classic) continue;
+                if ((tab is TabGroup.CrewmateRoles or TabGroup.ImpostorRoles or TabGroup.NeutralRoles or TabGroup.AddOns) && Options.CurrentGamemode != Gamemodes.Classic) continue;
+                var button = Object.Instantiate(OverviewButton, OverviewButton.transform.parent);
+                button.transform.localPosition += Vector3.right * num * 1f;
+                button.name = Utils.GetTabName(tab);
+                var label2 = button.transform.Find("FontPlacer").GetComponentInChildren<TextMeshPro>();
+                __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
+                    label2.text = Utils.GetTabName(tab);
+                })));
+                var passiveButton = button.GetComponent<PassiveButton>();
+                passiveButton.OnClick.RemoveAllListeners();
+                passiveButton.OnClick.AddListener((Action)(() => {
+                    __instance.ChangeTab((StringNames)tab);
                 }));
-            }
-
-            GamemodeSettingsButton = GameObject.Find("GamemodeTab");
-            if (GamemodeSettingsButton == null)
-            {
-                GamemodeSettingsButton = Object.Instantiate(OverviewButton, OverviewButton.transform.parent);
-                GamemodeSettingsButton.transform.localPosition += Vector3.right * 5.25f * 1f;
-                GamemodeSettingsButton.name = "GamemodeTab";
-                var fontPlacer2 = GamemodeSettingsButton.transform.Find("FontPlacer");
-                if (fontPlacer2 != null)
-                {
-                    var textMeshPro = fontPlacer2.GetComponentInChildren<TextMeshPro>();
-                    if (textMeshPro != null)
-                    {
-                        __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
-                            textMeshPro.text = "Gamemode Settings";
-                        })));
-                    }
-                }
-                var passiveButton2 = GamemodeSettingsButton.GetComponent<PassiveButton>();
-                passiveButton2.OnClick.RemoveAllListeners();
-                passiveButton2.OnClick.AddListener((Action)(() => {
-                    __instance.ChangeTab((StringNames)1);
-                }));
-            }
-
-            AdditionalGamemodesButton = GameObject.Find("AdditionalTab");
-            if (AdditionalGamemodesButton == null)
-            {
-                AdditionalGamemodesButton = Object.Instantiate(OverviewButton, OverviewButton.transform.parent);
-                AdditionalGamemodesButton.transform.localPosition += Vector3.right * 7f * 1f;
-                AdditionalGamemodesButton.name = "AdditionalTab";
-                var fontPlacer2 = AdditionalGamemodesButton.transform.Find("FontPlacer");
-                if (fontPlacer2 != null)
-                {
-                    var textMeshPro = fontPlacer2.GetComponentInChildren<TextMeshPro>();
-                    if (textMeshPro != null)
-                    {
-                        __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
-                            textMeshPro.text = "Additional Gamemodes";
-                        })));
-                    }
-                }
-                var passiveButton2 = AdditionalGamemodesButton.GetComponent<PassiveButton>();
-                passiveButton2.OnClick.RemoveAllListeners();
-                passiveButton2.OnClick.AddListener((Action)(() => {
-                    __instance.ChangeTab((StringNames)2);
-                }));
+                ViewSettingsButtons.Add(tab, button);
+                num += Options.CurrentGamemode == Gamemodes.Classic ? 1.4f : 1.75f;
             }
         }
 
@@ -106,44 +60,22 @@ namespace MoreGamemodes
         [HarmonyPrefix]
         public static bool SetTabPatch(LobbyViewSettingsPane __instance)
         {
-            if (ModSettingsButton == null || GamemodeSettingsButton == null || AdditionalGamemodesButton == null) return true;
-            var passiveButton = ModSettingsButton.GetComponent<PassiveButton>();
-            var passiveButton2 = GamemodeSettingsButton.GetComponent<PassiveButton>();
-            var passiveButton3 = AdditionalGamemodesButton.GetComponent<PassiveButton>();
             if (__instance.currentTab == StringNames.OverviewCategory || __instance.currentTab == StringNames.RolesCategory)
             {
-                passiveButton.SelectButton(false);
-                passiveButton2.SelectButton(false);
-                passiveButton3.SelectButton(false);
+                foreach (var button in ViewSettingsButtons.Values)
+                    button.GetComponent<PassiveButton>().SelectButton(false);
                 return true;
             }
-            if (__instance.currentTab == 0)
+            __instance.taskTabButton.SelectButton(false);
+		    __instance.rolesTabButton.SelectButton(false);
+            foreach (var tab in ViewSettingsButtons.Keys)
             {
-                passiveButton.SelectButton(true);
-                __instance.taskTabButton.SelectButton(false);
-		        __instance.rolesTabButton.SelectButton(false);
-                passiveButton2.SelectButton(false);
-                passiveButton3.SelectButton(false);
-                DrawOptions(__instance, TabGroup.ModSettings);
+                if (tab == (TabGroup)__instance.currentTab)
+                    ViewSettingsButtons[tab].GetComponent<PassiveButton>().SelectButton(true);
+                else
+                    ViewSettingsButtons[tab].GetComponent<PassiveButton>().SelectButton(false);
             }
-            else if (__instance.currentTab == (StringNames)1)
-            {
-                passiveButton2.SelectButton(true);
-                __instance.taskTabButton.SelectButton(false);
-		        __instance.rolesTabButton.SelectButton(false);
-                passiveButton.SelectButton(false);
-                passiveButton3.SelectButton(false);
-                DrawOptions(__instance, TabGroup.GamemodeSettings);
-            }
-            else if (__instance.currentTab == (StringNames)2)
-            {
-                passiveButton3.SelectButton(true);
-                __instance.taskTabButton.SelectButton(false);
-		        __instance.rolesTabButton.SelectButton(false);
-                passiveButton.SelectButton(false);
-                passiveButton2.SelectButton(false);
-                DrawOptions(__instance, TabGroup.AdditionalGamemodes);
-            }
+            DrawOptions(__instance, (TabGroup)__instance.currentTab);
             return false;
         }
 
@@ -225,12 +157,50 @@ namespace MoreGamemodes
             __instance.scrollBar.SetYBoundsMax(-num);
         }
 
+        public static void ReCreateButtons(LobbyViewSettingsPane __instance)
+        {
+            __instance.gameModeText.text = Options.Gamemode.GetString();
+            foreach (var button in ViewSettingsButtons.Values)
+                Object.Destroy(button.gameObject);
+            ViewSettingsButtons = new();
+            var OverviewButton = __instance.taskTabButton.gameObject;
+            var RolesButton = __instance.rolesTabButton.gameObject;
+            OverviewButton.transform.localScale = new Vector3(Options.CurrentGamemode == Gamemodes.Classic ? 0.4f : 0.5f, 1f, 1f);
+            RolesButton.transform.localScale = new Vector3(Options.CurrentGamemode == Gamemodes.Classic ? 0.4f : 0.5f, 1f, 1f);
+            num = Options.CurrentGamemode == Gamemodes.Classic ? 1.4f : 1.75f;
+            RolesButton.transform.localPosition = OverviewButton.transform.localPosition + Vector3.right * num * 1f;
+            num = Options.CurrentGamemode == Gamemodes.Classic ? 2.8f : 3.5f;
+            foreach (var tab in Enum.GetValues<TabGroup>())
+            {
+                if (tab == TabGroup.GamemodeSettings && Options.CurrentGamemode == Gamemodes.Classic) continue;
+                if ((tab is TabGroup.CrewmateRoles or TabGroup.ImpostorRoles or TabGroup.NeutralRoles or TabGroup.AddOns) && Options.CurrentGamemode != Gamemodes.Classic) continue;
+                var button = Object.Instantiate(__instance.taskTabButton.gameObject, __instance.taskTabButton.gameObject.transform.parent);
+                button.transform.localPosition += Vector3.right * num * 1f;
+                button.name = Utils.GetTabName(tab);
+                var label2 = button.transform.Find("FontPlacer").GetComponentInChildren<TextMeshPro>();
+                __instance.StartCoroutine(Effects.Lerp(2f, new Action<float>(p => {
+                    label2.text = Utils.GetTabName(tab);
+                })));
+                var passiveButton = button.GetComponent<PassiveButton>();
+                passiveButton.OnClick.RemoveAllListeners();
+                passiveButton.OnClick.AddListener((Action)(() => {
+                    __instance.ChangeTab((StringNames)tab);
+                }));
+                if (tab == (TabGroup)__instance.currentTab)
+                    passiveButton.SelectButton(true);
+                else
+                    passiveButton.SelectButton(false);
+                ViewSettingsButtons.Add(tab, button);
+                num += Options.CurrentGamemode == Gamemodes.Classic ? 1.4f : 1.75f;
+            }
+        }
+
         [HarmonyPatch(nameof(LobbyViewSettingsPane.OnEnable))]
         [HarmonyPostfix]
         public static void OnEnablePostfix(LobbyViewSettingsPane __instance)
         {
             if (GameManager.Instance.IsHideAndSeek()) return;
-            __instance.gameModeText.text = Options.Gamemode.GetString();
+            ReCreateButtons(__instance);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace MoreGamemodes
             ColorUtility.TryParseHtmlString("#1dde16", out Color);
             RoleName = "Opportunist";
             RoleDescription = "Survive to win";
-            RoleDescriptionLong = "Opportunist (Neutral): Survive to the end to win with winning team. If you die, you lose.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Opportunist];
             AbilityUses = -1f;
         }
 

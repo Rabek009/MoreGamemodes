@@ -66,7 +66,7 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (AbilityDuration > 0f)
-                return Utils.ColorString(Palette.ImpostorRed, "\n[TIME FROZEN]");
+                return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>[TIME FROZEN]</size>");
             return "";
         }
 
@@ -78,7 +78,7 @@ namespace MoreGamemodes
             Color = Palette.ImpostorRed;
             RoleName = "Time Freezer";
             RoleDescription = "Stop time to make sneaky kills";
-            RoleDescriptionLong = "Time Freezer (Impostor): Click vanish button to stop time for short period of time. When time is frozen other players can't move and are blind. They can't use their abilities, kill, report bodies, call meeting, sabotage, vent. You can kill during freeze, just make sure no one realize that you moved.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.TimeFreezer];
             AbilityUses = -1f;
             AbilityDuration = -1f;
             TimeSinceAbilityUse = 0f;

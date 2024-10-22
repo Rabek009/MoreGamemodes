@@ -1248,7 +1248,7 @@ namespace MoreGamemodes
                         PlayerControl.LocalPlayer.RpcSendMessage("You can only use /myrole in classic gamemode.", "Warning");
                         break;
                     }
-                    PlayerControl.LocalPlayer.RpcSendMessage(PlayerControl.LocalPlayer.GetRole().RoleDescriptionLong, "Role");
+                    PlayerControl.LocalPlayer.RpcSendMessage(PlayerControl.LocalPlayer.GetRole().RoleDescriptionLong, "RoleInfo");
                     break;
                 case "/guess":
                 case "/shoot":
@@ -1290,14 +1290,11 @@ namespace MoreGamemodes
                         PlayerControl.LocalPlayer.RpcSendMessage("This player doesn't exist!", "Warning");
                         break;
                     }
-                    if (!PlayerControl.LocalPlayer.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.RoleNames[role]))
+                    if (!PlayerControl.LocalPlayer.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.RoleNames[role]) ||
+                        !Utils.GetPlayerById(playerId).GetRole().CanBeGuessed(PlayerControl.LocalPlayer, CustomRolesHelper.RoleNames[role]) ||
+                        (CustomRolesHelper.RoleNames[role] == CustomRoles.SecurityGuard && !SecurityGuard.CanGetGuessed.GetBool())) 
                     {
                         PlayerControl.LocalPlayer.RpcSendMessage("You can't guess this player!", "Warning");
-                        break;
-                    }
-                    if (!Utils.GetPlayerById(playerId).GetRole().CanBeGuessed(PlayerControl.LocalPlayer))
-                    {
-                        PlayerControl.LocalPlayer.RpcSendMessage("Target can't be guessed!", "Warning");
                         break;
                     }
                     if (Utils.GetPlayerById(playerId).GetRole().Role == CustomRolesHelper.RoleNames[role])
@@ -1310,11 +1307,50 @@ namespace MoreGamemodes
                     }
                     else
                     {
-                        PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Misfire);
+                        PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Guessed);
                         PlayerControl.LocalPlayer.RpcExileV2();
                         Utils.SendSpam();
                         new LateTask(() => Utils.SendChat(Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + " was guessed", "Guesser"), 1f);
                     }
+                    break;
+                case "/r":
+                    canceled = true;
+                    if (Options.CurrentGamemode != Gamemodes.Classic)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("Roles are only in classic gamemode", "RoleInfo");
+                        break;
+                    }
+                    var role2 = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        role2 += subArgs;
+                    }
+                    role = role2.ToLower().Replace(" ", "");
+                    string crewmateRoles = "";
+                    string impostorRoles = "";
+                    string neutralRoles = "";
+                    if (!CustomRolesHelper.RoleNames.ContainsKey(role))
+                    {
+                        foreach (var roleType in Enum.GetValues<CustomRoles>())
+                        {
+                            if (CustomRolesHelper.IsVanilla(roleType)) continue;
+                            if (CustomRolesHelper.IsCrewmate(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
+                                crewmateRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                            if (CustomRolesHelper.IsImpostor(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
+                                impostorRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                            if (CustomRolesHelper.IsNeutral(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
+                                neutralRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                        }
+                        if (crewmateRoles != "")
+                            PlayerControl.LocalPlayer.RpcSendMessage(crewmateRoles, "Crewmates");
+                        if (impostorRoles != "")
+                            PlayerControl.LocalPlayer.RpcSendMessage(impostorRoles, "Impostors");
+                        if (neutralRoles != "")
+                            PlayerControl.LocalPlayer.RpcSendMessage(neutralRoles, "Neutrals");
+                        break;
+                    }
+                    PlayerControl.LocalPlayer.RpcSendMessage(CustomRolesHelper.RoleDescriptions[CustomRolesHelper.RoleNames[role]], "RoleInfo");
                     break;
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;
@@ -2023,7 +2059,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can only use /myrole in classic gamemode.", "Warning");
                         break;
                     }
-                    player.RpcSendMessage(player.GetRole().RoleDescriptionLong, "Role");
+                    player.RpcSendMessage(player.GetRole().RoleDescriptionLong, "RoleInfo");
                     break;
                 case "/guess":
                 case "/shoot":
@@ -2065,14 +2101,11 @@ namespace MoreGamemodes
                         player.RpcSendMessage("This player doesn't exist!", "Warning");
                         break;
                     }
-                    if (!player.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.RoleNames[role]))
+                    if (!player.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.RoleNames[role]) ||
+                        !Utils.GetPlayerById(playerId).GetRole().CanBeGuessed(player, CustomRolesHelper.RoleNames[role]) ||
+                        (CustomRolesHelper.RoleNames[role] == CustomRoles.SecurityGuard && !SecurityGuard.CanGetGuessed.GetBool()))
                     {
                         player.RpcSendMessage("You can't guess this player!", "Warning");
-                        break;
-                    }
-                    if (!Utils.GetPlayerById(playerId).GetRole().CanBeGuessed(player))
-                    {
-                        player.RpcSendMessage("Target can't be guessed!", "Warning");
                         break;
                     }
                     if (Utils.GetPlayerById(playerId).GetRole().Role == CustomRolesHelper.RoleNames[role])
@@ -2085,11 +2118,50 @@ namespace MoreGamemodes
                     }
                     else
                     {
-                        player.RpcSetDeathReason(DeathReasons.Misfire);
+                        player.RpcSetDeathReason(DeathReasons.Guessed);
                         player.RpcExileV2();
                         Utils.SendSpam();
                         new LateTask(() => Utils.SendChat(Main.StandardNames[player.PlayerId] + " was guessed", "Guesser"), 1f);
                     }
+                    break;
+                case "/r":
+                    canceled = true;
+                    if (Options.CurrentGamemode != Gamemodes.Classic)
+                    {
+                        player.RpcSendMessage("Roles are only in classic gamemode", "RoleInfo");
+                        break;
+                    }
+                    var role2 = "";
+                    for (int i = 1; i <= args.Length; ++i)
+                    {
+                        subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                        role2 += subArgs;
+                    }
+                    role = role2.ToLower().Replace(" ", "");
+                    string crewmateRoles = "";
+                    string impostorRoles = "";
+                    string neutralRoles = "";
+                    if (!CustomRolesHelper.RoleNames.ContainsKey(role))
+                    {
+                        foreach (var roleType in Enum.GetValues<CustomRoles>())
+                        {
+                            if (CustomRolesHelper.IsVanilla(roleType)) continue;
+                            if (CustomRolesHelper.IsCrewmate(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
+                                crewmateRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                            if (CustomRolesHelper.IsImpostor(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
+                                impostorRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                            if (CustomRolesHelper.IsNeutral(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
+                                neutralRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                        }
+                        if (crewmateRoles != "")
+                            player.RpcSendMessage(crewmateRoles, "Crewmates");
+                        if (impostorRoles != "")
+                            player.RpcSendMessage(impostorRoles, "Impostors");
+                        if (neutralRoles != "")
+                            player.RpcSendMessage(neutralRoles, "Neutrals");
+                        break;
+                    }
+                    player.RpcSendMessage(CustomRolesHelper.RoleDescriptions[CustomRolesHelper.RoleNames[role]], "RoleInfo");
                     break;
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;

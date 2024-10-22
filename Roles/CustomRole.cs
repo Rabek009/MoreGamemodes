@@ -228,7 +228,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public virtual bool CanBeGuessed(PlayerControl guesser)
+        public virtual bool CanBeGuessed(PlayerControl guesser, CustomRoles role)
         {
             return true;
         }

@@ -18,7 +18,7 @@ namespace MoreGamemodes
             Color = Palette.ImpostorRed;
             RoleName = "Evil Guesser";
             RoleDescription = "Guess roles during meeting";
-            RoleDescriptionLong = "Evil Guesser (Impostor): You can guess roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 2 is sheriff, you should type <i>/guess 2 sheriff</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead. During rounds you can kill like regular impostor.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.EvilGuesser];
             AbilityUses = -1f;
         }
 

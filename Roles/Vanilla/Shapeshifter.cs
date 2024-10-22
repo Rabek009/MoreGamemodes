@@ -10,7 +10,7 @@ namespace MoreGamemodes
             Color = Palette.ImpostorRed;
             RoleName = "Shapeshifter";
             RoleDescription = "Disguise yourself";
-            RoleDescriptionLong = "Shapeshifter (Impostor): You can shapeshift into other players. You can stay in shapeshifted form for limited time. When shapeshifting there is animation and depending on options you leave shapeshift evidence.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Shapeshifter];
             AbilityUses = -1f;
         }
     }

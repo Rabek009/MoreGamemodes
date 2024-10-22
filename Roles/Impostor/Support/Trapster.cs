@@ -114,7 +114,7 @@ namespace MoreGamemodes
             Color = Palette.ImpostorRed;
             RoleName = "Trapster";
             RoleDescription = "Trap players on dead bodies";
-            RoleDescriptionLong = "Trapster (Impostor): After killing someone, you place trap on dead body. Next player, who tries to report that body (or interact with it in any way) will be trapped on it unable to move and use abilities. Dead body can trap only 1 person at the time. If someone gets trapped on your body, your kill cooldown will decrease and you will get alerted.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Trapster];
             AbilityUses = -1f;
             TrappedPlayers = new Dictionary<byte, byte>();
         }

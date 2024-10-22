@@ -373,7 +373,7 @@ namespace MoreGamemodes
             return opt;
         }
 
-        public static string BuildPlayerName(this PlayerControl player, PlayerControl seer, bool isMeeting = false)
+        public static string BuildPlayerName(this PlayerControl player, PlayerControl seer, bool isMeeting = false, bool classicMeeting = false)
         {
             string name = Main.StandardNames[Main.AllShapeshifts[player.PlayerId]];
             if (isMeeting)
@@ -382,10 +382,12 @@ namespace MoreGamemodes
                 name = Utils.ColorString(Main.NameColors[(player.PlayerId, seer.PlayerId)], name);
             if (isMeeting)
             {
-                if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+                if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && !classicMeeting)
                 {
                     if (seer.GetRole().Role == CustomRoles.EvilGuesser)
                         name = Utils.ColorString(seer.GetRole().Color, player.PlayerId.ToString()) + " " + name;
+                    if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
+                        name = "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n</size>" + name;
                 }
                 return name;
             }

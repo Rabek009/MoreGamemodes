@@ -62,26 +62,8 @@ namespace MoreGamemodes
                 {
                     if (viewSettingsPane.currentTab != StringNames.OverviewCategory && viewSettingsPane.currentTab != StringNames.RolesCategory)
                         viewSettingsPane.RefreshTab();
-                    viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
+                    LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                 }
-            }
-
-            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.N, KeyCode.LeftShift }) && Main.GameStarted)
-            {
-                CustomRpcSender sender = CustomRpcSender.Create("test", Hazel.SendOption.None);
-                sender.StartMessage(-1);
-                sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetRole)
-                    .Write((ushort)RoleTypes.Phantom)
-                    .Write(true)
-                    .EndRpc();
-                sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.StartVanish)
-                    .EndRpc();
-                sender.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetRole)
-                    .Write((ushort)RoleTypes.Crewmate)
-                    .Write(true)
-                    .EndRpc();
-                sender.EndMessage();
-                sender.SendMessage();
             }
         }
 

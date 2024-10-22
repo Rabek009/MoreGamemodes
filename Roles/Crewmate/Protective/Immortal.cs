@@ -59,12 +59,13 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (ProtectionTime > 0f)
-                return Utils.ColorString(Color.cyan, "\n[PROTECTED]");
+                return Utils.ColorString(Color.cyan, "\n<size=1.8>[PROTECTED]</size>");
             return "";
         }
 
-        public override bool CanBeGuessed(PlayerControl guesser)
+        public override bool CanBeGuessed(PlayerControl guesser, CustomRoles role)
         {
+            if (role != CustomRoles.Immortal) return true;
             return !Player.AllTasksCompleted();
         }
 
@@ -76,7 +77,7 @@ namespace MoreGamemodes
             ColorUtility.TryParseHtmlString("#5e2a10", out Color);
             RoleName = "Immortal";
             RoleDescription = "Complete tasks to get protection";
-            RoleDescriptionLong = "Immortal (Crewmate): After completing all tasks you can survive few kill attempts. In addition after you complete task, you get temporarily protection. If impostor try to kill you, his cooldown will reset to 50%. You will know that someone tried to kill you when meeting is called. After completing all tasks you can't be guessed.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Immortal];
             AbilityUses = -1f;
             RealAbilityUses = -1f;
             ProtectionTime = 0f;
@@ -102,7 +103,7 @@ namespace MoreGamemodes
             ProtectionAfterCompletingTaskDuration = FloatOptionItem.Create(300102, "Protection after completing task duration", new(0f, 30f, 1f), 10f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 1, TabGroup.CrewmateRoles, false)
+            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 2, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Immortal] = Chance;
             Options.RolesCount[CustomRoles.Immortal] = Count;

@@ -38,7 +38,7 @@ namespace MoreGamemodes
             ColorUtility.TryParseHtmlString("#db72e0", out Color);
             RoleName = "Jester";
             RoleDescription = "Get voted out";
-            RoleDescriptionLong = "Jester (Neutral): Get voted out to win alone. Act suspicious to make people think you're impostor.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Jester];
             AbilityUses = -1f;
         }
 

@@ -223,7 +223,7 @@ namespace MoreGamemodes
                     {
                         if (viewSettingsPane.currentTab != StringNames.OverviewCategory && viewSettingsPane.currentTab != StringNames.RolesCategory)
                             viewSettingsPane.RefreshTab();
-                        viewSettingsPane.gameModeText.text = Options.Gamemode.GetString();
+                        LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                     }
                     break;
                 case CustomRPC.SetHackActive:

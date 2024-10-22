@@ -105,7 +105,7 @@ namespace MoreGamemodes
 
         public override string GetNamePostfix()
         {
-            return Utils.ColorString(Color.red, "\nBlock vent cooldown: " + (int)(Cooldown + 0.99f) + "s");
+            return Utils.ColorString(Color.red, "\n<size=1.8>Block vent cooldown: " + (int)(Cooldown + 0.99f) + "</size>");
         }
 
         public bool SeeKillFlash()
@@ -122,11 +122,6 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool CanBeGuessed(PlayerControl guesser)
-        {
-            return CanGetGuessed.GetBool();
-        }
-
         public SecurityGuard(PlayerControl player)
         {
             Role = CustomRoles.SecurityGuard;
@@ -135,7 +130,7 @@ namespace MoreGamemodes
             ColorUtility.TryParseHtmlString("#96944e", out Color);
             RoleName = "Security Guard";
             RoleDescription = "Block vents and gain extra info from security";
-            RoleDescriptionLong = "Security Guard (Crewmate): You can use pet button near vent to block it pernamently. Blocked vent can't be used by anyone. When you're looking at cameras/doorlog/binoculars you get alerted when someone die. Depending on options cameras don't blink when you're using it.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.SecurityGuard];
             AbilityUses = InitialAbilityUseLimit.GetInt();
             Cooldown = 10f;
             UsingCameras = false;

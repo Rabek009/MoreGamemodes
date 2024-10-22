@@ -138,13 +138,13 @@ namespace MoreGamemodes
             if (Main.IsModded[Player.PlayerId]) return "";
             if (BaseRole == BaseRoles.Crewmate)
             {
-                return Utils.ColorString(Color, "\nMode: Task\n<size=65%>") + Utils.ColorString(Color.magenta, "(") +
+                return Utils.ColorString(Color, "\n<size=1.8>Mode: Task\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>\n") +
-                    Utils.ColorString(Color.red, "Kill cooldown: " + (int)(Cooldown + 0.99f) + "s");
+                    Utils.ColorString(Color.red, "<size=1.8>Kill cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {
-                return Utils.ColorString(Color, "\nMode: Kill\n<size=65%>") + Utils.ColorString(Color.magenta, "(") +
+                return Utils.ColorString(Color, "\n<size=1.8>Mode: Kill\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>");
             }
             return "";
@@ -165,7 +165,7 @@ namespace MoreGamemodes
             ColorUtility.TryParseHtmlString("#e8e11e", out Color);
             RoleName = "Sheriff";
             RoleDescription = "Shoot impostors";
-            RoleDescriptionLong = "Sheriff (Crewmate): You can use pet button to switch between task and kill mode. In task mode you can do tasks. In kill mode you have kill button. You can kill impostors and depending on options neutrals. If you try to kill someone you can't, you die from misfire. Depending on options your target dies on misfire too.\n\nIf you have mod installed, you don't have task and kill mode. You can do tasks and kill at the same time.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Sheriff];
             AbilityUses = -1f;
             Cooldown = 10f;
         }

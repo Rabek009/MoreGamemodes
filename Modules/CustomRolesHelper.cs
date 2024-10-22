@@ -26,7 +26,29 @@ namespace MoreGamemodes
             { "trapster", CustomRoles.Trapster},
             { "opportunist", CustomRoles.Opportunist },
             { "jester", CustomRoles.Jester },
-            { "serialkiller", CustomRoles.SerialKiller}
+            { "serialkiller", CustomRoles.SerialKiller},
+        };
+
+        public static Dictionary<CustomRoles, string> RoleDescriptions = new() 
+        {
+            {CustomRoles.Crewmate, "Crewmate (Crewmate): Regular crewmate without any ability."},
+            {CustomRoles.Scientist, "Scientist (Crewmate): You can use vitals from anywhere, but you have limited battery. Complete task to recharge your battery. When you complete all tasks, your battery will recharge automatically."},
+            {CustomRoles.Engineer, "Engineer (Crewmate): You can vent like impostor, but you have venting cooldown and you can stay in vent for limited time."},
+            {CustomRoles.Noisemaker, "Noisemaker (Crewmate): When you get killed, you send alert. That alert informs crewmates that you died and shows direction to your body. Depending on options killers get alert too."},
+            {CustomRoles.Tracker, "Tracker (Crewmate): You can track other player too see that player on your map. Player position updates every few seconds. You can track player for limited amount of time. After tracking cooldown is over, you can track another player."},
+            {CustomRoles.Investigator, "Investigator (Crewmate): You can use pet button to switch between task and investigate mode. In task mode you can do tasks. In investigate mode you have kill button. If players is good, his name will become green. But if player is evil then his name will turn red. But some roles that are good can show as evil, also sometimes evil roles show as good. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed, you don't have task and investigate mode. You can do tasks and investigate at the same time."},
+            {CustomRoles.Sheriff, "Sheriff (Crewmate): You can use pet button to switch between task and kill mode. In task mode you can do tasks. In kill mode you have kill button. You can kill impostors and depending on options neutrals. If you try to kill someone you can't, you die from misfire. Depending on options your target dies on misfire too.\n\nIf you have mod installed, you don't have task and kill mode. You can do tasks and kill at the same time."},
+            {CustomRoles.Immortal, "Immortal (Crewmate): After completing all tasks you can survive few kill attempts. In addition after you complete task, you get temporarily protection. If impostor try to kill you, his cooldown will reset to 50%. You will know that someone tried to kill you when meeting is called. After completing all tasks you can't be guessed."},
+            {CustomRoles.SecurityGuard, "Security Guard (Crewmate): You can use pet button near vent to block it pernamently. Blocked vent can't be used by anyone. When you're looking at cameras/doorlog/binoculars you get alerted when someone die. Depending on options cameras don't blink when you're using it."},
+            {CustomRoles.Impostor, "Impostor (Impostor): Regular impostor without any ability."},
+            {CustomRoles.Shapeshifter, "Shapeshifter (Impostor): You can shapeshift into other players. You can stay in shapeshifted form for limited time. When shapeshifting there is animation and depending on options you leave shapeshift evidence."},
+            {CustomRoles.Phantom, "Phantom (Impostor): You can turn invisible for limited amount of time. When disappearing or appearing there is animation. While invisible, you can't kill, vent, repair sabotages, use platform and zipline. Other impostors can see you, when you're invisible. While invisible you're 10% faster."},
+            {CustomRoles.TimeFreezer, "Time Freezer (Impostor): Click vanish button to stop time for short period of time. When time is frozen other players can't move and are blind. They can't use their abilities, kill, report bodies, call meeting, sabotage, vent. You can kill during freeze, just make sure no one realize that you moved."},
+            {CustomRoles.EvilGuesser, "Evil Guesser (Impostor): You can guess roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 2 is sheriff, you should type <i>/guess 2 sheriff</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead. During rounds you can kill like regular impostor."},
+            {CustomRoles.Trapster, "Trapster (Impostor): After killing someone, you place trap on dead body. Next player, who tries to report that body (or interact with it in any way) will be trapped on it unable to move and use abilities. Dead body can trap only 1 person at the time. If someone gets trapped on your body, your kill cooldown will decrease and you will get alerted."},
+            {CustomRoles.Opportunist, "Opportunist (Neutral): Survive to the end to win with winning team. If you die, you lose."},
+            {CustomRoles.Jester, "Jester (Neutral): Get voted out to win alone. Act suspicious to make people think you're impostor."},
+            {CustomRoles.SerialKiller, "Serial Killer (Neutral): Your goal is to kill everyone. You have lower kill cooldown, so you can kill faster than impostors. You can vent and have impostor vision."},
         };
 
         public static void SetCustomRole(this PlayerControl player, CustomRoles role)

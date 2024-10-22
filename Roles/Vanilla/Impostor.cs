@@ -10,7 +10,7 @@ namespace MoreGamemodes
             Color = Palette.ImpostorRed;
             RoleName = "Impostor";
             RoleDescription = "Kill and sabotage";
-            RoleDescriptionLong = "Impostor (Impostor): Regular impostor without any ability.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Impostor];
             AbilityUses = -1f;
         }
     }

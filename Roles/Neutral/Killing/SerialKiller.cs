@@ -110,7 +110,7 @@ namespace MoreGamemodes
             ColorUtility.TryParseHtmlString("#63188f", out Color);
             RoleName = "Serial Killer";
             RoleDescription = "Kill everyone";
-            RoleDescriptionLong = "Serial Killer (Neutral): Your goal is to kill everyone. You have lower kill cooldown, so you can kill faster than impostors. You can vent and have impostor vision.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.SerialKiller];
             AbilityUses = -1f;
         }
 

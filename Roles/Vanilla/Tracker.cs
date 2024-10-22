@@ -10,7 +10,7 @@ namespace MoreGamemodes
             Color = Palette.CrewmateBlue;
             RoleName = "Tracker";
             RoleDescription = "Track a crewmate with your map";
-            RoleDescriptionLong = "Tracker (Crewmate): You can track other player too see that player on your map. Player position updates every few seconds. You can track player for limited amount of time. After tracking cooldown is over, you can track another player.";
+            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Tracker];
             AbilityUses = -1f;
         }
     }
