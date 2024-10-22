@@ -5,20 +5,14 @@ using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Reflection;
 
-[assembly: AssemblyFileVersion(MoreGamemodes.Main.CurrentVersion)]
-[assembly: AssemblyInformationalVersion(MoreGamemodes.Main.CurrentVersion)]
-[assembly: AssemblyVersion(MoreGamemodes.Main.CurrentVersion)]
 namespace MoreGamemodes;
 
-[BepInPlugin(PluginGuid, "More Gamemodes", CurrentVersion)]
-[BepInIncompatibility("jp.ykundesu.supernewroles")]
-[BepInIncompatibility("MalumMenu")]
+[BepInAutoPlugin]
 [BepInProcess("Among Us.exe")]
 public partial class Main : BasePlugin
 {
-    private Harmony Harmony { get; } = new(PluginGuid);
+    private Harmony Harmony { get; } = new(Id);
 
     public ConfigEntry<string> ConfigName { get; private set; }
 
@@ -69,7 +63,6 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> TimeSinceLastPet;
 
     public const string CurrentVersion = "2.0.0";
-    public const string PluginGuid = "com.rabek009.moregamemodes";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
