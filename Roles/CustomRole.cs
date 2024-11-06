@@ -108,6 +108,11 @@ namespace MoreGamemodes
             BaseRoles.DesyncPhantom;
         }
 
+        public virtual void OnAddVote(PlayerControl target)
+        {
+            
+        }
+
         public virtual bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, MessageReader reader)
         {
             return true;
@@ -191,8 +196,10 @@ namespace MoreGamemodes
 
         public bool ForceKillButton()
         {
-            return Role is CustomRoles.Sheriff or
-            CustomRoles.Investigator;
+            return IsNeutralKilling() ||
+            Role is CustomRoles.Investigator or
+            CustomRoles.Sheriff or
+            CustomRoles.Medic;
         }
 
         public virtual string GetProgressText()
@@ -226,11 +233,6 @@ namespace MoreGamemodes
         public virtual bool CanGuess(PlayerControl target, CustomRoles role)
         {
             return false;
-        }
-
-        public virtual bool CanBeGuessed(PlayerControl guesser, CustomRoles role)
-        {
-            return true;
         }
 
         public virtual bool CheckEndCriteria()

@@ -399,6 +399,33 @@ namespace MoreGamemodes
         }
     }
 
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MixUpOutfit))]
+    class MixUpOutfitPatch
+    {
+        public static void Postfix(PlayerControl __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            if (MeetingHud.Instance) return;
+            new LateTask(() =>
+            {
+                if (!MeetingHud.Instance)
+                {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                        pc.RpcSetNamePrivate(pc.BuildPlayerName(__instance, false), __instance, true);
+                    if (__instance.AmOwner)
+                        __instance.SetPet("pet_test");
+                    else
+                    {
+                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetPetStr, SendOption.None, __instance.GetClientId());
+		                writer.Write("pet_test");
+		                writer.Write(__instance.GetNextRpcSequenceId(RpcCalls.SetPetStr));
+		                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                    }
+                }
+            }, 0.2f, "Set MixUp Name");
+        }
+    }
+
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixMixedUpOutfit))]
     class FixMixedUpOutfitPatch
     {
@@ -411,9 +438,9 @@ namespace MoreGamemodes
                 if (!MeetingHud.Instance)
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)
-                        __instance.RpcSetNamePrivate(__instance.BuildPlayerName(pc, false), pc, true);
+                        pc.RpcSetNamePrivate(pc.BuildPlayerName(__instance, false), __instance, true);
                 }
-            }, 1f, "Fix After MixUp Name");
+            }, 0.2f, "Fix After MixUp Name");
         }
     }
 

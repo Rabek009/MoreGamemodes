@@ -7,10 +7,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Impostor;
             BaseRole = BaseRoles.Impostor;
             Player = player;
-            Color = Palette.ImpostorRed;
-            RoleName = "Impostor";
-            RoleDescription = "Kill and sabotage";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Impostor];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
     }

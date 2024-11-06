@@ -1,7 +1,6 @@
 using UnityEngine;
 using HarmonyLib;
 using InnerNet;
-using System.Collections.Generic;
 
 namespace MoreGamemodes
 {

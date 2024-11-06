@@ -738,5 +738,19 @@ namespace MoreGamemodes
             if (ventilationSystem != null)
                 VentilationSystemDeterioratePatch.SerializeV2(ventilationSystem);
         }
+
+        public static Color HexToColor(string hex)
+        {
+            ColorUtility.TryParseHtmlString(hex, out Color c);
+            return c;
+        }
+
+        public static void SetupRoleInfo(CustomRole role)
+        {
+            role.RoleName = CustomRolesHelper.RoleNames[role.Role];
+            role.RoleDescription = CustomRolesHelper.RoleDescriptions[role.Role];
+            role.RoleDescriptionLong = CustomRolesHelper.RoleDescriptionsLong[role.Role];
+            role.Color = CustomRolesHelper.RoleColors[role.Role];
+        }
     }
 }

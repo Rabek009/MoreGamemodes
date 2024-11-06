@@ -63,21 +63,12 @@ namespace MoreGamemodes
             return "";
         }
 
-        public override bool CanBeGuessed(PlayerControl guesser, CustomRoles role)
-        {
-            if (role != CustomRoles.Immortal) return true;
-            return !Player.AllTasksCompleted();
-        }
-
         public Immortal(PlayerControl player)
         {
             Role = CustomRoles.Immortal;
             BaseRole = BaseRoles.Crewmate;
             Player = player;
-            ColorUtility.TryParseHtmlString("#5e2a10", out Color);
-            RoleName = "Immortal";
-            RoleDescription = "Complete tasks to get protection";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Immortal];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
             RealAbilityUses = -1f;
             ProtectionTime = 0f;
@@ -92,18 +83,20 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static OptionItem ProtectionAfterCompletingTaskDuration;
         public static OptionItem TimesProtectedAfterCompletingAllTasks;
+        public static OptionItem CanBeGuessed;
         public static void SetupOptionItem()
         {
-            ColorUtility.TryParseHtmlString("#5e2a10", out Color c);
             Chance = IntegerOptionItem.Create(300100, "Immortal", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(c)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Immortal])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(300101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             ProtectionAfterCompletingTaskDuration = FloatOptionItem.Create(300102, "Protection after completing task duration", new(0f, 30f, 1f), 10f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 2, TabGroup.CrewmateRoles, false)
+            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 3, TabGroup.CrewmateRoles, false)
+                .SetParent(Chance);
+            CanBeGuessed = BooleanOptionItem.Create(300104, "Can be guessed", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Immortal] = Chance;
             Options.RolesCount[CustomRoles.Immortal] = Count;

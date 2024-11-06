@@ -78,7 +78,7 @@ namespace MoreGamemodes
         public static void Postfix(IntroCutscene __instance)
         {
             if (Main.GameStarted) return;
-            new LateTask(() => CustomGamemode.Instance.OnShowRole(__instance), 0.01f, "Show Role");
+            new LateTask(() => CustomGamemode.Instance.OnShowRole(__instance), 0.0001f, "Show Role");
         }
     }
 }

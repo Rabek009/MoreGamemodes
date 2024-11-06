@@ -9,13 +9,13 @@ namespace MoreGamemodes
     {
         public override void OnHudUpate(HudManager __instance)
         {
-            __instance.SabotageButton.SetDisabled();
-            __instance.SabotageButton.ToggleVisible(false);
             base.OnHudUpate(__instance);
+            if (Player.Data.IsDead) return;
+            __instance.ImpostorVentButton.ToggleVisible(true);
         }
         public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
-            if (exiled != null && exiled.Object != null && exiled.Object == Player)
+            if (exiled != null && exiled.Object != null && exiled.Object == Player && BaseRole == BaseRoles.DesyncImpostor)
             {
                 BaseRole = BaseRoles.Crewmate;
                 Player.RpcSetDesyncRole(RoleTypes.Crewmate, Player);
@@ -35,18 +35,21 @@ namespace MoreGamemodes
 
         public override void OnMurderPlayerAsTarget(PlayerControl killer)
         {
-            BaseRole = BaseRoles.Crewmate;
-            foreach (var pc in PlayerControl.AllPlayerControls)
+            if (BaseRole == BaseRoles.DesyncImpostor)
             {
-                if (pc.GetRole().BaseRole is BaseRoles.Impostor && !pc.Data.IsDead)
-                    pc.RpcSetDesyncRole(RoleTypes.Impostor, Player);
-                else if (pc.GetRole().BaseRole is BaseRoles.Shapeshifter && !pc.Data.IsDead)
-                    pc.RpcSetDesyncRole(RoleTypes.Shapeshifter, Player);
-                else if (pc.GetRole().BaseRole is BaseRoles.Phantom && !pc.Data.IsDead)
-                    pc.RpcSetDesyncRole(RoleTypes.Phantom, Player);
+                BaseRole = BaseRoles.Crewmate;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().BaseRole is BaseRoles.Impostor && !pc.Data.IsDead)
+                        pc.RpcSetDesyncRole(RoleTypes.Impostor, Player);
+                    else if (pc.GetRole().BaseRole is BaseRoles.Shapeshifter && !pc.Data.IsDead)
+                        pc.RpcSetDesyncRole(RoleTypes.Shapeshifter, Player);
+                    else if (pc.GetRole().BaseRole is BaseRoles.Phantom && !pc.Data.IsDead)
+                        pc.RpcSetDesyncRole(RoleTypes.Phantom, Player);
+                }
+                Player.Data.RpcSetTasks(new byte[0]);
+                Player.SyncPlayerSettings();
             }
-            Player.Data.RpcSetTasks(new byte[0]);
-            Player.SyncPlayerSettings();
         }
 
         public override void OnFixedUpdate()
@@ -66,6 +69,11 @@ namespace MoreGamemodes
                 Player.Data.RpcSetTasks(new byte[0]);
                 Player.SyncPlayerSettings();
             }
+        }
+
+        public override bool OnEnterVent(int id)
+        {
+            return true;
         }
 
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, MessageReader reader)
@@ -105,12 +113,9 @@ namespace MoreGamemodes
         public SerialKiller(PlayerControl player)
         {
             Role = CustomRoles.SerialKiller;
-            BaseRole = BaseRoles.DesyncImpostor;
+            BaseRole = (Main.IsModded.ContainsKey(player.PlayerId) && Main.IsModded[player.PlayerId]) ? BaseRoles.Crewmate : BaseRoles.DesyncImpostor;
             Player = player;
-            ColorUtility.TryParseHtmlString("#63188f", out Color);
-            RoleName = "Serial Killer";
-            RoleDescription = "Kill everyone";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.SerialKiller];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
 
@@ -119,9 +124,8 @@ namespace MoreGamemodes
         public static OptionItem KillCooldown;
         public static void SetupOptionItem()
         {
-            ColorUtility.TryParseHtmlString("#63188f", out Color c);
             Chance = IntegerOptionItem.Create(1000100, "Serial killer", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(c)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.SerialKiller])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(1000101, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);

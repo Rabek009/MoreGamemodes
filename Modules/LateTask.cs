@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+// https://github.com/tukasa0001/TownOfHost/blob/main/Modules/LateTask.cs
 namespace MoreGamemodes
 {
     class LateTask

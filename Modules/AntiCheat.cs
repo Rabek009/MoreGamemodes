@@ -7,6 +7,7 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 
+// https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/EAC.cs
 namespace MoreGamemodes
 {
     static class AntiCheat

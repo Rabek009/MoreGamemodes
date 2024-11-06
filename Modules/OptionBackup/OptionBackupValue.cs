@@ -1,6 +1,7 @@
 using System;
 using AmongUs.GameOptions;
 
+// https://github.com/tukasa0001/TownOfHost/blob/main/Modules/OptionBackup/OptionBackupValue.cs
 namespace MoreGamemodes
 {
     public abstract class OptionBackupValue

@@ -1,6 +1,4 @@
 using HarmonyLib;
-using Hazel;
-using InnerNet;
 
 namespace MoreGamemodes
 {

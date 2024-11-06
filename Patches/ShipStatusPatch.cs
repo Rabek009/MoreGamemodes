@@ -61,27 +61,6 @@ namespace MoreGamemodes
         }
     }
 
-    [HarmonyPatch(typeof(MushroomMixupSabotageSystem), nameof(MushroomMixupSabotageSystem.MushroomMixUp))]
-    class MushroomMixUpPatch
-    {
-        public static void Postfix()
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            if (MeetingHud.Instance) return;
-            new LateTask(() =>
-            {
-                if (!MeetingHud.Instance)
-                {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                            pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, true);
-                    }
-                }
-            }, 1f, "Set MixUp Name");
-        }
-    }
-
     [HarmonyPatch(typeof(VentilationSystem), nameof(VentilationSystem.PerformVentOp))]
     class PerformVentOpPatch
     {

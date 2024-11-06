@@ -1,10 +1,9 @@
-using AmongUs.GameOptions;
 using HarmonyLib;
 using Hazel;
-using InnerNet;
 
 namespace MoreGamemodes
 {
+    //https://github.com/tukasa0001/TownOfHost/blob/main/Patches/GameManagerPatch.cs
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Serialize))]
     class GameManagerSerializeFix
     {

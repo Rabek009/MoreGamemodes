@@ -111,10 +111,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Trapster;
             BaseRole = BaseRoles.Impostor;
             Player = player;
-            Color = Palette.ImpostorRed;
-            RoleName = "Trapster";
-            RoleDescription = "Trap players on dead bodies";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Trapster];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
             TrappedPlayers = new Dictionary<byte, byte>();
         }
@@ -127,7 +124,7 @@ namespace MoreGamemodes
         public static void SetupOptionItem()
         {
             Chance = IntegerOptionItem.Create(700100, "Trapster", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(Palette.ImpostorRed)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Trapster])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(700101, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);

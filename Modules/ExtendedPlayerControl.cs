@@ -20,6 +20,12 @@ namespace MoreGamemodes
             return ClassicGamemode.instance.AllPlayersRole[player.PlayerId];
         }
 
+        public static CustomRole GetRole(this NetworkedPlayerInfo playerInfo)
+        {
+            if (ClassicGamemode.instance == null || !ClassicGamemode.instance.AllPlayersRole.ContainsKey(playerInfo.PlayerId)) return null;
+            return ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId];
+        }
+
         public static void RpcTeleport(this PlayerControl player, Vector2 position)
         {
             if (MeetingHud.Instance) return;
@@ -299,29 +305,29 @@ namespace MoreGamemodes
             if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 2) reactorId = 21;
             if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 4) reactorId = 58;
 
-            MessageWriter SabotageWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
-            SabotageWriter.Write(reactorId);
-            MessageExtensions.WriteNetObject(SabotageWriter, pc);
-            SabotageWriter.Write((byte)128);
-            AmongUsClient.Instance.FinishRpcImmediately(SabotageWriter);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
+            writer.Write(reactorId);
+            writer.WriteNetObject(pc);
+            writer.Write((byte)128);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
 
             new LateTask(() =>
             {
-                MessageWriter SabotageFixWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
-                SabotageFixWriter.Write(reactorId);
-                MessageExtensions.WriteNetObject(SabotageFixWriter, pc);
-                SabotageFixWriter.Write((byte)16);
-                AmongUsClient.Instance.FinishRpcImmediately(SabotageFixWriter);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
+                writer.Write(reactorId);
+                writer.WriteNetObject(pc);
+                writer.Write((byte)16);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
             }, duration, "Fix Desync Reactor");
 
             if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 4)
                 new LateTask(() =>
                 {
-                    MessageWriter SabotageFixWriter = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
-                    SabotageFixWriter.Write(reactorId);
-                    MessageExtensions.WriteNetObject(SabotageFixWriter, pc);
-                    SabotageFixWriter.Write((byte)17);
-                    AmongUsClient.Instance.FinishRpcImmediately(SabotageFixWriter);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
+                    writer.Write(reactorId);
+                    writer.WriteNetObject(pc);
+                    writer.Write((byte)17);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }, duration, "Fix Desync Reactor 2");
         }
 
@@ -348,6 +354,22 @@ namespace MoreGamemodes
             if (ventdistance.Count == 0) return null;
             var min = ventdistance.OrderBy(c => c.Value).FirstOrDefault();
             Vent target = min.Key;
+            return target;
+        }
+
+        public static DeadBody GetClosestDeadBody(this PlayerControl player)
+        {
+            Vector2 playerpos = player.transform.position;
+            Dictionary<DeadBody, float> bodydistance = new();
+            float dis;
+            foreach (DeadBody body in Object.FindObjectsOfType<DeadBody>())
+            {
+                dis = Vector2.Distance(playerpos, body.transform.position);
+                bodydistance.Add(body, dis);
+            }
+            if (bodydistance.Count == 0) return null;
+            var min = bodydistance.OrderBy(c => c.Value).FirstOrDefault();
+            DeadBody target = min.Key;
             return target;
         }
 
@@ -384,10 +406,12 @@ namespace MoreGamemodes
             {
                 if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && !classicMeeting)
                 {
-                    if (seer.GetRole().Role == CustomRoles.EvilGuesser)
+                    if (seer.GetRole().Role == CustomRoles.EvilGuesser || seer.GetRole().Role == CustomRoles.NiceGuesser)
                         name = Utils.ColorString(seer.GetRole().Color, player.PlayerId.ToString()) + " " + name;
                     if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                         name = "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n</size>" + name;
+                    if (player.Data.IsDead && seer.GetRole().Role == CustomRoles.Mortician)
+                        name += " " + Utils.ColorString(seer.GetRole().Color, "(" + Utils.DeathReasonToString(player.GetDeathReason()) + ")");
                 }
                 return name;
             }

@@ -575,12 +575,11 @@ When you set players to 16 or higher, still max 15 players can join.
 If you set cooldown to 0 or lower, you disable this function. 0 second cooldown don't working. Set this value to 0,001 seconds, if you want no kill cooldown.
 
 ## Credits
-1. Using some code from Town of Host
+1. Using much code from Town of Host
 https://github.com/tukasa0001/TownOfHost
 
-2. Some code from Town Of Host: The Other Roles (Project Lotus)
+2. Pet action from Town Of Host: The Other Roles
 https://github.com/discus-sions/TownOfHost-TheOtherRoles
-https://github.com/ImaMapleTree/Lotus
 
 3. Many features from TOHE
 https://github.com/0xDrMoe/TownofHost-Enhanced

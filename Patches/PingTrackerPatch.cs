@@ -2,6 +2,7 @@
 using UnityEngine;
 using TMPro;
 
+// https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/EAC.cs
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(PingTracker), nameof(PingTracker.Update))]

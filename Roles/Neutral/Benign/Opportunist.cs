@@ -9,10 +9,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Opportunist;
             BaseRole = BaseRoles.Crewmate;
             Player = player;
-            ColorUtility.TryParseHtmlString("#1dde16", out Color);
-            RoleName = "Opportunist";
-            RoleDescription = "Survive to win";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Opportunist];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
 
@@ -20,9 +17,8 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static void SetupOptionItem()
         {
-            ColorUtility.TryParseHtmlString("#1dde16", out Color c);
             Chance = IntegerOptionItem.Create(800100, "Opportunist", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(c)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Opportunist])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(800101, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);

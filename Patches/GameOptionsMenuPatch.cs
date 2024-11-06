@@ -6,6 +6,8 @@ using Object= UnityEngine.Object;
 
 namespace MoreGamemodes;
 
+// https://github.com/Yumenopai/TownOfHost_Y/blob/main/Patches/GameOptionsPatch.cs
+
 public static class ModGameOptionsMenu
 {
     public static int TabIndex = 0;

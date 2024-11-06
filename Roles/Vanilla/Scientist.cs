@@ -7,10 +7,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Scientist;
             BaseRole = BaseRoles.Scientist;
             Player = player;
-            Color = Palette.CrewmateBlue;
-            RoleName = "Scientist";
-            RoleDescription = "Access vitals at any time";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Scientist];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
     }

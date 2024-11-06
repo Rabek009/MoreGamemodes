@@ -7,10 +7,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Engineer;
             BaseRole = BaseRoles.Engineer;
             Player = player;
-            Color = Palette.CrewmateBlue;
-            RoleName = "Engineer";
-            RoleDescription = "Can use the vents";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Engineer];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
     }

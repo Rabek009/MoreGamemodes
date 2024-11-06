@@ -16,10 +16,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Phantom;
             BaseRole = BaseRoles.Phantom;
             Player = player;
-            Color = Palette.ImpostorRed;
-            RoleName = "Phantom";
-            RoleDescription = "Turn invisible";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Phantom];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
     }

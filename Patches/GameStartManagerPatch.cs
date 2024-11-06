@@ -72,7 +72,7 @@ namespace MoreGamemodes
         }
     }
 
-    // https://github.com/SuperNewRoles/SuperNewRoles/blob/master/SuperNewRoles/Patches/LobbyBehaviourPatch.cs
+    // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Patches/DleksPatch.cs
     [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Update))]
     public class LobbyBehaviourUpdatePatch
     {

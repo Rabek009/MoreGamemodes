@@ -415,11 +415,15 @@ namespace MoreGamemodes
                 return false;
             if (RoleblockTimer[killer.PlayerId] > 0f)
                 return false;
-            return killer.GetRole().OnCheckMurder(target) && target.GetRole().OnCheckMurderAsTarget(killer);
+            if (!killer.GetRole().OnCheckMurder(target) || !target.GetRole().OnCheckMurderAsTarget(killer))
+                return false;
+            if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
+            return true;
         }
 
         public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
         {
+            PlayerKiller[target.PlayerId] = killer.PlayerId;
             killer.GetRole().OnMurderPlayer(target);
             target.GetRole().OnMurderPlayerAsTarget(killer);
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -514,6 +518,11 @@ namespace MoreGamemodes
                 if (syncSettings)
                     pc.SyncPlayerSettings();
                 
+                if (pc.Data.IsDead)
+                    TimeSinceDeath[pc.PlayerId] += Time.fixedDeltaTime;
+                else
+                    TimeSinceDeath[pc.PlayerId] = 0f;
+
                 if (pc.Data.IsDead) continue;
                 pc.GetRole().OnFixedUpdate();
             }
@@ -527,7 +536,7 @@ namespace MoreGamemodes
                 return false;
             if (player.shouldAppearInvisible || player.invisibilityAlpha < 1f)
                 return false;
-            return player.GetRole().OnEnterVent(id);
+            return player.GetRole().OnEnterVent(id) && GameManager.Instance.LogicOptions.MapId != 3;
         }
 
         public override void OnCompleteTask(PlayerControl __instance)
@@ -549,6 +558,13 @@ namespace MoreGamemodes
             if (RoleblockTimer[player.PlayerId] > 0f)
                 return false;
             return player.GetRole().OnUpdateSystem(__instance, systemType, reader);
+        }
+
+        public override void OnAddVote(int srcClient, int clientId)
+        {
+            var player = AmongUsClient.Instance.GetClient(srcClient).Character;
+            var target = AmongUsClient.Instance.GetClient(clientId).Character;
+            player.GetRole().OnAddVote(target);
         }
 
         public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
@@ -587,6 +603,8 @@ namespace MoreGamemodes
             string postfix = "";
             if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                 prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "</size>\n";
+            if (Medic.IsShielded(player) && (player == seer || seer.GetRole().Role == CustomRoles.Medic))
+                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Medic], "+");
             if (player == seer && !player.Data.IsDead)
                 postfix += player.GetRole().GetNamePostfix();
             return prefix + name + postfix;
@@ -630,6 +648,8 @@ namespace MoreGamemodes
             IsRoleblocked = new Dictionary<byte, bool>();
             BlockedVents = new List<int>();
             IsOnPetAbilityCooldown = new Dictionary<byte, bool>();
+            PlayerKiller = new Dictionary<byte, byte>();
+            TimeSinceDeath = new Dictionary<byte, float>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 FreezeTimer[pc.PlayerId] = 0f;
@@ -639,6 +659,8 @@ namespace MoreGamemodes
                 IsBlinded[pc.PlayerId] = false;
                 IsRoleblocked[pc.PlayerId] = false;
                 IsOnPetAbilityCooldown[pc.PlayerId] = false;
+                PlayerKiller[pc.PlayerId] = byte.MaxValue;
+                TimeSinceDeath[pc.PlayerId] = 0f;
             }
         }
 
@@ -654,5 +676,7 @@ namespace MoreGamemodes
         public Dictionary<byte, bool> IsRoleblocked;
         public List<int> BlockedVents;
         public Dictionary<byte, bool> IsOnPetAbilityCooldown;
+        public Dictionary<byte, byte> PlayerKiller;
+        public Dictionary<byte, float> TimeSinceDeath;
     }
 }

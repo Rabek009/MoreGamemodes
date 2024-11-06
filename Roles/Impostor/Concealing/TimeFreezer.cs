@@ -75,10 +75,7 @@ namespace MoreGamemodes
             Role = CustomRoles.TimeFreezer;
             BaseRole = BaseRoles.Phantom;
             Player = player;
-            Color = Palette.ImpostorRed;
-            RoleName = "Time Freezer";
-            RoleDescription = "Stop time to make sneaky kills";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.TimeFreezer];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
             AbilityDuration = -1f;
             TimeSinceAbilityUse = 0f;
@@ -96,7 +93,7 @@ namespace MoreGamemodes
         public static void SetupOptionItem()
         {
             Chance = IntegerOptionItem.Create(500100, "Time freezer", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(Palette.ImpostorRed)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.TimeFreezer])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(500101, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);

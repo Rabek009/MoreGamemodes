@@ -114,6 +114,16 @@ namespace MoreGamemodes
         }
     }
 
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.CanKick))]
+    class InnerNetClientCanKickPatch
+    {
+        public static bool Prefix(InnerNetClient __instance, ref bool __result)
+        {
+            __result = __instance.AmHost;
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnBecomeHost))]
     class OnBecomeHostPatch
     {
@@ -146,10 +156,28 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.AddVote))]
     class AddVotePatch
     {
-        public static bool Prefix(VoteBanSystem __instance)
+        public static bool Prefix(VoteBanSystem __instance, [HarmonyArgument(0)] int srcClient, [HarmonyArgument(1)] int clientId)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            new LateTask(() => __instance.SetDirtyBit(1U), 0.5f);
+            CustomGamemode.Instance.OnAddVote(srcClient, clientId);
+            if (__instance != VoteBanSystem.Instance) return false;
+            VoteBanSystem.Instance = Object.Instantiate(AmongUsClient.Instance.VoteBanPrefab);
+			AmongUsClient.Instance.Spawn(VoteBanSystem.Instance, -2, SpawnFlags.None);
+            new LateTask(() => {
+                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                writer.StartMessage(5);
+                writer.Write(AmongUsClient.Instance.GameId);
+			    writer.StartMessage(5);
+			    writer.WritePacked(__instance.NetId);
+			    writer.EndMessage();
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
+            }, 0.5f);
+            new LateTask(() => {
+                AmongUsClient.Instance.RemoveNetObject(__instance);
+                Object.Destroy(__instance.gameObject);
+            }, 5f);
             return false;
         }
     }

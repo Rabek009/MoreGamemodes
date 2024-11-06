@@ -1,3 +1,4 @@
+// https://github.com/tukasa0001/TownOfHost/blob/main/Modules/OptionItems/BooleanOptionItem.cs
 namespace MoreGamemodes
 {
     public class BooleanOptionItem : OptionItem

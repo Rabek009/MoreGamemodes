@@ -1,15 +1,23 @@
 using UnityEngine;
 using Hazel;
 using AmongUs.GameOptions;
-using System;
 
 namespace MoreGamemodes
 {
-    public class Sheriff : CustomRole
+    public class Medic : CustomRole
     {
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
-            Cooldown = KillCooldown.GetFloat();
+            Cooldown = ShieldCooldown.GetFloat();
+        }
+
+        public override void OnHudUpate(HudManager __instance)
+        {
+            base.OnHudUpate(__instance);
+            if (Player.Data.IsDead) return;
+            __instance.KillButton.OverrideText("Shield");
+            if (AbilityUses < 1f)
+                __instance.KillButton.SetDisabled();
         }
 
         public override void OnIntroDestroy()
@@ -31,7 +39,7 @@ namespace MoreGamemodes
                 Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
                 Main.NameColors[(Player.PlayerId, Player.PlayerId)] = Color.white;
-                new LateTask(() => Player.RpcSetKillTimer(Math.Max(Cooldown, 0.001f)), 0.5f);
+                new LateTask(() => Player.RpcSetKillTimer(Cooldown > 0.001f ? Cooldown : 0.001f), 0.5f);
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {
@@ -53,19 +61,14 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl target)
         {
+            if (IsShielded(target)) return false;
             if (!Main.IsModded[Player.PlayerId] && Cooldown > 0f) return false;
-            if (!CanKill(target))
-            {
-                Player.RpcSetDeathReason(DeathReasons.Misfire);
-                Player.RpcMurderPlayer(Player, true);
-                return MisfireKillsTarget.GetBool();
-            }
-            return true;
-        }
-
-        public override void OnMurderPlayer(PlayerControl target)
-        {
-            Cooldown = KillCooldown.GetFloat();
+            if (AbilityUses < 1f) return false;
+            ShieldedPlayer = target.PlayerId;
+            Player.RpcSetAbilityUses(0f);
+            Player.RpcSetKillTimer(ShieldCooldown.GetFloat());
+            Cooldown = ShieldCooldown.GetFloat();
+            return false;
         }
 
         public override void OnMurderPlayerAsTarget(PlayerControl killer)
@@ -113,6 +116,22 @@ namespace MoreGamemodes
                 Cooldown -= Time.fixedDeltaTime;
             if (Cooldown < 0f)
                 Cooldown = 0f;
+            if (ShieldedPlayer == byte.MaxValue) return;
+            if (Player.Data.IsDead)
+            {
+                ShieldedPlayer = byte.MaxValue;
+                Player.RpcSetAbilityUses(-1f);
+                return;
+            }
+            var player = Utils.GetPlayerById(ShieldedPlayer);
+            if (player == null || player.Data == null || player.Data.IsDead || player.Data.Disconnected)
+            {
+                ShieldedPlayer = byte.MaxValue;
+                Player.RpcSetAbilityUses(1f);
+                Player.RpcSetKillTimer(ShieldCooldown.GetFloat());
+                Cooldown = ShieldCooldown.GetFloat();
+                Player.Notify(Utils.ColorString(Color.red, "Shielded player died!"));
+            }
         }
 
         public override bool OnEnterVent(int id)
@@ -128,7 +147,7 @@ namespace MoreGamemodes
 
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
         {
-            opt.SetFloat(FloatOptionNames.KillCooldown, KillCooldown.GetFloat());
+            opt.SetFloat(FloatOptionNames.KillCooldown, ShieldCooldown.GetFloat());
             return opt;
         }
 
@@ -139,65 +158,95 @@ namespace MoreGamemodes
             {
                 return Utils.ColorString(Color, "\n<size=1.8>Mode: Task\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>\n") +
-                    Utils.ColorString(Color.red, "<size=1.8>Kill cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
+                    Utils.ColorString(Color.red, "<size=1.8>Shield cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {
-                return Utils.ColorString(Color, "\n<size=1.8>Mode: Kill\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
+                return Utils.ColorString(Color, "\n<size=1.8>Mode: Shield\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>");
             }
             return "";
         }
 
-        public bool CanKill(PlayerControl target)
+        public bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            if (target.GetRole().Role == CustomRoles.Jester) return CanKillJester.GetBool();
-            return target.GetRole().IsImpostor() || (target.GetRole().IsNeutralKilling() && CanKillNeutralKilling.GetBool()) ||
-                (target.GetRole().IsNeutralEvil() && CanKillNeutralEvil.GetBool()) || (target.GetRole().IsNeutralBenign() && CanKillNeutralBenign.GetBool());
+            if (target.PlayerId == ShieldedPlayer)
+            {
+                Player.RpcReactorFlash(0.3f, Color);
+                Player.Notify(Utils.ColorString(Color, "Someone attacked shielded player!"));
+                return false;
+            }
+            return true;
         }
 
-        public Sheriff(PlayerControl player)
+        public static bool OnGlobalCheckMurder(PlayerControl killer, PlayerControl target)
         {
-            Role = CustomRoles.Sheriff;
+            if (target == null) return true;
+            bool result = true;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.GetRole().Role == CustomRoles.Medic && !pc.Data.IsDead)
+                {
+                    Medic medicRole = pc.GetRole() as Medic;
+                    if (medicRole == null) continue;
+                    if (!medicRole.OnCheckMurder(killer, target))
+                        result = false;
+                }
+            }
+            if (!result && ResetKillCooldown.GetBool())
+                killer.RpcGuardAndKill(target);
+            else if (!result)
+                killer.RpcSetKillTimer(1f);
+            return result;
+        }
+
+        public static bool IsShielded(PlayerControl player)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.GetRole().Role == CustomRoles.Medic && !pc.Data.IsDead)
+                {
+                    Medic medicRole = pc.GetRole() as Medic;
+                    if (medicRole == null) continue;
+                    if (medicRole.ShieldedPlayer == player.PlayerId)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public Medic(PlayerControl player)
+        {
+            Role = CustomRoles.Medic;
             BaseRole = BaseRoles.Crewmate;
             Player = player;
             Utils.SetupRoleInfo(this);
-            AbilityUses = -1f;
+            AbilityUses = 1f;
             Cooldown = 10f;
+            ShieldedPlayer = byte.MaxValue;
         }
 
         public float Cooldown;
+        public byte ShieldedPlayer;
 
         public static OptionItem Chance;
         public static OptionItem Count;
-        public static OptionItem KillCooldown;
-        public static OptionItem MisfireKillsTarget;
-        public static OptionItem CanKillNeutralKilling;
-        public static OptionItem CanKillNeutralEvil;
-        public static OptionItem CanKillNeutralBenign;
-        public static OptionItem CanKillJester;
+        public static OptionItem ShieldCooldown;
+        public static OptionItem ResetKillCooldown;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(200100, "Sheriff", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Sheriff])
+            Chance = IntegerOptionItem.Create(300200, "Medic", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Medic])
                 .SetValueFormat(OptionFormat.Percent);
-            Count = IntegerOptionItem.Create(200101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
+            Count = IntegerOptionItem.Create(300201, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            KillCooldown = FloatOptionItem.Create(200102, "Kill cooldown", new(10f, 60f, 2.5f), 25f, TabGroup.CrewmateRoles, false)
+            ShieldCooldown = FloatOptionItem.Create(300202, "Shield cooldown", new(5f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            MisfireKillsTarget = BooleanOptionItem.Create(200103, "Misfire kills target", false, TabGroup.CrewmateRoles, false)
+            ResetKillCooldown = BooleanOptionItem.Create(300203, "Reset kill cooldown", false, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanKillNeutralKilling = BooleanOptionItem.Create(200104, "Can kill neutral killing", true, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            CanKillNeutralEvil = BooleanOptionItem.Create(200105, "Can kill neutral evil", true, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            CanKillNeutralBenign = BooleanOptionItem.Create(200106, "Can kill neutral benign", false, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            CanKillJester = BooleanOptionItem.Create(200107, "Can kill jester", false, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            Options.RolesChance[CustomRoles.Sheriff] = Chance;
-            Options.RolesCount[CustomRoles.Sheriff] = Count;
+            Options.RolesChance[CustomRoles.Medic] = Chance;
+            Options.RolesCount[CustomRoles.Medic] = Count;
         }
     }
 }

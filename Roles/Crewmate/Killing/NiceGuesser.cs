@@ -9,16 +9,15 @@ using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
-    public class EvilGuesser : CustomRole
+    public class NiceGuesser : CustomRole
     {
         public override bool CanGuess(PlayerControl target, CustomRoles role)
         {
-            if (target.GetRole().IsImpostor()) return false; 
-            if (role == CustomRoles.Crewmate) return CanGuessCrewmateRole.GetBool();
-            return CustomRolesHelper.IsCrewmate(role) || (CustomRolesHelper.IsNeutralKilling(role) && CanGuessNeutralKilling.GetBool()) || (CustomRolesHelper.IsNeutralEvil(role) && CanGuessNeutralEvil.GetBool()) ||
+            if (target == Player) return false;
+            return CustomRolesHelper.IsImpostor(role) || (CustomRolesHelper.IsNeutralKilling(role) && CanGuessNeutralKilling.GetBool()) || (CustomRolesHelper.IsNeutralEvil(role) && CanGuessNeutralEvil.GetBool()) ||
             (CustomRolesHelper.IsNeutralBenign(role) && CanGuessNeutralBenign.GetBool());
         }
-        
+
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/GuessManager.cs#L638
         public static void CreateMeetingButton(MeetingHud __instance)
         {
@@ -27,7 +26,7 @@ namespace MoreGamemodes
                 if (pva.transform.FindChild("MeetingButton") != null)
                     Object.Destroy(pva.transform.FindChild("MeetingButton").gameObject);
                 var player = GameData.Instance.GetPlayerById(pva.TargetPlayerId);
-                if (player.IsDead || player.Disconnected || player.ClientId == AmongUsClient.Instance.ClientId || player.GetRole().IsImpostor() || PlayerControl.LocalPlayer.Data.IsDead) continue;
+                if (player.IsDead || player.Disconnected || player.ClientId == AmongUsClient.Instance.ClientId || PlayerControl.LocalPlayer.Data.IsDead) continue;
                 GameObject template = pva.Buttons.transform.Find("CancelButton").gameObject;
                 GameObject targetBox = Object.Instantiate(template, pva.transform);
                 targetBox.name = "MeetingButton";
@@ -83,10 +82,9 @@ namespace MoreGamemodes
             ControllerManager.Instance.CloseOverlayMenu(minigame.name);
             System.Collections.Generic.List<(int, string, Color)> tabs = new();
             tabs.Add((0, "Vanilla roles", Color.yellow));
-            tabs.Add((1, "Crewmate investigative", Palette.CrewmateBlue));
-            tabs.Add((2, "Crewmate killing", Palette.CrewmateBlue));
-            tabs.Add((3, "Crewmate protective", Palette.CrewmateBlue));
-            tabs.Add((4, "Crewmate support", Palette.CrewmateBlue));
+            tabs.Add((5, "Impostor concealing", Palette.ImpostorRed));
+            tabs.Add((6, "Impostor killing", Palette.ImpostorRed));
+            tabs.Add((7, "Impostor support", Palette.ImpostorRed));
             if (CanGuessNeutralBenign.GetBool())
                 tabs.Add((8, "Neutral benign", Color.gray));
             if (CanGuessNeutralEvil.GetBool())
@@ -141,8 +139,8 @@ namespace MoreGamemodes
             {
                 foreach (var role in Enum.GetValues<RoleTypes>())
                 {
-                    if (role.IsImpostor() || (role == RoleTypes.Crewmate && !CanGuessCrewmateRole.GetBool()) || role == RoleTypes.GuardianAngel) continue;
-                    if (role != RoleTypes.Crewmate && GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(role) <= 0) continue;
+                    if (!role.IsImpostor() || role == RoleTypes.GuardianAngel) continue;
+                    if (role != RoleTypes.Impostor && GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(role) <= 0) continue;
                     int num = i % 3;
 			        int num2 = i / 3;
                     ShapeshifterPanel shapeshifterPanel = Object.Instantiate(minigame.PanelPrefab, minigame.transform);
@@ -162,7 +160,7 @@ namespace MoreGamemodes
                     shapeshifterPanel.LevelNumberText.text = "<font=\"VCR SDF\"><size=15>■";
                     shapeshifterPanel.LevelNumberText.transform.localPosition += new Vector3(0.2f, -0.02f, -10f); 
                     shapeshifterPanel.NameText.transform.localPosition = Vector3.zero;
-			        shapeshifterPanel.NameText.color = Palette.CrewmateBlue;
+			        shapeshifterPanel.NameText.color = Palette.ImpostorRed;
 			        minigame.potentialVictims.Add(shapeshifterPanel);
 			        list.Add(shapeshifterPanel.Button);
                     ++i;
@@ -253,10 +251,10 @@ namespace MoreGamemodes
             minigame.Close();
         }
 
-        public EvilGuesser(PlayerControl player)
+        public NiceGuesser(PlayerControl player)
         {
-            Role = CustomRoles.EvilGuesser;
-            BaseRole = BaseRoles.Impostor;
+            Role = CustomRoles.NiceGuesser;
+            BaseRole = BaseRoles.Crewmate;
             Player = player;
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
@@ -267,24 +265,21 @@ namespace MoreGamemodes
         public static OptionItem CanGuessNeutralKilling;
         public static OptionItem CanGuessNeutralEvil;
         public static OptionItem CanGuessNeutralBenign;
-        public static OptionItem CanGuessCrewmateRole;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(600100, "Evil guesser", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.EvilGuesser])
+            Chance = IntegerOptionItem.Create(200200, "Nice guesser", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.NiceGuesser])
                 .SetValueFormat(OptionFormat.Percent);
-            Count = IntegerOptionItem.Create(600101, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
+            Count = IntegerOptionItem.Create(200201, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanGuessNeutralKilling = BooleanOptionItem.Create(600102, "Can guess neutral killing", true, TabGroup.ImpostorRoles, false)
+            CanGuessNeutralKilling = BooleanOptionItem.Create(200202, "Can guess neutral killing", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanGuessNeutralEvil = BooleanOptionItem.Create(600103, "Can guess neutral evil", true, TabGroup.ImpostorRoles, false)
+            CanGuessNeutralEvil = BooleanOptionItem.Create(200203, "Can guess neutral evil", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanGuessNeutralBenign = BooleanOptionItem.Create(600104, "Can guess neutral benign", true, TabGroup.ImpostorRoles, false)
+            CanGuessNeutralBenign = BooleanOptionItem.Create(200204, "Can guess neutral benign", false, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanGuessCrewmateRole = BooleanOptionItem.Create(600105, "Can guess \"Crewmate\" role", true, TabGroup.ImpostorRoles, false)
-                .SetParent(Chance);
-            Options.RolesChance[CustomRoles.EvilGuesser] = Chance;
-            Options.RolesCount[CustomRoles.EvilGuesser] = Count;
+            Options.RolesChance[CustomRoles.NiceGuesser] = Chance;
+            Options.RolesCount[CustomRoles.NiceGuesser] = Count;
         }
     }
 }

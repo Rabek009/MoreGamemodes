@@ -1,3 +1,4 @@
+// https://github.com/Yumenopai/TownOfHost_Y/blob/main/Modules/OptionItem/TextOptionItem.cs
 namespace MoreGamemodes
 {
     public class TextOptionItem : OptionItem

@@ -7,10 +7,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Crewmate;
             BaseRole = BaseRoles.Crewmate;
             Player = player;
-            Color = Palette.CrewmateBlue;
-            RoleName = "Crewmate";
-            RoleDescription = "Do your tasks";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Crewmate];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
     }

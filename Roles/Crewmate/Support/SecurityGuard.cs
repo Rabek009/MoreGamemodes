@@ -105,7 +105,7 @@ namespace MoreGamemodes
 
         public override string GetNamePostfix()
         {
-            return Utils.ColorString(Color.red, "\n<size=1.8>Block vent cooldown: " + (int)(Cooldown + 0.99f) + "</size>");
+            return Utils.ColorString(Color.red, "\n<size=1.8>Block vent cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
         }
 
         public bool SeeKillFlash()
@@ -127,10 +127,7 @@ namespace MoreGamemodes
             Role = CustomRoles.SecurityGuard;
             BaseRole = BaseRoles.Crewmate;
             Player = player;
-            ColorUtility.TryParseHtmlString("#96944e", out Color);
-            RoleName = "Security Guard";
-            RoleDescription = "Block vents and gain extra info from security";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.SecurityGuard];
+            Utils.SetupRoleInfo(this);
             AbilityUses = InitialAbilityUseLimit.GetInt();
             Cooldown = 10f;
             UsingCameras = false;
@@ -145,25 +142,24 @@ namespace MoreGamemodes
         public static OptionItem InitialAbilityUseLimit;
         public static OptionItem AbilityUseGainWithEachTaskCompleted;
         public static OptionItem HideCameraUsage;
-        public static OptionItem CanGetGuessed;
+        public static OptionItem CanBeGuessed;
         public static void SetupOptionItem()
         {
-            ColorUtility.TryParseHtmlString("#96944e", out Color c);
             Chance = IntegerOptionItem.Create(400100, "Security guard", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(c)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.SecurityGuard])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(400101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             BlockVentCooldown = FloatOptionItem.Create(400102, "Block vent cooldown", new(10f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            InitialAbilityUseLimit = FloatOptionItem.Create(400103, "Initial ability use limit", new(1f, 15f, 1f), 2f, TabGroup.CrewmateRoles, false)
+            InitialAbilityUseLimit = FloatOptionItem.Create(400103, "Initial ability use limit", new(1f, 14f, 1f), 2f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(400104, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.5f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             HideCameraUsage = BooleanOptionItem.Create(400105, "Hide camera usage", false, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanGetGuessed = BooleanOptionItem.Create(400106, "Can get guessed", true, TabGroup.CrewmateRoles, false)
+            CanBeGuessed = BooleanOptionItem.Create(400106, "Can be guessed", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.SecurityGuard] = Chance;
             Options.RolesCount[CustomRoles.SecurityGuard] = Count;

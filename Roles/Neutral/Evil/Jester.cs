@@ -16,6 +16,16 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnCastVote(MeetingHud __instance, byte suspectPlayerId)
+        {
+            if (suspectPlayerId == Player.PlayerId && !CanVoteForHimself.GetBool())
+            {
+                Player.RpcSendMessage("You can't vote for yourself!", "Jester");
+                return false;
+            }
+            return true;
+        }
+
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
         {
             if (HasImpostorVision.GetBool())
@@ -35,10 +45,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Jester;
             BaseRole = CanUseVents.GetBool() ? BaseRoles.Engineer : BaseRoles.Crewmate;
             Player = player;
-            ColorUtility.TryParseHtmlString("#db72e0", out Color);
-            RoleName = "Jester";
-            RoleDescription = "Get voted out";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Jester];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
 
@@ -46,17 +53,19 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static OptionItem CanUseVents;
         public static OptionItem HasImpostorVision;
+        public static OptionItem CanVoteForHimself;
         public static void SetupOptionItem()
         {
-            ColorUtility.TryParseHtmlString("#db72e0", out Color c);
             Chance = IntegerOptionItem.Create(900100, "Jester", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(c)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Jester])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(900101, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             CanUseVents = BooleanOptionItem.Create(900102, "Can use vents", false, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             HasImpostorVision = BooleanOptionItem.Create(900103, "Has impostor vision", false, TabGroup.NeutralRoles, false)
+                .SetParent(Chance);
+            CanVoteForHimself = BooleanOptionItem.Create(900104, "Can vote for himself", true, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Jester] = Chance;
             Options.RolesCount[CustomRoles.Jester] = Count;

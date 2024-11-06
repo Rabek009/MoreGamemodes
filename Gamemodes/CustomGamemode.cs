@@ -197,6 +197,11 @@ namespace MoreGamemodes
             
         }
 
+        public virtual void OnAddVote(int srcClient, int clientId)
+        {
+            
+        }
+
         public virtual IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
         {
             return opt;

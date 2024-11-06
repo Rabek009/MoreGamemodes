@@ -1,3 +1,4 @@
+// https://github.com/tukasa0001/TownOfHost/blob/main/Modules/OptionItems/IntegerOptionItem.cs
 namespace MoreGamemodes
 {
     public class IntegerOptionItem : OptionItem

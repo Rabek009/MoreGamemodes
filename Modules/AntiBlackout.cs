@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Hazel;
 using AmongUs.GameOptions;
 
+// https://github.com/tukasa0001/TownOfHost/blob/main/Modules/AntiBlackout.cs
 namespace MoreGamemodes
 {
     public static class AntiBlackout

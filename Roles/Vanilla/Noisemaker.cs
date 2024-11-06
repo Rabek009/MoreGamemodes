@@ -7,10 +7,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Noisemaker;
             BaseRole = BaseRoles.Noisemaker;
             Player = player;
-            Color = Palette.CrewmateBlue;
-            RoleName = "Noisemaker";
-            RoleDescription = "Send out an alert when killed";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Noisemaker];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
     }

@@ -3,6 +3,7 @@ using HarmonyLib;
 using UnityEngine;
 using System.Collections.Generic;
 
+// https://github.com/tukasa0001/TownOfHost/blob/main/Modules/OptionHolder.cs
 namespace MoreGamemodes
 {
     [HarmonyPatch]
@@ -1112,14 +1113,18 @@ namespace MoreGamemodes
             CrewmateInvestigative = TextOptionItem.Create(100000, "Crewmate investigative", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
             Investigator.SetupOptionItem();
+            Mortician.SetupOptionItem();
             CrewmateKilling = TextOptionItem.Create(200000, "Crewmate killing", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
+            NiceGuesser.SetupOptionItem();
             Sheriff.SetupOptionItem();
             CrewmateProtective = TextOptionItem.Create(300000, "Crewmate protective", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
             Immortal.SetupOptionItem();
+            Medic.SetupOptionItem();
             CrewmateSupport = TextOptionItem.Create(400000, "Crewmate support", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
+            Mutant.SetupOptionItem();
             SecurityGuard.SetupOptionItem();
 
             //Impostor roles

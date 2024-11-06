@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BepInEx.Configuration;
 using UnityEngine;
 
+// https://github.com/tukasa0001/TownOfHost/blob/main/Modules/OptionItems/OptionItem.cs
 namespace MoreGamemodes
 {
     public abstract class OptionItem

@@ -7,10 +7,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Shapeshifter;
             BaseRole = BaseRoles.Shapeshifter;
             Player = player;
-            Color = Palette.ImpostorRed;
-            RoleName = "Shapeshifter";
-            RoleDescription = "Disguise yourself";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Shapeshifter];
+            Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
         }
     }

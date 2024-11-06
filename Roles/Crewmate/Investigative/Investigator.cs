@@ -75,7 +75,6 @@ namespace MoreGamemodes
             if (BaseRole == BaseRoles.DesyncImpostor)
             {
                 BaseRole = BaseRoles.Crewmate;
-                Player.RpcSetDesyncRole(RoleTypes.Crewmate, Player);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.GetRole().BaseRole is BaseRoles.Impostor && !pc.Data.IsDead)
@@ -169,10 +168,7 @@ namespace MoreGamemodes
             Role = CustomRoles.Investigator;
             BaseRole = BaseRoles.Crewmate;
             Player = player;
-            ColorUtility.TryParseHtmlString("#118385", out Color);
-            RoleName = "Investigator";
-            RoleDescription = "See if someone is good or evil";
-            RoleDescriptionLong = CustomRolesHelper.RoleDescriptions[CustomRoles.Investigator];
+            Utils.SetupRoleInfo(this);
             AbilityUses = InitialAbilityUseLimit.GetInt();
             Cooldown = 10f;
         }
@@ -190,9 +186,8 @@ namespace MoreGamemodes
         public static OptionItem AbilityUseGainWithEachTaskCompleted;
         public static void SetupOptionItem()
         {
-            ColorUtility.TryParseHtmlString("#118385", out Color c);
             Chance = IntegerOptionItem.Create(100100, "Investigator", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(c)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Investigator])
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(100101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);

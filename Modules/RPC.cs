@@ -46,6 +46,7 @@ namespace MoreGamemodes
         SetAbilityUses,
         BlockVent,
         SetPetAbilityCooldown,
+        GuessPlayer
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -193,6 +194,9 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.SetPetAbilityCooldown:
                     __instance.SetPetAbilityCooldown(reader.ReadBoolean());
+                    break;
+                case CustomRPC.GuessPlayer:
+                    __instance.GuessPlayer();
                     break;
             }
         }
@@ -606,6 +610,12 @@ namespace MoreGamemodes
             ClassicGamemode.instance.IsOnPetAbilityCooldown[player.PlayerId] = onCooldown;
         }
 
+        public static void GuessPlayer(this PlayerControl player)
+        {
+            SoundManager.Instance.PlaySound(player.KillSfx, false, 0.8f);
+            HudManager.Instance.KillOverlay.ShowKillAnimation(player.Data, player.Data);
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -902,6 +912,13 @@ namespace MoreGamemodes
             player.SetPetAbilityCooldown(onCooldown);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetPetAbilityCooldown, SendOption.Reliable, -1);
             writer.Write(onCooldown);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcGuessPlayer(this PlayerControl player)
+        {
+            player.GuessPlayer();
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.GuessPlayer, SendOption.Reliable, -1);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

@@ -3,6 +3,8 @@ using Hazel;
 
 namespace MoreGamemodes
 {
+    // https://github.com/discus-sions/TownOfHost-TheOtherRoles/blob/main/Patches/PetActionsPatch.cs
+    // Thanks to ImaMapleTree
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.TryPet))]
     class TryPetPatch
     {

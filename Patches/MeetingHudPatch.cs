@@ -1,4 +1,6 @@
 ﻿using HarmonyLib;
+using AmongUs.GameOptions;
+using UnityEngine;
 
 namespace MoreGamemodes
 {
@@ -7,6 +9,13 @@ namespace MoreGamemodes
     {
         public static void Postfix(MeetingHud __instance)
         {
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+            {
+                if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.EvilGuesser)
+                    EvilGuesser.CreateMeetingButton(__instance);
+                if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.NiceGuesser)
+                    NiceGuesser.CreateMeetingButton(__instance);
+            }
             if (!AmongUsClient.Instance.AmHost) return;
 
             foreach (var pva in __instance.playerStates)
@@ -28,6 +37,7 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             AntiBlackout.SetIsDead();
+            AntiBlackout.RestoreIsDead(doSend: false);
             if (RandomItemsGamemode.instance != null)
                 RandomItemsGamemode.instance.CamouflageTimer = -1f;
             if (Options.EnableRandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
@@ -56,6 +66,13 @@ namespace MoreGamemodes
         public static bool Prefix(MeetingHud __instance, [HarmonyArgument(0)] byte srcPlayerId, [HarmonyArgument(1)] byte suspectPlayerId)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            var player = GameData.Instance.GetPlayerById(suspectPlayerId);
+            if (player != null && (player.IsDead || player.Disconnected))
+            {
+                var voter = Utils.GetPlayerById(srcPlayerId);
+                __instance.RpcClearVote(voter.GetClientId());
+                return false;
+            }
             bool canceled = !CustomGamemode.Instance.OnCastVote(__instance, srcPlayerId, suspectPlayerId);
             if (canceled)
             {
@@ -63,6 +80,57 @@ namespace MoreGamemodes
                 __instance.RpcClearVote(voter.GetClientId());
             }
             return !canceled;
+        }
+    }
+
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.UpdateButtons))]
+    class UpdateButtonsPatch
+    {
+        public static bool Prefix(MeetingHud __instance)
+        {
+            if (PlayerControl.LocalPlayer.Data.IsDead && !__instance.amDead)
+		    {
+			    __instance.SetForegroundForDead();
+		    }
+			for (int i = 0; i < __instance.playerStates.Length; i++)
+			{
+				PlayerVoteArea playerVoteArea = __instance.playerStates[i];
+				NetworkedPlayerInfo playerById = GameData.Instance.GetPlayerById(playerVoteArea.TargetPlayerId);
+				if (playerById == null)
+				{
+					playerVoteArea.SetDisabled();
+				}
+				else
+				{
+					bool flag = playerById.Disconnected || playerById.IsDead;
+					if (flag != playerVoteArea.AmDead)
+					{
+						playerVoteArea.SetDead(__instance.reporterId == playerById.PlayerId, flag, playerById.Role.Role == RoleTypes.GuardianAngel);
+						__instance.SetDirtyBit(1U);
+                        if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+                        {
+                            if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.EvilGuesser)
+                                EvilGuesser.CreateMeetingButton(__instance);
+                            if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.NiceGuesser)
+                                NiceGuesser.CreateMeetingButton(__instance);
+                        }
+					}
+				}
+			}
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(ShapeshifterMinigame), nameof(ShapeshifterMinigame.OnDisable))]
+    class ShapeshifterMinigameOnDisablePatch
+    {
+        public static void Postfix(ShapeshifterMinigame __instance)
+        {
+            if (MeetingHud.Instance != null && __instance.gameObject.name == "GuessMenu")
+            {
+                foreach (var pva in MeetingHud.Instance.playerStates)
+                    pva.transform.localPosition -= new Vector3(0f, 100f, 0f);
+            }
         }
     }
 }

@@ -33,7 +33,6 @@ namespace MoreGamemodes
                     exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
                 return;
             }
-            AntiBlackout.RestoreIsDead(doSend: false);
             if (exiled != null)
                 exiled.IsDead = true;
             if (Options.EnableMidGameChat.GetBool() || (AntiBlackout.ShowDoubleAnimation && exiled != null))
