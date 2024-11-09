@@ -38,6 +38,9 @@ namespace MoreGamemodes
                 {
                     case Gamemodes.Classic:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        foreach (var addOn in ClassicGamemode.instance.AllPlayersAddOns[playerInfo.PlayerId])
+                            lastResult += Utils.ColorString(addOn.Color, addOn.AddOnName) + " ";
+                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText()) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
@@ -131,6 +134,8 @@ namespace MoreGamemodes
                 {
                     case Gamemodes.Classic:
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
+                        foreach (var addOn in ClassicGamemode.instance.AllPlayersAddOns[playerInfo.PlayerId])
+                            lastResult += Utils.ColorString(addOn.Color, addOn.AddOnName) + " ";
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText()) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";

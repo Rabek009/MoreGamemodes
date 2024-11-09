@@ -235,9 +235,19 @@ namespace MoreGamemodes
             return false;
         }
 
+        public virtual bool CanGuess(PlayerControl target, AddOns addOn)
+        {
+            return false;
+        }
+
         public virtual bool CheckEndCriteria()
         {
             return false;
+        }
+
+        public virtual bool IsCompatible(AddOns addOn)
+        {
+            return true;
         }
 
         public CustomRoles Role;

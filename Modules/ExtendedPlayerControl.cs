@@ -26,6 +26,28 @@ namespace MoreGamemodes
             return ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId];
         }
 
+        public static List<AddOn> GetAddOns(this PlayerControl player)
+        {
+            if (ClassicGamemode.instance == null || !ClassicGamemode.instance.AllPlayersAddOns.ContainsKey(player.PlayerId)) return null;
+            return ClassicGamemode.instance.AllPlayersAddOns[player.PlayerId];
+        }
+
+        public static List<AddOn> GetAddOns(this NetworkedPlayerInfo playerInfo)
+        {
+            if (ClassicGamemode.instance == null || !ClassicGamemode.instance.AllPlayersAddOns.ContainsKey(playerInfo.PlayerId)) return null;
+            return ClassicGamemode.instance.AllPlayersAddOns[playerInfo.PlayerId];
+        }
+
+        public static bool HasAddOn(this PlayerControl player, AddOns addOn)
+        {
+            foreach (var addon in player.GetAddOns())
+            {
+                if (addon.Type == addOn)
+                    return true;
+            }
+            return false;
+        }
+
         public static void RpcTeleport(this PlayerControl player, Vector2 position)
         {
             if (MeetingHud.Instance) return;
@@ -522,6 +544,33 @@ namespace MoreGamemodes
             MeetingRoomManager.Instance.AssignSelf(player, target);
             DestroyableSingleton<HudManager>.Instance.OpenMeetingRoom(player);
 		    player.RpcStartMeeting(target);
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+            {
+                new LateTask(() => {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        ClassicGamemode.instance.FreezeTimer[pc.PlayerId] = 0f;
+                        ClassicGamemode.instance.BlindTimer[pc.PlayerId] = 0f;
+                        ClassicGamemode.instance.RoleblockTimer[pc.PlayerId] = 0f;
+                        ClassicGamemode.instance.IsFrozen[pc.PlayerId] = false;
+                        ClassicGamemode.instance.IsBlinded[pc.PlayerId] = false;
+                        if (ClassicGamemode.instance.IsRoleblocked[pc.PlayerId])
+                            pc.RpcSetRoleblock(false);
+                        pc.GetRole().OnMeeting();
+                        foreach (var addOn in pc.GetAddOns())
+                            addOn.OnMeeting();
+                        Utils.SyncAllSettings();
+                        Utils.SetAllVentInteractions();
+                    }
+                }, 0.01f);
+                new LateTask(() => {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        foreach (var ar in PlayerControl.AllPlayerControls)
+                            pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true, true), ar, true);
+                    }
+                }, 0.5f);
+            }
         }
 
         public static void RpcRevive(this PlayerControl player)

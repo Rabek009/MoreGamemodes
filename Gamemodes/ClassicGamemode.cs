@@ -19,6 +19,8 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 pc.GetRole().OnExile(exiled);
+                foreach (var addOn in pc.GetAddOns())
+                    addOn.OnExile(exiled);
                 pc.RpcResetAbilityCooldown();
             } 
         }
@@ -34,6 +36,8 @@ namespace MoreGamemodes
             if (!player.GetRole().CanUseKillButton() && player.GetRole().ForceKillButton() && !player.Data.IsDead)
                 __instance.KillButton.ToggleVisible(true);
             player.GetRole().OnHudUpate(__instance);
+            foreach (var addOn in player.GetAddOns())
+                addOn.OnHudUpate(__instance);
             if (IsRoleblocked[player.PlayerId])
             {
                 __instance.AbilityButton.SetDisabled();
@@ -108,12 +112,21 @@ namespace MoreGamemodes
             __instance.RoleText.color = role.Color;
             __instance.RoleBlurbText.color = role.Color;
             __instance.RoleBlurbText.text = role.RoleDescription;
+            foreach (var addOn in PlayerControl.LocalPlayer.GetAddOns())
+            {
+                __instance.RoleText.text += " + " + Utils.ColorString(addOn.Color, addOn.AddOnName);
+                __instance.RoleBlurbText.text += "\n" + Utils.ColorString(addOn.Color, addOn.AddOnDescription);
+            }
         }
 
         public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
+            {
                 pc.GetRole().OnVotingComplete(__instance, states, exiled, tie);
+                foreach (var addOn in pc.GetAddOns())
+                    addOn.OnVotingComplete(__instance, states, exiled, tie);
+            }
             new LateTask(() => {
                 if (exiled != null && exiled.Object != null && Main.RealOptions.GetBool(BoolOptionNames.ConfirmImpostor))
                 {
@@ -152,7 +165,15 @@ namespace MoreGamemodes
         {
             var player = Utils.GetPlayerById(srcPlayerId);
             if (player == null) return true;
-            return player.GetRole().OnCastVote(__instance, suspectPlayerId);
+            if (!player.GetRole().OnCastVote(__instance, suspectPlayerId))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in player.GetAddOns())
+            {
+                if (!addOn.OnCastVote(__instance, suspectPlayerId))
+                    cancel = true;
+            }
+            return !cancel;
         }
 
         public override bool OnSelectRolesPrefix()
@@ -288,6 +309,49 @@ namespace MoreGamemodes
                 ChosenRoles.Remove(role);
             }
 
+            List<AddOns> ChosenAddOns = new();
+            foreach (var addOn in Enum.GetValues<AddOns>())
+            {
+                for (int i = 1; i <= AddOnsHelper.GetAddOnCount(addOn); ++i)
+                {
+                    if (rand.Next(1, 100) <= AddOnsHelper.GetAddOnChance(addOn))
+                        ChosenAddOns.Add(addOn);
+                }
+            }
+
+            while (ChosenAddOns.Any())
+            {
+                var addOn = ChosenAddOns[rand.Next(0, ChosenAddOns.Count)];
+                List<PlayerControl> PotentialPlayers = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if ((pc.GetRole().IsCrewmate() && !AddOnsHelper.CrewmatesCanGet(addOn)) || (pc.GetRole().IsNeutral() && !AddOnsHelper.NeutralsCanGet(addOn)) || (pc.GetRole().IsImpostor() && !AddOnsHelper.ImpostorsCanGet(addOn)))
+                        continue;
+                    if (pc.GetAddOns().Count >= Options.MaxAddOnsForPlayer.GetInt())
+                        continue;
+                    if (!pc.GetRole().IsCompatible(addOn))
+                        continue;
+                    bool compatible = true;
+                    foreach (var addon in pc.GetAddOns())
+                    {
+                        if (!addon.IsCompatible(addOn))
+                        {
+                            compatible = false;
+                            break;
+                        }
+                    }
+                    if (!compatible)
+                        continue;
+                    PotentialPlayers.Add(pc);
+                }
+                if (PotentialPlayers.Any())
+                {
+                    var player = PotentialPlayers[rand.Next(0, PotentialPlayers.Count)];
+                    player.RpcSetAddOn(addOn);
+                }
+                ChosenAddOns.Remove(addOn);
+            }
+
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 switch (pc.GetRole().BaseRole)
@@ -371,7 +435,11 @@ namespace MoreGamemodes
         public override void OnIntroDestroy()
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
+            {
                 pc.GetRole().OnIntroDestroy();
+                foreach (var addOn in pc.GetAddOns())
+                    addOn.OnIntroDestroy();
+            }  
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (!pc.GetRole().IsCrewmate())
@@ -389,7 +457,12 @@ namespace MoreGamemodes
                 }
                 pc.RpcResetAbilityCooldown();
                 if (!pc.AmOwner && !Main.IsModded[pc.PlayerId])
-                    pc.Notify(Utils.ColorString(pc.GetRole().Color, pc.GetRole().RoleDescription));
+                {
+                    string text = Utils.ColorString(pc.GetRole().Color, pc.GetRole().RoleDescription);
+                    foreach (var addOn in pc.GetAddOns())
+                        text += "\n" + Utils.ColorString(addOn.Color, addOn.AddOnDescription);
+                    pc.Notify(text);
+                }
             }
         }
 
@@ -398,6 +471,8 @@ namespace MoreGamemodes
             if (RoleblockTimer[pc.PlayerId] > 0f)
                 return;
             pc.GetRole().OnPet();
+            foreach (var addOn in pc.GetAddOns())
+                addOn.OnPet();
         }
 
         public override bool OnCheckProtect(PlayerControl guardian, PlayerControl target)
@@ -406,7 +481,15 @@ namespace MoreGamemodes
                 return false;
             if (RoleblockTimer[guardian.PlayerId] > 0f)
                 return false;
-            return guardian.GetRole().OnCheckProtect(target);
+            if (!guardian.GetRole().OnCheckProtect(target))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in guardian.GetAddOns())
+            {
+                if (!addOn.OnCheckProtect(target))
+                    cancel = true;
+            }
+            return !cancel;
         }
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)
@@ -415,7 +498,24 @@ namespace MoreGamemodes
                 return false;
             if (RoleblockTimer[killer.PlayerId] > 0f)
                 return false;
-            if (!killer.GetRole().OnCheckMurder(target) || !target.GetRole().OnCheckMurderAsTarget(killer))
+            if (!killer.GetRole().OnCheckMurder(target))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in killer.GetAddOns())
+            {
+                if (!addOn.OnCheckMurder(target))
+                    cancel = true;
+            }
+            if (cancel)
+                return false;
+            if (!target.GetRole().OnCheckMurderAsTarget(killer))
+                return false;
+            foreach (var addOn in target.GetAddOns())
+            {
+                if (!addOn.OnCheckMurderAsTarget(killer))
+                    cancel = true;
+            }
+            if (cancel)
                 return false;
             if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
             return true;
@@ -425,9 +525,17 @@ namespace MoreGamemodes
         {
             PlayerKiller[target.PlayerId] = killer.PlayerId;
             killer.GetRole().OnMurderPlayer(target);
+            foreach (var addOn in killer.GetAddOns())
+                addOn.OnMurderPlayer(target);
             target.GetRole().OnMurderPlayerAsTarget(killer);
+            foreach (var addOn in target.GetAddOns())
+                addOn.OnMurderPlayerAsTarget(killer);
             foreach (var pc in PlayerControl.AllPlayerControls)
+            {
                 pc.GetRole().OnGlobalMurderPlayer(killer, target);
+                foreach (var addOn in pc.GetAddOns())
+                    addOn.OnGlobalMurderPlayer(killer, target);
+            }
         }
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
@@ -435,12 +543,22 @@ namespace MoreGamemodes
             if (Main.Timer < 5f) return false;
             if (!shapeshifter.GetRole().CanUseShiftButton())
                 return false;
-            return shapeshifter.GetRole().OnCheckShapeshift(target);
+            if (!shapeshifter.GetRole().OnCheckShapeshift(target))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in shapeshifter.GetAddOns())
+            {
+                if (!addOn.OnCheckShapeshift(target))
+                    cancel = true;
+            }
+            return !cancel;
         }
 
         public override void OnShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
             shapeshifter.GetRole().OnShapeshift(target);
+            foreach (var addOn in shapeshifter.GetAddOns())
+                addOn.OnShapeshift(target);
         }
 
         public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
@@ -451,6 +569,14 @@ namespace MoreGamemodes
             }
             if (!Trapster.OnGlobalReportDeadBody(__instance, target)) return false;
             bool report = __instance.GetRole().OnReportDeadBody(target);
+            if (report)
+            {
+                foreach (var addOn in __instance.GetAddOns())
+                {
+                    if (!addOn.OnReportDeadBody(target))
+                        report = false;
+                }
+            }
             if (report)
             {
                 new LateTask(() => {
@@ -464,6 +590,8 @@ namespace MoreGamemodes
                         if (IsRoleblocked[pc.PlayerId])
                             pc.RpcSetRoleblock(false);
                         pc.GetRole().OnMeeting();
+                        foreach (var addOn in pc.GetAddOns())
+                            addOn.OnMeeting();
                         Utils.SyncAllSettings();
                         Utils.SetAllVentInteractions();
                     }
@@ -525,24 +653,38 @@ namespace MoreGamemodes
 
                 if (pc.Data.IsDead) continue;
                 pc.GetRole().OnFixedUpdate();
+                foreach (var addOn in pc.GetAddOns())
+                    addOn.OnFixedUpdate();
             }
         }
 
         public override bool OnEnterVent(PlayerControl player, int id)
         {
+            if (GameManager.Instance.LogicOptions.MapId == 3)
+                return false;
             if (RoleblockTimer[player.PlayerId] > 0f)
                 return false;
             if (BlockedVents.Contains(id))
                 return false;
             if (player.shouldAppearInvisible || player.invisibilityAlpha < 1f)
                 return false;
-            return player.GetRole().OnEnterVent(id) && GameManager.Instance.LogicOptions.MapId != 3;
+            if (!player.GetRole().OnEnterVent(id))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in player.GetAddOns())
+            {
+                if (!addOn.OnEnterVent(id))
+                    cancel = true;
+            }
+            return !cancel;
         }
 
         public override void OnCompleteTask(PlayerControl __instance)
         {
             if (__instance.Data.IsDead) return;
             __instance.GetRole().OnCompleteTask();
+            foreach (var addOn in __instance.GetAddOns())
+                addOn.OnCompleteTask();
         }
 
         public override bool OnCheckVanish(PlayerControl phantom)
@@ -550,14 +692,30 @@ namespace MoreGamemodes
             if (Main.Timer < 5f) return false;
             if (RoleblockTimer[phantom.PlayerId] > 0f)
                 return false;
-            return phantom.GetRole().OnCheckVanish();
+            if (!phantom.GetRole().OnCheckVanish())
+                return false;
+            bool cancel = false;
+            foreach (var addOn in phantom.GetAddOns())
+            {
+                if (!addOn.OnCheckVanish())
+                    cancel = true;
+            }
+            return !cancel;
         }
 
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (RoleblockTimer[player.PlayerId] > 0f)
                 return false;
-            return player.GetRole().OnUpdateSystem(__instance, systemType, reader);
+            if (!player.GetRole().OnUpdateSystem(__instance, systemType, reader))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in player.GetAddOns())
+            {
+                if (!addOn.OnUpdateSystem(__instance, systemType, reader))
+                    cancel = true;
+            }
+            return !cancel;
         }
 
         public override void OnAddVote(int srcClient, int clientId)
@@ -565,6 +723,8 @@ namespace MoreGamemodes
             var player = AmongUsClient.Instance.GetClient(srcClient).Character;
             var target = AmongUsClient.Instance.GetClient(clientId).Character;
             player.GetRole().OnAddVote(target);
+            foreach (var addOn in player.GetAddOns())
+                addOn.OnAddVote(target);
         }
 
         public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
@@ -594,6 +754,8 @@ namespace MoreGamemodes
             }
             opt.SetBool(BoolOptionNames.ConfirmImpostor, false);
             opt = player.GetRole().ApplyGameOptions(opt);
+            foreach (var addOn in player.GetAddOns())
+                opt = addOn.ApplyGameOptions(opt);
             return opt;
         }
 
@@ -602,11 +764,20 @@ namespace MoreGamemodes
             string prefix = "";
             string postfix = "";
             if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
+            {
+                foreach (var addOn in player.GetAddOns())
+                    prefix += "<size=1.8>" + Utils.ColorString(addOn.Color, addOn.AddOnName) + " </size>";
+            }
+            if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                 prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "</size>\n";
             if (Medic.IsShielded(player) && (player == seer || seer.GetRole().Role == CustomRoles.Medic))
                 postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Medic], "+");
             if (player == seer && !player.Data.IsDead)
+            {
                 postfix += player.GetRole().GetNamePostfix();
+                foreach (var addOn in player.GetAddOns())
+                    postfix = addOn.GetNamePostfix();
+            }
             return prefix + name + postfix;
         }
 
@@ -638,6 +809,7 @@ namespace MoreGamemodes
             PetAction = true;
             DisableTasks = false;
             AllPlayersRole = new Dictionary<byte, CustomRole>();
+            AllPlayersAddOns = new Dictionary<byte, List<AddOn>>();
             Winner = CustomWinners.None;
             AdditionalWinners = new List<AdditionalWinners>();
             FreezeTimer = new Dictionary<byte, float>();
@@ -652,6 +824,7 @@ namespace MoreGamemodes
             TimeSinceDeath = new Dictionary<byte, float>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
+                AllPlayersAddOns[pc.PlayerId] = new List<AddOn>();
                 FreezeTimer[pc.PlayerId] = 0f;
                 BlindTimer[pc.PlayerId] = 0f;
                 RoleblockTimer[pc.PlayerId] = 0f;
@@ -666,6 +839,7 @@ namespace MoreGamemodes
 
         public static ClassicGamemode instance;
         public Dictionary<byte, CustomRole> AllPlayersRole;
+        public Dictionary<byte, List<AddOn>> AllPlayersAddOns;
         public CustomWinners Winner;
         public List<AdditionalWinners> AdditionalWinners;
         public Dictionary<byte, float> FreezeTimer;

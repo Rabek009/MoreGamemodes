@@ -20,6 +20,11 @@ namespace MoreGamemodes
             return "";
         }
 
+        public override bool IsCompatible(AddOns addOn)
+        {
+            return addOn != AddOns.Oblivious;
+        }
+
         public Mortician(PlayerControl player)
         {
             Role = CustomRoles.Mortician;

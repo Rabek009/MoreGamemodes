@@ -752,5 +752,13 @@ namespace MoreGamemodes
             role.RoleDescriptionLong = CustomRolesHelper.RoleDescriptionsLong[role.Role];
             role.Color = CustomRolesHelper.RoleColors[role.Role];
         }
+
+        public static void SetupAddOnInfo(AddOn addOn)
+        {
+            addOn.AddOnName = AddOnsHelper.AddOnNames[addOn.Type];
+            addOn.AddOnDescription = AddOnsHelper.AddOnDescriptions[addOn.Type];
+            addOn.AddOnDescriptionLong = AddOnsHelper.AddOnDescriptionsLong[addOn.Type];
+            addOn.Color = AddOnsHelper.AddOnColors[addOn.Type];
+        }
     }
 }

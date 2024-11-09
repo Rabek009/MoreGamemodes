@@ -175,7 +175,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 foreach (var ar in PlayerControl.AllPlayerControls)
-                    pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true), ar, true);  
+                    pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true, false), ar, true);  
             }
             foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
             {

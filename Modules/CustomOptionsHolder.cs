@@ -54,6 +54,8 @@ namespace MoreGamemodes
 
         public static Dictionary<CustomRoles, OptionItem> RolesChance;
         public static Dictionary<CustomRoles, OptionItem> RolesCount;
+        public static Dictionary<AddOns, OptionItem> AddOnsChance;
+        public static Dictionary<AddOns, OptionItem> AddOnsCount;
 
         //Main settings
         public static OptionItem Basic;
@@ -380,6 +382,13 @@ namespace MoreGamemodes
         public static OptionItem NeutralEvil;
         public static OptionItem NeutralKilling;
 
+        //Add Ons
+        public static OptionItem AddOns;
+        public static OptionItem MaxAddOnsForPlayer;
+        public static OptionItem HelpfulAddOns;
+        public static OptionItem HarmfulAddOns;
+        public static OptionItem ImpostorAddOns;
+
         public static bool IsLoaded = false;
 
         public static void Load()
@@ -387,6 +396,8 @@ namespace MoreGamemodes
             if (IsLoaded) return;
             RolesChance = new Dictionary<CustomRoles, OptionItem>();
             RolesCount = new Dictionary<CustomRoles, OptionItem>();
+            AddOnsChance = new Dictionary<AddOns, OptionItem>();
+            AddOnsCount = new Dictionary<AddOns, OptionItem>();
 
             _ = PresetOptionItem.Create(0, TabGroup.ModSettings)
                 .SetColor(new Color32(204, 204, 0, 255))
@@ -1153,12 +1164,26 @@ namespace MoreGamemodes
             NeutralBenign = TextOptionItem.Create(800010, "Neutral benign", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
             Opportunist.SetupOptionItem();
-            NeutralEvil = TextOptionItem.Create(900010, "Neutral evil", TabGroup.NeutralRoles)
+            NeutralEvil = TextOptionItem.Create(900000, "Neutral evil", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
             Jester.SetupOptionItem();
-            NeutralKilling = TextOptionItem.Create(1000010, "Neutral killing", TabGroup.NeutralRoles)
+            NeutralKilling = TextOptionItem.Create(1000000, "Neutral killing", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
             SerialKiller.SetupOptionItem();
+
+            //Add ons
+            AddOns = TextOptionItem.Create(1100000, "Add ons", TabGroup.AddOns)
+                .SetColor(Color.yellow);
+            MaxAddOnsForPlayer = IntegerOptionItem.Create(1100001, "Max add ons for player", new(0, 15, 1), 1, TabGroup.AddOns, false);
+            HelpfulAddOns = TextOptionItem.Create(1100010, "Helpful add ons", TabGroup.AddOns)
+                .SetColor(Color.yellow);
+            Bait.SetupOptionItem();
+            HarmfulAddOns = TextOptionItem.Create(1200000, "Harmful add ons", TabGroup.AddOns)
+                .SetColor(Color.yellow);
+            Oblivious.SetupOptionItem();
+            ImpostorAddOns = TextOptionItem.Create(1300000, "Impostor add ons", TabGroup.AddOns)
+                .SetColor(Color.yellow);
+            Lurker.SetupOptionItem();
 
             IsLoaded = true;
         }

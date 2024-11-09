@@ -18,6 +18,12 @@ namespace MoreGamemodes
             return CustomRolesHelper.IsCrewmate(role) || (CustomRolesHelper.IsNeutralKilling(role) && CanGuessNeutralKilling.GetBool()) || (CustomRolesHelper.IsNeutralEvil(role) && CanGuessNeutralEvil.GetBool()) ||
             (CustomRolesHelper.IsNeutralBenign(role) && CanGuessNeutralBenign.GetBool());
         }
+
+        public override bool CanGuess(PlayerControl target, AddOns addOn)
+        {
+            if (target == Player) return false;
+            return CanGuessAddOns.GetBool();
+        }
         
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/GuessManager.cs#L638
         public static void CreateMeetingButton(MeetingHud __instance)
@@ -93,6 +99,11 @@ namespace MoreGamemodes
                 tabs.Add((9, "Neutral evil", Color.gray));
             if (CanGuessNeutralKilling.GetBool())
                 tabs.Add((10, "Neutral killing", Color.gray));
+            if (CanGuessAddOns.GetBool())
+            {
+                tabs.Add((11, "Helpful add ons", Color.yellow));
+                tabs.Add((12, "Harmful add ons", Color.yellow));
+            }
             
             List<UiElement> list = new();
             for (int i = 0; i < tabs.Count; ++i)
@@ -168,7 +179,7 @@ namespace MoreGamemodes
                     ++i;
                 }
             }
-            else
+            else if (id <= 10)
             {
                 foreach (var role in CustomRolesHelper.CommandRoleNames.Keys)
                 {
@@ -198,6 +209,39 @@ namespace MoreGamemodes
                     shapeshifterPanel.LevelNumberText.transform.localPosition += new Vector3(0.2f, -0.02f, -10f); 
                     shapeshifterPanel.NameText.transform.localPosition = Vector3.zero;
 			        shapeshifterPanel.NameText.color = CustomRolesHelper.RoleColors[roleType];
+			        minigame.potentialVictims.Add(shapeshifterPanel);
+			        list.Add(shapeshifterPanel.Button);
+                    ++i;
+                }
+            }
+            else
+            {
+                foreach (var addon in AddOnsHelper.CommandAddOnNames.Keys)
+                {
+                    AddOns addOn = AddOnsHelper.CommandAddOnNames[addon];
+                    if (addOn == AddOns.Bait && !Bait.CanBeGuessed.GetBool()) continue;
+                    if (AddOnsHelper.GetAddOnChance(addOn) <= 0) continue;
+                    if (Options.AddOnsChance[addOn].Id < id * 100000 || Options.AddOnsChance[addOn].Id >= id * 100000 + 100000) continue;
+                    int num = i % 3;
+			        int num2 = i / 3;
+                    ShapeshifterPanel shapeshifterPanel = Object.Instantiate(minigame.PanelPrefab, minigame.transform);
+			        shapeshifterPanel.transform.localPosition = new Vector3(minigame.XStart + num * minigame.XOffset, minigame.YStart + num2 * minigame.YOffset, -1f);
+                    PassiveButton button = shapeshifterPanel.GetComponent<PassiveButton>();
+                    shapeshifterPanel.shapeshift = (Action)(() => GuessPlayer(playerId, addon, minigame, __instance));
+                    SpriteRenderer[] componentsInChildren = shapeshifterPanel.GetComponentsInChildren<SpriteRenderer>();
+		            for (int j = 0; j < componentsInChildren.Length; j++)
+		            {
+			            componentsInChildren[j].material.SetInt(PlayerMaterial.MaskLayer, i + 2);
+                        if (j != 9)
+                            componentsInChildren[j].material.color = Palette.ImpostorRed;
+		            }
+                    componentsInChildren[9].sprite = HudManager.Instance.KillButton.graphic.sprite;
+                    shapeshifterPanel.NameText.text = AddOnsHelper.AddOnNames[addOn];
+                    Object.Destroy(shapeshifterPanel.PlayerIcon.gameObject);
+                    shapeshifterPanel.LevelNumberText.text = "<font=\"VCR SDF\"><size=15>■";
+                    shapeshifterPanel.LevelNumberText.transform.localPosition += new Vector3(0.2f, -0.02f, -10f); 
+                    shapeshifterPanel.NameText.transform.localPosition = Vector3.zero;
+			        shapeshifterPanel.NameText.color = AddOnsHelper.AddOnColors[addOn];
 			        minigame.potentialVictims.Add(shapeshifterPanel);
 			        list.Add(shapeshifterPanel.Button);
                     ++i;
@@ -268,6 +312,7 @@ namespace MoreGamemodes
         public static OptionItem CanGuessNeutralEvil;
         public static OptionItem CanGuessNeutralBenign;
         public static OptionItem CanGuessCrewmateRole;
+        public static OptionItem CanGuessAddOns;
         public static void SetupOptionItem()
         {
             Chance = IntegerOptionItem.Create(600100, "Evil guesser", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
@@ -282,6 +327,8 @@ namespace MoreGamemodes
             CanGuessNeutralBenign = BooleanOptionItem.Create(600104, "Can guess neutral benign", true, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             CanGuessCrewmateRole = BooleanOptionItem.Create(600105, "Can guess \"Crewmate\" role", true, TabGroup.ImpostorRoles, false)
+                .SetParent(Chance);
+            CanGuessAddOns = BooleanOptionItem.Create(600106, "Can guess add ons", false, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.EvilGuesser] = Chance;
             Options.RolesCount[CustomRoles.EvilGuesser] = Count;

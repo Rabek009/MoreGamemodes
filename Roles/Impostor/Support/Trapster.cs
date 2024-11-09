@@ -62,6 +62,7 @@ namespace MoreGamemodes
 
         public bool OnReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
         {
+            if (reporter.HasAddOn(AddOns.Oblivious)) return true;
             if (target != null && TrappedPlayers.ContainsKey(target.PlayerId) && TrappedPlayers[target.PlayerId] == byte.MaxValue)
             {
                 TrappedPlayers[target.PlayerId] = reporter.PlayerId;

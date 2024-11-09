@@ -46,7 +46,8 @@ namespace MoreGamemodes
         SetAbilityUses,
         BlockVent,
         SetPetAbilityCooldown,
-        GuessPlayer
+        GuessPlayer,
+        SetAddOn,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -197,6 +198,9 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.GuessPlayer:
                     __instance.GuessPlayer();
+                    break;
+                case CustomRPC.SetAddOn:
+                    __instance.SetAddOn((AddOns)reader.ReadInt32());
                     break;
             }
         }
@@ -575,7 +579,7 @@ namespace MoreGamemodes
 				{
 				}
 			}
-            if (AmongUsClient.Instance.AmHost && !Main.IsModded[player.PlayerId])
+            if (AmongUsClient.Instance.AmHost && !player.AmOwner && !Main.IsModded[player.PlayerId])
             {
                 if (roleblock)
                     player.RpcDesyncUpdateSystem(SystemTypes.Comms, 128);
@@ -921,5 +925,14 @@ namespace MoreGamemodes
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.GuessPlayer, SendOption.Reliable, -1);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
+
+        public static void RpcSetAddOn(this PlayerControl player, AddOns addOn)
+        {
+            player.SetAddOn(addOn);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetAddOn, SendOption.Reliable, -1);
+            writer.Write((int)addOn);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
     }
 }
