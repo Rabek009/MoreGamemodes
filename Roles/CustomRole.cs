@@ -15,6 +15,7 @@ namespace MoreGamemodes
         {
             __instance.PetButton.SetDisabled();
             __instance.PetButton.ToggleVisible(false);
+            __instance.ReportButton.OverrideText(TranslationController.Instance.GetString(StringNames.ReportButton));
         }
 
         public virtual void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
@@ -168,6 +169,11 @@ namespace MoreGamemodes
             return CustomRolesHelper.IsCrewmateKilling(Role);
         }
 
+        public bool HasTasks()
+        {
+            return CustomRolesHelper.HasTasks(Role);
+        }
+
         public bool CanUseProtectButton()
         {
             return false;
@@ -207,16 +213,10 @@ namespace MoreGamemodes
             string text = "";
             if (AbilityUses > -1)
                 text += " (" + AbilityUses + ")";
-            if (IsCrewmate())
+            if (HasTasks())
             {
-                int totalTasks = 0;
-                int completedTasks = 0;
-                foreach (var task in Player.Data.Tasks)
-                {
-                    ++totalTasks;
-                    if (task.Complete)
-                        ++completedTasks;
-                }
+                int totalTasks = ClassicGamemode.instance.DefaultTasks[Player.PlayerId].Count;
+                int completedTasks = ClassicGamemode.instance.CompletedTasks[Player.PlayerId].Count;
                 if (Utils.IsActive(SystemTypes.Comms))
                     text += " (?/" + totalTasks + ")";
                 else

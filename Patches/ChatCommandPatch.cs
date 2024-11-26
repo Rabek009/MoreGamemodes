@@ -338,7 +338,7 @@ namespace MoreGamemodes
                             subArgs = args.Length < 3 ? "" : args[2];
                             GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.GuardianAngelCooldown, float.Parse(subArgs));
                             break;
-                        case "protectduration":
+                        case "protectionduration":
                             subArgs = args.Length < 3 ? "" : args[2];
                             GameOptionsManager.Instance.CurrentGameOptions.SetFloat(FloatOptionNames.ProtectionDurationSeconds, float.Parse(subArgs));
                             break;
@@ -1248,9 +1248,9 @@ namespace MoreGamemodes
                         PlayerControl.LocalPlayer.RpcSendMessage("You can only use /myrole in classic gamemode.", "Warning");
                         break;
                     }
-                    PlayerControl.LocalPlayer.RpcSendMessage(PlayerControl.LocalPlayer.GetRole().RoleDescriptionLong, "RoleInfo");
+                    PlayerControl.LocalPlayer.RpcSendMessage(PlayerControl.LocalPlayer.GetRole().RoleDescriptionLong + "\n\n<u>Role options:</u>\n" + Utils.GetRoleOptions(PlayerControl.LocalPlayer.GetRole().Role), "RoleInfo");
                     foreach (var addOn in PlayerControl.LocalPlayer.GetAddOns())
-                        PlayerControl.LocalPlayer.RpcSendMessage(addOn.AddOnDescriptionLong, "RoleInfo");
+                        PlayerControl.LocalPlayer.RpcSendMessage(addOn.AddOnDescriptionLong + "\n\n<u>Add on options:</u>\n" + Utils.GetAddOnOptions(addOn.Type), "RoleInfo");
                     break;
                 case "/guess":
                 case "/shoot":
@@ -1366,9 +1366,9 @@ namespace MoreGamemodes
                     string neutralRoles = "";
                     string addOns = "";
                     if (CustomRolesHelper.CommandRoleNames.ContainsKey(role))
-                        PlayerControl.LocalPlayer.RpcSendMessage(CustomRolesHelper.RoleDescriptionsLong[CustomRolesHelper.CommandRoleNames[role]], "RoleInfo");
+                        PlayerControl.LocalPlayer.RpcSendMessage(CustomRolesHelper.RoleDescriptionsLong[CustomRolesHelper.CommandRoleNames[role]] + "\n\n<u>Role options:</u>\n" + Utils.GetRoleOptions(CustomRolesHelper.CommandRoleNames[role]), "RoleInfo");
                     else if (AddOnsHelper.CommandAddOnNames.ContainsKey(role))
-                        PlayerControl.LocalPlayer.RpcSendMessage(AddOnsHelper.AddOnDescriptionsLong[AddOnsHelper.CommandAddOnNames[role]], "RoleInfo");
+                        PlayerControl.LocalPlayer.RpcSendMessage(AddOnsHelper.AddOnDescriptionsLong[AddOnsHelper.CommandAddOnNames[role]] + "\n\n<u>Add on options:</u>\n" + Utils.GetAddOnOptions(AddOnsHelper.CommandAddOnNames[role]), "RoleInfo");
                     else
                     {
                         foreach (var roleType in Enum.GetValues<CustomRoles>())
@@ -2102,9 +2102,9 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can only use /myrole in classic gamemode.", "Warning");
                         break;
                     }
-                    player.RpcSendMessage(player.GetRole().RoleDescriptionLong, "RoleInfo");
+                    player.RpcSendMessage(player.GetRole().RoleDescriptionLong + "\n\n<u>Role options:</u>\n" + Utils.GetRoleOptions(player.GetRole().Role), "RoleInfo");
                     foreach (var addOn in player.GetAddOns())
-                        player.RpcSendMessage(addOn.AddOnDescriptionLong, "RoleInfo");
+                        player.RpcSendMessage(addOn.AddOnDescriptionLong + "\n\n<u>Add on options:</u>\n" + Utils.GetAddOnOptions(addOn.Type), "RoleInfo");
                     break;
                 case "/guess":
                 case "/shoot":
@@ -2220,9 +2220,9 @@ namespace MoreGamemodes
                     string neutralRoles = "";
                     string addOns = "";
                     if (CustomRolesHelper.CommandRoleNames.ContainsKey(role))
-                        player.RpcSendMessage(CustomRolesHelper.RoleDescriptionsLong[CustomRolesHelper.CommandRoleNames[role]], "RoleInfo");
+                        player.RpcSendMessage(CustomRolesHelper.RoleDescriptionsLong[CustomRolesHelper.CommandRoleNames[role]] + "\n\n<u>Role options:</u>\n" + Utils.GetRoleOptions(CustomRolesHelper.CommandRoleNames[role]), "RoleInfo");
                     else if (AddOnsHelper.CommandAddOnNames.ContainsKey(role))
-                        player.RpcSendMessage(AddOnsHelper.AddOnDescriptionsLong[AddOnsHelper.CommandAddOnNames[role]], "RoleInfo");
+                        player.RpcSendMessage(AddOnsHelper.AddOnDescriptionsLong[AddOnsHelper.CommandAddOnNames[role]] + "\n\n<u>Add on options:</u>\n" + Utils.GetAddOnOptions(AddOnsHelper.CommandAddOnNames[role]), "RoleInfo");
                     else
                     {
                         foreach (var roleType in Enum.GetValues<CustomRoles>())

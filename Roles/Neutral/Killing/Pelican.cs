@@ -5,16 +5,21 @@ using System.Collections.Generic;
 
 namespace MoreGamemodes
 {
-    public class SerialKiller : CustomRole
+    public class Pelican : CustomRole
     {
         public override void OnHudUpate(HudManager __instance)
         {
             base.OnHudUpate(__instance);
             if (Player.Data.IsDead) return;
+            __instance.KillButton.OverrideText("Eat");
             __instance.SabotageButton.SetDisabled();
             __instance.SabotageButton.ToggleVisible(false);
+            if (!CanUseVents.GetBool())
+            {
+                __instance.ImpostorVentButton.SetDisabled();
+                __instance.ImpostorVentButton.ToggleVisible(false);
+            }
         }
-
         public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
             if (exiled != null && exiled.Object != null && exiled.Object == Player && BaseRole == BaseRoles.DesyncImpostor)
@@ -33,6 +38,44 @@ namespace MoreGamemodes
                 Player.Data.RpcSetTasks(new byte[0]);
                 Player.SyncPlayerSettings();
             }
+        }
+
+        public override bool OnCheckMurder(PlayerControl target)
+        {
+            bool cancel = false;
+            foreach (var addOn in Player.GetAddOns())
+            {
+                if (!addOn.OnCheckMurder(target))
+                    cancel = true;
+            }
+            if (cancel)
+                return false;
+            if (!target.GetRole().OnCheckMurderAsTarget(Player))
+                return false;
+            foreach (var addOn in target.GetAddOns())
+            {
+                if (!addOn.OnCheckMurderAsTarget(Player))
+                    cancel = true;
+            }
+            Player.RpcTeleport(target.transform.position);
+            Player.RpcSetDeathReason(DeathReasons.Eaten);
+            target.RpcExileV2();
+            Player.RpcSetKillTimer(EatCooldown.GetFloat());
+            ++Main.PlayerKills[Player.PlayerId];
+            ClassicGamemode.instance.PlayerKiller[target.PlayerId] = Player.PlayerId;
+            Player.GetRole().OnMurderPlayer(target);
+            foreach (var addOn in Player.GetAddOns())
+                addOn.OnMurderPlayer(target);
+            target.GetRole().OnMurderPlayerAsTarget(Player);
+            foreach (var addOn in target.GetAddOns())
+                addOn.OnMurderPlayerAsTarget(Player);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                pc.GetRole().OnGlobalMurderPlayer(Player, target);
+                foreach (var addOn in pc.GetAddOns())
+                    addOn.OnGlobalMurderPlayer(Player, target);
+            }
+            return false;
         }
 
         public override void OnMurderPlayerAsTarget(PlayerControl killer)
@@ -75,7 +118,7 @@ namespace MoreGamemodes
 
         public override bool OnEnterVent(int id)
         {
-            return true;
+            return CanUseVents.GetBool();
         }
 
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, MessageReader reader)
@@ -86,7 +129,7 @@ namespace MoreGamemodes
 
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
         {
-            opt.SetFloat(FloatOptionNames.KillCooldown, KillCooldown.GetFloat());
+            opt.SetFloat(FloatOptionNames.KillCooldown, EatCooldown.GetFloat());
             return opt;
         }
 
@@ -106,15 +149,15 @@ namespace MoreGamemodes
             {
                 List<byte> winners = new();
                 winners.Add(Player.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.SerialKiller);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.Pelican);
                 return true;
             }
             return false;
         }
 
-        public SerialKiller(PlayerControl player)
+        public Pelican(PlayerControl player)
         {
-            Role = CustomRoles.SerialKiller;
+            Role = CustomRoles.Pelican;
             BaseRole = BaseRoles.DesyncImpostor;
             Player = player;
             Utils.SetupRoleInfo(this);
@@ -123,19 +166,22 @@ namespace MoreGamemodes
 
         public static OptionItem Chance;
         public static OptionItem Count;
-        public static OptionItem KillCooldown;
+        public static OptionItem EatCooldown;
+        public static OptionItem CanUseVents;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(1000100, "Serial killer", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.SerialKiller])
+            Chance = IntegerOptionItem.Create(1000200, "Pelican", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
+                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Pelican])
                 .SetValueFormat(OptionFormat.Percent);
-            Count = IntegerOptionItem.Create(1000101, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
+            Count = IntegerOptionItem.Create(1000201, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            KillCooldown = FloatOptionItem.Create(1000102, "Kill cooldown", new(1f, 30f, 0.5f), 15f, TabGroup.NeutralRoles, false)
+            EatCooldown = FloatOptionItem.Create(1000202, "Eat cooldown", new(10f, 60f, 2.5f), 30f, TabGroup.NeutralRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            Options.RolesChance[CustomRoles.SerialKiller] = Chance;
-            Options.RolesCount[CustomRoles.SerialKiller] = Count;
+            CanUseVents = BooleanOptionItem.Create(1000203, "Can use vents", true, TabGroup.NeutralRoles, false)
+                .SetParent(Chance);
+            Options.RolesChance[CustomRoles.Pelican] = Chance;
+            Options.RolesCount[CustomRoles.Pelican] = Count;
         }
     }
 }

@@ -442,7 +442,7 @@ namespace MoreGamemodes
             }  
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!pc.GetRole().IsCrewmate())
+                if (!pc.GetRole().HasTasks())
                 {
                     if (!pc.GetRole().CanUseKillButton() && !pc.AmOwner && !Main.IsModded[pc.PlayerId])
                     {
@@ -752,6 +752,8 @@ namespace MoreGamemodes
                 opt.SetFloat(FloatOptionNames.CrewLightMod, 0f);
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, 0f);
             }
+            if (player.Data.IsDead)
+                opt.SetBool(BoolOptionNames.AnonymousVotes, false);
             opt.SetBool(BoolOptionNames.ConfirmImpostor, false);
             opt = player.GetRole().ApplyGameOptions(opt);
             foreach (var addOn in player.GetAddOns())
@@ -776,7 +778,7 @@ namespace MoreGamemodes
             {
                 postfix += player.GetRole().GetNamePostfix();
                 foreach (var addOn in player.GetAddOns())
-                    postfix = addOn.GetNamePostfix();
+                    postfix += addOn.GetNamePostfix();
             }
             return prefix + name + postfix;
         }
@@ -803,6 +805,162 @@ namespace MoreGamemodes
                 RoleblockTimer[player.PlayerId] = timer;
         }
 
+        public void ChangeRole(PlayerControl player, CustomRoles role)
+        {
+            player.RpcSetCustomRole(role);
+            if (player.Data.IsDead)
+                player.RpcSetRole(player.GetRole().IsImpostor() ? RoleTypes.ImpostorGhost : RoleTypes.CrewmateGhost);
+            else
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)))
+                        Main.DesyncRoles.Remove((player.PlayerId, pc.PlayerId));
+                    if (Main.DesyncRoles.ContainsKey((pc.PlayerId, player.PlayerId)))
+                        Main.DesyncRoles.Remove((pc.PlayerId, player.PlayerId));
+                }
+                switch (player.GetRole().BaseRole)
+                {
+                    case BaseRoles.Crewmate:
+                        player.RpcSetRoleV2(RoleTypes.Crewmate);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        break;
+                    case BaseRoles.Scientist:
+                        player.RpcSetRoleV2(RoleTypes.Scientist);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Scientist;
+                        break;
+                    case BaseRoles.Engineer:
+                        player.RpcSetRoleV2(RoleTypes.Engineer);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Engineer;
+                        break;
+                    case BaseRoles.Noisemaker:
+                        player.RpcSetRoleV2(RoleTypes.Noisemaker);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Noisemaker;
+                        break;
+                    case BaseRoles.Tracker:
+                        player.RpcSetRoleV2(RoleTypes.Tracker);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Tracker;
+                        break;
+                    case BaseRoles.Impostor:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Impostor;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Impostor, pc);
+                        }
+                        break;
+                    case BaseRoles.Shapeshifter:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Shapeshifter;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Shapeshifter, pc);
+                        }
+                        break;
+                    case BaseRoles.Phantom:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Phantom;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Phantom, pc);
+                        }
+                        break;
+                    case BaseRoles.DesyncImpostor:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == player)
+                                player.RpcSetDesyncRole(RoleTypes.Impostor, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                        }
+                        break;
+                    case BaseRoles.DesyncShapeshifter:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == player)
+                                player.RpcSetDesyncRole(RoleTypes.Shapeshifter, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                        }
+                        break;
+                    case BaseRoles.DesyncPhantom:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == player)
+                                player.RpcSetDesyncRole(RoleTypes.Phantom, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                        }
+                        break;
+                }
+                switch (player.GetRole().BaseRole)
+                {
+                    case BaseRoles.DesyncImpostor:
+                    case BaseRoles.DesyncShapeshifter:
+                    case BaseRoles.DesyncPhantom:
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc != player)
+                            {
+                                if (pc.GetRole().BaseRole is BaseRoles.Impostor or BaseRoles.Shapeshifter or BaseRoles.Phantom)
+                                    pc.RpcSetDesyncRole(RoleTypes.Crewmate, player);
+                                else
+                                    pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], player);
+                            }
+                        }
+                        break;
+                    default:
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc != player)
+                                pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], player);
+                        }
+                        break;
+                }
+                Main.KillCooldowns[player.PlayerId] = 10f;
+                player.GetRole().OnIntroDestroy();
+            }
+            if (!player.GetRole().IsCrewmate())
+            {
+                if (!player.GetRole().CanUseKillButton() && !player.GetRole().HasTasks() && !player.AmOwner && !Main.IsModded[player.PlayerId])
+                {
+                    foreach (var task in player.Data.Tasks)
+                    {
+                        if (task.Complete) continue;
+                        player.RpcCompleteTask(task.Id);
+                    }
+                }
+                player.Data.Tasks.Clear();
+                player.Data.MarkDirty();
+            }
+            else if (player.Data.Tasks.Count == 0 && DefaultTasks.ContainsKey(player.PlayerId))
+            {
+                player.Data.Tasks = DefaultTasks[player.PlayerId];
+                List<byte> playerTasks = new();
+                List<uint> completedTasks = CompletedTasks[player.PlayerId];
+                foreach (var task in player.Data.Tasks)
+                    playerTasks.Add(task.TypeId);     
+                player.Data.RpcSetTasks(playerTasks.ToArray());
+                foreach (var idx in completedTasks)
+                    player.RpcCompleteTask(idx);
+                if (!AntiCheat.ChangedTasks.Contains(player.PlayerId))
+                    AntiCheat.ChangedTasks.Add(player.PlayerId);
+            }
+            new LateTask(() => player.RpcSetKillTimer(9.8f), 0.2f);
+            player.RpcResetAbilityCooldown();
+            player.SyncPlayerSettings();
+            player.RpcSetVentInteraction();
+        }
+
         public ClassicGamemode()
         {
             Gamemode = Gamemodes.Classic;
@@ -822,6 +980,8 @@ namespace MoreGamemodes
             IsOnPetAbilityCooldown = new Dictionary<byte, bool>();
             PlayerKiller = new Dictionary<byte, byte>();
             TimeSinceDeath = new Dictionary<byte, float>();
+            DefaultTasks = new Dictionary<byte, Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo.TaskInfo>>();
+            CompletedTasks = new Dictionary<byte, List<uint>>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 AllPlayersAddOns[pc.PlayerId] = new List<AddOn>();
@@ -852,5 +1012,7 @@ namespace MoreGamemodes
         public Dictionary<byte, bool> IsOnPetAbilityCooldown;
         public Dictionary<byte, byte> PlayerKiller;
         public Dictionary<byte, float> TimeSinceDeath;
+        public Dictionary<byte, Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo.TaskInfo>> DefaultTasks;
+        public Dictionary<byte, List<uint>> CompletedTasks;
     }
 }

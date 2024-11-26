@@ -62,7 +62,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> OptionProtectCooldowns;
     public static Dictionary<byte, float> TimeSinceLastPet;
 
-    public const string CurrentVersion = "2.0.0";
+    public const string CurrentVersion = "2.1.0 beta1";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -144,6 +144,7 @@ public partial class Main : BasePlugin
         VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
         ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
         PlayerTagManager.Initialize();
+        AntiBlackout.Reset();
 
         Instance.Log.LogMessage($"Sucessfully Loaded MoreGamemodes With Version {CurrentVersion} Is Dev Version: {isDev} Is Beta Version: {isBeta}");
 
@@ -220,6 +221,7 @@ public partial class Main : BasePlugin
                 CoEnterVentPatch.PlayersToKick = new List<byte>();
                 VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
                 ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
+                AntiBlackout.Reset();
             }
             else if (__instance.PlayerId != 255)
                 IsModded[__instance.PlayerId] = false;
@@ -270,6 +272,7 @@ public enum DeathReasons
     Trapped,
     Escaped,
     Guessed,
+    Eaten,
 }
 
 public enum BaseRoles

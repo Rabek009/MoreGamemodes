@@ -35,9 +35,28 @@ namespace MoreGamemodes
             }
             if (exiled != null)
                 exiled.IsDead = true;
-            if (Options.EnableMidGameChat.GetBool() || (AntiBlackout.ShowDoubleAnimation && exiled != null))
-                Utils.SetChatVisible();
-            new LateTask(() => Utils.SendGameData(), 0.5f);
+            if (AntiBlackout.ShowDoubleAnimation && exiled != null)
+            {
+                Utils.ShowExileAnimation();
+                return;
+            }
+            new LateTask(() => {
+                Utils.SendGameData();
+                AntiBlackout.IsCached = false;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data != null && pc.Data.IsDead && !pc.Data.Disconnected)
+                        pc.SetChatVisible(true);
+                }
+            }, 0.5f);
+            if (Options.EnableMidGameChat.GetBool())
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data != null && !pc.Data.IsDead && !pc.Data.Disconnected)
+                        pc.SetChatVisible(true);
+                }
+            }
             CustomGamemode.Instance.OnExile(exiled);
             
             if (exiled == null || exiled.Object == null) return;

@@ -111,7 +111,7 @@ namespace MoreGamemodes
             player.RpcSetVentInteraction();
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
             if (player == seer)
-                Main.KillCooldowns[player.PlayerId] = 0f;
+                Main.KillCooldowns[player.PlayerId] = 10f;
         }
 
         public static void RpcSetDesyncRoleV2(this PlayerControl player, RoleTypes role, PlayerControl seer)
@@ -127,7 +127,7 @@ namespace MoreGamemodes
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             if (player == seer)
-                Main.KillCooldowns[player.PlayerId] = 0f;
+                Main.KillCooldowns[player.PlayerId] = 10f;
         }
 
         public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
@@ -428,12 +428,20 @@ namespace MoreGamemodes
             {
                 if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && !classicMeeting)
                 {
-                    if (seer.GetRole().Role == CustomRoles.EvilGuesser || seer.GetRole().Role == CustomRoles.NiceGuesser)
-                        name = Utils.ColorString(seer.GetRole().Color, player.PlayerId.ToString()) + " " + name;
+                    var prefix = "";
+                    var postfix = "";
                     if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
-                        name = "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n</size>" + name;
-                    if (player.Data.IsDead && seer.GetRole().Role == CustomRoles.Mortician)
-                        name += " " + Utils.ColorString(seer.GetRole().Color, "(" + Utils.DeathReasonToString(player.GetDeathReason()) + ")");
+                    {
+                        foreach (var addOn in player.GetAddOns())
+                            prefix += "<size=1.6>" + Utils.ColorString(addOn.Color, addOn.AddOnName) + " </size>";
+                    }
+                    if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
+                        prefix += "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n</size>";
+                    if (seer.GetRole().Role == CustomRoles.EvilGuesser || seer.GetRole().Role == CustomRoles.NiceGuesser)
+                        prefix += Utils.ColorString(seer.GetRole().Color, player.PlayerId.ToString()) + " ";
+                    if (player.Data.IsDead && (seer.GetRole().Role == CustomRoles.Mortician || seer.Data.IsDead))
+                        postfix += " " + Utils.ColorString(seer.GetRole().Color, "(" + Utils.DeathReasonToString(player.GetDeathReason()) + ")");
+                    name = prefix + name + postfix;
                 }
                 return name;
             }
@@ -829,6 +837,53 @@ namespace MoreGamemodes
                     sender.SendMessage();
                 }
             }
+        }
+
+        public static void SetChatVisible(this PlayerControl player, bool visible)
+        {
+            if (player.AmOwner)
+            {
+                HudManager.Instance.Chat.SetVisible(visible);
+		        HudManager.Instance.Chat.HideBanButton();
+                return;
+            }
+            bool isDead = player.Data.IsDead;
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            writer.StartMessage(6);
+            writer.Write(AmongUsClient.Instance.GameId);
+            writer.WritePacked(player.GetClientId());
+            writer.StartMessage(4);
+			writer.WritePacked(HudManager.Instance.MeetingPrefab.SpawnId);
+			writer.WritePacked(-2);
+			writer.Write((byte)SpawnFlags.None);
+			writer.WritePacked(1);
+            uint netIdCnt = AmongUsClient.Instance.NetIdCnt;
+			AmongUsClient.Instance.NetIdCnt = netIdCnt + 1U;
+			writer.WritePacked(netIdCnt);
+			writer.StartMessage(1);
+            writer.WritePacked(0);
+			writer.EndMessage();
+			writer.EndMessage();
+            player.Data.IsDead = visible;
+            writer.StartMessage(1);
+            writer.WritePacked(player.Data.NetId);
+            player.Data.Serialize(writer, true);
+            writer.EndMessage();
+            writer.StartMessage(2);
+            writer.WritePacked(netIdCnt);
+			writer.Write((byte)RpcCalls.CloseMeeting);
+            writer.EndMessage();
+            player.Data.IsDead = isDead;
+            writer.StartMessage(1);
+            writer.WritePacked(player.Data.NetId);
+            player.Data.Serialize(writer, true);
+            writer.EndMessage();
+            writer.StartMessage(5);
+            writer.WritePacked(netIdCnt);
+            writer.EndMessage();
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
     }
 }

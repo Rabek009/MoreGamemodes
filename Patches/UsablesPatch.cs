@@ -116,7 +116,7 @@ namespace MoreGamemodes
         public static bool Prefix(Console __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ((!pc.Object.GetRole().IsCrewmate() && ! __instance.AllowImpostor) || ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId]))
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ((!pc.Object.GetRole().HasTasks() && ! __instance.AllowImpostor) || ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId]))
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
                 return false;

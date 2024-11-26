@@ -288,11 +288,13 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CompleteTask))]
     class CompleteTaskPatch
     {
-        public static void Postfix(PlayerControl __instance)
+        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] uint idx)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             var pc = __instance;
             CustomGamemode.Instance.OnCompleteTask(pc);
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+                ClassicGamemode.instance.CompletedTasks[__instance.PlayerId].Add(idx);
         }
     }
 
@@ -620,13 +622,22 @@ namespace MoreGamemodes
                 if (phantom.AmOwner)
                 {
                     DestroyableSingleton<HudManager>.Instance.AbilityButton.SetFromSettings(phantom.Data.Role.Ability);
+                    phantom.Data.Role.SetCooldown();
                     return false;
                 }
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(phantom.NetId, (byte)RpcCalls.SetRole, SendOption.None, phantom.GetClientId());
-		        writer.Write((ushort)RoleTypes.Phantom);
-		        writer.Write(true);
-		        AmongUsClient.Instance.FinishRpcImmediately(writer);
-                new LateTask(() => phantom.RpcSetKillTimer(Math.Max(Main.KillCooldowns[phantom.PlayerId], 0.001f)), 0.1f);
+                CustomRpcSender sender = CustomRpcSender.Create("Cancel vanish", SendOption.None);
+                sender.StartMessage(phantom.GetClientId());
+                sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)RoleTypes.Phantom)
+                    .Write(true)
+                    .EndRpc();
+                sender.StartRpc(phantom.NetId, (byte)RpcCalls.ProtectPlayer)
+                    .WriteNetObject(phantom)
+                    .Write(0)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
+                new LateTask(() => phantom.RpcSetKillTimer(Math.Max(Main.KillCooldowns[phantom.PlayerId], 0.001f)), 0.2f);
             }
             return false;
         }
@@ -890,6 +901,20 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             return playFullAnimation;
+        }
+    }
+
+    [HarmonyPatch(typeof(NetworkedPlayerInfo), nameof(NetworkedPlayerInfo.RpcSetTasks))]
+    class RpcSetTasksPatch
+    {
+        public static void Postfix(NetworkedPlayerInfo __instance, [HarmonyArgument(0)] Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> taskTypeIds)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+            {
+                ClassicGamemode.instance.DefaultTasks[__instance.PlayerId] = __instance.Tasks;
+                ClassicGamemode.instance.CompletedTasks[__instance.PlayerId] = new List<uint>();
+            }
         }
     }
 }

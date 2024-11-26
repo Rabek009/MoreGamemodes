@@ -42,6 +42,7 @@ namespace MoreGamemodes
             VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
             PlayerTagManager.ResetPlayerTags();
+            AntiBlackout.Reset();
             Main.StandardNames = new Dictionary<byte, string>();
             SetHudActivePatch.IsActive = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -113,7 +114,7 @@ namespace MoreGamemodes
             }
             CustomGamemode.Instance.OnIntroDestroy();
             if (Options.EnableMidGameChat.GetBool() || CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle)
-                Utils.SetChatVisible();
+                Utils.SetChatVisible(true);
             if (CustomGamemode.Instance.PetAction)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)

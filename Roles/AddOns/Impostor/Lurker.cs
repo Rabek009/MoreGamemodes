@@ -44,7 +44,7 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(1300101, "Max", new(1, 15, 1), 1, TabGroup.AddOns, false)
                 .SetParent(Chance);
-            CooldownDecreaseSpeed = IntegerOptionItem.Create(1300102, "Cooldown decrease speed", new(10, 300, 5), 100, TabGroup.AddOns, false)
+            CooldownDecreaseSpeed = IntegerOptionItem.Create(1300102, "Cooldown decrease speed", new(10, 300, 5), 65, TabGroup.AddOns, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Percent);
             Options.AddOnsChance[AddOns.Lurker] = Chance;

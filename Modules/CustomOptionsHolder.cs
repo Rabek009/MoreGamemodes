@@ -124,7 +124,7 @@ namespace MoreGamemodes
         public static OptionItem MisfireKillsCrewmate;
         public static OptionItem Illusion;
         public static OptionItem EnableIllusion;
-        public static OptionItem Radar;
+        public static OptionItem RadarItem;
         public static OptionItem EnableRadar;
         public static OptionItem RadarRange;
         public static OptionItem Swap;
@@ -542,7 +542,7 @@ namespace MoreGamemodes
                 .SetColor(Color.cyan);
             EnableIllusion = BooleanOptionItem.Create(4041, "Enable", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.RandomItems);
-            Radar = TextOptionItem.Create(4050, "Radar", TabGroup.GamemodeSettings)
+            RadarItem = TextOptionItem.Create(4050, "Radar", TabGroup.GamemodeSettings)
                 .SetGamemode(Gamemodes.RandomItems)
                 .SetColor(Color.cyan);
             EnableRadar = BooleanOptionItem.Create(4051, "Enable", false, TabGroup.GamemodeSettings, false)
@@ -1144,12 +1144,15 @@ namespace MoreGamemodes
             SeeTeammateRoles = BooleanOptionItem.Create(500001, "See teammate roles", true, TabGroup.ImpostorRoles, false);
             ImpostorConcealing = TextOptionItem.Create(500010, "Impostor concealing", TabGroup.ImpostorRoles)
                 .SetColor(Palette.ImpostorRed);
+            Escapist.SetupOptionItem();
             TimeFreezer.SetupOptionItem();
             ImpostorKilling = TextOptionItem.Create(600000, "Impostor killing", TabGroup.ImpostorRoles)
                 .SetColor(Palette.ImpostorRed);
             EvilGuesser.SetupOptionItem();
+            Hitman.SetupOptionItem();
             ImpostorSupport = TextOptionItem.Create(700000, "Impostor support", TabGroup.ImpostorRoles)
                 .SetColor(Palette.ImpostorRed);
+            Parasite.SetupOptionItem();
             Trapster.SetupOptionItem();
 
             //Neutral roles
@@ -1163,12 +1166,15 @@ namespace MoreGamemodes
             MaxBenignNeutrals = IntegerOptionItem.Create(800006, "Max Benign neutrals", new(0, 15, 1), 0, TabGroup.NeutralRoles, false);
             NeutralBenign = TextOptionItem.Create(800010, "Neutral benign", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
+            Amnesiac.SetupOptionItem();
             Opportunist.SetupOptionItem();
             NeutralEvil = TextOptionItem.Create(900000, "Neutral evil", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
+            Executioner.SetupOptionItem();
             Jester.SetupOptionItem();
             NeutralKilling = TextOptionItem.Create(1000000, "Neutral killing", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
+            Pelican.SetupOptionItem();
             SerialKiller.SetupOptionItem();
 
             //Add ons
@@ -1178,8 +1184,11 @@ namespace MoreGamemodes
             HelpfulAddOns = TextOptionItem.Create(1100010, "Helpful add ons", TabGroup.AddOns)
                 .SetColor(Color.yellow);
             Bait.SetupOptionItem();
+            Radar.SetupOptionItem();
+            Watcher.SetupOptionItem();
             HarmfulAddOns = TextOptionItem.Create(1200000, "Harmful add ons", TabGroup.AddOns)
                 .SetColor(Color.yellow);
+            Blind.SetupOptionItem();
             Oblivious.SetupOptionItem();
             ImpostorAddOns = TextOptionItem.Create(1300000, "Impostor add ons", TabGroup.AddOns)
                 .SetColor(Color.yellow);

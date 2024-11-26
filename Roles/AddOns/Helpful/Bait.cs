@@ -1,4 +1,5 @@
 using System;
+using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
@@ -14,7 +15,16 @@ namespace MoreGamemodes
                 killer.Notify(Utils.ColorString(Color, "YOU KILLED BAIT"));
             }
             new LateTask(() => {
-                if (!MeetingHud.Instance && killer != null && killer.Data != null && !killer.Data.IsDead && !killer.Data.Disconnected && Player != null && Player.Data != null)
+                bool bodyExists = false;
+                foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
+                {
+                    if (deadBody.ParentId == Player.PlayerId)
+                    {
+                        bodyExists = true;
+                        break;
+                    }
+                }
+                if (!MeetingHud.Instance && killer != null && killer.Data != null && !killer.Data.IsDead && !killer.Data.Disconnected && Player != null && Player.Data != null && bodyExists)
                     killer.ForceReportDeadBody(Player.Data);
             }, Math.Max(0.15f, ReportDelay.GetFloat()), "Bait self report");
         }

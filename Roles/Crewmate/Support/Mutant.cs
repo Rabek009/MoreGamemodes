@@ -7,6 +7,7 @@ namespace MoreGamemodes
     {
         public override void OnHudUpate(HudManager __instance)
         {
+            __instance.ReportButton.OverrideText(TranslationController.Instance.GetString(StringNames.ReportButton));
             __instance.PetButton.OverrideText("Repair");
             if (AbilityUses < 1f || !Utils.IsSabotage() || Utils.IsActive(SystemTypes.MushroomMixupSabotage))
                 __instance.PetButton.SetDisabled();

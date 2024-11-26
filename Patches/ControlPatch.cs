@@ -65,6 +65,11 @@ namespace MoreGamemodes
                     LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                 }
             }
+
+            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.N, KeyCode.LeftShift }))
+            {
+                PlayerControl.LocalPlayer.RpcSendMessage(HudManager.Instance.MeetingPrefab.GetComponentsInChildren<InnerNetObject>().Length.ToString(), "test");
+            }
         }
 
         static bool GetKeysDown(KeyCode[] keys)

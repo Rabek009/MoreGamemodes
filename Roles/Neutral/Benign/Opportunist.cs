@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace MoreGamemodes
 {
     public class Opportunist : CustomRole

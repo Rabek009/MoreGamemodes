@@ -1,11 +1,10 @@
-using UnityEngine;
-
 namespace MoreGamemodes
 {
     public class Mortician : CustomRole
     {
         public override bool OnReportDeadBody(NetworkedPlayerInfo target)
         {
+            if (target == null) return true;
             var name = Utils.ColorString(Palette.PlayerColors[Main.StandardColors[target.PlayerId]], Main.StandardNames[target.PlayerId]);
             var role = target.GetRole();
             var killerRole = GameData.Instance.GetPlayerById(ClassicGamemode.instance.PlayerKiller[target.PlayerId]).GetRole();

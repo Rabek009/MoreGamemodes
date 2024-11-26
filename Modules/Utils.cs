@@ -189,7 +189,7 @@ namespace MoreGamemodes
                     writer.StartMessage(1);
                     {
                         writer.WritePacked(playerinfo.NetId);
-                        playerinfo.Serialize(writer, true);
+                        playerinfo.Serialize(writer, false);
                     }
                     writer.EndMessage();
                 }
@@ -349,6 +349,7 @@ namespace MoreGamemodes
             if (reason == DeathReasons.Trapped) return "Trapped";
             if (reason == DeathReasons.Escaped) return "Escaped";
             if (reason == DeathReasons.Guessed) return "Guessed";
+            if (reason == DeathReasons.Eaten) return "Eaten";
             return "???";
         }
 
@@ -361,7 +362,13 @@ namespace MoreGamemodes
             return false;
         }
 
-        public static void SetChatVisible()
+        public static void SetChatVisible(bool visible)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                pc.SetChatVisible(visible);
+        }
+
+        public static void ShowExileAnimation()
         {
             MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
             MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
@@ -618,7 +625,7 @@ namespace MoreGamemodes
             foreach (var tab in Enum.GetValues<TabGroup>())
             {
                 if (tab == TabGroup.GamemodeSettings && Options.CurrentGamemode == Gamemodes.Classic) continue;
-                if ((tab is TabGroup.CrewmateRoles or TabGroup.ImpostorRoles or TabGroup.NeutralRoles or TabGroup.AddOns) && Options.CurrentGamemode != Gamemodes.Classic) continue;
+                if (tab is TabGroup.CrewmateRoles or TabGroup.ImpostorRoles or TabGroup.NeutralRoles or TabGroup.AddOns) continue;
                 Messages[tab] = "<b><size=125%>" + GetTabName(tab) + "</size></b>\n\n" + Messages[tab];
                 if (player == null)
                     SendChat(Messages[tab], "Options");
@@ -759,6 +766,112 @@ namespace MoreGamemodes
             addOn.AddOnDescription = AddOnsHelper.AddOnDescriptions[addOn.Type];
             addOn.AddOnDescriptionLong = AddOnsHelper.AddOnDescriptionsLong[addOn.Type];
             addOn.Color = AddOnsHelper.AddOnColors[addOn.Type];
+        }
+
+        public static string GetRoleOptions(CustomRoles role)
+        {
+            if (role is CustomRoles.Crewmate or CustomRoles.Impostor) return "";
+            string text = "";
+            switch (role)
+            {
+                case CustomRoles.Scientist:
+                    text += ColorString(Palette.CrewmateBlue, "Scientist") + ": " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Scientist) + "%";
+                    text += "\n → Max: " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Scientist);
+                    text += "\n → Vitals display cooldown: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.ScientistCooldown) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.ScientistCooldown)) + "s";
+                    text += "\n → Battery duration: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.ScientistBatteryCharge) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.ScientistBatteryCharge)) + "s";
+                    return text;
+                case CustomRoles.Engineer:
+                    text += ColorString(Palette.CrewmateBlue, "Engineer") + ": " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Engineer) + "%";
+                    text += "\n → Max: " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Engineer);
+                    text += "\n → Vent use cooldown: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.EngineerCooldown) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.EngineerCooldown)) + "s";
+                    text += "\n → Max time in vents: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.EngineerInVentMaxTime) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.EngineerInVentMaxTime)) + "s";
+                    return text;
+                case CustomRoles.Noisemaker:
+                    text += ColorString(Palette.CrewmateBlue, "Noisemaker") + ": " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Noisemaker) + "%";
+                    text += "\n → Max: " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Noisemaker);
+                    text += "\n → Impostors get alert: " + ((Main.RealOptions != null ? Main.RealOptions.GetBool(BoolOptionNames.NoisemakerImpostorAlert) : GameOptionsManager.Instance.CurrentGameOptions.GetBool(BoolOptionNames.NoisemakerImpostorAlert)) ? "✓" : "X");
+                    text += "\n → Alert duration: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.NoisemakerAlertDuration) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.NoisemakerAlertDuration)) + "s";
+                    return text;
+                case CustomRoles.Tracker:
+                    text += ColorString(Palette.CrewmateBlue, "Tracker") + ": " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Tracker) + "%";
+                    text += "\n → Max: " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Tracker);
+                    text += "\n → Tracking cooldown: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.TrackerCooldown) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.TrackerCooldown)) + "s";
+                    text += "\n → Tracking delay: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.TrackerDelay) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.TrackerDelay)) + "s";
+                    text += "\n → Tracking duration: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.TrackerDuration) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.TrackerDuration)) + "s";
+                    return text;
+                case CustomRoles.Shapeshifter:
+                    text += ColorString(Palette.ImpostorRed, "Shapeshifter") + ": " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Shapeshifter) + "%";
+                    text += "\n → Max: " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Shapeshifter);
+                    text += "\n → Leave shapeshifting evidence: " + ((Main.RealOptions != null ? Main.RealOptions.GetBool(BoolOptionNames.ShapeshifterLeaveSkin) : GameOptionsManager.Instance.CurrentGameOptions.GetBool(BoolOptionNames.ShapeshifterLeaveSkin)) ? "✓" : "X");
+                    text += "\n → Shapeshift duration: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.ShapeshifterDuration) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.ShapeshifterDuration)) + "s";
+                    text += "\n → Shapeshift cooldown: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.ShapeshifterCooldown) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.ShapeshifterCooldown)) + "s";
+                    return text;
+                case CustomRoles.Phantom:
+                    text += ColorString(Palette.ImpostorRed, "Phantom") + ": " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(RoleTypes.Phantom) + "%";
+                    text += "\n → Max: " + GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetNumPerGame(RoleTypes.Phantom);
+                    text += "\n → Vanish duration: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.PhantomDuration) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.PhantomDuration)) + "s";
+                    text += "\n → Vanish cooldown: " + (Main.RealOptions != null ? Main.RealOptions.GetFloat(FloatOptionNames.PhantomCooldown) : GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.PhantomCooldown)) + "s";
+                    return text;
+            }
+            for (int index = 0; index < OptionItem.AllOptions.Count; index++)
+            {
+                var option = OptionItem.AllOptions[index];
+                var enabled = option.Id == Options.RolesChance[role].Id || (option.Id > Options.RolesChance[role].Id && option.Id < Options.RolesChance[role].Id + 100 && (option.Parent.Parent == null || option.Parent.GetBool()));
+                if (!enabled) continue;
+                if (text != "")
+                    text += "\n";
+
+                if (option.Parent?.Parent?.Parent != null)
+                    text += "           → ";
+                else if (option.Parent?.Parent != null)
+                    text += "      → ";
+                else if (option.Parent != null)
+                    text += " → ";
+                text += option.GetName(option.NameColor == Color.white);
+
+                text += ": ";
+                if (option is BooleanOptionItem)
+                    text += option.GetBool() ? "✓" : "X";
+                else if (option is IntegerOptionItem)
+                    text += option.ApplyFormat(option.GetInt().ToString());
+                else if (option is FloatOptionItem)
+                    text += option.ApplyFormat(option.GetFloat().ToString());
+                else if (option is StringOptionItem)
+                    text += option.GetString();
+            }
+            return text;
+        }
+
+        public static string GetAddOnOptions(AddOns addOn)
+        {
+            string text = "";
+            for (int index = 0; index < OptionItem.AllOptions.Count; index++)
+            {
+                var option = OptionItem.AllOptions[index];
+                var enabled = option.Id == Options.AddOnsChance[addOn].Id || (option.Id > Options.AddOnsChance[addOn].Id && option.Id < Options.AddOnsChance[addOn].Id + 100 && (option.Parent.Parent == null || option.Parent.GetBool()));
+                if (!enabled) continue;
+                if (text != "")
+                    text += "\n";
+
+                if (option.Parent?.Parent?.Parent != null)
+                    text += "           → ";
+                else if (option.Parent?.Parent != null)
+                    text += "      → ";
+                else if (option.Parent != null)
+                    text += " → ";
+                text += option.GetName(option.NameColor == Color.white);
+
+                text += ": ";
+                if (option is BooleanOptionItem)
+                    text += option.GetBool() ? "✓" : "X";
+                else if (option is IntegerOptionItem)
+                    text += option.ApplyFormat(option.GetInt().ToString());
+                else if (option is FloatOptionItem)
+                    text += option.ApplyFormat(option.GetFloat().ToString());
+                else if (option is StringOptionItem)
+                    text += option.GetString();
+            }
+            return text;
         }
     }
 }

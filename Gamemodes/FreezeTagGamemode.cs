@@ -170,7 +170,7 @@ namespace MoreGamemodes
             target.RpcSetVentInteraction();
             if (target.Data.Role.Role == RoleTypes.Noisemaker)
                 SendNoisemakerAlert(target);
-            new LateTask(() => target.RpcTeleport(target.transform.position), 0.2f);
+            target.RpcTeleport(target.transform.position);
             return false;
         }
 

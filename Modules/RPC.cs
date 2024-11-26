@@ -48,6 +48,8 @@ namespace MoreGamemodes
         SetPetAbilityCooldown,
         GuessPlayer,
         SetAddOn,
+        MarkEscapistPosition,
+        SetHitmanTarget,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -201,6 +203,12 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.SetAddOn:
                     __instance.SetAddOn((AddOns)reader.ReadInt32());
+                    break;
+                case CustomRPC.MarkEscapistPosition:
+                    __instance.MarkEscapistPosition(reader.ReadBoolean() ? NetHelpers.ReadVector2(reader) : null);
+                    break;
+                case CustomRPC.SetHitmanTarget:
+                    __instance.SetHitmanTarget(reader.ReadByte());
                     break;
             }
         }
@@ -620,6 +628,22 @@ namespace MoreGamemodes
             HudManager.Instance.KillOverlay.ShowKillAnimation(player.Data, player.Data);
         }
 
+        public static void MarkEscapistPosition(this PlayerControl player, Vector2? position)
+        {
+            if (ClassicGamemode.instance == null || player.GetRole().Role != CustomRoles.Escapist) return;
+            Escapist escapistRole = player.GetRole() as Escapist;
+            if (escapistRole == null) return;
+            escapistRole.MarkedPosition = position;
+        }
+
+        public static void SetHitmanTarget(this PlayerControl player, byte targetId)
+        {
+            if (ClassicGamemode.instance == null || player.GetRole().Role != CustomRoles.Hitman) return;
+            Hitman hitmanRole = player.GetRole() as Hitman;
+            if (hitmanRole == null) return;
+            hitmanRole.Target = targetId;
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -934,5 +958,21 @@ namespace MoreGamemodes
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
+        public static void RpcMarkEscapistPosition(this PlayerControl player, Vector2? position)
+        {
+            player.MarkEscapistPosition(position);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.MarkEscapistPosition, SendOption.Reliable, -1);
+            writer.Write(position != null);
+            if (position != null)
+                NetHelpers.WriteVector2((Vector2)position, writer);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetHitmanTarget(this PlayerControl player, byte targetId)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetHitmanTarget, SendOption.Reliable, -1);
+            writer.Write(targetId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
     }
 }

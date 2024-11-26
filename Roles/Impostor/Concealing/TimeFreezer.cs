@@ -12,6 +12,11 @@ namespace MoreGamemodes
             __instance.AbilityButton.OverrideText("Freeze Time");
             if ((Utils.IsActive(SystemTypes.Reactor) || Utils.IsActive(SystemTypes.LifeSupp) || Utils.IsActive(SystemTypes.Laboratory) || Utils.IsActive(SystemTypes.HeliSabotage)) && !CanFreezeDuringCriticalSabotage.GetBool())
                 __instance.AbilityButton.SetDisabled();
+            if (!CanUseVents.GetBool())
+            {
+                __instance.ImpostorVentButton.SetDisabled();
+                __instance.ImpostorVentButton.ToggleVisible(false);
+            }
         }
 
         public override bool OnCheckVanish()
@@ -30,7 +35,7 @@ namespace MoreGamemodes
             Utils.SyncAllSettings();
             Utils.SetAllVentInteractions();
             AbilityDuration = FreezeDuration.GetFloat();
-            new LateTask(() => Player.RpcSetAbilityCooldown(FreezeDuration.GetFloat()), 0.1f);
+            new LateTask(() => Player.RpcSetAbilityCooldown(FreezeDuration.GetFloat()), 0.2f);
             return false;
         }
 

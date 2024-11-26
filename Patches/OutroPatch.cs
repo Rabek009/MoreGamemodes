@@ -41,7 +41,6 @@ namespace MoreGamemodes
                         foreach (var addOn in ClassicGamemode.instance.AllPlayersAddOns[playerInfo.PlayerId])
                             lastResult += Utils.ColorString(addOn.Color, addOn.AddOnName) + " ";
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
-                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText()) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
@@ -256,14 +255,20 @@ namespace MoreGamemodes
                         __instance.BackgroundBar.material.color = Palette.ImpostorRed;
                         break;
                     case CustomWinners.Jester:
-                        ColorUtility.TryParseHtmlString("#db72e0", out Color jesterColor);
-                        WinnerText.text += Utils.ColorString(jesterColor, "Jester ");
-                        __instance.BackgroundBar.material.color = jesterColor;
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Jester], "Jester ");
+                        __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Jester];
                         break;
                     case CustomWinners.SerialKiller:
-                        ColorUtility.TryParseHtmlString("#63188f", out Color serialKillerColor);
-                        WinnerText.text += Utils.ColorString(serialKillerColor, "Serial Killer ");
-                        __instance.BackgroundBar.material.color = serialKillerColor;
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.SerialKiller], "Serial Killer ");
+                        __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.SerialKiller];
+                        break;
+                    case CustomWinners.Executioner:
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Executioner], "Executioner ");
+                        __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Executioner];
+                        break;
+                    case CustomWinners.Pelican:
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Pelican], "Pelican ");
+                        __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Pelican];
                         break;
                 }
                 if (!(ClassicGamemode.instance.Winner is CustomWinners.None or CustomWinners.Terminated or CustomWinners.NoOne))
@@ -322,6 +327,7 @@ namespace MoreGamemodes
             Main.TimeSinceLastPet = new Dictionary<byte, float>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
+            AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {
                 var hours = (int)Main.Timer / 3600;

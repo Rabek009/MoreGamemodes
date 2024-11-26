@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using AmongUs.GameOptions;
+using Hazel;
 
 // https://github.com/tukasa0001/TownOfHost/blob/main/Modules/AntiBlackout.cs
 namespace MoreGamemodes
@@ -7,11 +8,16 @@ namespace MoreGamemodes
     public static class AntiBlackout
     {
         public static bool ShowDoubleAnimation => Options.NoGameEnd.GetBool() || (Main.RealOptions.GetInt(Int32OptionNames.NumImpostors) == 1 && CustomRolesHelper.IsNeutralKillerEnabled()) || GameData.Instance.PlayerCount <= 3;
-        public static bool IsCached { get; private set; } = false;
+        public static bool IsCached = false;
         private static Dictionary<byte, (bool isDead, bool Disconnected)> isDeadCache = new();
 
         public static void SetIsDead(bool doSend = true)
         {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data != null && pc.Data.IsDead && !pc.Data.Disconnected)
+                    pc.SetChatVisible(false);
+            }
             isDeadCache.Clear();
             foreach (var info in GameData.Instance.AllPlayers)
             {
@@ -35,7 +41,6 @@ namespace MoreGamemodes
                 }
             }
             isDeadCache.Clear();
-            IsCached = false;
             if (doSend) Utils.SendGameData();
         }
 
@@ -44,7 +49,28 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost || !IsCached || !player.Disconnected) return;
             isDeadCache[player.PlayerId] = (true, true);
             player.IsDead = player.Disconnected = false;
-            Utils.SendGameData();
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage(5);
+            {
+                writer.Write(AmongUsClient.Instance.GameId);
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(player.NetId);
+                    player.Serialize(writer, false);
+                }
+                writer.EndMessage();
+            }
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
+            player.IsDead = player.Disconnected = false;
+        }
+
+        public static void Reset()
+        {
+            if (isDeadCache == null) isDeadCache = new();
+            isDeadCache.Clear();
+            IsCached = false;
         }
     }
 }
