@@ -6,7 +6,6 @@ using System;
 using InnerNet;
 
 using Object = UnityEngine.Object;
-using AmongUs.GameOptions;
 
 namespace MoreGamemodes
 {
@@ -64,11 +63,6 @@ namespace MoreGamemodes
                         viewSettingsPane.RefreshTab();
                     LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                 }
-            }
-
-            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.N, KeyCode.LeftShift }))
-            {
-                PlayerControl.LocalPlayer.RpcSendMessage(HudManager.Instance.MeetingPrefab.GetComponentsInChildren<InnerNetObject>().Length.ToString(), "test");
             }
         }
 
