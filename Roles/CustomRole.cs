@@ -53,6 +53,11 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual bool OnCheckMurderLate(PlayerControl target)
+        {
+            return true;
+        }
+
         public virtual void OnMurderPlayer(PlayerControl target)
         {
 
@@ -107,6 +112,11 @@ namespace MoreGamemodes
         {
             return BaseRole is BaseRoles.Phantom or
             BaseRoles.DesyncPhantom;
+        }
+
+        public virtual void OnAppear()
+        {
+
         }
 
         public virtual void OnAddVote(PlayerControl target)
@@ -238,6 +248,11 @@ namespace MoreGamemodes
         public virtual bool CanGuess(PlayerControl target, AddOns addOn)
         {
             return false;
+        }
+
+        public virtual bool CanGetGuessed(PlayerControl guesser, CustomRoles? role)
+        {
+            return true;
         }
 
         public virtual bool CheckEndCriteria()

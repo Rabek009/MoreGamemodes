@@ -42,7 +42,7 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.PetAction)
             {
                 if (callId == 49)
-                    AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.None, -1));
+                    AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.Reliable, -1));
                 CustomGamemode.Instance.OnPet(pc);
                 Main.TimeSinceLastPet[pc.PlayerId] = 0f;
                 return false;

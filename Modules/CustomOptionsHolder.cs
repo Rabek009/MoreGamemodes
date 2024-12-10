@@ -74,6 +74,7 @@ namespace MoreGamemodes
         public static OptionItem EnableNameRepeating;
         public static OptionItem MaximumNameLength;
         public static OptionItem CanUseTpoutCommand;
+        public static OptionItem CanUseKcountCommand;
 
         //Hide and seek
         public static OptionItem Seekers;
@@ -425,6 +426,8 @@ namespace MoreGamemodes
             MaximumNameLength = IntegerOptionItem.Create(15, "Maximum name length", new(10, 94, 1), 25, TabGroup.ModSettings, false)
                 .SetParent(CanUseNameCommand);
             CanUseTpoutCommand = BooleanOptionItem.Create(16, "Can use /tpout command", true, TabGroup.ModSettings, false);
+            CanUseKcountCommand = BooleanOptionItem.Create(17, "Can use /kcount command", true, TabGroup.ModSettings, false)
+                .SetGamemode(Gamemodes.Classic);
 
             //Hide and seek
             Seekers = TextOptionItem.Create(1000, "Seekers", TabGroup.GamemodeSettings)
@@ -1125,16 +1128,20 @@ namespace MoreGamemodes
                 .SetColor(Palette.CrewmateBlue);
             Investigator.SetupOptionItem();
             Mortician.SetupOptionItem();
+            Snitch.SetupOptionItem();
             CrewmateKilling = TextOptionItem.Create(200000, "Crewmate killing", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
             NiceGuesser.SetupOptionItem();
+            Shaman.SetupOptionItem();
             Sheriff.SetupOptionItem();
             CrewmateProtective = TextOptionItem.Create(300000, "Crewmate protective", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
+            Altruist.SetupOptionItem();
             Immortal.SetupOptionItem();
             Medic.SetupOptionItem();
             CrewmateSupport = TextOptionItem.Create(400000, "Crewmate support", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
+            Judge.SetupOptionItem();
             Mutant.SetupOptionItem();
             SecurityGuard.SetupOptionItem();
 
@@ -1144,10 +1151,12 @@ namespace MoreGamemodes
             SeeTeammateRoles = BooleanOptionItem.Create(500001, "See teammate roles", true, TabGroup.ImpostorRoles, false);
             ImpostorConcealing = TextOptionItem.Create(500010, "Impostor concealing", TabGroup.ImpostorRoles)
                 .SetColor(Palette.ImpostorRed);
+            Droner.SetupOptionItem();
             Escapist.SetupOptionItem();
             TimeFreezer.SetupOptionItem();
             ImpostorKilling = TextOptionItem.Create(600000, "Impostor killing", TabGroup.ImpostorRoles)
                 .SetColor(Palette.ImpostorRed);
+            Archer.SetupOptionItem();
             EvilGuesser.SetupOptionItem();
             Hitman.SetupOptionItem();
             ImpostorSupport = TextOptionItem.Create(700000, "Impostor support", TabGroup.ImpostorRoles)

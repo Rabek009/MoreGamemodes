@@ -129,7 +129,7 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(700101, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            KillCooldownDecreaseOnTrap = FloatOptionItem.Create(700102, "Kill cooldown decrease on trap", new(1f, 30f, 1f), 10f, TabGroup.ImpostorRoles, false)
+            KillCooldownDecreaseOnTrap = FloatOptionItem.Create(700102, "Kill cooldown decrease on trap", new(1f, 30f, 0.5f), 5f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
             Options.RolesChance[CustomRoles.Trapster] = Chance;

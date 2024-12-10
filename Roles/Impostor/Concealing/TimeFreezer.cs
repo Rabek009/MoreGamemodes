@@ -19,6 +19,24 @@ namespace MoreGamemodes
             }
         }
 
+        public override void OnFixedUpdate()
+        {
+            if (AbilityDuration <= -1f)
+            {
+                TimeSinceAbilityUse += Time.fixedDeltaTime;
+            }
+            if (AbilityDuration > -1f)
+            {
+                AbilityDuration -= Time.fixedDeltaTime;
+            }
+            if (AbilityDuration <= 0f && AbilityDuration > -1f)
+            {
+                AbilityDuration = -1f;
+                TimeSinceAbilityUse = 0f;
+                Player.RpcResetAbilityCooldown();
+            }
+        }
+
         public override bool OnCheckVanish()
         {
             if (AbilityDuration > 0f) return false;
@@ -37,24 +55,6 @@ namespace MoreGamemodes
             AbilityDuration = FreezeDuration.GetFloat();
             new LateTask(() => Player.RpcSetAbilityCooldown(FreezeDuration.GetFloat()), 0.2f);
             return false;
-        }
-
-        public override void OnFixedUpdate()
-        {
-            if (AbilityDuration <= -1f)
-            {
-                TimeSinceAbilityUse += Time.fixedDeltaTime;
-            }
-            if (AbilityDuration > -1f)
-            {
-                AbilityDuration -= Time.fixedDeltaTime;
-            }
-            if (AbilityDuration <= 0f && AbilityDuration > -1f)
-            {
-                AbilityDuration = -1f;
-                TimeSinceAbilityUse = 0f;
-                Player.RpcResetAbilityCooldown();
-            }
         }
 
         public override bool OnEnterVent(int id)
@@ -110,7 +110,7 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             CanFreezeDuringCriticalSabotage = BooleanOptionItem.Create(500104, "Can freeze during critical sabotage", false, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            CanUseVents = BooleanOptionItem.Create(500105, "Can use vents", true, TabGroup.ImpostorRoles, false)
+            CanUseVents = BooleanOptionItem.Create(500105, "Can use vents", false, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.TimeFreezer] = Chance;
             Options.RolesCount[CustomRoles.TimeFreezer] = Count;

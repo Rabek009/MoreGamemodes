@@ -82,9 +82,9 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Percent);
             Count = IntegerOptionItem.Create(400201, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            InitialAbilityUseLimit = FloatOptionItem.Create(400202, "Initial ability use limit", new(1f, 99f, 1f), 2f, TabGroup.CrewmateRoles, false)
+            InitialAbilityUseLimit = FloatOptionItem.Create(400202, "Initial ability use limit", new(0f, 99f, 1f), 1f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(400203, "Ability use gain with each task completed", new(0f, 5f, 0.2f), 1f, TabGroup.CrewmateRoles, false)
+            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(400203, "Ability use gain with each task completed", new(0f, 5f, 0.1f), 0.5f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Mutant] = Chance;
             Options.RolesCount[CustomRoles.Mutant] = Count;

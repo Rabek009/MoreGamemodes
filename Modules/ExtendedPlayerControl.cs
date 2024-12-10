@@ -62,11 +62,31 @@ namespace MoreGamemodes
                 new LateTask(() => player.RpcTeleport(position), 0.1f, "Retry Teleport");
                 return;
             }
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && player.GetRole().Role == CustomRoles.Droner)
+            {
+                var dronerRole = player.GetRole() as Droner;
+                if (dronerRole != null)
+                {
+                    player.RpcSetDronerRealPosition(position);
+                    if (AmongUsClient.Instance.AmClient && !player.AmOwner)
+                    {
+                        player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 328));
+                    }
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc.AmOwner || pc == player) continue;
+                        MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable, pc.GetClientId());
+                        NetHelpers.WriteVector2(position, writer2);
+                        writer2.Write((ushort)(player.NetTransform.lastSequenceId + 16383 + 8));
+                        AmongUsClient.Instance.FinishRpcImmediately(writer2);
+                    }
+                }
+            }
             if (AmongUsClient.Instance.AmClient)
             {
                 player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 328));
             }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.None);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable);
             NetHelpers.WriteVector2(position, writer);
             writer.Write((ushort)(player.NetTransform.lastSequenceId + 8));
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -100,7 +120,7 @@ namespace MoreGamemodes
                 player.StartCoroutine(player.CoSetRole(role, true));
                 return;
             }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, seer.GetClientId());
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, seer.GetClientId());
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -122,7 +142,7 @@ namespace MoreGamemodes
                 player.StartCoroutine(player.CoSetRole(role, true));
                 return;
             }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, seer.GetClientId());
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, seer.GetClientId());
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -194,7 +214,7 @@ namespace MoreGamemodes
                 GameOptionsManager.Instance.CurrentGameOptions = options2;
                 return;
             }
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(6);
             writer.Write(AmongUsClient.Instance.GameId);
             writer.WritePacked(target.GetClientId());
@@ -259,7 +279,7 @@ namespace MoreGamemodes
             }
             else
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, killer.GetClientId());
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, killer.GetClientId());
                 writer.WriteNetObject(target);
                 writer.Write((int)MurderResultFlags.FailedProtected);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -269,7 +289,7 @@ namespace MoreGamemodes
         public static void RpcUnmoddedSetKillTimer(this PlayerControl player, float time)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(6);
             writer.Write(AmongUsClient.Instance.GameId);
             writer.WritePacked(player.GetClientId());
@@ -315,7 +335,7 @@ namespace MoreGamemodes
         public static void RpcExileV2(this PlayerControl player)
         {
             player.Exiled();
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -366,6 +386,12 @@ namespace MoreGamemodes
         public static Vent GetClosestVent(this PlayerControl player)
         {
             Vector2 playerpos = player.transform.position;
+            if (ClassicGamemode.instance != null && player.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = player.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    playerpos = dronerRole.DronePosition;
+            }
             Dictionary<Vent, float> ventdistance = new();
             float dis;
             foreach (Vent vent in ShipStatus.Instance.AllVents)
@@ -433,7 +459,7 @@ namespace MoreGamemodes
                     if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                     {
                         foreach (var addOn in player.GetAddOns())
-                            prefix += "<size=1.6>" + Utils.ColorString(addOn.Color, addOn.AddOnName) + " </size>";
+                            prefix += "<size=1.6>" + Utils.ColorString(addOn.Color, "(" + addOn.AddOnName + ")") + " </size>";
                     }
                     if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                         prefix += "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n</size>";
@@ -501,7 +527,7 @@ namespace MoreGamemodes
             if (player == null) return;
             Main.StandardRoles[player.PlayerId] = role;
             player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -522,7 +548,7 @@ namespace MoreGamemodes
                 RoleManager.Instance.SetRole(player, role);
             else
                 player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);
             writer.Write(true);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -608,6 +634,135 @@ namespace MoreGamemodes
                         player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
                 }
                 return;
+            }
+            else if (Options.CurrentGamemode is Gamemodes.Classic)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)))
+                        Main.DesyncRoles.Remove((player.PlayerId, pc.PlayerId));
+                    if (Main.DesyncRoles.ContainsKey((pc.PlayerId, player.PlayerId)))
+                        Main.DesyncRoles.Remove((pc.PlayerId, player.PlayerId));
+                }
+                switch (player.GetRole().BaseRole)
+                {
+                    case BaseRoles.Crewmate:
+                        player.RpcSetRoleV2(RoleTypes.Crewmate);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        break;
+                    case BaseRoles.Scientist:
+                        player.RpcSetRoleV2(RoleTypes.Scientist);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Scientist;
+                        break;
+                    case BaseRoles.Engineer:
+                        player.RpcSetRoleV2(RoleTypes.Engineer);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Engineer;
+                        break;
+                    case BaseRoles.Noisemaker:
+                        player.RpcSetRoleV2(RoleTypes.Noisemaker);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Noisemaker;
+                        break;
+                    case BaseRoles.Tracker:
+                        player.RpcSetRoleV2(RoleTypes.Tracker);
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Tracker;
+                        break;
+                    case BaseRoles.Impostor:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Impostor;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Impostor, pc);
+                        }
+                        break;
+                    case BaseRoles.Shapeshifter:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Shapeshifter;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Shapeshifter, pc);
+                        }
+                        break;
+                    case BaseRoles.Phantom:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Phantom;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Phantom, pc);
+                        }
+                        break;
+                    case BaseRoles.DesyncImpostor:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == player)
+                                player.RpcSetDesyncRole(RoleTypes.Impostor, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                        }
+                        break;
+                    case BaseRoles.DesyncShapeshifter:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == player)
+                                player.RpcSetDesyncRole(RoleTypes.Shapeshifter, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                        }
+                        break;
+                    case BaseRoles.DesyncPhantom:
+                        Main.StandardRoles[player.PlayerId] = RoleTypes.Crewmate;
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == player)
+                                player.RpcSetDesyncRole(RoleTypes.Phantom, pc);
+                            else
+                                player.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
+                        }
+                        break;
+                }
+                switch (player.GetRole().BaseRole)
+                {
+                    case BaseRoles.DesyncImpostor:
+                    case BaseRoles.DesyncShapeshifter:
+                    case BaseRoles.DesyncPhantom:
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc != player)
+                            {
+                                if (pc.GetRole().BaseRole is BaseRoles.Impostor or BaseRoles.Shapeshifter or BaseRoles.Phantom)
+                                    pc.RpcSetDesyncRole(RoleTypes.Crewmate, player);
+                                else
+                                    pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], player);
+                            }
+                        }
+                        break;
+                    default:
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc != player)
+                                pc.RpcSetDesyncRole(Main.StandardRoles[pc.PlayerId], player);
+                        }
+                        break;
+                }
+                foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
+                {
+                    if (deadBody.ParentId == player.PlayerId)
+                    {
+                        var position = deadBody.transform.position;
+                        player.RpcTeleport(new Vector2(position.x, position.y + 0.3636f));
+                        break;
+                    }
+                }
+                player.RpcSetPet(Main.StandardPets[player.PlayerId]);
+                player.RpcSetDeathReason(DeathReasons.Alive);
+                PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
             }
             player.RpcSetRoleV2(Main.StandardRoles[player.PlayerId]);
             foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
@@ -746,15 +901,20 @@ namespace MoreGamemodes
 
         public static RoleTypes GetSelfRole(this PlayerControl player)
         {
-            if (CustomGamemode.Instance.Gamemode is Gamemodes.BattleRoyale or Gamemodes.ColorWars) return RoleTypes.Impostor;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.BattleRoyale or Gamemodes.PaintBattle or Gamemodes.BaseWars or Gamemodes.ColorWars) return RoleTypes.Impostor;
             if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak) return RoleTypes.Shapeshifter;
-            if (CustomGamemode.Instance.Gamemode is Gamemodes.PaintBattle or Gamemodes.BaseWars) return RoleTypes.Phantom;
             return Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
         }
 
         public static List<Vent> GetVentsFromClosest(this PlayerControl player)
         {
             Vector2 playerpos = player.transform.position;
+            if (ClassicGamemode.instance != null && player.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = player.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    playerpos = dronerRole.DronePosition;
+            }
             List<Vent> vents = new();
             foreach (var vent in ShipStatus.Instance.AllVents)
                 vents.Add(vent);
@@ -798,7 +958,7 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic || player == null) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!pc.AmOwner && !pc.GetRole().IsImpostor() && pc != player)
+                if (!pc.AmOwner && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != player)
                 {
                     CustomRpcSender sender = CustomRpcSender.Create("ResetInvisibility", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
@@ -808,6 +968,8 @@ namespace MoreGamemodes
                     sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
                         .Write((ushort)role)
                         .Write(true)
+                        .EndRpc();
+                    sender.StartRpc(player.NetId, (byte)RpcCalls.CancelPet)
                         .EndRpc();
                     sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                         .WriteVector2(new Vector2(50f, 50f))

@@ -35,12 +35,30 @@ namespace MoreGamemodes
             }, 2f, "Welcome Message");
             new LateTask(() => 
             {
-                if (client != null && client.Character != null && (client.Character.Data == null || client.Character.Data.IsIncomplete))
+                try
                 {
-                    client.Character.Despawn();
-                    __instance.KickPlayer(client.Id, false);
+                    if (AmongUsClient.Instance.AmHost && !IsDisconnected(client) && client.Character.Data.IsIncomplete)
+                    {
+                        AmongUsClient.Instance.KickPlayer(client.Id, false);
+                        return;
+                    }
                 }
-            }, 3f, "Kick Fortegreen");
+                catch { }
+            }, 4.5f, "Kick Fortegreen");
+        }
+        // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Patches/PlayerJoinAndLeftPatch.cs#L164
+        public static bool IsDisconnected(ClientData client)
+        {
+            var __instance = AmongUsClient.Instance;
+            for (int i = 0; i < __instance.allClients.Count; i++)
+            {
+                ClientData clientData = __instance.allClients[i];
+                if (clientData.Id == client.Id)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -148,6 +166,17 @@ namespace MoreGamemodes
         }
     }
 
+    [HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.CmdAddVote))]
+    class CmdAddVotePatch
+    {
+        public static bool Prefix(VoteBanSystem __instance, [HarmonyArgument(0)] int clientId)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            CustomGamemode.Instance.OnAddVote(AmongUsClient.Instance.ClientId, clientId);
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.AddVote))]
     class AddVotePatch
     {
@@ -155,11 +184,11 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             CustomGamemode.Instance.OnAddVote(srcClient, clientId);
-            if (__instance != VoteBanSystem.Instance) return false;
+            if (AmongUsClient.Instance.ClientId == srcClient || __instance != VoteBanSystem.Instance) return false;
             VoteBanSystem.Instance = Object.Instantiate(AmongUsClient.Instance.VoteBanPrefab);
 			AmongUsClient.Instance.Spawn(VoteBanSystem.Instance, -2, SpawnFlags.None);
             new LateTask(() => {
-                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(5);
                 writer.Write(AmongUsClient.Instance.GameId);
 			    writer.StartMessage(5);
@@ -319,6 +348,15 @@ namespace MoreGamemodes
                 __instance.SendOrDisconnect(messageWriter);
                 messageWriter.Recycle();
             }
+        }  
+    }
+
+    [HarmonyPatch(typeof(GameData), nameof(GameData.DirtyAllData))]
+    class DirtyAllDataPatch
+    {
+        public static bool Prefix()
+        {
+            return false;
         }
     }
 }

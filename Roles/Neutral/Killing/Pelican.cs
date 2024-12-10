@@ -40,41 +40,16 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnCheckMurder(PlayerControl target)
+        public override bool OnCheckMurderLate(PlayerControl target)
         {
-            bool cancel = false;
-            foreach (var addOn in Player.GetAddOns())
-            {
-                if (!addOn.OnCheckMurder(target))
-                    cancel = true;
-            }
-            if (cancel)
-                return false;
-            if (!target.GetRole().OnCheckMurderAsTarget(Player))
-                return false;
-            foreach (var addOn in target.GetAddOns())
-            {
-                if (!addOn.OnCheckMurderAsTarget(Player))
-                    cancel = true;
-            }
             Player.RpcTeleport(target.transform.position);
             Player.RpcSetDeathReason(DeathReasons.Eaten);
             target.RpcExileV2();
+            target.RpcSetScanner(false);
             Player.RpcSetKillTimer(EatCooldown.GetFloat());
             ++Main.PlayerKills[Player.PlayerId];
             ClassicGamemode.instance.PlayerKiller[target.PlayerId] = Player.PlayerId;
-            Player.GetRole().OnMurderPlayer(target);
-            foreach (var addOn in Player.GetAddOns())
-                addOn.OnMurderPlayer(target);
-            target.GetRole().OnMurderPlayerAsTarget(Player);
-            foreach (var addOn in target.GetAddOns())
-                addOn.OnMurderPlayerAsTarget(Player);
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                pc.GetRole().OnGlobalMurderPlayer(Player, target);
-                foreach (var addOn in pc.GetAddOns())
-                    addOn.OnGlobalMurderPlayer(Player, target);
-            }
+            ClassicGamemode.instance.OnMurderPlayer(Player, target);
             return false;
         }
 

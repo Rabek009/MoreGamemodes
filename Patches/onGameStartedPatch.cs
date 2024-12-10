@@ -15,8 +15,8 @@ namespace MoreGamemodes
             {
                 if (CustomGamemode.Instance == null)
                 {
-                    ClassicGamemode.instance = new ClassicGamemode();
-                    CustomGamemode.Instance = ClassicGamemode.instance;
+                    UnmoddedGamemode.instance = new UnmoddedGamemode();
+                    CustomGamemode.Instance = UnmoddedGamemode.instance;
                 }
                 return;
             }

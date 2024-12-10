@@ -16,19 +16,25 @@ namespace MoreGamemodes
             {"tracker", CustomRoles.Tracker},
             {"investigator", CustomRoles.Investigator},
             {"mortician", CustomRoles.Mortician},
+            {"snitch", CustomRoles.Snitch},
             {"sheriff", CustomRoles.Sheriff},
             {"niceguesser", CustomRoles.NiceGuesser},
+            {"shaman", CustomRoles.Shaman},
             {"immortal", CustomRoles.Immortal},
             {"medic", CustomRoles.Medic},
+            {"altruist", CustomRoles.Altruist},
             {"securityguard", CustomRoles.SecurityGuard},
             {"mutant", CustomRoles.Mutant},
+            {"judge", CustomRoles.Judge},
             {"impostor", CustomRoles.Impostor},
             {"shapeshifter", CustomRoles.Shapeshifter},
             {"phantom", CustomRoles.Phantom},
             {"timefreezer", CustomRoles.TimeFreezer},
             {"escapist", CustomRoles.Escapist},
+            {"droner", CustomRoles.Droner},
             {"evilguesser", CustomRoles.EvilGuesser},
             {"hitman", CustomRoles.Hitman},
+            {"archer", CustomRoles.Archer},
             {"trapster", CustomRoles.Trapster},
             {"parasite", CustomRoles.Parasite},
             {"opportunist", CustomRoles.Opportunist},
@@ -48,19 +54,25 @@ namespace MoreGamemodes
             {CustomRoles.Tracker, "Tracker"},
             {CustomRoles.Investigator, "Investigator"},
             {CustomRoles.Mortician, "Mortician"},
+            {CustomRoles.Snitch, "Snitch"},
             {CustomRoles.Sheriff, "Sheriff"},
             {CustomRoles.NiceGuesser, "Nice Guesser"},
+            {CustomRoles.Shaman, "Shaman"},
             {CustomRoles.Immortal, "Immortal"},
             {CustomRoles.Medic, "Medic"},
+            {CustomRoles.Altruist, "Altruist"},
             {CustomRoles.SecurityGuard, "Security Guard"},
             {CustomRoles.Mutant, "Mutant"},
+            {CustomRoles.Judge, "Judge"},
             {CustomRoles.Impostor, "Impostor"},
             {CustomRoles.Shapeshifter, "Shapeshifter"},
             {CustomRoles.Phantom, "Phantom"},
             {CustomRoles.TimeFreezer, "Time Freezer"},
             {CustomRoles.Escapist, "Escapist"},
+            {CustomRoles.Droner, "Droner"},
             {CustomRoles.EvilGuesser, "Evil Guesser"},
             {CustomRoles.Hitman, "Hitman"},
+            {CustomRoles.Archer, "Archer"},
             {CustomRoles.Trapster, "Trapster"},
             {CustomRoles.Parasite, "Parasite"},
             {CustomRoles.Opportunist, "Opportunist"},
@@ -80,19 +92,25 @@ namespace MoreGamemodes
             {CustomRoles.Tracker, "Track a crewmate with your map"},
             {CustomRoles.Investigator, "See if someone is good or evil"},
             {CustomRoles.Mortician, "Get info about bodies"},
+            {CustomRoles.Snitch, "Complete tasks to find killers"},
             {CustomRoles.Sheriff, "Shoot impostors"},
             {CustomRoles.NiceGuesser, "Guess evil roles during meeting"},
+            {CustomRoles.Shaman, "Curse killers and make them die"},
             {CustomRoles.Immortal, "Complete tasks to get protection"},
             {CustomRoles.Medic, "Give shield to crewmate"},
+            {CustomRoles.Altruist, "Sacrifice yourself to revive someone"},
             {CustomRoles.SecurityGuard, "Block vents and gain extra info from security"},
             {CustomRoles.Mutant, "Fix sabotages from anywhere"},
+            {CustomRoles.Judge, "Exile who you want"},
             {CustomRoles.Impostor, "Kill and sabotage"},
             {CustomRoles.Shapeshifter, "Disguise yourself"},
             {CustomRoles.Phantom, "Turn invisible"},
             {CustomRoles.TimeFreezer, "Freeze time to make sneaky kills"},
             {CustomRoles.Escapist, "Mark location and teleport to it"},
+            {CustomRoles.Droner, "Use drones to kill players"},
             {CustomRoles.EvilGuesser, "Guess roles during meeting"},
             {CustomRoles.Hitman, "Kill your targets with no cooldown"},
+            {CustomRoles.Archer, "Shoot players from far away"},
             {CustomRoles.Trapster, "Trap players on dead bodies"},
             {CustomRoles.Parasite, "Sacrifice to make someone impostor"},
             {CustomRoles.Opportunist, "Survive to win"},
@@ -112,19 +130,25 @@ namespace MoreGamemodes
             {CustomRoles.Tracker, "Tracker (Crewmate): You can track other player too see that player on your map. Player position updates every few seconds. You can track player for limited amount of time. After tracking cooldown is over, you can track another player."},
             {CustomRoles.Investigator, "Investigator (Crewmate): You can use pet button to switch between task and investigate mode. In task mode you can do tasks. In investigate mode you have kill button. Use kill button to investigate player. If players is good, his name will become green. But if player is evil then his name will turn red. But some roles that are good can show as evil, also sometimes evil roles show as good. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed, you don't have task and investigate mode. You can do tasks and investigate at the same time."},
             {CustomRoles.Mortician, "Mortician (Crewmate): When you report dead body, you know target's role, killer's role and how old is body. During meeting you see death reasons. Depending on options you have arrow pointing to nearest dead body."},
+            {CustomRoles.Snitch, "Snitch (Crewmate): After completing all tasks you see who is impostor and depending on options neutral killer. Depending on options you can also see arrows to them. But if you're close to complete tasks, killers will know you and see arrow to you. Depending on options you might have more tasks than other crewmates. Finish tasks fast and don't get killed!"},
             {CustomRoles.Sheriff, "Sheriff (Crewmate): You can use pet button to switch between task and kill mode. In task mode you can do tasks. In kill mode you have kill button. You can kill impostors and depending on options neutrals. If you try to kill someone you can't, you die from misfire. Depending on options your target dies on misfire too.\n\nIf you have mod installed, you don't have task and kill mode. You can do tasks and kill at the same time."},
             {CustomRoles.NiceGuesser, "Nice Guesser (Crewmate): You can guess evil roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 6 is trapster, you should type <i>/guess 6 trapster</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead."},
-            {CustomRoles.Immortal, "Immortal (Crewmate): After completing all tasks you can survive few kill attempts. In addition after you complete task, you get temporarily protection. If impostor try to kill you, his cooldown will reset to 50%. You will know that someone tried to kill you when meeting is called."},
+            {CustomRoles.Shaman, "Shaman (Crewmate): During meeting you can curse someone. If that player is killer he has to kill someone next round, or he will die and is informed about it. If that player can't kill, nothing will happen. You can curse max 1 person per meeting. You can't call meeting, but you can still report dead body. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed you can use curse button to curse someone."},
+            {CustomRoles.Immortal, "Immortal (Crewmate): After completing all tasks you can survive few kill attempts. In addition after you complete task, you get temporarily protection. If impostor try to kill you, his cooldown will reset to 50%."},
             {CustomRoles.Medic, "Medic (Crewmate): You can use pet button to switch between task and shield mode. In task mode you can do tasks. In shield mode you have kill button. Use kill button to give shield to crewmate. Player with shield can't be killed. If player with shield die, you can give shield to another player. You get alerted when someone try to kill protected player and depending on options killer's cooldown reset to 50%. When you die, shield disappear.\n\nIf you have mod installed, you don't have task and shield mode. You can do tasks and give shield at the same time."},
+            {CustomRoles.Altruist, "Altruist (Crewmate): You can use report button to revive someone. After reviving someone you die. Revived player can still use their abilities, chat and do everything else. Depending on options you have arrow pointing to nearest dead body."},
             {CustomRoles.SecurityGuard, "Security Guard (Crewmate): You can use pet button near vent to block it permanently. Blocked vent can't be used by anyone. When you're looking at cameras/doorlog/binoculars you get alerted when someone die. Depending on options cameras don't blink when you're using it."},
             {CustomRoles.Mutant, "Mutant (Crewmate): You can use pet button during sabotage to instantly fix it from anywhere. You can't fix mushroom mixup sabotage."},
+            {CustomRoles.Judge, "Judge (Crewmate): During meeting you can eject anyone you want one time. To do this open kick menu (open chat and click red button), select player who you want to exile and click \"kick\". After that meeting will instantly end and that player will be ejected. Depending on options you might die after using ability.\n\nIf you have mod installed you can use judge button to exile player."},
             {CustomRoles.Impostor, "Impostor (Impostor): Regular impostor without any ability.<size=0>"},
             {CustomRoles.Shapeshifter, "Shapeshifter (Impostor): You can shapeshift into other players. You can stay in shapeshifted form for limited time. When shapeshifting there is animation and depending on options you leave shapeshift evidence."},
             {CustomRoles.Phantom, "Phantom (Impostor): You can turn invisible for limited amount of time. When disappearing or appearing there is animation. While invisible, you can't kill, vent, repair sabotages, use platform and zipline. Other impostors can see you, when you're invisible. While invisible you're 10% faster."},
             {CustomRoles.TimeFreezer, "Time Freezer (Impostor): Click vanish button to freeze time for short period of time. When time is frozen other players can't move and are blind. They can't use their abilities, kill, report bodies, call meeting, sabotage, vent. You can kill during freeze, just make sure no one realize that you moved."},
             {CustomRoles.Escapist, "Escapist (Impostor): You can mark position with your vanish button. You can teleport to that position by using vanish button again. After teleporting or after meeting your marked position reset and you have to mark again."},
+            {CustomRoles.Droner, "Droner (Impostor): You can use vanish button to launch the drone from your position. You can control this drone and everyone can see it. Drone can stay on map for limited amount of time. When controlling drone you can kill people using it. Use pet button to stop using it or it will stop automatically when ability duration is over. After that you have cooldown before you can use your ability again. When you're using a drone, your real character is not moving (other people see you standing still). People can still interact with you when you're using a drone. When using drone you can't vent, report, call meetings and interact with objects."},
             {CustomRoles.EvilGuesser, "Evil Guesser (Impostor): You can guess roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 2 is sheriff, you should type <i>/guess 2 sheriff</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead. During rounds you can kill like regular impostor."},
             {CustomRoles.Hitman, "Hitman (Impostor): Your target is random non impostor and you're only allowed to kill that target. After killing you have 1 second kill cooldown and your target changes. Target changes when your current target dies, after meeting or when your shift timer goes to 0. Depending on options you have arrow pointing to your target. You can see your target name at any time and you see target's name in black."},
+            {CustomRoles.Archer, "Archer (Impostor): You can use pet button to kill nearest player from any distance without teleporting to them, but it uses arrow. You can kill normally without usign it. You have limited arrows, but you can get more by killing. You can only shoot, when your cooldown is 0."},
             {CustomRoles.Trapster, "Trapster (Impostor): After killing someone, you place trap on dead body. Next player, who tries to report that body (or interact with it in any way) will be trapped on it unable to move and use abilities. Dead body can trap only 1 person at the time. If someone gets trapped on your body, your kill cooldown will decrease and you will get alerted."},
             {CustomRoles.Parasite, "Parasite (Impostor): You can use pet button to turn nearby player into impostor, but you die after doing it. Depending on options that person becomes regular impostor, parasite or random impostor role. You can kill like regular impostor, but after kill your ability cooldown reset. You can use ability when you're suspicious to turn someone less suspicious into impostor."},
             {CustomRoles.Opportunist, "Opportunist (Neutral): Survive to the end to win with winning team. If you die, you lose."},
@@ -144,19 +168,25 @@ namespace MoreGamemodes
             {CustomRoles.Tracker, Palette.CrewmateBlue},
             {CustomRoles.Investigator, Utils.HexToColor("#118385")},
             {CustomRoles.Mortician, Utils.HexToColor("#4d5254")},
+            {CustomRoles.Snitch, Utils.HexToColor("#7c9923")},
             {CustomRoles.Sheriff, Utils.HexToColor("#e8e11e")},
             {CustomRoles.NiceGuesser, Utils.HexToColor("#f5f17a")},
+            {CustomRoles.Shaman, Utils.HexToColor("#dce7e8")},
             {CustomRoles.Immortal, Utils.HexToColor("#5e2a10")},
             {CustomRoles.Medic, Utils.HexToColor("#144015")},
+            {CustomRoles.Altruist, Utils.HexToColor("#3d040e")},
             {CustomRoles.SecurityGuard, Utils.HexToColor("#96944e")},
             {CustomRoles.Mutant, Utils.HexToColor("#4b0c4d")},
+            {CustomRoles.Judge, Utils.HexToColor("#294361")},
             {CustomRoles.Impostor, Palette.ImpostorRed},
             {CustomRoles.Shapeshifter, Palette.ImpostorRed},
             {CustomRoles.Phantom, Palette.ImpostorRed},
             {CustomRoles.TimeFreezer, Palette.ImpostorRed},
             {CustomRoles.Escapist, Palette.ImpostorRed},
+            {CustomRoles.Droner, Palette.ImpostorRed},
             {CustomRoles.EvilGuesser, Palette.ImpostorRed},
             {CustomRoles.Hitman, Palette.ImpostorRed},
+            {CustomRoles.Archer, Palette.ImpostorRed},
             {CustomRoles.Trapster, Palette.ImpostorRed},
             {CustomRoles.Parasite, Palette.ImpostorRed},
             {CustomRoles.Opportunist, Utils.HexToColor("#1dde16")},
@@ -194,11 +224,17 @@ namespace MoreGamemodes
                 case CustomRoles.Mortician:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Mortician(player);
                     break;
+                case CustomRoles.Snitch:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Snitch(player);
+                    break;
                 case CustomRoles.Sheriff:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Sheriff(player);
                     break;
                 case CustomRoles.NiceGuesser:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new NiceGuesser(player);
+                    break;
+                case CustomRoles.Shaman:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Shaman(player);
                     break;
                 case CustomRoles.Immortal:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Immortal(player);
@@ -206,11 +242,17 @@ namespace MoreGamemodes
                 case CustomRoles.Medic:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Medic(player);
                     break;
+                case CustomRoles.Altruist:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Altruist(player);
+                    break;
                 case CustomRoles.SecurityGuard:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new SecurityGuard(player);
                     break;
                 case CustomRoles.Mutant:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Mutant(player);
+                    break;
+                case CustomRoles.Judge:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Judge(player);
                     break;
                 case CustomRoles.Impostor:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Impostor(player);
@@ -227,11 +269,17 @@ namespace MoreGamemodes
                 case CustomRoles.Escapist:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Escapist(player);
                     break;
+                case CustomRoles.Droner:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Droner(player);
+                    break;
                 case CustomRoles.EvilGuesser:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new EvilGuesser(player);
                     break;
                 case CustomRoles.Hitman:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Hitman(player);
+                    break;
+                case CustomRoles.Archer:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Archer(player);
                     break;
                 case CustomRoles.Trapster:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Trapster(player);
@@ -285,8 +333,10 @@ namespace MoreGamemodes
             CustomRoles.Phantom or
             CustomRoles.TimeFreezer or
             CustomRoles.Escapist or
+            CustomRoles.Droner or
             CustomRoles.EvilGuesser or
             CustomRoles.Hitman or
+            CustomRoles.Archer or
             CustomRoles.Trapster or
             CustomRoles.Parasite;
         }
@@ -317,7 +367,8 @@ namespace MoreGamemodes
         public static bool IsCrewmateKilling(CustomRoles role)
         {
             return role is CustomRoles.Sheriff or
-            CustomRoles.NiceGuesser;
+            CustomRoles.NiceGuesser or
+            CustomRoles.Shaman;
         }
 
         public static bool IsVanilla(CustomRoles role)
@@ -414,20 +465,26 @@ public enum CustomRoles
     Tracker,
     Investigator,
     Mortician,
+    Snitch,
     Sheriff,
     NiceGuesser,
+    Shaman,
     Immortal,
     Medic,
+    Altruist,
     SecurityGuard,
     Mutant,
+    Judge,
     // Impostor
     Impostor,
     Shapeshifter,
     Phantom,
     TimeFreezer,
     Escapist,
+    Droner,
     EvilGuesser,
     Hitman,
+    Archer,
     Trapster,
     Parasite,
     //Neutral

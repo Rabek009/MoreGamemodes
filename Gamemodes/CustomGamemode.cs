@@ -182,6 +182,11 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual void OnAppear(PlayerControl phantom)
+        {
+
+        }
+
         public virtual bool OnCloseDoors(ShipStatus __instance)
         {
             return true;

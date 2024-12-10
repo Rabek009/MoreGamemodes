@@ -388,6 +388,8 @@ namespace MoreGamemodes
             if (killer.Data.Role.IsImpostor && !NoItemGive)
                 killer.RpcSetItem(RandomItemImpostor());
             target.RpcSetItem(Items.None);
+            if (Options.EnableMedicine.GetBool())
+                new LateTask(() => target.SetChatVisible(false), 0.2f);
         }
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)

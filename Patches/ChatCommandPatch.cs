@@ -1076,10 +1076,12 @@ namespace MoreGamemodes
                 case "/commands":
                 case "/cm":
                     canceled = true;
-                    PlayerControl.LocalPlayer.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n" +
-                        "/now - show active settings\n/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/changesetting SETTING VALUE - changes setting value\n" +
-                        "/gamemode GAMEMODE - changes gamemode\n/kick PLAYER_ID - kick player\n/ban PLAYER_ID - ban player\n/announce MESSAGE - send message\n/lastresult - show last game result\n" +
-                        "/tpout - teleports you outside lobby ship\n/tpin - teleports you into lobby ship\n/tagcolor - changes color of your tag (not host tag)\n/hostcolor - changes color of host tag", "Command");
+                    PlayerControl.LocalPlayer.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/h gm - show gamemode description\n" +
+                        "/n - show active settings\n/id (players, colors) - show ids\n/h i - show item description\n/cm - show list of commands\n/cs SETTING VALUE - changes setting value\n" +
+                        "/gm GAMEMODE - changes gamemode\n/kick PLAYER_ID - kick player\n/ban PLAYER_ID - ban player\n/ac MESSAGE - send message\n/l - show last game result\n" +
+                        "/tpout - teleports you outside lobby ship\n/tpin - teleports you into lobby ship\n/tagcolor - changes color of your tag (not host tag)\n/hostcolor - changes color of host tag\n" +
+                        "/m - shows your role description\n/guess PLAYER_ID ROLE - you guess player as nice/evil guesser\n/r - shows roles percentage and amount\n/r ROLE - shows role description\n" +
+                        "/kc - shows alive killers amount in classic", "Command");
                     break;
                 case "/kick":
                     canceled = true;
@@ -1295,6 +1297,7 @@ namespace MoreGamemodes
                     if (CustomRolesHelper.CommandRoleNames.ContainsKey(role))
                     {
                         if (!PlayerControl.LocalPlayer.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.CommandRoleNames[role]) ||
+                            !Utils.GetPlayerById(playerId).GetRole().CanGetGuessed(PlayerControl.LocalPlayer, CustomRolesHelper.CommandRoleNames[role]) ||
                             (CustomRolesHelper.CommandRoleNames[role] == CustomRoles.Immortal && !Immortal.CanBeGuessed.GetBool()) ||
                             (CustomRolesHelper.CommandRoleNames[role] == CustomRoles.SecurityGuard && !SecurityGuard.CanBeGuessed.GetBool()) ||
                             (CustomRolesHelper.CommandRoleNames[role] == CustomRoles.Mortician && !Mortician.CanBeGuessed.GetBool()))
@@ -1347,11 +1350,13 @@ namespace MoreGamemodes
                         }
                     }
                     break;
+                case "/roles":
+                case "/role":
                 case "/r":
                     canceled = true;
                     if (Options.CurrentGamemode != Gamemodes.Classic)
                     {
-                        PlayerControl.LocalPlayer.RpcSendMessage("Roles are only in classic gamemode", "RoleInfo");
+                        PlayerControl.LocalPlayer.RpcSendMessage("Roles are only in classic gamemode", "Warning");
                         break;
                     }
                     var role2 = "";
@@ -1394,6 +1399,37 @@ namespace MoreGamemodes
                         }
                         PlayerControl.LocalPlayer.RpcSendMessage(addOns, "AddOns");
                     }
+                    break;
+                case "/kcount":
+                case "/kc":
+                    if (!Main.GameStarted)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't use /kcount in lobby", "Warning");
+                        break;
+                    }
+                    if (Options.CurrentGamemode != Gamemodes.Classic)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can use /kcount only in classic gamemode", "Warning");
+                        break;
+                    }
+                    if (!Options.CanUseKcountCommand.GetBool())
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("Host disabled usage of this command.", "Warning");
+                        break;
+                    }
+                    int impostorCount = 0;
+                    int neutralKillerCount = 0;
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc.Data.IsDead || pc.Data.Disconnected) continue;
+                        if (pc.GetRole().IsImpostor())
+                            ++impostorCount;
+                        if (pc.GetRole().IsNeutralKilling())
+                            ++neutralKillerCount;
+                    }
+                    var text2 = impostorCount + Utils.ColorString(Palette.ImpostorRed, impostorCount == 1 ? " impostor" : " impostors") + "\n";
+                    text2 += neutralKillerCount + Utils.ColorString(Color.gray, neutralKillerCount == 1 ? " neutral killer" : " neutral killers");
+                    PlayerControl.LocalPlayer.RpcSendMessage(text2, "KillCount");
                     break;
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;
@@ -1954,9 +1990,10 @@ namespace MoreGamemodes
                 case "/commands":
                 case "/cm":
                     canceled = true;
-                    player.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/help gamemode - show gamemode description\n/now - show active settings\n" +
-                        "/id (players, colors) - show ids\n/help item - show item description\n/commands - show list of commands\n/lastresult - show last game result\n" +
-                        "/tpout - teleports you outside lobby ship\n/tpin - teleports you into lobby ship\n/tagcolor - changes color of your tag", "Commands");
+                    player.RpcSendMessage("Commands:\n/color COLOR - changes your color\n/name NAME - changes your name\n/h gm - show gamemode description\n/n - show active settings\n" +
+                        "/id (players, colors) - show ids\n/h i - show item description\n/cm - show list of commands\n/l - show last game result\n/tpout - teleports you outside lobby ship\n" +
+                        "/tpin - teleports you into lobby ship\n/tagcolor - changes color of your tag\n/m - shows your role description\n/guess PLAYER_ID ROLE - you guess player as nice/evil guesser\n" +
+                        "/r - shows roles percentage and amount\n/r ROLE - shows role description\n/kc - shows alive killers amount in classic", "Commands");
                     break;
                 case "/lastresult":
                 case "/l":
@@ -2149,6 +2186,7 @@ namespace MoreGamemodes
                     if (CustomRolesHelper.CommandRoleNames.ContainsKey(role))
                     {
                         if (!player.GetRole().CanGuess(Utils.GetPlayerById(playerId), CustomRolesHelper.CommandRoleNames[role]) ||
+                            !Utils.GetPlayerById(playerId).GetRole().CanGetGuessed(player, CustomRolesHelper.CommandRoleNames[role]) ||
                             (CustomRolesHelper.CommandRoleNames[role] == CustomRoles.Immortal && !Immortal.CanBeGuessed.GetBool()) ||
                             (CustomRolesHelper.CommandRoleNames[role] == CustomRoles.SecurityGuard && !SecurityGuard.CanBeGuessed.GetBool()) ||
                             (CustomRolesHelper.CommandRoleNames[role] == CustomRoles.Mortician && !Mortician.CanBeGuessed.GetBool()))
@@ -2201,6 +2239,8 @@ namespace MoreGamemodes
                         }
                     }
                     break;
+                case "/roles":
+                case "/role":
                 case "/r":
                     canceled = true;
                     if (Options.CurrentGamemode != Gamemodes.Classic)
@@ -2248,6 +2288,37 @@ namespace MoreGamemodes
                         }
                         player.RpcSendMessage(addOns, "AddOns");
                     }
+                    break;
+                case "/kcount":
+                case "/kc":
+                    if (!Main.GameStarted)
+                    {
+                        player.RpcSendMessage("You can't use /kcount in lobby", "Warning");
+                        break;
+                    }
+                    if (Options.CurrentGamemode != Gamemodes.Classic)
+                    {
+                        player.RpcSendMessage("You can use /kcount only in classic gamemode", "Warning");
+                        break;
+                    }
+                    if (!Options.CanUseKcountCommand.GetBool())
+                    {
+                        player.RpcSendMessage("Host disabled usage of this command.", "Warning");
+                        break;
+                    }
+                    int impostorCount = 0;
+                    int neutralKillerCount = 0;
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc.Data.IsDead || pc.Data.Disconnected) continue;
+                        if (pc.GetRole().IsImpostor())
+                            ++impostorCount;
+                        if (pc.GetRole().IsNeutralKilling())
+                            ++neutralKillerCount;
+                    }
+                    var text2 = impostorCount + Utils.ColorString(Palette.ImpostorRed, impostorCount == 1 ? " impostor" : " impostors") + "\n";
+                    text2 += neutralKillerCount + Utils.ColorString(Color.gray, neutralKillerCount == 1 ? " neutral killer" : " neutral killers");
+                    player.RpcSendMessage(text2, "KillCount");
                     break;
                 case "1":
                     if (PaintBattleGamemode.instance == null) break;

@@ -15,6 +15,10 @@ namespace MoreGamemodes
                     EvilGuesser.CreateMeetingButton(__instance);
                 if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.NiceGuesser)
                     NiceGuesser.CreateMeetingButton(__instance);
+                if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Judge)
+                    Judge.CreateMeetingButton(__instance);
+                if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Shaman)
+                    Shaman.CreateMeetingButton(__instance);
             }
             if (!AmongUsClient.Instance.AmHost) return;
 
@@ -113,6 +117,10 @@ namespace MoreGamemodes
                                 EvilGuesser.CreateMeetingButton(__instance);
                             if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.NiceGuesser)
                                 NiceGuesser.CreateMeetingButton(__instance);
+                            if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Judge)
+                                Judge.CreateMeetingButton(__instance);
+                            if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Shaman)
+                                Shaman.CreateMeetingButton(__instance);
                         }
 					}
 				}

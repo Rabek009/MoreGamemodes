@@ -122,6 +122,12 @@ namespace MoreGamemodes
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.PaintBattle)
                 return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return false;
+            }
             return true;
         }
     }
@@ -140,6 +146,12 @@ namespace MoreGamemodes
                 return false;
             if (Options.EnableDisableGapPlatform.GetBool())
                 return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return false;
+            }
             return true;
         }
     }
@@ -158,6 +170,12 @@ namespace MoreGamemodes
                 return false;
             if (Options.EnableDisableZipline.GetBool())
                 return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return false;
+            }
             return true;
         }
     }
@@ -172,6 +190,12 @@ namespace MoreGamemodes
                 return false;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
                 return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return false;
+            }
             return true;
         }
     }
@@ -195,6 +219,28 @@ namespace MoreGamemodes
             }
             if (CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
                 return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Ladder), nameof(Ladder.CanUse))]
+    class LadderCanUsePatch
+    {
+        public static bool Prefix(Ladder __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
+        {
+            canUse = couldUse = false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return false;
+            }
             return true;
         }
     }
@@ -213,6 +259,12 @@ namespace MoreGamemodes
                 CustomGamemode.Instance.Gamemode == Gamemodes.ColorWars)
             {
                 __instance.Close();
+            }
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    __instance.Close();
             }
         }
     }

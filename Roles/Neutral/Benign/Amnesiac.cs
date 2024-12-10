@@ -18,7 +18,7 @@ namespace MoreGamemodes
             else if (target.GetRole().IsImpostor())
                 ClassicGamemode.instance.ChangeRole(target.Object, CustomRoles.Impostor);
             else if (target.GetRole().IsNeutral())
-                ClassicGamemode.instance.ChangeRole(target.Object, CustomRoles.Opportunist);
+                ClassicGamemode.instance.ChangeRole(target.Object, CustomRoles.Amnesiac);
             return false;
         }
 

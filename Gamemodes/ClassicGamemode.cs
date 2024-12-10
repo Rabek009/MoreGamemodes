@@ -22,7 +22,27 @@ namespace MoreGamemodes
                 foreach (var addOn in pc.GetAddOns())
                     addOn.OnExile(exiled);
                 pc.RpcResetAbilityCooldown();
-            } 
+            }
+            if ((exiled == null || exiled.Object == null) && Main.RealOptions.GetBool(BoolOptionNames.ConfirmImpostor))
+            {
+                int impostors = 0;
+                int neutralKillers = 0;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data.IsDead || pc.Data.Disconnected) continue;
+                    if (pc.GetRole().IsImpostor())
+                        ++impostors;
+                    if (pc.GetRole().IsNeutralKilling())
+                        ++neutralKillers;
+                }
+                var text = impostors + Utils.ColorString(Palette.ImpostorRed, impostors == 1 ? " impostor" : " impostors");
+                if (neutralKillers > 0)
+                    text += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
+                text += " remain.";
+                text = Utils.ColorString(Color.white, text);
+			    foreach (var pc in PlayerControl.AllPlayerControls)
+                    pc.Notify(text);
+            }
         }
 
         public override void OnSetFilterText(HauntMenuMinigame __instance)
@@ -62,6 +82,12 @@ namespace MoreGamemodes
 
         public override void OnShowNormalMap(MapBehaviour __instance)
         {
+            if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return;
+            }
             if (PlayerControl.LocalPlayer.GetRole().IsImpostor() && !MeetingHud.Instance && !IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
             {
                 __instance.Close();
@@ -71,6 +97,16 @@ namespace MoreGamemodes
 
         public override void OnShowSabotageMap(MapBehaviour __instance)
         {
+            if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                {
+                    __instance.Close();
+                    __instance.ShowNormalMap();
+                    return;
+                }
+            }
             if (!PlayerControl.LocalPlayer.GetRole().IsImpostor() || MeetingHud.Instance || IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
             {
                 __instance.Close();
@@ -150,7 +186,7 @@ namespace MoreGamemodes
                         name += Utils.ColorString(Color.gray, "Neutral");
                     name += ")\n" + impostors + Utils.ColorString(Palette.ImpostorRed, impostors == 1 ? " impostor" : " impostors");
                     if (neutralKillers > 0)
-                        name += " and " + neutralKillers + Utils.ColorString(Color.gray, impostors == 1 ? " neutral killer" : "neutral killers");
+                        name += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                     name += " remain.<size=0>";
 			        exiled.Object.SetName(name);
                     MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
@@ -158,7 +194,7 @@ namespace MoreGamemodes
                     writer.Write(name);
 		            AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
-            }, 1f, "Custom exile message");
+            }, 5f, "Custom exile message");
         }
 
         public override bool OnCastVote(MeetingHud __instance, byte srcPlayerId, byte suspectPlayerId)
@@ -508,6 +544,7 @@ namespace MoreGamemodes
             }
             if (cancel)
                 return false;
+            if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
             if (!target.GetRole().OnCheckMurderAsTarget(killer))
                 return false;
             foreach (var addOn in target.GetAddOns())
@@ -517,13 +554,19 @@ namespace MoreGamemodes
             }
             if (cancel)
                 return false;
-            if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
+            if (!killer.GetRole().OnCheckMurderLate(target))
+                return false;
             return true;
         }
 
         public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
         {
-            PlayerKiller[target.PlayerId] = killer.PlayerId;
+            if (PlayerKiller[target.PlayerId] == byte.MaxValue)
+                PlayerKiller[target.PlayerId] = killer.PlayerId;
+            if (CustomRolesHelper.GetRoleChance(CustomRoles.Altruist) > 0)
+                new LateTask(() => target.SetChatVisible(false), 0.2f);
+            killer = Utils.GetPlayerById(PlayerKiller[target.PlayerId]);
+            if (killer == null) return;
             killer.GetRole().OnMurderPlayer(target);
             foreach (var addOn in killer.GetAddOns())
                 addOn.OnMurderPlayer(target);
@@ -579,7 +622,21 @@ namespace MoreGamemodes
             }
             if (report)
             {
+                Shaman.OnGlobalReportDeadBody(__instance, target);
+                if (CustomRolesHelper.GetRoleChance(CustomRoles.Altruist) > 0)
+                {
+                    foreach (var playerId in PlayersDiedThisRound)
+                    {
+                        var player = Utils.GetPlayerById(playerId);
+                        if (player != null && !player.Data.Disconnected)
+                            DestroyableSingleton<RoleManager>.Instance.AssignRoleOnDeath(player, true);
+                    }
+                    PlayersDiedThisRound.Clear();
+                }
+                bool isDead = __instance.Data.IsDead;
+                __instance.Data.IsDead = false;
                 new LateTask(() => {
+                    __instance.Data.IsDead = isDead;
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
                         FreezeTimer[pc.PlayerId] = 0f;
@@ -703,6 +760,13 @@ namespace MoreGamemodes
             return !cancel;
         }
 
+        public override void OnAppear(PlayerControl phantom)
+        {
+            phantom.GetRole().OnAppear();
+            foreach (var addOn in phantom.GetAddOns())
+                addOn.OnAppear();
+        }
+
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (RoleblockTimer[player.PlayerId] > 0f)
@@ -765,15 +829,26 @@ namespace MoreGamemodes
         {
             string prefix = "";
             string postfix = "";
-            if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
+            if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
             {
                 foreach (var addOn in player.GetAddOns())
-                    prefix += "<size=1.8>" + Utils.ColorString(addOn.Color, addOn.AddOnName) + " </size>";
+                    prefix += "<size=1.8>" + Utils.ColorString(addOn.Color, "(" + addOn.AddOnName + ")") + " </size>";
             }
-            if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
+            if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                 prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "</size>\n";
-            if (Medic.IsShielded(player) && (player == seer || seer.GetRole().Role == CustomRoles.Medic))
-                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Medic], "+");
+            if (Medic.IsShielded(player) && (player == seer || seer.GetRole().Role == CustomRoles.Medic || seer.Data.Role.IsDead))
+                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Medic], "✚");
+            if (Shaman.IsCursed(player) && (player == seer || seer.Data.Role.IsDead))
+                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Shaman], "乂");
+            if (Snitch.IsAnySnitchRevealed() && (seer.GetRole().IsImpostor() || (seer.GetRole().IsNeutralKilling() && Snitch.CanFindNeutralKillers.GetBool())) && ((player.GetRole().Role == CustomRoles.Snitch && (player.GetRole() as Snitch).IsRevealed()) || player == seer || seer.Data.Role.IsDead))
+            {
+                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Snitch], "★");
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (player == seer && pc.GetRole().Role == CustomRoles.Snitch && (pc.GetRole() as Snitch).IsRevealed())
+                        postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Snitch], Utils.GetArrow(player.transform.position, pc.transform.position));
+                }
+            }
             if (player == seer && !player.Data.IsDead)
             {
                 postfix += player.GetRole().GetNamePostfix();
@@ -982,6 +1057,7 @@ namespace MoreGamemodes
             TimeSinceDeath = new Dictionary<byte, float>();
             DefaultTasks = new Dictionary<byte, Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo.TaskInfo>>();
             CompletedTasks = new Dictionary<byte, List<uint>>();
+            PlayersDiedThisRound = new List<byte>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 AllPlayersAddOns[pc.PlayerId] = new List<AddOn>();
@@ -1014,5 +1090,6 @@ namespace MoreGamemodes
         public Dictionary<byte, float> TimeSinceDeath;
         public Dictionary<byte, Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo.TaskInfo>> DefaultTasks;
         public Dictionary<byte, List<uint>> CompletedTasks;
+        public List<byte> PlayersDiedThisRound;
     }
 }

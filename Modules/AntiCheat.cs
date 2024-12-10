@@ -252,7 +252,7 @@ namespace MoreGamemodes
                         return true;
                     }
                     if (target2 == null) break;
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.PaintBattle or  Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.PaintBattle or  Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars) break;
                     var targetRole = Main.DesyncRoles.ContainsKey((target2.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(target2.PlayerId, pc.PlayerId)] : Main.StandardRoles[target2.PlayerId];
                     if (!pc.GetSelfRole().IsImpostor())
                     {

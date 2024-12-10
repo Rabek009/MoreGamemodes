@@ -3,20 +3,21 @@
 ## About the mod
 
 More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
-Among Us version: 2024.9.9<br>
+Among Us version: 2024.11.26s<br>
 Join to discord server: https://discord.gg/jJe5kPpbFJ
 
 ## Hotkeys
 
 ### Host only
-| HotKey              | Function                       | Usable Scene |
-| ------------------- | ------------------------------ | ------------ |
-| `Shift`+`L`+`Enter` | End the game immediatly        | In Game      |
-| `Shift`+`M`+`Enter` | Skip meeting to end            | In Meeting   |
-| `Shift`+`Z`+`Enter` | Make yourself dead             | In Game      |
-| `C`                 | Cancel game start              | In Countdown |
-| `Shift`             | Start the game immediately     | In Countdown |
-| `Ctrl` + `Delete`   | Reset options to default       | In Lobby     |
+| HotKey              | Function                          | Usable Scene |
+| ------------------- | --------------------------------- | ------------ |
+| `Shift`+`L`+`Enter` | End the game immediatly           | In Game      |
+| `Shift`+`M`+`Enter` | Skip meeting to end               | In Meeting   |
+| `Shift`+`Z`+`Enter` | Make yourself dead                | In Game      |
+| `C`                 | Cancel game start                 | In Countdown |
+| `Shift`             | Start the game immediately        | In Countdown |
+| `Ctrl` + `Delete`   | Reset options to default          | In Lobby     |
+| `Shift`+`V`+`Enter` | End meeting (with counting votes) | In Meeting   |
 
 ### Mod client only
 | HotKey | Function              | Usable Scene |
@@ -54,17 +55,23 @@ Join to discord server: https://discord.gg/jJe5kPpbFJ
 | /tpout                                          | Teleports you outside lobby ship                        |
 | /tpin                                           | Teleports you into lobby ship                           |
 | /tagcolor COLOR_HEX                             | Changes color of your tag (not host tag)                |
+| /myrole<br>/m                                   | Show your role description (Classic)                    |
+| /guess, /shoot, /bet<br>/bt, /gs PLAYER_ID ROLE | You guess player as evil/nice guesser (Classic)         |
+| /roles<br>/role, /r                             | Show role options (Classic)                             |
+| /roles, /role<br>/r ROLE                        | Show role description (Classic)                         |
+| /kcount<br>/kc                                  | Show amount of killers alive (Classic)                  |
 
 ## Game options
-| Name                   |
-| ---------------------- |
-| Gamemode               |
-| No game end            |
-| Can use /color command |
-| Enable fortegreen      |
-| can use /name command  |
-| Enable name repeating  |
-| Maximum name length    |
+| Name                    |
+| ----------------------- |
+| Gamemode                |
+| No game end             |
+| Can use /color command  |
+| Enable fortegreen       |
+| Can use /name command   |
+| Enable name repeating   |
+| Maximum name length     |
+| Can use /kcount command |
 
 ## Gamemodes
 

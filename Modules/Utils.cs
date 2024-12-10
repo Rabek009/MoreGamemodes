@@ -350,6 +350,8 @@ namespace MoreGamemodes
             if (reason == DeathReasons.Escaped) return "Escaped";
             if (reason == DeathReasons.Guessed) return "Guessed";
             if (reason == DeathReasons.Eaten) return "Eaten";
+            if (reason == DeathReasons.Cursed) return "Cursed";
+            if (reason == DeathReasons.Shot) return "Shot";
             return "???";
         }
 
@@ -420,6 +422,12 @@ namespace MoreGamemodes
         public static ExplosionHole RpcCreateExplosionHole(float size, int speedDecrease, Vector2 position)
         {
             return new ExplosionHole(size, speedDecrease, position);
+        }
+
+        public static Drone RpcCreateDrone(PlayerControl owner, Vector2 position)
+        {
+            if (ClassicGamemode.instance == null) return null;
+            return new Drone(owner, position);
         }
 
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)

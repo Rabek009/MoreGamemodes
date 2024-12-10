@@ -351,5 +351,6 @@ namespace MoreGamemodes
         Base,
         Display,
         ExplosionHole,
+        Drone,
     }
 }

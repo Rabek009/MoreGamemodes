@@ -106,6 +106,11 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual void OnAppear()
+        {
+
+        }
+
         public virtual void OnAddVote(PlayerControl target)
         {
             

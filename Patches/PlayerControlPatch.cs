@@ -6,6 +6,7 @@ using Hazel;
 using InnerNet;
 using System.Linq;
 using System;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace MoreGamemodes
 {
@@ -311,6 +312,12 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
                 return false;
             if (Options.EnableDisableGapPlatform.GetBool()) return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && __instance.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = __instance.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.RealPosition != null)
+                    return false;
+            }
             return true;
         }
     }
@@ -329,6 +336,12 @@ namespace MoreGamemodes
                 return false;
             if (Options.EnableDisableZipline.GetBool())
                 return false;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && target.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = target.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.ControlledDrone != null)
+                    return false;
+            }
             return true;
         }
     }
@@ -389,6 +402,12 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] DeathReason reason, [HarmonyArgument(1)] bool assignGhostRole)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && reason == DeathReason.Kill && CustomRolesHelper.GetRoleChance(CustomRoles.Altruist) > 0 && assignGhostRole)
+            {
+                __instance.Die(reason, false);
+                ClassicGamemode.instance.PlayersDiedThisRound.Add(__instance.PlayerId);
+                return false;
+            }
             if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && reason == DeathReason.Kill && Options.EnableMedicine.GetBool() && assignGhostRole)
             {
                 __instance.Die(reason, false);
@@ -418,7 +437,7 @@ namespace MoreGamemodes
                         __instance.SetPet("pet_test");
                     else
                     {
-                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetPetStr, SendOption.None, __instance.GetClientId());
+                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetPetStr, SendOption.Reliable, __instance.GetClientId());
 		                writer.Write("pet_test");
 		                writer.Write(__instance.GetNextRpcSequenceId(RpcCalls.SetPetStr));
 		                AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -713,7 +732,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner) continue;
-                if (!pc.GetRole().IsImpostor() && pc != phantom)
+                if (!pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
                     CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
@@ -762,6 +781,7 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] bool shouldAnimate)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
+            CustomGamemode.Instance.OnAppear(__instance);
             if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return true;
             PlayerControl phantom = __instance;
             if (shouldAnimate)
@@ -771,7 +791,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner) continue;
-                if (shouldAnimate && !pc.GetRole().IsImpostor() && pc != phantom)
+                if (shouldAnimate && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
                     CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
@@ -849,7 +869,7 @@ namespace MoreGamemodes
                         sender.SendMessage();
                     }, 1.2f);
                 }
-                else if (!shouldAnimate && !pc.GetRole().IsImpostor() && pc != phantom)
+                else if (!shouldAnimate && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
                     CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
@@ -887,10 +907,14 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return;
             if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return;
             var player = __instance.myPlayer;
-            new LateTask(() => {
-                if (player != null && (player.shouldAppearInvisible || player.invisibilityAlpha < 1f))
-                    player.RpcResetInvisibility();
-            }, 0.5f);
+            if (player != null && (player.shouldAppearInvisible || player.invisibilityAlpha < 1f))
+                player.RpcResetInvisibility();
+            else if (player != null && player.GetRole().Role == CustomRoles.Droner)
+            {
+                var dronerRole = player.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.ControlledDrone != null)
+                    dronerRole.CancelLadder();
+            }
         }
     }
 
@@ -907,7 +931,65 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(NetworkedPlayerInfo), nameof(NetworkedPlayerInfo.RpcSetTasks))]
     class RpcSetTasksPatch
     {
-        public static void Postfix(NetworkedPlayerInfo __instance, [HarmonyArgument(0)] Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> taskTypeIds)
+        // https://github.com/tukasa0001/TownOfHost/blob/main/Patches/TaskAssignPatch.cs
+        public static void Prefix(NetworkedPlayerInfo __instance, [HarmonyArgument(0)] ref Il2CppStructArray<byte> taskTypeIds)
+        {
+            if (!AmongUsClient.Instance.AmHost || ClassicGamemode.instance == null) return;
+            if (ClassicGamemode.instance.DefaultTasks.ContainsKey(__instance.PlayerId)) return;
+            bool hasCommonTasks = true;
+            int NumShortTasks = Main.RealOptions.GetInt(Int32OptionNames.NumShortTasks);
+            int NumLongTasks = Main.RealOptions.GetInt(Int32OptionNames.NumLongTasks);
+            if (__instance.GetRole().Role == CustomRoles.Snitch && (Snitch.AdditionalShortTasks.GetInt() > 0 || Snitch.AdditionalLongTasks.GetInt() > 0))
+            {
+                NumShortTasks += Snitch.AdditionalShortTasks.GetInt();
+                NumLongTasks += Snitch.AdditionalLongTasks.GetInt();
+            }
+            if (hasCommonTasks && NumShortTasks == Main.RealOptions.GetInt(Int32OptionNames.NumShortTasks) && NumLongTasks == Main.RealOptions.GetInt(Int32OptionNames.NumLongTasks)) return;
+
+            Il2CppSystem.Collections.Generic.List<byte> TasksList = new();
+            foreach (var num in taskTypeIds)
+                TasksList.Add(num);
+
+            int defaultCommonTasksNum = Main.RealOptions.GetInt(Int32OptionNames.NumCommonTasks);
+            if (hasCommonTasks) TasksList.RemoveRange(defaultCommonTasksNum, TasksList.Count - defaultCommonTasksNum);
+            else TasksList.Clear();
+
+            Il2CppSystem.Collections.Generic.HashSet<TaskTypes> usedTaskTypes = new();
+            int start2 = 0;
+            int start3 = 0;
+
+            Il2CppSystem.Collections.Generic.List<NormalPlayerTask> LongTasks = new();
+            foreach (var task in ShipStatus.Instance.LongTasks)
+                LongTasks.Add(task);
+            Shuffle(LongTasks);
+
+            Il2CppSystem.Collections.Generic.List<NormalPlayerTask> ShortTasks = new();
+            foreach (var task in ShipStatus.Instance.ShortTasks)
+                ShortTasks.Add(task);
+            Shuffle(ShortTasks);
+
+            ShipStatus.Instance.AddTasksFromList(
+                ref start2,
+                NumLongTasks,
+                TasksList,
+                usedTaskTypes,
+                LongTasks
+            );
+            ShipStatus.Instance.AddTasksFromList(
+                ref start3,
+                NumShortTasks,
+                TasksList,
+                usedTaskTypes,
+                ShortTasks
+            );
+
+            taskTypeIds = new Il2CppStructArray<byte>(TasksList.Count);
+            for (int i = 0; i < TasksList.Count; i++)
+            {
+                taskTypeIds[i] = TasksList[i];
+            }
+        }
+        public static void Postfix(NetworkedPlayerInfo __instance, [HarmonyArgument(0)] Il2CppStructArray<byte> taskTypeIds)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
@@ -915,6 +997,53 @@ namespace MoreGamemodes
                 ClassicGamemode.instance.DefaultTasks[__instance.PlayerId] = __instance.Tasks;
                 ClassicGamemode.instance.CompletedTasks[__instance.PlayerId] = new List<uint>();
             }
+        }
+        public static void Shuffle<T>(Il2CppSystem.Collections.Generic.List<T> list)
+        {
+            for (int i = 0; i < list.Count - 1; i++)
+            {
+                T obj = list[i];
+                int rand = UnityEngine.Random.Range(i, list.Count);
+                list[i] = list[rand];
+                list[rand] = obj;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(CustomNetworkTransform), nameof(CustomNetworkTransform.Deserialize))]
+    class CustomNetworkTransformDeserializePatch
+    {
+        public static bool Prefix(CustomNetworkTransform __instance, [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] bool initialState)
+        {
+            if (!AmongUsClient.Instance.AmHost || ClassicGamemode.instance == null || initialState) return true;
+            if (__instance.myPlayer.GetRole().Role != CustomRoles.Droner) return true;
+            var dronerRole = __instance.myPlayer.GetRole() as Droner;
+            if (dronerRole == null || dronerRole.ControlledDrone == null) return true;
+            if (__instance.isPaused || __instance.AmOwner) return false;
+            ushort num = reader.ReadUInt16();
+		    int num2 = reader.ReadPackedInt32();
+            if (!NetHelpers.SidGreaterThan((ushort)(num + num2 - 1), __instance.lastSequenceId)) return false;
+            for (int i = 0; i < num2 - 1; ++i)
+                NetHelpers.ReadVector2(reader);
+            dronerRole.DronePosition = NetHelpers.ReadVector2(reader);
+            __instance.lastSequenceId = (ushort)(num + num2 - 1);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckSporeTrigger))]
+    class CheckSporeTriggerPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] Mushroom mushroom)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && __instance.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = __instance.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.ControlledDrone != null)
+                    return false;
+            }
+            return true;
         }
     }
 }

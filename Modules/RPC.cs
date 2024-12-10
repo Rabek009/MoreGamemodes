@@ -50,6 +50,9 @@ namespace MoreGamemodes
         SetAddOn,
         MarkEscapistPosition,
         SetHitmanTarget,
+        UseJudgeAbility,
+        SetShamanTarget,
+        SetDronerRealPosition,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -97,6 +100,12 @@ namespace MoreGamemodes
                     if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && (__instance.shouldAppearInvisible || __instance.invisibilityAlpha < 1f))
                         return false;
                     if (Options.DisableGapPlatform.GetBool()) return false;
+                    if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && __instance.GetRole().Role == CustomRoles.Droner)
+                    {
+                        Droner dronerRole = __instance.GetRole() as Droner;
+                        if (dronerRole != null && dronerRole.RealPosition != null)
+                            return false;
+                    }
                     break;
             }
             return true;
@@ -209,6 +218,15 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.SetHitmanTarget:
                     __instance.SetHitmanTarget(reader.ReadByte());
+                    break;
+                case CustomRPC.UseJudgeAbility:
+                    __instance.UseJudgeAbility();
+                    break;
+                case CustomRPC.SetShamanTarget:
+                    __instance.SetShamanTarget(reader.ReadByte());
+                    break;
+                case CustomRPC.SetDronerRealPosition:
+                    __instance.SetDronerRealPosition(reader.ReadBoolean() ? NetHelpers.ReadVector2(reader) : null);
                     break;
             }
         }
@@ -404,6 +422,7 @@ namespace MoreGamemodes
         {
             CustomGamemode.Instance = null;
             ClassicGamemode.instance = null;
+            UnmoddedGamemode.instance = null;
             HideAndSeekGamemode.instance = null;
             ShiftAndSeekGamemode.instance = null;
             BombTagGamemode.instance = null;
@@ -642,6 +661,34 @@ namespace MoreGamemodes
             Hitman hitmanRole = player.GetRole() as Hitman;
             if (hitmanRole == null) return;
             hitmanRole.Target = targetId;
+        }
+
+        public static void UseJudgeAbility(this PlayerControl player)
+        {
+            if (ClassicGamemode.instance == null || player.GetRole().Role != CustomRoles.Judge) return;
+            Judge judgeRole = player.GetRole() as Judge;
+            if (judgeRole == null) return;
+            judgeRole.AbilityUsed = true;
+        }
+
+        public static void SetShamanTarget(this PlayerControl player, byte targetId)
+        {
+            if (ClassicGamemode.instance == null || player.GetRole().Role != CustomRoles.Shaman) return;
+            Shaman shamanRole = player.GetRole() as Shaman;
+            if (shamanRole == null) return;
+            shamanRole.Target = targetId;
+            if (player.AmOwner && MeetingHud.Instance != null)
+                Shaman.CreateMeetingButton(MeetingHud.Instance);
+        }
+
+        public static void SetDronerRealPosition(this PlayerControl player, Vector2? position)
+        {
+            if (ClassicGamemode.instance == null || player.GetRole().Role != CustomRoles.Droner) return;
+            Droner dronerRole = player.GetRole() as Droner;
+            if (dronerRole == null) return;
+            dronerRole.RealPosition = position;
+            if (player.AmOwner)
+                HudManager.Instance.SetHudActive(!MeetingHud.Instance);
         }
 
         public static void RpcVersionCheck(this PlayerControl player, string version)
@@ -972,6 +1019,32 @@ namespace MoreGamemodes
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetHitmanTarget, SendOption.Reliable, -1);
             writer.Write(targetId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcUseJudgeAbility(this PlayerControl player)
+        {
+            player.UseJudgeAbility();
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.UseJudgeAbility, SendOption.Reliable, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetShamanTarget(this PlayerControl player, byte targetId)
+        {
+            if (player.AmOwner && MeetingHud.Instance != null)
+                Shaman.CreateMeetingButton(MeetingHud.Instance);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetShamanTarget, SendOption.Reliable, -1);
+            writer.Write(targetId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetDronerRealPosition(this PlayerControl player, Vector2? position)
+        {
+            player.SetDronerRealPosition(position);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetDronerRealPosition, SendOption.Reliable, -1);
+            writer.Write(position != null);
+            if (position != null)
+                NetHelpers.WriteVector2((Vector2)position, writer);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

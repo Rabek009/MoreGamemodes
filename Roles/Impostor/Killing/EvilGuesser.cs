@@ -33,7 +33,7 @@ namespace MoreGamemodes
                 if (pva.transform.FindChild("MeetingButton") != null)
                     Object.Destroy(pva.transform.FindChild("MeetingButton").gameObject);
                 var player = GameData.Instance.GetPlayerById(pva.TargetPlayerId);
-                if (player.IsDead || player.Disconnected || player.ClientId == AmongUsClient.Instance.ClientId || player.GetRole().IsImpostor() || PlayerControl.LocalPlayer.Data.IsDead) continue;
+                if (player.IsDead || player.Disconnected || player.ClientId == AmongUsClient.Instance.ClientId || player.GetRole().IsImpostor() || PlayerControl.LocalPlayer.Data.IsDead || !player.GetRole().CanGetGuessed(PlayerControl.LocalPlayer, null)) continue;
                 GameObject template = pva.Buttons.transform.Find("CancelButton").gameObject;
                 GameObject targetBox = Object.Instantiate(template, pva.transform);
                 targetBox.name = "MeetingButton";
@@ -153,7 +153,6 @@ namespace MoreGamemodes
                 foreach (var role in Enum.GetValues<RoleTypes>())
                 {
                     if (role.IsImpostor() || (role == RoleTypes.Crewmate && !CanGuessCrewmateRole.GetBool()) || role == RoleTypes.GuardianAngel) continue;
-                    if (role != RoleTypes.Crewmate && GameOptionsManager.Instance.CurrentGameOptions.RoleOptions.GetChancePerGame(role) <= 0) continue;
                     int num = i % 3;
 			        int num2 = i / 3;
                     ShapeshifterPanel shapeshifterPanel = Object.Instantiate(minigame.PanelPrefab, minigame.transform);
@@ -187,7 +186,6 @@ namespace MoreGamemodes
                     if (CustomRolesHelper.IsVanilla(roleType)) continue;
                     if ((roleType == CustomRoles.Immortal && !Immortal.CanBeGuessed.GetBool()) || (roleType == CustomRoles.SecurityGuard && !SecurityGuard.CanBeGuessed.GetBool()) || 
                         (roleType == CustomRoles.Mortician && !Mortician.CanBeGuessed.GetBool())) continue;
-                    if (CustomRolesHelper.GetRoleChance(roleType) <= 0) continue;
                     if (Options.RolesChance[roleType].Id < id * 100000 || Options.RolesChance[roleType].Id >= id * 100000 + 100000) continue;
                     int num = i % 3;
 			        int num2 = i / 3;
@@ -220,7 +218,6 @@ namespace MoreGamemodes
                 {
                     AddOns addOn = AddOnsHelper.CommandAddOnNames[addon];
                     if (addOn == AddOns.Bait && !Bait.CanBeGuessed.GetBool()) continue;
-                    if (AddOnsHelper.GetAddOnChance(addOn) <= 0) continue;
                     if (Options.AddOnsChance[addOn].Id < id * 100000 || Options.AddOnsChance[addOn].Id >= id * 100000 + 100000) continue;
                     int num = i % 3;
 			        int num2 = i / 3;

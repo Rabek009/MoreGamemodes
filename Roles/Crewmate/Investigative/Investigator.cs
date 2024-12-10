@@ -202,7 +202,7 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             CrewmateKillingShowRed = BooleanOptionItem.Create(100106, "Crewmate killing show red", false, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            InitialAbilityUseLimit = FloatOptionItem.Create(100107, "Initial ability use limit", new(1f, 15f, 1f), 1f, TabGroup.CrewmateRoles, false)
+            InitialAbilityUseLimit = FloatOptionItem.Create(100107, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(100108, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.5f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);

@@ -62,7 +62,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> OptionProtectCooldowns;
     public static Dictionary<byte, float> TimeSinceLastPet;
 
-    public const string CurrentVersion = "2.1.0 beta1";
+    public const string CurrentVersion = "2.1.0 dev1";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -87,6 +87,7 @@ public partial class Main : BasePlugin
 
         CustomGamemode.Instance = null;
         ClassicGamemode.instance = null;
+        UnmoddedGamemode.instance = null;
         HideAndSeekGamemode.instance = null;
         ShiftAndSeekGamemode.instance = null;
         BombTagGamemode.instance = null;
@@ -172,6 +173,7 @@ public partial class Main : BasePlugin
             {
                 CustomGamemode.Instance = null;
                 ClassicGamemode.instance = null;
+                UnmoddedGamemode.instance = null;
                 HideAndSeekGamemode.instance = null;
                 ShiftAndSeekGamemode.instance = null;
                 BombTagGamemode.instance = null;
@@ -241,6 +243,7 @@ class ModManagerLateUpdatePatch
 
 public enum Gamemodes
 {
+    None = -1,
     Classic,
     HideAndSeek,
     ShiftAndSeek,
@@ -273,6 +276,8 @@ public enum DeathReasons
     Escaped,
     Guessed,
     Eaten,
+    Cursed,
+    Shot,
 }
 
 public enum BaseRoles

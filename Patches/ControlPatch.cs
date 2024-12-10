@@ -64,6 +64,11 @@ namespace MoreGamemodes
                     LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                 }
             }
+
+            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.V, KeyCode.LeftShift }) && MeetingHud.Instance)
+            {
+                MeetingHud.Instance.ForceSkipAll();
+            }
         }
 
         static bool GetKeysDown(KeyCode[] keys)

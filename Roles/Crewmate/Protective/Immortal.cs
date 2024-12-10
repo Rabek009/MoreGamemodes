@@ -10,14 +10,12 @@ namespace MoreGamemodes
             {
                 killer.RpcGuardAndKill(Player);
                 Main.KillCooldowns[killer.PlayerId] = Main.OptionKillCooldowns[killer.PlayerId] / 2f;
-                ++TimesSaved;
                 return false;
             }
             if (RealAbilityUses > 0f)
             {
                 killer.RpcGuardAndKill(Player);
                 Main.KillCooldowns[killer.PlayerId] = Main.OptionKillCooldowns[killer.PlayerId] / 2f;
-                ++TimesSaved;
                 RealAbilityUses -= 1f;
                 return false;
             }
@@ -29,13 +27,6 @@ namespace MoreGamemodes
             ProtectionTime = 0f;
             if (AbilityUses != RealAbilityUses)
                 Player.RpcSetAbilityUses(RealAbilityUses);
-            if (TimesSaved == 0)
-                Player.RpcSendMessage("No one tried to kill you during this round.", "Immortal");
-            else if (TimesSaved == 1)
-                Player.RpcSendMessage("Someone tried to kill you 1 time during this round.", "Immortal");
-            else if (TimesSaved >= 2)
-                Player.RpcSendMessage("Someone tried to kill you " + TimesSaved + " times during this round.", "Immortal");
-            TimesSaved = 0;
         }
 
         public override void OnFixedUpdate()
@@ -72,12 +63,10 @@ namespace MoreGamemodes
             AbilityUses = -1f;
             RealAbilityUses = -1f;
             ProtectionTime = 0f;
-            TimesSaved = 0;
         }
 
         public float RealAbilityUses;
         public float ProtectionTime;
-        public int TimesSaved;
 
         public static OptionItem Chance;
         public static OptionItem Count;
