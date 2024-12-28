@@ -16,7 +16,6 @@ namespace MoreGamemodes
                         RpcTeleport(dronerRole.DronePosition);
                 }
             }
-            base.OnFixedUpdate();
         }
 
         public Drone(PlayerControl owner, Vector2 position)

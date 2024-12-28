@@ -33,7 +33,6 @@ namespace MoreGamemodes
                     Utils.RpcCreateExplosionHole(Size, HoleSpeedDecrease, Position);
                 Despawn();
             }
-            base.OnFixedUpdate();
         }
 
         public Explosion(float size, float duration, bool createHole, int holeSpeedDecrease, Vector2 position)

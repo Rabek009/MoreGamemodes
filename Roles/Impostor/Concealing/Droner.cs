@@ -60,6 +60,11 @@ namespace MoreGamemodes
             return ControlledDrone == null;
         }
 
+        public override void OnMeeting()
+        {
+            EndAbility();
+        }
+
         public override void OnFixedUpdate()
         {
             if (AbilityDuration <= -1f)
@@ -88,7 +93,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player || pc.AmOwner) continue;
-                CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityStart", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityStart", SendOption.Reliable);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                     .WriteVector2(Player.transform.position)
@@ -139,16 +144,8 @@ namespace MoreGamemodes
             if (Player.AmOwner)
                 Player.Visible = true;
             Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityEnd", SendOption.None);
+            CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityEnd", SendOption.Reliable);
             sender.StartMessage(-1);
-            sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(Player.transform.position)
-                .Write(Player.NetTransform.lastSequenceId)
-                .EndRpc();
-            sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(Player.transform.position)
-                .Write((ushort)(Player.NetTransform.lastSequenceId + 16383))
-                .EndRpc();
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(Player.transform.position)
                 .Write((ushort)(Player.NetTransform.lastSequenceId + 32767))
@@ -180,7 +177,7 @@ namespace MoreGamemodes
             Player.StartCoroutine(Player.CoSetRole(role, true));
             Player.MyPhysics.CancelPet();
             Player.NetTransform.SnapTo(Player.transform.position, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("CancelLadderDroner", SendOption.None);
+            CustomRpcSender sender = CustomRpcSender.Create("CancelLadderDroner", SendOption.Reliable);
             sender.StartMessage(Player.GetClientId());
             sender.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
                 .EndRpc();
@@ -195,29 +192,13 @@ namespace MoreGamemodes
                 .WriteVector2(DronePosition)
                 .Write(Player.NetTransform.lastSequenceId)
                 .EndRpc();
-            sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(DronePosition)
-                .Write((ushort)(Player.NetTransform.lastSequenceId + 16383))
-                .EndRpc();
-            sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(DronePosition)
-                .Write((ushort)(Player.NetTransform.lastSequenceId + 32767))
-                .EndRpc();
-            sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(DronePosition)
-                .Write((ushort)(Player.NetTransform.lastSequenceId + 32767 + 16383))
-                .EndRpc();
-            sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(DronePosition)
-                .Write(Player.NetTransform.lastSequenceId)
-                .EndRpc();
             sender.EndMessage();
             sender.SendMessage();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (!pc.AmOwner && pc != Player)
                 {
-                    CustomRpcSender sender2 = CustomRpcSender.Create("CancelLadder", SendOption.None);
+                    CustomRpcSender sender2 = CustomRpcSender.Create("CancelLadder", SendOption.Reliable);
                     sender2.StartMessage(pc.GetClientId());
                     sender2.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
                         .EndRpc();
@@ -226,15 +207,7 @@ namespace MoreGamemodes
                         .Write((ushort)role3)
                         .Write(true)
                         .EndRpc();
-                    sender.StartRpc(Player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
-                        .EndRpc();
-                    sender2.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(Player.transform.position)
-                        .Write(Player.NetTransform.lastSequenceId)
-                        .EndRpc();
-                    sender2.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(Player.transform.position)
-                        .Write((ushort)(Player.NetTransform.lastSequenceId + 16383))
+                    sender2.StartRpc(Player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
                         .EndRpc();
                     sender2.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                         .WriteVector2(Player.transform.position)

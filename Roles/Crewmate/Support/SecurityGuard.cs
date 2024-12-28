@@ -38,7 +38,7 @@ namespace MoreGamemodes
         {
             if (Cooldown > 0f || AbilityUses < 1f) return;
             Vent vent = Player.GetClosestVent();
-            if ((Vector2.Distance(Player.transform.position, vent.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, vent.transform.position, Constants.ShipOnlyMask, false)) && !Player.AmOwner && !Main.IsModded[Player.PlayerId])
+            if (Vector2.Distance(Player.transform.position, vent.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, vent.transform.position, Constants.ShipOnlyMask, false))
             {
                 Player.Notify(Utils.ColorString(Color.red, "(!) No vent nearby (!)"));
                 return;

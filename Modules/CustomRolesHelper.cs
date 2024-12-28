@@ -197,6 +197,44 @@ namespace MoreGamemodes
             {CustomRoles.Pelican, Utils.HexToColor("#35ab15")},
         };
 
+        public static Dictionary<CustomRoles, CustomRoleTypes> CRoleTypes = new() 
+        {
+            {CustomRoles.Crewmate, CustomRoleTypes.CrewmateVanilla},
+            {CustomRoles.Scientist, CustomRoleTypes.CrewmateVanilla},
+            {CustomRoles.Engineer, CustomRoleTypes.CrewmateVanilla},
+            {CustomRoles.Noisemaker, CustomRoleTypes.CrewmateVanilla},
+            {CustomRoles.Tracker, CustomRoleTypes.CrewmateVanilla},
+            {CustomRoles.Investigator, CustomRoleTypes.CrewmateInvestigative},
+            {CustomRoles.Mortician, CustomRoleTypes.CrewmateInvestigative},
+            {CustomRoles.Snitch, CustomRoleTypes.CrewmateInvestigative},
+            {CustomRoles.Sheriff, CustomRoleTypes.CrewmateKilling},
+            {CustomRoles.NiceGuesser, CustomRoleTypes.CrewmateKilling},
+            {CustomRoles.Shaman, CustomRoleTypes.CrewmateKilling},
+            {CustomRoles.Immortal, CustomRoleTypes.CrewmateProtective},
+            {CustomRoles.Medic, CustomRoleTypes.CrewmateProtective},
+            {CustomRoles.Altruist, CustomRoleTypes.CrewmateProtective},
+            {CustomRoles.SecurityGuard, CustomRoleTypes.CrewmateSupport},
+            {CustomRoles.Mutant, CustomRoleTypes.CrewmateSupport},
+            {CustomRoles.Judge, CustomRoleTypes.CrewmateSupport},
+            {CustomRoles.Impostor, CustomRoleTypes.ImpostorVanilla},
+            {CustomRoles.Shapeshifter, CustomRoleTypes.ImpostorVanilla},
+            {CustomRoles.Phantom, CustomRoleTypes.ImpostorVanilla},
+            {CustomRoles.TimeFreezer, CustomRoleTypes.ImpostorConcealing},
+            {CustomRoles.Escapist, CustomRoleTypes.ImpostorConcealing},
+            {CustomRoles.Droner, CustomRoleTypes.ImpostorConcealing},
+            {CustomRoles.EvilGuesser, CustomRoleTypes.ImpostorKilling},
+            {CustomRoles.Hitman, CustomRoleTypes.ImpostorKilling},
+            {CustomRoles.Archer, CustomRoleTypes.ImpostorKilling},
+            {CustomRoles.Trapster, CustomRoleTypes.ImpostorSupport},
+            {CustomRoles.Parasite, CustomRoleTypes.ImpostorSupport},
+            {CustomRoles.Opportunist, CustomRoleTypes.NeutralBenign},
+            {CustomRoles.Amnesiac, CustomRoleTypes.NeutralBenign},
+            {CustomRoles.Jester, CustomRoleTypes.NeutralEvil},
+            {CustomRoles.Executioner, CustomRoleTypes.NeutralEvil},
+            {CustomRoles.SerialKiller, CustomRoleTypes.NeutralKilling},
+            {CustomRoles.Pelican, CustomRoleTypes.NeutralKilling},
+        };
+
         public static void SetCustomRole(this PlayerControl player, CustomRoles role)
         {
             if (ClassicGamemode.instance == null) return;
@@ -323,22 +361,19 @@ namespace MoreGamemodes
 
         public static bool IsCrewmate(CustomRoles role)
         {
-            return !IsImpostor(role) && !IsNeutral(role);
+            return CRoleTypes[role] is CustomRoleTypes.CrewmateVanilla or
+            CustomRoleTypes.CrewmateInvestigative or
+            CustomRoleTypes.CrewmateKilling or
+            CustomRoleTypes.CrewmateProtective or
+            CustomRoleTypes.CrewmateSupport;
         }
 
         public static bool IsImpostor(CustomRoles role)
         {
-            return role is CustomRoles.Impostor or
-            CustomRoles.Shapeshifter or
-            CustomRoles.Phantom or
-            CustomRoles.TimeFreezer or
-            CustomRoles.Escapist or
-            CustomRoles.Droner or
-            CustomRoles.EvilGuesser or
-            CustomRoles.Hitman or
-            CustomRoles.Archer or
-            CustomRoles.Trapster or
-            CustomRoles.Parasite;
+            return CRoleTypes[role] is CustomRoleTypes.ImpostorVanilla or
+            CustomRoleTypes.ImpostorConcealing or
+            CustomRoleTypes.ImpostorKilling or
+            CustomRoleTypes.ImpostorSupport;
         }
 
         public static bool IsNeutral(CustomRoles role)
@@ -348,46 +383,35 @@ namespace MoreGamemodes
 
         public static bool IsNeutralBenign(CustomRoles role)
         {
-            return role is CustomRoles.Opportunist or
-            CustomRoles.Amnesiac;
+            return CRoleTypes[role] == CustomRoleTypes.NeutralBenign;
         }
 
         public static bool IsNeutralEvil(CustomRoles role)
         {
-            return role is CustomRoles.Jester or
-            CustomRoles.Executioner;
+            return CRoleTypes[role] == CustomRoleTypes.NeutralEvil;
         }
 
         public static bool IsNeutralKilling(CustomRoles role)
         {
-            return role is CustomRoles.SerialKiller or
-            CustomRoles.Pelican;
+            return CRoleTypes[role] == CustomRoleTypes.NeutralKilling;
         }
 
         public static bool IsCrewmateKilling(CustomRoles role)
         {
-            return role is CustomRoles.Sheriff or
-            CustomRoles.NiceGuesser or
-            CustomRoles.Shaman;
+            return CRoleTypes[role] == CustomRoleTypes.CrewmateKilling;
         }
 
         public static bool IsVanilla(CustomRoles role)
         {
-            return role is CustomRoles.Crewmate or
-            CustomRoles.Scientist or
-            CustomRoles.Engineer or
-            CustomRoles.Noisemaker or
-            CustomRoles.Tracker or
-            CustomRoles.Impostor or
-            CustomRoles.Shapeshifter or
-            CustomRoles.Phantom;
+            return CRoleTypes[role] is CustomRoleTypes.CrewmateVanilla or
+            CustomRoleTypes.ImpostorVanilla;
         }
 
         public static bool HasTasks(CustomRoles role)
         {
             return IsCrewmate(role) ||
             (role == CustomRoles.Executioner && (Executioner.CurrentRoleAfterTargetDeath is RolesAfterTargetDeath.Amnesiac or RolesAfterTargetDeath.Crewmate)) ||
-            role is CustomRoles.Amnesiac;
+            role == CustomRoles.Amnesiac;
         }
 
         public static int GetRoleChance(CustomRoles role)
@@ -442,16 +466,6 @@ namespace MoreGamemodes
             }
             return Options.RolesCount.ContainsKey(role) ? Options.RolesCount[role].GetInt() : 0;
         }
-
-        public static bool IsNeutralKillerEnabled()
-        {
-            foreach (var role in Enum.GetValues<CustomRoles>())
-            {
-                if (GetRoleChance(role) > 0 && IsNeutralKilling(role))
-                    return true;
-            }
-            return false;
-        }
     }
 }
 
@@ -494,6 +508,37 @@ public enum CustomRoles
     Executioner,
     SerialKiller,
     Pelican,
+}
+
+public enum BaseRoles
+{
+    Crewmate,
+    Scientist,
+    Engineer,
+    Noisemaker,
+    Tracker,
+    Impostor,
+    Shapeshifter,
+    Phantom,
+    DesyncImpostor,
+    DesyncShapeshifter,
+    DesyncPhantom,
+}
+
+public enum CustomRoleTypes
+{
+    CrewmateVanilla,
+    CrewmateInvestigative,
+    CrewmateKilling,
+    CrewmateProtective,
+    CrewmateSupport,
+    ImpostorVanilla,
+    ImpostorConcealing,
+    ImpostorKilling,
+    ImpostorSupport,
+    NeutralBenign,
+    NeutralEvil,
+    NeutralKilling,
 }
 
 public enum CustomWinners

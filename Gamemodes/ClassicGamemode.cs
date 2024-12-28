@@ -43,6 +43,8 @@ namespace MoreGamemodes
 			    foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.Notify(text);
             }
+            if (exiled != null && exiled.Object != null && Main.RealOptions.GetBool(BoolOptionNames.ConfirmImpostor))
+                exiled.PlayerName = Main.StandardNames[exiled.PlayerId];
         }
 
         public override void OnSetFilterText(HauntMenuMinigame __instance)
@@ -188,7 +190,7 @@ namespace MoreGamemodes
                     if (neutralKillers > 0)
                         name += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                     name += " remain.<size=0>";
-			        exiled.Object.SetName(name);
+			        exiled.PlayerName = name;
                     MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
 		            writer.Write(exiled.Object.Data.NetId);
                     writer.Write(name);
@@ -544,7 +546,6 @@ namespace MoreGamemodes
             }
             if (cancel)
                 return false;
-            if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
             if (!target.GetRole().OnCheckMurderAsTarget(killer))
                 return false;
             foreach (var addOn in target.GetAddOns())
@@ -554,6 +555,7 @@ namespace MoreGamemodes
             }
             if (cancel)
                 return false;
+            if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
             if (!killer.GetRole().OnCheckMurderLate(target))
                 return false;
             return true;
@@ -666,6 +668,11 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                foreach (var ar in PlayerControl.AllPlayerControls)
+                    NameSymbols[(pc.PlayerId, ar.PlayerId)] = new Dictionary<CustomRoles, (string, Color)>();
+            } 
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 bool syncSettings = false;
@@ -836,19 +843,8 @@ namespace MoreGamemodes
             }
             if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                 prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "</size>\n";
-            if (Medic.IsShielded(player) && (player == seer || seer.GetRole().Role == CustomRoles.Medic || seer.Data.Role.IsDead))
-                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Medic], "✚");
-            if (Shaman.IsCursed(player) && (player == seer || seer.Data.Role.IsDead))
-                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Shaman], "乂");
-            if (Snitch.IsAnySnitchRevealed() && (seer.GetRole().IsImpostor() || (seer.GetRole().IsNeutralKilling() && Snitch.CanFindNeutralKillers.GetBool())) && ((player.GetRole().Role == CustomRoles.Snitch && (player.GetRole() as Snitch).IsRevealed()) || player == seer || seer.Data.Role.IsDead))
-            {
-                postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Snitch], "★");
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (player == seer && pc.GetRole().Role == CustomRoles.Snitch && (pc.GetRole() as Snitch).IsRevealed())
-                        postfix += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Snitch], Utils.GetArrow(player.transform.position, pc.transform.position));
-                }
-            }
+            foreach (var symbol in NameSymbols[(player.PlayerId, seer.PlayerId)].Values)
+                postfix += Utils.ColorString(symbol.Item2, symbol.Item1);
             if (player == seer && !player.Data.IsDead)
             {
                 postfix += player.GetRole().GetNamePostfix();
@@ -1058,6 +1054,7 @@ namespace MoreGamemodes
             DefaultTasks = new Dictionary<byte, Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo.TaskInfo>>();
             CompletedTasks = new Dictionary<byte, List<uint>>();
             PlayersDiedThisRound = new List<byte>();
+            NameSymbols = new Dictionary<(byte, byte), Dictionary<CustomRoles, (string, Color)>>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 AllPlayersAddOns[pc.PlayerId] = new List<AddOn>();
@@ -1070,6 +1067,8 @@ namespace MoreGamemodes
                 IsOnPetAbilityCooldown[pc.PlayerId] = false;
                 PlayerKiller[pc.PlayerId] = byte.MaxValue;
                 TimeSinceDeath[pc.PlayerId] = 0f;
+                foreach (var ar in PlayerControl.AllPlayerControls)
+                    NameSymbols[(pc.PlayerId, ar.PlayerId)] = new Dictionary<CustomRoles, (string, Color)>();
             }
         }
 
@@ -1091,5 +1090,6 @@ namespace MoreGamemodes
         public Dictionary<byte, Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo.TaskInfo>> DefaultTasks;
         public Dictionary<byte, List<uint>> CompletedTasks;
         public List<byte> PlayersDiedThisRound;
+        public Dictionary<(byte, byte), Dictionary<CustomRoles, (string, Color)>> NameSymbols;
     }
 }

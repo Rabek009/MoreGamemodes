@@ -4,6 +4,20 @@ namespace MoreGamemodes
     {
         public override void OnFixedUpdate()
         {
+            if (IsRevealed())
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc == Player || pc.GetRole().IsImpostor() || (pc.GetRole().IsNeutralKilling() && CanFindNeutralKillers.GetBool()) || pc.Data.IsDead)
+                        ClassicGamemode.instance.NameSymbols[(Player.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = ("★", Color);
+                    if ((pc.GetRole().IsImpostor() || (pc.GetRole().IsNeutralKilling() && CanFindNeutralKillers.GetBool())) && !pc.Data.IsDead)
+                    {
+                        if (!ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)].ContainsKey(CustomRoles.Snitch))
+                            ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = ("★", Color);
+                        ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = (ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch].Item1 + Utils.GetArrow(pc.transform.position, Player.transform.position), Color);
+                    }
+                }
+            }
             if (Player.AllTasksCompleted() && !Player.Data.IsDead)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -17,8 +31,6 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             string postfix = "";
-            if (IsRevealed())
-                postfix += Utils.ColorString(Color, "★");
             if (SeeArrowToImpostors.GetBool() && !Player.Data.IsDead && Player.AllTasksCompleted())
             {
                 postfix += "\n";
@@ -50,21 +62,6 @@ namespace MoreGamemodes
             return completedTasks >= totalTasks - TasksRemainingWhenRevealed.GetInt();
         }
 
-        public static bool IsAnySnitchRevealed()
-        {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.GetRole().Role == CustomRoles.Snitch && !pc.Data.IsDead)
-                {
-                    Snitch snitchRole = pc.GetRole() as Snitch;
-                    if (snitchRole == null) continue;
-                    if (snitchRole.IsRevealed())
-                        return true;
-                }
-            }
-            return false;
-        }
-
         public Snitch(PlayerControl player)
         {
             Role = CustomRoles.Snitch;
@@ -92,11 +89,11 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             SeeArrowToImpostors = BooleanOptionItem.Create(100303, "See arrow to impostors", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            TasksRemainingWhenRevealed = IntegerOptionItem.Create(100304, "Tasks remaining when revealed", new(1, 10, 1), 2, TabGroup.CrewmateRoles, false)
+            TasksRemainingWhenRevealed = IntegerOptionItem.Create(100304, "Tasks remaining when revealed", new(1, 10, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            AdditionalShortTasks = IntegerOptionItem.Create(100305, "Additional short tasks", new(0, 5, 1), 0, TabGroup.CrewmateRoles, false)
+            AdditionalShortTasks = IntegerOptionItem.Create(100305, "Additional short tasks", new(0, 5, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            AdditionalLongTasks = IntegerOptionItem.Create(100306, "Additional long tasks", new(0, 5, 1), 0, TabGroup.CrewmateRoles, false)
+            AdditionalLongTasks = IntegerOptionItem.Create(100306, "Additional long tasks", new(0, 5, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Snitch] = Chance;
             Options.RolesCount[CustomRoles.Snitch] = Count;

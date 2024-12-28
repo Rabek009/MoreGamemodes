@@ -7,11 +7,6 @@ namespace MoreGamemodes
 {
     public class PaintBattleGamemode : CustomGamemode
     {
-        public override void OnExile(NetworkedPlayerInfo exiled)
-        {
-            PaintTime = Options.PaintingTime.GetInt();
-        }
-
         public override void OnHudUpate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;

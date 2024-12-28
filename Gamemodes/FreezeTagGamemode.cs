@@ -170,7 +170,12 @@ namespace MoreGamemodes
             target.RpcSetVentInteraction();
             if (target.Data.Role.Role == RoleTypes.Noisemaker)
                 SendNoisemakerAlert(target);
+            target.RpcSetPet("");
             target.RpcTeleport(target.transform.position);
+            new LateTask(() => {
+                if (!target.onLadder && !target.inMovingPlat)
+                    target.RpcTeleport(target.transform.position);
+            }, 0.2f);
             return false;
         }
 
@@ -232,6 +237,7 @@ namespace MoreGamemodes
                                 Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.green;
                             pc.SyncPlayerSettings();
                             pc.RpcSetVentInteraction();
+                            pc.RpcSetPet(Main.StandardPets[pc.PlayerId]);
                         }
                     }
                     else
@@ -322,7 +328,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner || Main.IsModded[pc.PlayerId] || pc == player || (pc.Data.Role.IsImpostor && !GameManager.Instance.LogicOptions.GetNoisemakerImpostorAlert())) continue;
-                CustomRpcSender sender = CustomRpcSender.Create("SendNoisemakerAlert", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("SendNoisemakerAlert", SendOption.Reliable);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(player.NetId, (byte)RpcCalls.MurderPlayer)
                     .WriteNetObject(player)

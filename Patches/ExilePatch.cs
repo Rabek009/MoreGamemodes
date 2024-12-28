@@ -27,11 +27,6 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return;
             if (exiled != null && exiled.Object != null && exiled.Object.GetDeathReason() == DeathReasons.Alive)
                 exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
-            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
-            {
-                CustomGamemode.Instance.OnExile(exiled);
-                return;
-            }
             if (exiled != null)
                 exiled.IsDead = true;
             if (AntiBlackout.ShowDoubleAnimation && exiled != null)

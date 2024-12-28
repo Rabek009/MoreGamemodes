@@ -7,7 +7,7 @@ namespace MoreGamemodes
 {
     public static class AntiBlackout
     {
-        public static bool ShowDoubleAnimation => Options.NoGameEnd.GetBool() || (Main.RealOptions.GetInt(Int32OptionNames.NumImpostors) == 1 && CustomRolesHelper.IsNeutralKillerEnabled()) || GameData.Instance.PlayerCount <= 3;
+        public static bool ShowDoubleAnimation => Options.NoGameEnd.GetBool() || (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && Main.RealOptions.GetInt(Int32OptionNames.NumImpostors) == 1) || GameData.Instance.PlayerCount <= 3;
         public static bool IsCached = false;
         private static Dictionary<byte, (bool isDead, bool Disconnected)> isDeadCache = new();
 

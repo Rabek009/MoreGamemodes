@@ -1023,12 +1023,12 @@ namespace MoreGamemodes
                     }
                     break;
                 case "/stop":
+                    canceled = true;
                     if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted))
                     {
                         PlayerControl.LocalPlayer.RpcSendMessage("You can't use /stop now.", "Warning");
                         break;
                     }
-                    canceled = true;
                     if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.Stop)
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);    
@@ -1086,11 +1086,21 @@ namespace MoreGamemodes
                 case "/kick":
                     canceled = true;
                     subArgs = args.Length < 2 ? "" : args[1];
+                    if (Utils.GetPlayerById(byte.Parse(subArgs)).GetClientId() == AmongUsClient.Instance.ClientId)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't kick yourself!", "Warning");
+                        break;
+                    }
                     AmongUsClient.Instance.KickPlayer(Utils.GetPlayerById(byte.Parse(subArgs)).GetClientId(), false);
                     break;
                 case "/ban":
                     canceled = true;
                     subArgs = args.Length < 2 ? "" : args[1];
+                    if (Utils.GetPlayerById(byte.Parse(subArgs)).GetClientId() == AmongUsClient.Instance.ClientId)
+                    {
+                        PlayerControl.LocalPlayer.RpcSendMessage("You can't ban yourself!", "Warning");
+                        break;
+                    }
                     AmongUsClient.Instance.KickPlayer(Utils.GetPlayerById(byte.Parse(subArgs)).GetClientId(), true);
                     break;
                 case "/announce":
@@ -1111,12 +1121,12 @@ namespace MoreGamemodes
                         PlayerControl.LocalPlayer.RpcSendMessage(Main.LastResult, "LastResult");
                     break;
                 case "/info":
+                    canceled = true;
                     if (!Main.GameStarted || CustomGamemode.Instance.Gamemode != Gamemodes.RandomItems || PlayerControl.LocalPlayer.Data.IsDead)
                     {
                         PlayerControl.LocalPlayer.RpcSendMessage("You can't use /info now.", "Warning");
                         break;
                     }
-                    canceled = true;
                     if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.Newsletter)
                     {
                         int crewmates = 0;
@@ -1402,6 +1412,7 @@ namespace MoreGamemodes
                     break;
                 case "/kcount":
                 case "/kc":
+                    canceled = true;
                     if (!Main.GameStarted)
                     {
                         PlayerControl.LocalPlayer.RpcSendMessage("You can't use /kcount in lobby", "Warning");
@@ -2291,6 +2302,7 @@ namespace MoreGamemodes
                     break;
                 case "/kcount":
                 case "/kc":
+                    canceled = true;
                     if (!Main.GameStarted)
                     {
                         player.RpcSendMessage("You can't use /kcount in lobby", "Warning");

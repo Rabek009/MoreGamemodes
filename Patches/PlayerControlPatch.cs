@@ -370,7 +370,27 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && RoleManager.IsGhostRole(roleType))
                 return false;
             if (RoleManager.IsGhostRole(roleType)) return true;
-            Utils.SetDesyncRoleForPlayer(__instance, roleType, roleType);
+            RoleAssigned[__instance.PlayerId] = true;
+            __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
+            CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
+            MessageWriter writer = sender.stream;
+            sender.StartMessage(-1);
+            bool disconnected = __instance.Data.Disconnected;
+            __instance.Data.Disconnected = true;
+            writer.StartMessage(1);
+            writer.WritePacked(__instance.Data.NetId);
+            __instance.Data.Serialize(writer, false);
+            writer.EndMessage();
+            __instance.Data.Disconnected = disconnected;
+            sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetRole)
+                .Write((ushort)roleType)
+                .Write(true)
+                .EndRpc();
+            sender.EndMessage();
+            sender.SendMessage();
+            new LateTask(() => {
+                __instance.Data.MarkDirty();
+            }, 0.5f);
             return false;
         }
     }
@@ -426,7 +446,7 @@ namespace MoreGamemodes
         public static void Postfix(PlayerControl __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (MeetingHud.Instance) return;
+            if (__instance.Data.IsDead || MeetingHud.Instance) return;
             new LateTask(() =>
             {
                 if (!MeetingHud.Instance)
@@ -437,10 +457,19 @@ namespace MoreGamemodes
                         __instance.SetPet("pet_test");
                     else
                     {
-                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetPetStr, SendOption.Reliable, __instance.GetClientId());
-		                writer.Write("pet_test");
-		                writer.Write(__instance.GetNextRpcSequenceId(RpcCalls.SetPetStr));
-		                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                        CustomRpcSender sender = CustomRpcSender.Create("SetDesyncPet", SendOption.Reliable);
+                        MessageWriter writer = sender.stream;
+                        sender.StartMessage(__instance.GetClientId());
+                        sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetPetStr)
+                            .Write("pet_test")
+		                    .Write(__instance.GetNextRpcSequenceId(RpcCalls.SetPetStr))
+                            .EndRpc();
+                        writer.StartMessage(1);
+                        writer.WritePacked(__instance.Data.NetId);
+                        __instance.Data.Serialize(writer, false);
+                        writer.EndMessage();
+                        sender.EndMessage();
+                        sender.SendMessage();
                     }
                 }
             }, 0.2f, "Set MixUp Name");
@@ -453,7 +482,7 @@ namespace MoreGamemodes
         public static void Postfix(PlayerControl __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (MeetingHud.Instance) return;
+            if (__instance.Data.IsDead || MeetingHud.Instance) return;
             new LateTask(() =>
             {
                 if (!MeetingHud.Instance)
@@ -644,7 +673,7 @@ namespace MoreGamemodes
                     phantom.Data.Role.SetCooldown();
                     return false;
                 }
-                CustomRpcSender sender = CustomRpcSender.Create("Cancel vanish", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("Cancel vanish", SendOption.Reliable);
                 sender.StartMessage(phantom.GetClientId());
                 sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                     .Write((ushort)RoleTypes.Phantom)
@@ -734,7 +763,7 @@ namespace MoreGamemodes
                 if (pc.AmOwner) continue;
                 if (!pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
-                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.None);
+                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.Reliable);
                     sender.StartMessage(pc.GetClientId());
                     sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                         .Write((ushort)RoleTypes.Phantom)
@@ -751,7 +780,7 @@ namespace MoreGamemodes
                     sender.SendMessage();
                     new LateTask(() => {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected || pc == null || pc.Data == null || pc.Data.Disconnected) return;
-                        CustomRpcSender sender = CustomRpcSender.Create("PhantomVanish", SendOption.None);
+                        CustomRpcSender sender = CustomRpcSender.Create("PhantomVanish", SendOption.Reliable);
                         sender.StartMessage(pc.GetClientId());
                         sender.StartRpc(phantom.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                             .WriteVector2(new Vector2(50f, 50f))
@@ -793,7 +822,7 @@ namespace MoreGamemodes
                 if (pc.AmOwner) continue;
                 if (shouldAnimate && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
-                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.None);
+                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.Reliable);
                     sender.StartMessage(pc.GetClientId());
                     sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                         .Write((ushort)RoleTypes.Phantom)
@@ -810,16 +839,8 @@ namespace MoreGamemodes
                     sender.SendMessage();
                     new LateTask(() => {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected || pc == null || pc.Data == null || pc.Data.Disconnected) return;
-                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.None);
+                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.Reliable);
                         sender.StartMessage(pc.GetClientId());
-                        sender.StartRpc(phantom.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                            .WriteVector2(phantom.transform.position)
-                            .Write(phantom.NetTransform.lastSequenceId)
-                            .EndRpc();
-                        sender.StartRpc(phantom.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                            .WriteVector2(new Vector2(50f, 50f))
-                            .Write((ushort)(phantom.NetTransform.lastSequenceId + 16383))
-                            .EndRpc();
                         sender.StartRpc(phantom.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                             .WriteVector2(new Vector2(50f, 50f))
                             .Write((ushort)(phantom.NetTransform.lastSequenceId + 32767))
@@ -851,7 +872,7 @@ namespace MoreGamemodes
                     }, 1f);
                     new LateTask(() => {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected || pc == null || pc.Data == null || pc.Data.Disconnected) return;
-                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.None);
+                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.Reliable);
                         sender.StartMessage(pc.GetClientId());
                         sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                             .Write((ushort)RoleTypes.Phantom)
@@ -871,7 +892,7 @@ namespace MoreGamemodes
                 }
                 else if (!shouldAnimate && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
-                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.None);
+                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.Reliable);
                     sender.StartMessage(pc.GetClientId());
                     sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                         .Write((ushort)RoleTypes.Phantom)
@@ -932,71 +953,97 @@ namespace MoreGamemodes
     class RpcSetTasksPatch
     {
         // https://github.com/tukasa0001/TownOfHost/blob/main/Patches/TaskAssignPatch.cs
-        public static void Prefix(NetworkedPlayerInfo __instance, [HarmonyArgument(0)] ref Il2CppStructArray<byte> taskTypeIds)
+        public static bool Prefix(NetworkedPlayerInfo __instance, [HarmonyArgument(0)] ref Il2CppStructArray<byte> taskTypeIds)
         {
-            if (!AmongUsClient.Instance.AmHost || ClassicGamemode.instance == null) return;
-            if (ClassicGamemode.instance.DefaultTasks.ContainsKey(__instance.PlayerId)) return;
-            bool hasCommonTasks = true;
-            int NumShortTasks = Main.RealOptions.GetInt(Int32OptionNames.NumShortTasks);
-            int NumLongTasks = Main.RealOptions.GetInt(Int32OptionNames.NumLongTasks);
-            if (__instance.GetRole().Role == CustomRoles.Snitch && (Snitch.AdditionalShortTasks.GetInt() > 0 || Snitch.AdditionalLongTasks.GetInt() > 0))
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (ClassicGamemode.instance != null && !ClassicGamemode.instance.DefaultTasks.ContainsKey(__instance.PlayerId))
             {
-                NumShortTasks += Snitch.AdditionalShortTasks.GetInt();
-                NumLongTasks += Snitch.AdditionalLongTasks.GetInt();
+                bool hasCommonTasks = true;
+                int NumShortTasks = Main.RealOptions.GetInt(Int32OptionNames.NumShortTasks);
+                int NumLongTasks = Main.RealOptions.GetInt(Int32OptionNames.NumLongTasks);
+                if (__instance.GetRole().Role == CustomRoles.Snitch && (Snitch.AdditionalShortTasks.GetInt() > 0 || Snitch.AdditionalLongTasks.GetInt() > 0))
+                {
+                    NumShortTasks += Snitch.AdditionalShortTasks.GetInt();
+                    NumLongTasks += Snitch.AdditionalLongTasks.GetInt();
+                }
+                if (!hasCommonTasks || NumShortTasks != Main.RealOptions.GetInt(Int32OptionNames.NumShortTasks) || NumLongTasks != Main.RealOptions.GetInt(Int32OptionNames.NumLongTasks))
+                {
+                    Il2CppSystem.Collections.Generic.List<byte> TasksList = new();
+                    foreach (var num in taskTypeIds)
+                        TasksList.Add(num);
+
+                    int defaultCommonTasksNum = Main.RealOptions.GetInt(Int32OptionNames.NumCommonTasks);
+                    if (hasCommonTasks) TasksList.RemoveRange(defaultCommonTasksNum, TasksList.Count - defaultCommonTasksNum);
+                    else TasksList.Clear();
+
+                    Il2CppSystem.Collections.Generic.HashSet<TaskTypes> usedTaskTypes = new();
+                    int start2 = 0;
+                    int start3 = 0;
+
+                    Il2CppSystem.Collections.Generic.List<NormalPlayerTask> LongTasks = new();
+                    foreach (var task in ShipStatus.Instance.LongTasks)
+                        LongTasks.Add(task);
+                    Shuffle(LongTasks);
+
+                    Il2CppSystem.Collections.Generic.List<NormalPlayerTask> ShortTasks = new();
+                    foreach (var task in ShipStatus.Instance.ShortTasks)
+                        ShortTasks.Add(task);
+                    Shuffle(ShortTasks);
+
+                    ShipStatus.Instance.AddTasksFromList(
+                        ref start2,
+                        NumLongTasks,
+                        TasksList,
+                        usedTaskTypes,
+                        LongTasks
+                    );
+                    ShipStatus.Instance.AddTasksFromList(
+                        ref start3,
+                        NumShortTasks,
+                        TasksList,
+                        usedTaskTypes,
+                        ShortTasks
+                    );
+
+                    taskTypeIds = new Il2CppStructArray<byte>(TasksList.Count);
+                    for (int i = 0; i < TasksList.Count; i++)
+                    {
+                        taskTypeIds[i] = TasksList[i];
+                    }
+                }
             }
-            if (hasCommonTasks && NumShortTasks == Main.RealOptions.GetInt(Int32OptionNames.NumShortTasks) && NumLongTasks == Main.RealOptions.GetInt(Int32OptionNames.NumLongTasks)) return;
-
-            Il2CppSystem.Collections.Generic.List<byte> TasksList = new();
-            foreach (var num in taskTypeIds)
-                TasksList.Add(num);
-
-            int defaultCommonTasksNum = Main.RealOptions.GetInt(Int32OptionNames.NumCommonTasks);
-            if (hasCommonTasks) TasksList.RemoveRange(defaultCommonTasksNum, TasksList.Count - defaultCommonTasksNum);
-            else TasksList.Clear();
-
-            Il2CppSystem.Collections.Generic.HashSet<TaskTypes> usedTaskTypes = new();
-            int start2 = 0;
-            int start3 = 0;
-
-            Il2CppSystem.Collections.Generic.List<NormalPlayerTask> LongTasks = new();
-            foreach (var task in ShipStatus.Instance.LongTasks)
-                LongTasks.Add(task);
-            Shuffle(LongTasks);
-
-            Il2CppSystem.Collections.Generic.List<NormalPlayerTask> ShortTasks = new();
-            foreach (var task in ShipStatus.Instance.ShortTasks)
-                ShortTasks.Add(task);
-            Shuffle(ShortTasks);
-
-            ShipStatus.Instance.AddTasksFromList(
-                ref start2,
-                NumLongTasks,
-                TasksList,
-                usedTaskTypes,
-                LongTasks
-            );
-            ShipStatus.Instance.AddTasksFromList(
-                ref start3,
-                NumShortTasks,
-                TasksList,
-                usedTaskTypes,
-                ShortTasks
-            );
-
-            taskTypeIds = new Il2CppStructArray<byte>(TasksList.Count);
-            for (int i = 0; i < TasksList.Count; i++)
+            new LateTask(() => {
+                if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
+                {
+                    ClassicGamemode.instance.DefaultTasks[__instance.PlayerId] = __instance.Tasks;
+                    ClassicGamemode.instance.CompletedTasks[__instance.PlayerId] = new List<uint>();
+                }
+            }, 0f);
+            if (!Main.GameStarted)
             {
-                taskTypeIds[i] = TasksList[i];
+                __instance.SetTasks(taskTypeIds);
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetTasks fix blackscreen", SendOption.Reliable);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(-1);
+                writer.StartMessage(1);
+                writer.WritePacked(__instance.NetId);
+                __instance.Serialize(writer, false);
+                writer.EndMessage();
+                sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetTasks)
+                    .WriteBytesAndSize(taskTypeIds)
+                    .EndRpc();
+                bool disconnected = __instance.Disconnected;
+                __instance.Disconnected = true;
+                writer.StartMessage(1);
+                writer.WritePacked(__instance.NetId);
+                __instance.Serialize(writer, false);
+                writer.EndMessage();
+                __instance.Disconnected = disconnected;
+                sender.EndMessage();
+                sender.SendMessage();
+                return false;
             }
-        }
-        public static void Postfix(NetworkedPlayerInfo __instance, [HarmonyArgument(0)] Il2CppStructArray<byte> taskTypeIds)
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
-            {
-                ClassicGamemode.instance.DefaultTasks[__instance.PlayerId] = __instance.Tasks;
-                ClassicGamemode.instance.CompletedTasks[__instance.PlayerId] = new List<uint>();
-            }
+            return true;
         }
         public static void Shuffle<T>(Il2CppSystem.Collections.Generic.List<T> list)
         {

@@ -64,6 +64,18 @@ namespace MoreGamemodes
             Player.RpcSetShamanTarget(Target);
         }
 
+        public override void OnFixedUpdate()
+        {
+            if (Target == byte.MaxValue) return;
+            var player = Utils.GetPlayerById(Target);
+            if (player == null || player.Data == null || player.Data.IsDead || player.Data.Disconnected) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc == player || pc.Data.IsDead)
+                    ClassicGamemode.instance.NameSymbols[(Target, pc.PlayerId)][CustomRoles.Shaman] = ("乂", Color);
+            }
+        }
+
         public static void OnGlobalReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -75,22 +87,6 @@ namespace MoreGamemodes
                     shamanRole.OnReportDeadBody(reporter, target);
                 }
             }
-        }
-
-        public static bool IsCursed(PlayerControl player)
-        {
-            if (!player.GetRole().IsImpostor() && !player.GetRole().IsNeutralKilling() && player.GetRole().Role != CustomRoles.Sheriff) return false;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.GetRole().Role == CustomRoles.Shaman)
-                {
-                    Shaman shamanRole = pc.GetRole() as Shaman;
-                    if (shamanRole == null) continue;
-                    if (shamanRole.Target == player.PlayerId)
-                        return true;
-                }
-            }
-            return false;
         }
 
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/GuessManager.cs#L638

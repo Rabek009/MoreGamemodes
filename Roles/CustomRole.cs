@@ -146,37 +146,44 @@ namespace MoreGamemodes
 
         public bool IsCrewmate()
         {
-            return CustomRolesHelper.IsCrewmate(Role);
+            return CustomRoleType is CustomRoleTypes.CrewmateVanilla or
+            CustomRoleTypes.CrewmateInvestigative or
+            CustomRoleTypes.CrewmateKilling or
+            CustomRoleTypes.CrewmateProtective or
+            CustomRoleTypes.CrewmateSupport;
         }
 
         public bool IsImpostor()
         {
-            return CustomRolesHelper.IsImpostor(Role);
+            return CustomRoleType is CustomRoleTypes.ImpostorVanilla or
+            CustomRoleTypes.ImpostorConcealing or
+            CustomRoleTypes.ImpostorKilling or
+            CustomRoleTypes.ImpostorSupport;
         }
 
         public bool IsNeutral()
         {
-            return CustomRolesHelper.IsNeutral(Role);
+            return IsNeutralBenign() || IsNeutralEvil() || IsNeutralKilling();
         }
 
         public bool IsNeutralBenign()
         {
-            return CustomRolesHelper.IsNeutralBenign(Role);
+            return CustomRoleType == CustomRoleTypes.NeutralBenign;
         }
 
         public bool IsNeutralEvil()
         {
-            return CustomRolesHelper.IsNeutralEvil(Role);
+            return CustomRoleType == CustomRoleTypes.NeutralEvil;
         }
 
         public bool IsNeutralKilling()
         {
-            return CustomRolesHelper.IsNeutralKilling(Role);
+            return CustomRoleType == CustomRoleTypes.NeutralKilling;
         }
 
         public bool IsCrewmateKilling()
         {
-            return CustomRolesHelper.IsCrewmateKilling(Role);
+            return CustomRoleType == CustomRoleTypes.CrewmateKilling;
         }
 
         public bool HasTasks()
@@ -269,6 +276,7 @@ namespace MoreGamemodes
         public BaseRoles BaseRole;
         public PlayerControl Player;
         public Color Color;
+        public CustomRoleTypes CustomRoleType;
         public string RoleName;
         public string RoleDescription;
         public string RoleDescriptionLong; 

@@ -19,7 +19,6 @@ namespace MoreGamemodes
                 RpcChangeSprite($"<size={Size}><font=\"VCR SDF\"><#ff000069>●");
                 State = 2;
             }
-            base.OnFixedUpdate();
             if (Timer < WaitDuration) return;
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;

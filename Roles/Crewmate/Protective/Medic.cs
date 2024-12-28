@@ -132,6 +132,12 @@ namespace MoreGamemodes
                 Cooldown = ShieldCooldown.GetFloat();
                 Player.Notify(Utils.ColorString(Color.red, "Shielded player died!"));
             }
+            if (ShieldedPlayer == byte.MaxValue) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc == Player || pc == player || pc.Data.IsDead)
+                    ClassicGamemode.instance.NameSymbols[(ShieldedPlayer, pc.PlayerId)][CustomRoles.Medic] = ("✚", Color);
+            }
         }
 
         public override bool OnEnterVent(int id)

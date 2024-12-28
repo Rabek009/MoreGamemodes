@@ -20,7 +20,6 @@ namespace MoreGamemodes
                 Despawn();
                 return;
             }
-            base.OnFixedUpdate();
             AttackTimer += Time.fixedDeltaTime;
             TimeSinceLastDamage += Time.fixedDeltaTime;
             if (AttackTimer >= 1f)

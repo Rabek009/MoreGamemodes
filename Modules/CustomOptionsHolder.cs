@@ -413,7 +413,7 @@ namespace MoreGamemodes
                 .SetColor(Color.red);
             AntiCheat = BooleanOptionItem.Create(4, "Anti Cheat", true, TabGroup.ModSettings, false)
                 .SetColor(Color.blue);
-            CheatingPenalty = StringOptionItem.Create(5, "Cheating Penalty", cheatingPenalties, 3, TabGroup.ModSettings, false)
+            CheatingPenalty = StringOptionItem.Create(5, "Cheating Penalty", cheatingPenalties, 0, TabGroup.ModSettings, false)
                 .SetParent(AntiCheat);
             Commands = TextOptionItem.Create(10, "Commands", TabGroup.ModSettings)
                 .SetColor(Color.cyan);
@@ -755,7 +755,7 @@ namespace MoreGamemodes
             PaintBattle = TextOptionItem.Create(9000, "Paint battle", TabGroup.GamemodeSettings)
                 .SetGamemode(Gamemodes.PaintBattle)
                 .SetColor(Color.gray);
-            PaintingTime = IntegerOptionItem.Create(9001, "Painting time", new(30, 255, 5), 180, TabGroup.GamemodeSettings, false)
+            PaintingTime = IntegerOptionItem.Create(9001, "Painting time", new(30, 900, 10), 180, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.PaintBattle)
                 .SetValueFormat(OptionFormat.Seconds);
             VotingTime = IntegerOptionItem.Create(9002, "Voting time", new(5, 30, 1), 10, TabGroup.GamemodeSettings, false)

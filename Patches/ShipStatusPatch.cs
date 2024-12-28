@@ -197,7 +197,7 @@ namespace MoreGamemodes
                     }
                     if (pc.GetClosestVent().Id == LastClosestVent[pc.PlayerId] && players >= 3) continue;
                     LastClosestVent[pc.PlayerId] = pc.GetClosestVent().Id; 
-                    MessageWriter writer = MessageWriter.Get(SendOption.None);
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -264,7 +264,7 @@ namespace MoreGamemodes
                 if (player != null && pc != player) continue;
                 if (BlockVentInteraction(pc))
                 {
-                    MessageWriter writer = MessageWriter.Get(SendOption.None);
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());

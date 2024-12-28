@@ -62,7 +62,7 @@ namespace MoreGamemodes
                 new LateTask(() => player.RpcTeleport(position), 0.1f, "Retry Teleport");
                 return;
             }
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && player.GetRole().Role == CustomRoles.Droner)
+            if (Main.GameStarted && CustomGamemode.Instance.Gamemode == Gamemodes.Classic && player.GetRole().Role == CustomRoles.Droner)
             {
                 var dronerRole = player.GetRole() as Droner;
                 if (dronerRole != null)
@@ -214,7 +214,7 @@ namespace MoreGamemodes
                 GameOptionsManager.Instance.CurrentGameOptions = options2;
                 return;
             }
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage(6);
             writer.Write(AmongUsClient.Instance.GameId);
             writer.WritePacked(target.GetClientId());
@@ -289,7 +289,7 @@ namespace MoreGamemodes
         public static void RpcUnmoddedSetKillTimer(this PlayerControl player, float time)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage(6);
             writer.Write(AmongUsClient.Instance.GameId);
             writer.WritePacked(player.GetClientId());
@@ -463,6 +463,8 @@ namespace MoreGamemodes
                     }
                     if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
                         prefix += "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n</size>";
+                    foreach (var symbol in ClassicGamemode.instance.NameSymbols[(player.PlayerId, seer.PlayerId)].Values)
+                        postfix += Utils.ColorString(symbol.Item2, symbol.Item1);
                     if (seer.GetRole().Role == CustomRoles.EvilGuesser || seer.GetRole().Role == CustomRoles.NiceGuesser)
                         prefix += Utils.ColorString(seer.GetRole().Color, player.PlayerId.ToString()) + " ";
                     if (player.Data.IsDead && (seer.GetRole().Role == CustomRoles.Mortician || seer.Data.IsDead))
@@ -789,64 +791,6 @@ namespace MoreGamemodes
             return false;
         }
 
-        // It doesn't work for phantom and tracker
-        // Makes role really weird, but also gives new possibilities to host only mods
-        public static void RpcSetWeirdRole(this PlayerControl player, RoleTypes role, bool despawnFakePlayer, PlayerControl seer = null)
-        {
-            if (player.AmOwner || Main.IsModded[player.PlayerId])
-            {
-                if (seer == null)
-                    player.RpcSetRoleV2(role);
-                else
-                    player.RpcSetDesyncRole(role, seer);
-                return;
-            }
-            PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
-            playerControl.PlayerId = player.PlayerId;
-            playerControl.isNew = false;
-            playerControl.notRealPlayer = true;
-            AmongUsClient.Instance.NetIdCnt += 1U;
-            MessageWriter msg = MessageWriter.Get(SendOption.None);
-			msg.StartMessage(5);
-			msg.Write(AmongUsClient.Instance.GameId);
-			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
-			msg.EndMessage();
-			msg.StartMessage(6);
-			msg.Write(AmongUsClient.Instance.GameId);
-			msg.WritePacked(int.MaxValue);
-			for (uint i = 1; i <= 3; ++i)
-			{
-			    msg.StartMessage(4);
-			    msg.WritePacked(2U);
-			    msg.WritePacked(-2);
-			    msg.Write((byte)SpawnFlags.None);
-			    msg.WritePacked(1);
-		        msg.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-			    msg.StartMessage(1);
-			    msg.EndMessage();
-			    msg.EndMessage();
-			}
-			msg.EndMessage();
-			AmongUsClient.Instance.SendOrDisconnect(msg);
-			msg.Recycle();
-            if (seer == null)
-                playerControl.RpcSetRoleV2(role);
-            else
-                playerControl.RpcSetDesyncRole(role, seer);
-            if (PlayerControl.AllPlayerControls.Contains(playerControl))
-                PlayerControl.AllPlayerControls.Remove(playerControl);
-            if (despawnFakePlayer)
-            {
-                new LateTask(() => playerControl.Despawn(), 0.5f);
-            }
-            else
-            {
-                Main.RoleFakePlayer[player.PlayerId] = playerControl.NetId;
-                playerControl.MyPhysics.RpcExitVent(0);
-                playerControl.MyPhysics.RpcEnterVent(0);
-            }
-        }
-
         public static void RpcSetUnshiftButton(this PlayerControl player)
         {
             if (Main.AllShapeshifts[player.PlayerId] != player.PlayerId) return;
@@ -863,7 +807,7 @@ namespace MoreGamemodes
             new LateTask(() => {
                 player.RpcSetNamePrivate(player.BuildPlayerName(player, false), player, true);
                 var outfit = player.Data.Outfits[PlayerOutfitType.Default];
-                var sender = CustomRpcSender.Create("Set Unshift Button", SendOption.None);
+                var sender = CustomRpcSender.Create("Set Unshift Button", SendOption.Reliable);
                 sender.StartMessage(player.GetClientId());
                 sender.StartRpc(player.NetId, RpcCalls.SetColor)
                     .Write(player.Data.NetId)
@@ -901,8 +845,8 @@ namespace MoreGamemodes
 
         public static RoleTypes GetSelfRole(this PlayerControl player)
         {
-            if (CustomGamemode.Instance.Gamemode is Gamemodes.BattleRoyale or Gamemodes.PaintBattle or Gamemodes.BaseWars or Gamemodes.ColorWars) return RoleTypes.Impostor;
-            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.KillOrDie or Gamemodes.Jailbreak) return RoleTypes.Shapeshifter;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.BattleRoyale or Gamemodes.ColorWars) return RoleTypes.Impostor;
+            if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars) return RoleTypes.Shapeshifter;
             return Main.DesyncRoles.ContainsKey((player.PlayerId, player.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, player.PlayerId)] : Main.StandardRoles[player.PlayerId];
         }
 
@@ -973,14 +917,6 @@ namespace MoreGamemodes
                         .EndRpc();
                     sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                         .WriteVector2(new Vector2(50f, 50f))
-                        .Write(player.NetTransform.lastSequenceId)
-                        .EndRpc();
-                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(new Vector2(50f, 50f))
-                        .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
-                        .EndRpc();
-                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(new Vector2(50f, 50f))
                         .Write((ushort)(player.NetTransform.lastSequenceId + 32767))
                         .EndRpc();
                     sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
@@ -1010,7 +946,7 @@ namespace MoreGamemodes
                 return;
             }
             bool isDead = player.Data.IsDead;
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage(6);
             writer.Write(AmongUsClient.Instance.GameId);
             writer.WritePacked(player.GetClientId());

@@ -1,9 +1,12 @@
-﻿using HarmonyLib;
-using InnerNet;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using HarmonyLib;
 using Hazel;
+using Il2CppSystem.Collections.Generic;
+using InnerNet;
 using UnityEngine;
+using System.Linq;
+
+using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
@@ -20,6 +23,11 @@ namespace MoreGamemodes
                 PlayerTagManager.PlayersWithTags.Add(new ModdedPlayerTag(client.FriendCode, "00ff00", "#Host"));
                 return;
             }
+            if (client != null && (client.FriendCode == "skewgram#9364" || client.FriendCode == "metersmall#7725"))
+            {
+                AmongUsClient.Instance.KickPlayer(client.Id, true);
+                return;
+            }
             if (client != null && Options.AntiCheat.GetBool() && !Utils.IsValidFriendCode(client.FriendCode) && AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
             {
                 AmongUsClient.Instance.KickPlayer(client.Id, Options.CurrentCheatingPenalty == CheatingPenalties.Ban);
@@ -33,18 +41,6 @@ namespace MoreGamemodes
                 else if (client != null)
                     __instance.KickPlayer(client.Id, false);
             }, 2f, "Welcome Message");
-            new LateTask(() => 
-            {
-                try
-                {
-                    if (AmongUsClient.Instance.AmHost && !IsDisconnected(client) && client.Character.Data.IsIncomplete)
-                    {
-                        AmongUsClient.Instance.KickPlayer(client.Id, false);
-                        return;
-                    }
-                }
-                catch { }
-            }, 4.5f, "Kick Fortegreen");
         }
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Patches/PlayerJoinAndLeftPatch.cs#L164
         public static bool IsDisconnected(ClientData client)
@@ -54,11 +50,9 @@ namespace MoreGamemodes
             {
                 ClientData clientData = __instance.allClients[i];
                 if (clientData.Id == client.Id)
-                {
-                    return true;
-                }
+                    return false;
             }
-            return false;
+            return true;
         }
     }
 
@@ -97,7 +91,7 @@ namespace MoreGamemodes
             if (!__instance.AmHost)
             {
                 Options.Gamemode.SetValue(0);
-                Main.StandardNames = new Dictionary<byte, string>();
+                Main.StandardNames = new System.Collections.Generic.Dictionary<byte, string>();
                 new LateTask(() => PlayerControl.LocalPlayer.RpcVersionCheck(Main.CurrentVersion), 2f, "Version Check");
             }
         }
@@ -144,7 +138,7 @@ namespace MoreGamemodes
         {
             if (__instance.IsGameStarted)
             {
-                List<byte> winners = new();
+                System.Collections.Generic.List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     winners.Add(pc.PlayerId);
                 CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
@@ -206,24 +200,22 @@ namespace MoreGamemodes
         }
     }
 
-    // https://github.com/Gurge44/EndlessHostRoles/blob/main/Patches/ClientPatch.cs
-    static class InnerNetClientPatch
-    {
-        private static byte Timer;
+    //https://github.com/Gurge44/EndlessHostRoles/blob/main/Patches/ClientPatch.cs
 
-        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendInitialData))]
-        [HarmonyPrefix]
-        public static bool SendInitialDataPrefix(InnerNetClient __instance, int clientId)
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendInitialData))]
+    class SendInitialDataPatch
+    {
+        public static bool Prefix(InnerNetClient __instance, [HarmonyArgument(0)] int clientId)
         {
-            if (!Constants.IsVersionModded() || AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
+            if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
             MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
             messageWriter.StartMessage(6);
             messageWriter.Write(__instance.GameId);
             messageWriter.WritePacked(clientId);
-            Il2CppSystem.Collections.Generic.List<InnerNetObject> obj = __instance.allObjects;
+            List<InnerNetObject> obj = __instance.allObjects;
             lock (obj)
             {
-                HashSet<GameObject> hashSet = new();
+                System.Collections.Generic.HashSet<GameObject> hashSet = new();
                 for (int i = 0; i < __instance.allObjects.Count; i++)
                 {
                     InnerNetObject innerNetObject = __instance.allObjects[i];
@@ -241,42 +233,47 @@ namespace MoreGamemodes
                         }
                     }
                 }
-            
                 messageWriter.EndMessage();
                 __instance.SendOrDisconnect(messageWriter);
                 messageWriter.Recycle();
             }
-
             DelaySpawnPlayerInfo(__instance, clientId);
-            return false;
+			return false;
         }
-
         private static void DelaySpawnPlayerInfo(InnerNetClient __instance, int clientId)
         {
-            var players = GameData.Instance.AllPlayers.ToArray();
-
-            foreach (var batch in players.Chunk(5))
+            var players = GameData.Instance.AllPlayers.ToArray().ToList();
+            while (players.Count > 0)
             {
+                var batch = players.Take(5).ToList();
                 MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
                 messageWriter.StartMessage(6);
                 messageWriter.Write(__instance.GameId);
                 messageWriter.WritePacked(clientId);
-
-                batch.DoIf(p => p != null && p.ClientId != clientId && !p.Disconnected, p => __instance.WriteSpawnMessage(p, p.OwnerId, p.SpawnFlags, messageWriter));
-
+                foreach (var player in batch)
+                {
+                    if (messageWriter.Length > 500) break;
+                    if (player != null && player.ClientId != clientId && !player.Disconnected)
+                    {
+                        __instance.WriteSpawnMessage(player, player.OwnerId, player.SpawnFlags, messageWriter);
+                    }
+                    players.Remove(player);
+                }
                 messageWriter.EndMessage();
                 __instance.SendOrDisconnect(messageWriter);
                 messageWriter.Recycle();
             }
         }
+    }
 
-        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendAllStreamedObjects))]
-        [HarmonyPrefix]
-        public static bool SendAllStreamedObjectsPrefix(InnerNetClient __instance, ref bool __result)
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendAllStreamedObjects))]
+    class SendAllStreamedObjectsPatch
+    {
+        public static bool Prefix(InnerNetClient __instance, ref bool __result)
         {
             if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
             __result = false;
-            Il2CppSystem.Collections.Generic.List<InnerNetObject> obj = __instance.allObjects;
+            List<InnerNetObject> obj = __instance.allObjects;
             lock (obj)
             {
                 for (int i = 0; i < __instance.allObjects.Count; i++)
@@ -287,15 +284,29 @@ namespace MoreGamemodes
                         MessageWriter messageWriter = __instance.Streams[(int)innerNetObject.sendMode];
                         messageWriter.StartMessage(1);
                         messageWriter.WritePacked(innerNetObject.NetId);
-                        if (innerNetObject.Serialize(messageWriter, false)) messageWriter.EndMessage();
-                        else messageWriter.CancelMessage();
-
-                        if (innerNetObject.Chunked && innerNetObject.IsDirty)
-                            __result = true;
+                        try
+                        {
+                            if (innerNetObject.Serialize(messageWriter, false))
+                            {
+                                messageWriter.EndMessage();
+                            }
+                            else
+                            {
+                                messageWriter.CancelMessage();
+                            }
+                            if (innerNetObject.Chunked && innerNetObject.IsDirty)
+                            {
+                                __result = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Main.Instance.Log.LogError(ex);
+                            messageWriter.CancelMessage();
+                        }
                     }
                 }
             }
-
             for (int j = 0; j < __instance.Streams.Length; j++)
             {
                 MessageWriter messageWriter2 = __instance.Streams[j];
@@ -308,22 +319,71 @@ namespace MoreGamemodes
                     messageWriter2.Write(__instance.GameId);
                 }
             }
-
-            return false;
+			return false;
         }
+    }
 
-        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.FixedUpdate))]
-        [HarmonyPostfix]
-        public static void FixedUpdatePostfix(InnerNetClient __instance)
+    
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn))]
+    class SpawnPatch
+    {
+        public static void Postfix(InnerNetClient __instance, [HarmonyArgument(0)] InnerNetObject netObjParent)
         {
-            if (!Constants.IsVersionModded() || AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started || !__instance.AmHost || __instance.Streams == null || __instance.NetworkMode != NetworkModes.OnlineGame) return;
+            if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return;
+            if (__instance.AmHost)
+            {
+                switch (netObjParent)
+                {
+                    case NetworkedPlayerInfo playerinfo:
+                        new LateTask(() => {
+                            if (playerinfo != null && AmongUsClient.Instance.AmConnected)
+                            {
+                                var client = AmongUsClient.Instance.GetClient(playerinfo.ClientId);
+                                if (client != null && !CreatePlayerPatch.IsDisconnected(client) && playerinfo.IsIncomplete)
+                                {
+                                    Main.Instance.Log.LogInfo($"Disconnecting Client [{client.Id}]{client.PlayerName} {client.FriendCode} for playerinfo timeout");
+                                    AmongUsClient.Instance.SendLateRejection(client.Id, DisconnectReasons.ClientTimeout);
+                                    __instance.OnPlayerLeft(client, DisconnectReasons.ClientTimeout);
+                                }
+                            }
+                        }, 5f, "PlayerInfo Green Bean Kick");
+                        break;
+                    case PlayerControl player:
+                        new LateTask(() => {
+                            if (player != null && !player.notRealPlayer && !player.isDummy && AmongUsClient.Instance.AmConnected)
+                            {
+                                var client = AmongUsClient.Instance.GetClient(player.OwnerId);
+                                if (client != null && !CreatePlayerPatch.IsDisconnected(client) && (player.Data == null || player.Data.IsIncomplete))
+                                {
+                                    Main.Instance.Log.LogInfo($"Disconnecting Client [{client.Id}]{client.PlayerName} {client.FriendCode} for playercontrol timeout");
+                                    AmongUsClient.Instance.SendLateRejection(client.Id, DisconnectReasons.ClientTimeout);
+                                    __instance.OnPlayerLeft(client, DisconnectReasons.ClientTimeout);
+                                }
+                            }
+                        }, 5.5f, "PlayerControl Green Bean Kick");
+                        break;
+                }
+            }
+            if (!__instance.AmHost)
+            {
+                Debug.LogError("Tried to spawn while not host:" + (netObjParent?.ToString()));
+            }
+        }
+    }
 
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.FixedUpdate))]
+    public class InnerNetClientFixedUpdatePatch
+    {
+        private static byte Timer = 0;
+        public static void Postfix(InnerNetClient __instance)
+        {
+            if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return;
+            if (!__instance.AmHost || __instance.Streams == null) return;
             if (Timer == 0)
             {
                 Timer = 1;
                 return;
             }
-
             var player = GameData.Instance.AllPlayers.ToArray().FirstOrDefault(x => x.IsDirty);
             if (player != null)
             {
@@ -333,22 +393,30 @@ namespace MoreGamemodes
                 messageWriter.Write(__instance.GameId);
                 messageWriter.StartMessage(1);
                 messageWriter.WritePacked(player.NetId);
-                if (player.Serialize(messageWriter, false))
+                try
                 {
+                    if (player.Serialize(messageWriter, false))
+                    {
+                        messageWriter.EndMessage();
+                    }
+                    else
+                    {
+                        messageWriter.CancelMessage();
+                        player.ClearDirtyBits();
+                        return;
+                    }
                     messageWriter.EndMessage();
+                    __instance.SendOrDisconnect(messageWriter);
+                    messageWriter.Recycle();
                 }
-                else
+                catch (Exception ex)
                 {
+                    Main.Instance.Log.LogError(ex);
                     messageWriter.CancelMessage();
                     player.ClearDirtyBits();
-                    return;
                 }
-
-                messageWriter.EndMessage();
-                __instance.SendOrDisconnect(messageWriter);
-                messageWriter.Recycle();
             }
-        }  
+        }
     }
 
     [HarmonyPatch(typeof(GameData), nameof(GameData.DirtyAllData))]

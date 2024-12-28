@@ -62,7 +62,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> OptionProtectCooldowns;
     public static Dictionary<byte, float> TimeSinceLastPet;
 
-    public const string CurrentVersion = "2.1.0 dev1";
+    public const string CurrentVersion = "2.1.0 dev2";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -157,7 +157,7 @@ public partial class Main : BasePlugin
     {
         public static bool Prefix(PlayerControl __instance)
         {
-            if (!AmongUsClient.Instance.AmHost && __instance.PlayerId == 255)
+            if (!AmongUsClient.Instance.AmHost && (__instance.PlayerId == 254 || __instance.PlayerId == 255))
             {
                 __instance.cosmetics.currentBodySprite.BodySprite.color = Color.clear;
                 __instance.cosmetics.colorBlindText.color = Color.clear;
@@ -278,19 +278,4 @@ public enum DeathReasons
     Eaten,
     Cursed,
     Shot,
-}
-
-public enum BaseRoles
-{
-    Crewmate,
-    Scientist,
-    Engineer,
-    Noisemaker,
-    Tracker,
-    Impostor,
-    Shapeshifter,
-    Phantom,
-    DesyncImpostor,
-    DesyncShapeshifter,
-    DesyncPhantom,
 }

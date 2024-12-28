@@ -222,7 +222,7 @@ namespace MoreGamemodes
         {
             if (deadBodyParent == null || !Main.GameStarted) return;
             CreateDeadBody(position, colorId, deadBodyParent);
-            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.None);
+            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.Reliable);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
@@ -438,143 +438,66 @@ namespace MoreGamemodes
 
         public static void SetDesyncRoleForPlayer(PlayerControl player, RoleTypes selfRole, RoleTypes othersRole)
         {
-            int assignedRoles = 0;
-            int playerCount = 0;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc == player) continue;
-                ++playerCount;
-                if (pc.Data != null && (RpcSetRolePatch.RoleAssigned[pc.PlayerId] || pc.Data.Disconnected))
-                    ++assignedRoles;
-            }
-            if (assignedRoles >= playerCount)
-            {
-                new LateTask(() => {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc.AmOwner)
-                        {
-                            Dictionary<byte, bool> Disconnected = new();
-                            foreach (var ar in PlayerControl.AllPlayerControls)
-                            {
-                                Disconnected[ar.PlayerId] = ar.Data.Disconnected;
-                                ar.Data.Disconnected = true;
-                            }
-                            player.StartCoroutine(player.CoSetRole(pc == player ? selfRole : othersRole, true));
-                            foreach (var ar in PlayerControl.AllPlayerControls)
-                                ar.Data.Disconnected = Disconnected[ar.PlayerId];
-                            continue;
-                        }
-                        CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
-                        MessageWriter writer = sender.stream;
-                        sender.StartMessage(pc.GetClientId());
-                        RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
-                        Dictionary<byte, bool> Disconnected2 = new();
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                        {   
-                            Disconnected2[ar.PlayerId] = ar.Data.Disconnected;
-                            ar.Data.Disconnected = true;
-                            writer.StartMessage(1);
-                            writer.WritePacked(ar.Data.NetId);
-                            ar.Data.Serialize(writer, false);
-                            writer.EndMessage();
-                        }
-                        sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
-                            .Write((ushort)(pc == player ? selfRole : othersRole))
-                            .Write(true)
-                            .EndRpc();
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                        {
-                            ar.Data.Disconnected = Disconnected2[ar.PlayerId];
-                            writer.StartMessage(1);
-                            writer.WritePacked(ar.Data.NetId);
-                            ar.Data.Serialize(writer, false);
-                            writer.EndMessage();
-                        }
-                        sender.EndMessage();
-                        sender.SendMessage();
-                    }
-                }, 0.5f);
-                return;
-            }
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
-            player.RpcSetDesyncRoleV2(selfRole, player);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc == player) continue;
-                player.RpcSetDesyncRoleV2(othersRole, pc);
+                if (pc.AmOwner)
+                {
+                    player.StartCoroutine(player.CoSetRole(pc == player ? selfRole : othersRole, true));
+                    continue;
+                }
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(pc.GetClientId());
+                bool disconnected = player.Data.Disconnected;
+                player.Data.Disconnected = true;
+                writer.StartMessage(1);
+                writer.WritePacked(player.Data.NetId);
+                player.Data.Serialize(writer, false);
+                writer.EndMessage();
+                player.Data.Disconnected = disconnected;
+                sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)(pc == player ? selfRole : othersRole))
+                    .Write(true)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
             }
+            new LateTask(() => {
+                player.Data.MarkDirty();
+            }, 0.5f);
         }
 
         public static void SetDesyncRoleForPlayers(PlayerControl player, List<PlayerControl> list, RoleTypes listRole, RoleTypes othersRole)
         {
-            int assignedRoles = 0;
-            int playerCount = 0;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc == player) continue;
-                ++playerCount;
-                if (pc.Data != null && (RpcSetRolePatch.RoleAssigned[pc.PlayerId] || pc.Data.Disconnected))
-                    ++assignedRoles;
-            }
-            if (assignedRoles >= playerCount)
-            {
-                new LateTask(() => {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc.AmOwner)
-                        {
-                            Dictionary<byte, bool> Disconnected = new();
-                            foreach (var ar in PlayerControl.AllPlayerControls)
-                            {
-                                Disconnected[ar.PlayerId] = ar.Data.Disconnected;
-                                ar.Data.Disconnected = true;
-                            }
-                            player.StartCoroutine(player.CoSetRole(list.Contains(pc) ? listRole : othersRole, true));
-                            foreach (var ar in PlayerControl.AllPlayerControls)
-                                ar.Data.Disconnected = Disconnected[ar.PlayerId];
-                            continue;
-                        }
-                        CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
-                        MessageWriter writer = sender.stream;
-                        sender.StartMessage(pc.GetClientId());
-                        RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
-                        Dictionary<byte, bool> Disconnected2 = new();
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                        {   
-                            Disconnected2[ar.PlayerId] = ar.Data.Disconnected;
-                            ar.Data.Disconnected = true;
-                            writer.StartMessage(1);
-                            writer.WritePacked(ar.Data.NetId);
-                            ar.Data.Serialize(writer, false);
-                            writer.EndMessage();
-                        }
-                        sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
-                            .Write((ushort)(list.Contains(pc) ? listRole : othersRole))
-                            .Write(true)
-                            .EndRpc();
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                        {
-                            ar.Data.Disconnected = Disconnected2[ar.PlayerId];
-                            writer.StartMessage(1);
-                            writer.WritePacked(ar.Data.NetId);
-                            ar.Data.Serialize(writer, false);
-                            writer.EndMessage();
-                        }
-                        sender.EndMessage();
-                        sender.SendMessage();
-                    }
-                }, 0.5f);
-                return;
-            }
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (list.Contains(pc))
-                    player.RpcSetDesyncRoleV2(listRole, pc);
-                else
-                    player.RpcSetDesyncRoleV2(othersRole, pc);
+                if (pc.AmOwner)
+                {
+                    player.StartCoroutine(player.CoSetRole(list.Contains(pc) ? listRole : othersRole, true));
+                    continue;
+                }
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(pc.GetClientId());
+                bool disconnected = player.Data.Disconnected;
+                player.Data.Disconnected = true;
+                writer.StartMessage(1);
+                writer.WritePacked(player.Data.NetId);
+                player.Data.Serialize(writer, false);
+                writer.EndMessage();
+                player.Data.Disconnected = disconnected;
+                sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)(list.Contains(pc) ? listRole : othersRole))
+                    .Write(true)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
             }
+            new LateTask(() => {
+                player.Data.MarkDirty();
+            }, 0.5f);
         }
 
         public static void DestroyTranslator(this GameObject obj)
@@ -766,6 +689,7 @@ namespace MoreGamemodes
             role.RoleDescription = CustomRolesHelper.RoleDescriptions[role.Role];
             role.RoleDescriptionLong = CustomRolesHelper.RoleDescriptionsLong[role.Role];
             role.Color = CustomRolesHelper.RoleColors[role.Role];
+            role.CustomRoleType = CustomRolesHelper.CRoleTypes[role.Role];
         }
 
         public static void SetupAddOnInfo(AddOn addOn)

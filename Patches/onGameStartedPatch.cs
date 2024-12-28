@@ -84,6 +84,13 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             Utils.SyncAllSettings();
+            new LateTask(() => {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+					PlayerNameColor.Set(pc);
+				PlayerControl.LocalPlayer.StopAllCoroutines();
+				DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
+				DestroyableSingleton<HudManager>.Instance.HideGameLoader();
+            }, 0f);
             return CustomGamemode.Instance.OnSelectRolesPrefix();
         }
         public static void Postfix()
@@ -130,10 +137,7 @@ namespace MoreGamemodes
             if (CustomGamemode.Instance.DisableTasks)
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
-                {
                     pc.Data.RpcSetTasks(new byte[0]);
-                    pc.Data.MarkDirty();
-                }
             }
             
             bool shouldPerformVentInteractions = false;

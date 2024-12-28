@@ -62,7 +62,7 @@ namespace MoreGamemodes
 
         public bool OnReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
         {
-            if (reporter.HasAddOn(AddOns.Oblivious)) return true;
+            if (!(reporter.GetRole().Role is CustomRoles.Altruist or CustomRoles.Amnesiac) && reporter.HasAddOn(AddOns.Oblivious)) return true;
             if (target != null && TrappedPlayers.ContainsKey(target.PlayerId) && TrappedPlayers[target.PlayerId] == byte.MaxValue)
             {
                 TrappedPlayers[target.PlayerId] = reporter.PlayerId;
