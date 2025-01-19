@@ -255,14 +255,14 @@ namespace MoreGamemodes
                     var targetRole = Main.DesyncRoles.ContainsKey((target2.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(target2.PlayerId, pc.PlayerId)] : Main.StandardRoles[target2.PlayerId];
                     if (!pc.GetSelfRole().IsImpostor())
                     {
-                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
+                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to kill as crewmate");
                         pc.RpcMurderPlayer(target2, false);
                         return true;
                     }
                     if (targetRole.IsImpostor())
                     {
-                        if (!TimeSinceRoleChange.ContainsKey(target2.PlayerId) || TimeSinceRoleChange[target2.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
+                        if (!TimeSinceRoleChange.ContainsKey(target2.PlayerId) || TimeSinceRoleChange[target2.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to kill impostor");
                         return true;
                     }
@@ -292,7 +292,7 @@ namespace MoreGamemodes
                     if (target3 == null) break;
                     if (pc.Data.Role.Role != RoleTypes.GuardianAngel)
                     {
-                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
+                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to protect as not guardian angel");
                         return true;
                     }
@@ -356,7 +356,7 @@ namespace MoreGamemodes
                     }
                     if (pc.GetSelfRole() != RoleTypes.Shapeshifter)
                     {
-                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
+                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to shift as not shapeshifter");
                         pc.RpcRejectShapeshift();
                         return true;
@@ -375,7 +375,7 @@ namespace MoreGamemodes
                     }
                     if (pc.GetSelfRole() != RoleTypes.Phantom)
                     {
-                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
+                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to vanish as not phantom");
                         return true;
                     }
@@ -393,7 +393,7 @@ namespace MoreGamemodes
                     }
                     if (pc.GetSelfRole() != RoleTypes.Phantom)
                     {
-                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
+                        if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to appear as not phantom");
                         return true;
                     }
@@ -470,7 +470,7 @@ namespace MoreGamemodes
                         HandleCheat(physics.myPlayer, "Venting during meeting");
                         return true;
                     }
-                    if (!physics.myPlayer.GetSelfRole().IsImpostor() && physics.myPlayer.GetSelfRole() != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(physics.myPlayer.PlayerId) || TimeSinceRoleChange[physics.myPlayer.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f)))
+                    if (!physics.myPlayer.GetSelfRole().IsImpostor() && physics.myPlayer.GetSelfRole() != RoleTypes.Engineer && (!TimeSinceRoleChange.ContainsKey(physics.myPlayer.PlayerId) || TimeSinceRoleChange[physics.myPlayer.PlayerId] > 5f))
                     {
                         HandleCheat(physics.myPlayer, "Trying to vent as non venting role");
                         return true;
@@ -611,7 +611,7 @@ namespace MoreGamemodes
                 case SystemTypes.Sabotage:
                     if (!selfRole.IsImpostor())
                     {   
-                        if (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > Mathf.Max(0.02f, AmongUsClient.Instance.Ping / 1000f * 6f))
+                        if (!TimeSinceRoleChange.ContainsKey(player.PlayerId) || TimeSinceRoleChange[player.PlayerId] > 5f)
                             HandleCheat(player, "Sabotaging as crewmate");
                         return true;
                     }

@@ -326,6 +326,7 @@ namespace MoreGamemodes
             Main.ProtectCooldowns = new Dictionary<byte, float>();
             Main.OptionProtectCooldowns = new Dictionary<byte, float>();
             Main.TimeSinceLastPet = new Dictionary<byte, float>();
+            ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
             CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             AntiBlackout.Reset();

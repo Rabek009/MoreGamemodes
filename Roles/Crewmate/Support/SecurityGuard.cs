@@ -38,7 +38,7 @@ namespace MoreGamemodes
         {
             if (Cooldown > 0f || AbilityUses < 1f) return;
             Vent vent = Player.GetClosestVent();
-            if (Vector2.Distance(Player.transform.position, vent.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, vent.transform.position, Constants.ShipOnlyMask, false))
+            if (Vector2.Distance(Player.GetRealPosition(), vent.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, vent.transform.position, Constants.ShipOnlyMask, false))
             {
                 Player.Notify(Utils.ColorString(Color.red, "(!) No vent nearby (!)"));
                 return;
@@ -146,9 +146,7 @@ namespace MoreGamemodes
         public static OptionItem CanBeGuessed;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(400100, "Security guard", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.SecurityGuard])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(400100, CustomRoles.SecurityGuard, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(400101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             BlockVentCooldown = FloatOptionItem.Create(400102, "Block vent cooldown", new(10f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)

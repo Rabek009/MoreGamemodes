@@ -43,7 +43,7 @@ namespace MoreGamemodes
             Frame = 0;
             CreateHole = createHole;
             HoleSpeedDecrease = holeSpeedDecrease;
-            CreateNetObject($"<size={Size}><line-height=97%><cspace=0.16em><#0000>WWW</color><mark=#ff0000>W</mark><#0000>WWW</color>\n<mark=#ff0000>W</mark><#0000>W</color><mark=#ff0000>WWW</mark><#0000>W</color><mark=#ff0000>W\nW</mark><mark=#ff8000>WW</mark><mark=#ffff00>W</mark><mark=#ff8000>WW</mark><mark=#ffff00>W\nWW</mark><mark=#ff8000>W</mark><mark=#ffff00>W</mark><mark=#ff8000>W</mark><mark=#ffff00>WW</mark>\n<mark=#ff8000>W</mark><mark=#ffff80>WW</mark><mark=#ffff00>W</mark><mark=#ffff80>WW</mark><mark=#ff8000>W</mark>\n<#0000>W</color><mark=#ff8000>W</mark><mark=#ffff80>WWW</mark><mark=#ff8000>W</mark><#0000>W\nWW</color><mark=#ff8000>WWW</mark><#0000>WW", position, CustomObjectTypes.Explosion);
+            CreateNetObject($"<size={Size}><line-height=97%><cspace=0.16em><#0000>WWW</color><mark=#ff0000>W</mark><#0000>WWW</color>\n<mark=#ff0000>W</mark><#0000>W</color><mark=#ff0000>WWW</mark><#0000>W</color><mark=#ff0000>W\nW</mark><mark=#ff8000>WW</mark><mark=#ffff00>W</mark><mark=#ff8000>WW</mark><mark=#ffff00>W\nWW</mark><mark=#ff8000>W</mark><mark=#ffff00>W</mark><mark=#ff8000>W</mark><mark=#ffff00>WW</mark>\n<mark=#ff8000>W</mark><mark=#ffff80>WW</mark><mark=#ffff00>W</mark><mark=#ffff80>WW</mark><mark=#ff8000>W</mark>\n<#0000>W</color><mark=#ff8000>W</mark><mark=#ffff80>WWW</mark><mark=#ff8000>W</mark><#0000>W\nWW</color><mark=#ff8000>WWW</mark><#0000>WW", position);
         }
 
         public float Size;

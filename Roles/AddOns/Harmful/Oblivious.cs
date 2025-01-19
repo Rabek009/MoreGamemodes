@@ -25,9 +25,7 @@ namespace MoreGamemodes
         public static OptionItem ReportAfterKillingBait;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(1200100, "Oblivious", new(0, 100, 5), 0, TabGroup.AddOns, false)
-                .SetColor(AddOnsHelper.AddOnColors[AddOns.Oblivious])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = AddOnOptionItem.Create(1200100, AddOns.Oblivious, TabGroup.AddOns, false);
             Count = IntegerOptionItem.Create(1200101, "Max", new(1, 15, 1), 1, TabGroup.AddOns, false)
                 .SetParent(Chance);
             ReportAfterKillingBait = BooleanOptionItem.Create(1200102, "Report after killing bait", true, TabGroup.AddOns, false)

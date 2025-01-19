@@ -66,9 +66,7 @@ namespace MoreGamemodes
         public static OptionItem DieAfterUsingAbility;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(400300, "Judge", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Judge])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(400300, CustomRoles.Judge, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(400301, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             DieAfterUsingAbility = BooleanOptionItem.Create(400302, "Die after using ability", false, TabGroup.CrewmateRoles, false)

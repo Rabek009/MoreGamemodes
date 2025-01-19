@@ -178,9 +178,7 @@ namespace MoreGamemodes
         public static OptionItem CanKillJester;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(200100, "Sheriff", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Sheriff])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(200100, CustomRoles.Sheriff, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(200101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             KillCooldown = FloatOptionItem.Create(200102, "Kill cooldown", new(10f, 60f, 2.5f), 25f, TabGroup.CrewmateRoles, false)

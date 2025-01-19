@@ -34,6 +34,7 @@ public partial class Main : BasePlugin
     public static ConfigEntry<bool> ShowFPS { get; private set; }
     public static ConfigEntry<bool> DarkTheme { get; private set; }
     public static ConfigEntry<bool> DisableLobbyMusic { get; private set; }
+    public static ConfigEntry<bool> ApplyBanList { get; private set; }
 
     public static Dictionary<byte, byte> StandardColors;
     public static Dictionary<byte, string> StandardNames;
@@ -62,7 +63,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> OptionProtectCooldowns;
     public static Dictionary<byte, float> TimeSinceLastPet;
 
-    public const string CurrentVersion = "2.1.0 dev2";
+    public const string CurrentVersion = "2.1.0 beta2.1";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -84,6 +85,7 @@ public partial class Main : BasePlugin
         ShowFPS = Config.Bind("Client Options", "ShowFPS", true);
         DarkTheme = Config.Bind("Client Options", "DarkTheme", false);
         DisableLobbyMusic = Config.Bind("Client Options", "DisableLobbyMusic", false);
+        ApplyBanList = Config.Bind("Client Options", "ApplyBanList", true);
 
         CustomGamemode.Instance = null;
         ClassicGamemode.instance = null;
@@ -146,9 +148,9 @@ public partial class Main : BasePlugin
         ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
         PlayerTagManager.Initialize();
         AntiBlackout.Reset();
+        BanManager.Init();
 
         Instance.Log.LogMessage($"Sucessfully Loaded MoreGamemodes With Version {CurrentVersion} Is Dev Version: {isDev} Is Beta Version: {isBeta}");
-
         Harmony.PatchAll();
     }
 
@@ -157,7 +159,7 @@ public partial class Main : BasePlugin
     {
         public static bool Prefix(PlayerControl __instance)
         {
-            if (!AmongUsClient.Instance.AmHost && (__instance.PlayerId == 254 || __instance.PlayerId == 255))
+            if (!AmongUsClient.Instance.AmHost && __instance.PlayerId == 254)
             {
                 __instance.cosmetics.currentBodySprite.BodySprite.color = Color.clear;
                 __instance.cosmetics.colorBlindText.color = Color.clear;

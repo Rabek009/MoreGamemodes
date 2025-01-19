@@ -126,9 +126,7 @@ namespace MoreGamemodes
         public static OptionItem KillCooldown;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(1000100, "Serial killer", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.SerialKiller])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(1000100, CustomRoles.SerialKiller, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(1000101, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             KillCooldown = FloatOptionItem.Create(1000102, "Kill cooldown", new(1f, 30f, 0.5f), 15f, TabGroup.NeutralRoles, false)

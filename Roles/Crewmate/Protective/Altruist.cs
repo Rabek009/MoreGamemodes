@@ -21,7 +21,7 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (SeeArrowToNearestBody.GetBool() && !Player.Data.IsDead && Player.GetClosestDeadBody() != null)
-                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.transform.position, Player.GetClosestDeadBody().transform.position));
+                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.GetRealPosition(), Player.GetClosestDeadBody().transform.position));
             return "";
         }
 
@@ -40,9 +40,7 @@ namespace MoreGamemodes
         public static OptionItem CanBeGuessed;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(300300, "Altruist", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Altruist])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(300300, CustomRoles.Altruist, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(300301, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             SeeArrowToNearestBody = BooleanOptionItem.Create(300302, "See arrow to nearest body", false, TabGroup.CrewmateRoles, false)

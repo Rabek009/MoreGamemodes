@@ -56,9 +56,7 @@ namespace MoreGamemodes
         public static OptionItem CanVoteForHimself;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(900100, "Jester", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Jester])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(900100, CustomRoles.Jester, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(900101, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             CanUseVents = BooleanOptionItem.Create(900102, "Can use vents", false, TabGroup.NeutralRoles, false)

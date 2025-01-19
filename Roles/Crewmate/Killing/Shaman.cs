@@ -130,9 +130,7 @@ namespace MoreGamemodes
         public static OptionItem AbilityUseGainWithEachTaskCompleted;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(200300, "Shaman", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Shaman])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(200300, CustomRoles.Shaman, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(200301, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             InitialAbilityUseLimit = FloatOptionItem.Create(200302, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.CrewmateRoles, false)

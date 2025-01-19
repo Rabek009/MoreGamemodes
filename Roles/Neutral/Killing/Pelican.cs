@@ -145,9 +145,7 @@ namespace MoreGamemodes
         public static OptionItem CanUseVents;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(1000200, "Pelican", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Pelican])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(1000200, CustomRoles.Pelican, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(1000201, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             EatCooldown = FloatOptionItem.Create(1000202, "Eat cooldown", new(10f, 60f, 2.5f), 30f, TabGroup.NeutralRoles, false)

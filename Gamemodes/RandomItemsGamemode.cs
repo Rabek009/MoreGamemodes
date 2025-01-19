@@ -145,7 +145,7 @@ namespace MoreGamemodes
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Knowledge:
-                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
+                        if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
                         if (target.Data.Role.IsImpostor)
                         {
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Color.red;
@@ -165,7 +165,7 @@ namespace MoreGamemodes
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Gun:
-                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
+                        if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
                         if (target.Data.Role.IsImpostor)
                             pc.RpcMurderPlayer(target, true);
                         else
@@ -183,7 +183,7 @@ namespace MoreGamemodes
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Illusion:
-                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
+                        if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
                         if (target.Data.Role.IsImpostor)
                             target.RpcMurderPlayer(pc, true);
                         else
@@ -194,7 +194,7 @@ namespace MoreGamemodes
                         bool showReactorFlash = false;
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if (player.Data.Role.IsImpostor && Vector2.Distance(pc.transform.position, player.transform.position) <= Options.RadarRange.GetFloat() * 9 && !player.Data.IsDead)
+                            if (player.Data.Role.IsImpostor && Vector2.Distance(pc.GetRealPosition(), player.transform.position) <= Options.RadarRange.GetFloat() * 9 && !player.Data.IsDead)
                                 showReactorFlash = true;
                         }
                         if (showReactorFlash)
@@ -202,7 +202,7 @@ namespace MoreGamemodes
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Swap:
-                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f) break;
+                        if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
                         if (NoItemGive) break;
                         List<byte> playerTasks = new();
                         List<byte> targetTasks = new();
@@ -272,7 +272,7 @@ namespace MoreGamemodes
                         foreach (var ar in PlayerControl.AllPlayerControls)
                         {
                             if (ar != pc)
-                                ar.RpcTeleport(pc.transform.position);
+                                ar.RpcTeleport(pc.GetRealPosition());
                         }
                         NoBombTimer = 10f;
                         pc.RpcSetItem(Items.None);
@@ -281,7 +281,7 @@ namespace MoreGamemodes
                         if (NoBombTimer > 0f) return;
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if ((!player.Data.Role.IsImpostor || Options.CanKillImpostors.GetBool()) && Vector2.Distance(pc.transform.position, player.transform.position) <= Options.BombRadius.GetFloat() * 2f && !player.Data.IsDead && player != pc && ShieldTimer[player.PlayerId] <= 0f)
+                            if ((!player.Data.Role.IsImpostor || Options.CanKillImpostors.GetBool()) && Vector2.Distance(pc.GetRealPosition(), player.transform.position) <= Options.BombRadius.GetFloat() * 2f && !player.Data.IsDead && player != pc && ShieldTimer[player.PlayerId] <= 0f)
                             {
                                 player.RpcSetDeathReason(DeathReasons.Bombed);
                                 player.RpcMurderPlayer(player, true);
@@ -290,7 +290,7 @@ namespace MoreGamemodes
                         }
                         pc.RpcSetDeathReason(DeathReasons.Suicide);
                         pc.RpcMurderPlayer(pc, true);
-                        Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, Options.RiExplosionCreatesHole.GetBool(), Options.RiHoleSpeedDecrease.GetInt(), pc.transform.position);
+                        Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, Options.RiExplosionCreatesHole.GetBool(), Options.RiHoleSpeedDecrease.GetInt(), pc.GetRealPosition());
                         pc.RpcSetItem(Items.None);
                         if (Options.NoGameEnd.GetBool()) break;
                         var isSomeoneAlive = false;
@@ -317,11 +317,11 @@ namespace MoreGamemodes
                             if ((!player.Data.Role.IsImpostor && Options.CrewmatesSeeTrap.GetBool()) || (player.Data.Role.IsImpostor && Options.ImpostorsSeeTrap.GetBool()) || player.Data.Role.IsDead || player == pc)
                                 visibleList.Add(player.PlayerId);
                         }
-                        Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.transform.position, visibleList, pc.PlayerId);
+                        Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.GetRealPosition(), visibleList, pc.PlayerId);
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.TeamChanger:
-                        if (target == null || Vector2.Distance(pc.transform.position, target.transform.position) > 2f || target.Data.Role.IsImpostor) break;
+                        if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f || target.Data.Role.IsImpostor) break;
                         var role = Options.TargetGetsYourRole.GetBool() ? pc.Data.Role.Role : RoleTypes.Impostor;
                         target.RpcSetRoleV2(role);
                         pc.RpcMurderPlayer(pc, true);
@@ -345,7 +345,7 @@ namespace MoreGamemodes
                         break;
                     case Items.Rope:
                         target = pc.GetClosestPlayer();
-                        target.RpcTeleport(pc.transform.position);
+                        target.RpcTeleport(pc.GetRealPosition());
                         pc.RpcSetItem(Items.None);
                         break;
                     case Items.Compass:

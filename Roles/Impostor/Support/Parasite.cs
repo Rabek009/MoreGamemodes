@@ -33,7 +33,7 @@ namespace MoreGamemodes
         {
             if (Cooldown > 0f) return;
             PlayerControl target = Player.GetClosestPlayer(true);
-            if ((target == null || Vector2.Distance(Player.transform.position, target.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, target.transform.position, Constants.ShipOnlyMask, false)) && !Player.AmOwner && !Main.IsModded[Player.PlayerId])
+            if ((target == null || Vector2.Distance(Player.GetRealPosition(), target.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, target.transform.position, Constants.ShipOnlyMask, false)) && !Player.AmOwner && !Main.IsModded[Player.PlayerId])
             {
                 Player.Notify(Utils.ColorString(Color.red, "(!) No player nearby (!)"));
                 return;
@@ -132,9 +132,7 @@ namespace MoreGamemodes
         public static TurnedImpostorRoles CurrentTurnedImpostorRole => (TurnedImpostorRoles)TurnedImpostorRole.GetValue();
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(700200, "Parasite", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Parasite])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(700200, CustomRoles.Parasite, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(700201, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             InfectCooldown = FloatOptionItem.Create(700202, "Infect cooldown", new(10f, 90f, 5f), 25f, TabGroup.ImpostorRoles, false)

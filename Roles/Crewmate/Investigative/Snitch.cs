@@ -14,7 +14,7 @@ namespace MoreGamemodes
                     {
                         if (!ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)].ContainsKey(CustomRoles.Snitch))
                             ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = ("★", Color);
-                        ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = (ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch].Item1 + Utils.GetArrow(pc.transform.position, Player.transform.position), Color);
+                        ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = (ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch].Item1 + Utils.GetArrow(pc.GetRealPosition(), Player.transform.position), Color);
                     }
                 }
             }
@@ -37,7 +37,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.GetRole().IsImpostor() || (pc.GetRole().IsNeutralKilling() && CanFindNeutralKillers.GetBool()))
-                        postfix += Utils.ColorString(pc.GetRole().Color, Utils.GetArrow(Player.transform.position, pc.transform.position));
+                        postfix += Utils.ColorString(pc.GetRole().Color, Utils.GetArrow(Player.GetRealPosition(), pc.transform.position));
                 }
             }
             return postfix;
@@ -80,9 +80,7 @@ namespace MoreGamemodes
         public static OptionItem AdditionalLongTasks;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(100300, "Snitch", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Snitch])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(100300, CustomRoles.Snitch, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(100301, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             CanFindNeutralKillers = BooleanOptionItem.Create(100302, "Can find neutral killers", true, TabGroup.CrewmateRoles, false)

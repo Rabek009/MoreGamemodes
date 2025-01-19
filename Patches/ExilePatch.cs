@@ -35,22 +35,26 @@ namespace MoreGamemodes
                 return;
             }
             new LateTask(() => {
+                if (!GameManager.Instance.ShouldCheckForGameEnd) return;
                 Utils.SendGameData();
                 AntiBlackout.IsCached = false;
+            }, 0.7f);
+            new LateTask(() => {
+                if (!GameManager.Instance.ShouldCheckForGameEnd) return;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.Data != null && pc.Data.IsDead && !pc.Data.Disconnected)
                         pc.SetChatVisible(true);
                 }
-            }, 0.5f);
-            if (Options.EnableMidGameChat.GetBool())
-            {
-                foreach (var pc in PlayerControl.AllPlayerControls)
+                if (Options.EnableMidGameChat.GetBool())
                 {
-                    if (pc.Data != null && !pc.Data.IsDead && !pc.Data.Disconnected)
-                        pc.SetChatVisible(true);
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc.Data != null && !pc.Data.IsDead && !pc.Data.Disconnected)
+                            pc.SetChatVisible(true);
+                    }
                 }
-            }
+            }, 0.9f);
             CustomGamemode.Instance.OnExile(exiled);
             
             if (exiled == null || exiled.Object == null) return;

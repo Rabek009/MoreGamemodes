@@ -45,9 +45,7 @@ namespace MoreGamemodes
         public static OptionItem CanBeGuessed;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(1100100, "Bait", new(0, 100, 5), 0, TabGroup.AddOns, false)
-                .SetColor(AddOnsHelper.AddOnColors[AddOns.Bait])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = AddOnOptionItem.Create(1100100, AddOns.Bait, TabGroup.AddOns, false);
             Count = IntegerOptionItem.Create(1100101, "Max", new(1, 15, 1), 1, TabGroup.AddOns, false)
                 .SetParent(Chance);
             ReportDelay = FloatOptionItem.Create(1100102, "Report delay", new(0f, 10f, 0.5f), 0f, TabGroup.AddOns, false)

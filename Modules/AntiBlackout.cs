@@ -13,11 +13,6 @@ namespace MoreGamemodes
 
         public static void SetIsDead(bool doSend = true)
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.Data != null && pc.Data.IsDead && !pc.Data.Disconnected)
-                    pc.SetChatVisible(false);
-            }
             isDeadCache.Clear();
             foreach (var info in GameData.Instance.AllPlayers)
             {
@@ -28,6 +23,11 @@ namespace MoreGamemodes
             }
             IsCached = true;
             if (doSend) Utils.SendGameData();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data != null && pc.Data.IsDead && !pc.Data.Disconnected)
+                    pc.SetChatVisible(false);
+            }
         }
         public static void RestoreIsDead(bool doSend = true)
         {

@@ -186,9 +186,7 @@ namespace MoreGamemodes
         public static OptionItem AbilityUseGainWithEachTaskCompleted;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(100100, "Investigator", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Investigator])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(100100, CustomRoles.Investigator, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(100101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             InvestigateCooldown = FloatOptionItem.Create(100102, "Investigate cooldown", new(10f, 60f, 2.5f), 30f, TabGroup.CrewmateRoles, false)

@@ -287,7 +287,7 @@ namespace MoreGamemodes
             }
             else
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
                 writer.Write(message);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
             }
@@ -312,9 +312,7 @@ namespace MoreGamemodes
         public static OptionItem CanGuessAddOns;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(600100, "Evil guesser", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.EvilGuesser])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(600100, CustomRoles.EvilGuesser, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(600101, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             CanGuessNeutralKilling = BooleanOptionItem.Create(600102, "Can guess neutral killing", true, TabGroup.ImpostorRoles, false)

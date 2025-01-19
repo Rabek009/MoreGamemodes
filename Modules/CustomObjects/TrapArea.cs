@@ -26,13 +26,13 @@ namespace MoreGamemodes
             {
                 if (!p.Data.IsDead && !p.inVent && !MeetingHud.Instance)
                 {
-                    dis = Vector2.Distance(Position, p.transform.position);
+                    dis = Vector2.Distance(Position, p.GetRealPosition());
                     pcdistance.Add(p, dis);
                 }
             }
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
-            if (Vector2.Distance(Position, target.transform.position) <= Options.TrapRadius.GetFloat())
+            if (Vector2.Distance(Position, target.GetRealPosition()) <= Radius)
             {
                 if (RandomItemsGamemode.instance != null && RandomItemsGamemode.instance.ShieldTimer[target.PlayerId] <= 0f)
                 {
@@ -44,16 +44,21 @@ namespace MoreGamemodes
             }
         }
 
+        public override void OnMeeting()
+        {
+            Despawn();
+        }
+
         public TrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
         {
             Radius = radius;
-            Size = radius * 25f;
+            Size = radius * 32f;
             Timer = -0.1f;
             WaitDuration = waitDuration;
             State = 0;
             VisibleList = visibleList;
             OwnerId = ownerId;
-            CreateNetObject($"<size={Size}><font=\"VCR SDF\"><#c7c7c769>●", position, CustomObjectTypes.TrapArea);
+            CreateNetObject($"<size={Size}><font=\"VCR SDF\"><#c7c7c769>●", position);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (!VisibleList.Contains(pc.PlayerId))

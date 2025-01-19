@@ -1389,12 +1389,14 @@ namespace MoreGamemodes
                         foreach (var roleType in Enum.GetValues<CustomRoles>())
                         {
                             if (CustomRolesHelper.IsVanilla(roleType)) continue;
+                            string chance = CustomRolesHelper.GetRoleChance(roleType) <= 100 ? CustomRolesHelper.GetRoleChance(roleType).ToString() + "%" : "Always";
+                            string count = CustomRolesHelper.GetRoleCount(roleType).ToString();
                             if (CustomRolesHelper.IsCrewmate(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
-                                crewmateRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                                crewmateRoles += Options.RolesChance[roleType].GetName() + ": " + chance + " x" + count + "\n";
                             if (CustomRolesHelper.IsImpostor(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
-                                impostorRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                                impostorRoles += Options.RolesChance[roleType].GetName() + ": " + chance + " x" + count + "\n";
                             if (CustomRolesHelper.IsNeutral(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
-                                neutralRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                                neutralRoles += Options.RolesChance[roleType].GetName() + ": " + chance + " x" + count + "\n";
                         }
                         if (crewmateRoles != "")
                             PlayerControl.LocalPlayer.RpcSendMessage(crewmateRoles, "Crewmates");
@@ -2279,12 +2281,14 @@ namespace MoreGamemodes
                         foreach (var roleType in Enum.GetValues<CustomRoles>())
                         {
                             if (CustomRolesHelper.IsVanilla(roleType)) continue;
+                            string chance = CustomRolesHelper.GetRoleChance(roleType) <= 100 ? CustomRolesHelper.GetRoleChance(roleType).ToString() + "%" : "Always";
+                            string count = CustomRolesHelper.GetRoleCount(roleType).ToString();
                             if (CustomRolesHelper.IsCrewmate(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
-                                crewmateRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                                crewmateRoles += Options.RolesChance[roleType].GetName() + ": " + chance + " x" + count + "\n";
                             if (CustomRolesHelper.IsImpostor(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
-                                impostorRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                                impostorRoles += Options.RolesChance[roleType].GetName() + ": " + chance + " x" + count + "\n";
                             if (CustomRolesHelper.IsNeutral(roleType) && CustomRolesHelper.GetRoleChance(roleType) > 0)
-                                neutralRoles += Options.RolesChance[roleType].GetName() + ": " + CustomRolesHelper.GetRoleChance(roleType) + "% x" + CustomRolesHelper.GetRoleCount(roleType) + "\n";
+                                neutralRoles += Options.RolesChance[roleType].GetName() + ": " + chance + " x" + count + "\n";
                         }
                         if (crewmateRoles != "")
                             player.RpcSendMessage(crewmateRoles, "Crewmates");
@@ -2449,7 +2453,7 @@ namespace MoreGamemodes
                     {
                         new LateTask(() =>
                         {
-                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.Reliable);
                             var writer = sender.stream;
                             sender.StartMessage(clientId2);
                             sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
@@ -2505,7 +2509,7 @@ namespace MoreGamemodes
             }
             if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
                 writer.Write(chatText);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 __result = true;
@@ -2520,7 +2524,7 @@ namespace MoreGamemodes
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
             if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
                 DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable);
             messageWriter.Write(chatText);
             messageWriter.EndMessage();
             __result = true;
@@ -2609,9 +2613,9 @@ namespace MoreGamemodes
             if (Main.DarkTheme.Value)
             {
                 if (isDead)
-                    __instance.Background.color = new Color(0.0f, 0.0f, 0.0f, 0.6f);
+                    __instance.Background.color = new Color(0.1f, 0.1f, 0.1f, 0.6f);
                 else
-                    __instance.Background.color = Color.black;
+                    __instance.Background.color = new Color(0.1f, 0.1f, 0.1f, 1f);
                 __instance.TextArea.color = Color.white;
             }
         }

@@ -54,7 +54,6 @@ public static class GameOptionsMenuPatch
             if (option.Tab != modTab) continue;
 
             var enabled = !option.IsHiddenOn(Options.CurrentGamemode) && (option.Parent == null || (!option.Parent.IsHiddenOn(Options.CurrentGamemode) && option.Parent.GetBool()));
-
             if (option.IsHeader || option is TextOptionItem)
             {
                 CategoryHeaderMasked categoryHeaderMasked = Object.Instantiate(__instance.categoryHeaderOrigin, Vector3.zero, Quaternion.identity, __instance.settingsContainer);
@@ -66,16 +65,13 @@ public static class GameOptionsMenuPatch
                 categoryHeaderMasked.transform.FindChild("HeaderText").GetComponent<TMPro.TextMeshPro>().outlineWidth = 0.17f;
                 categoryHeaderMasked.gameObject.SetActive(enabled);
                 ModGameOptionsMenu.CategoryHeaderList.TryAdd(index, categoryHeaderMasked);
-
                 if (enabled) num -= 0.63f;
             }
             if (option is TextOptionItem) continue;
-
             var baseGameSetting = GetSetting(option);
             if (baseGameSetting == null) continue;
 
             OptionBehaviour optionBehaviour;
-
             switch (baseGameSetting.Type)
             {
                 case OptionTypes.Checkbox:
@@ -117,7 +113,6 @@ public static class GameOptionsMenuPatch
                     }
                 default:
                     continue;
-
             }
             optionBehaviour.transform.localPosition = new Vector3(0.952f, num, -2f);
             optionBehaviour.SetClickMask(__instance.ButtonClickMask);
@@ -126,15 +121,12 @@ public static class GameOptionsMenuPatch
             ModGameOptionsMenu.BehaviourList.TryAdd(index, optionBehaviour);
             optionBehaviour.gameObject.SetActive(enabled);
             __instance.Children.Add(optionBehaviour);
-
             if (enabled) num -= 0.45f;
         }
-
         __instance.ControllerSelectable.Clear();
         foreach (var x in __instance.scrollBar.GetComponentsInChildren<UiElement>())
             __instance.ControllerSelectable.Add(x);
         __instance.scrollBar.SetYBoundsMax(-num - 1.65f);
-
         return false;
     }
     private static void OptionBehaviourSetSizeAndPosition(OptionBehaviour optionBehaviour, OptionItem option, OptionTypes type)
@@ -143,7 +135,6 @@ public static class GameOptionsMenuPatch
         Vector3 scaleOffset = new(0f, 0f, 0f);
         Color color = new(0.7f, 0.7f, 0.7f);
         float sizeDelta_x = 5.7f;
-
         if (option.Parent?.Parent?.Parent != null)
         {
             scaleOffset = new(-0.18f, 0, 0);
@@ -165,37 +156,31 @@ public static class GameOptionsMenuPatch
             color = new(0.5f, 0.7f, 0.5f);
             sizeDelta_x = 5.5f;
         }
-
         optionBehaviour.transform.FindChild("LabelBackground").GetComponent<SpriteRenderer>().color = color;
         optionBehaviour.transform.FindChild("LabelBackground").localScale += new Vector3(0.9f, -0.2f, 0f) + scaleOffset;
         optionBehaviour.transform.FindChild("LabelBackground").localPosition += new Vector3(-0.4f, 0f, 0f) + positionOffset;
-
         optionBehaviour.transform.FindChild("Title Text").localPosition += new Vector3(-0.4f, 0f, 0f) + positionOffset; ;
         optionBehaviour.transform.FindChild("Title Text").GetComponent<RectTransform>().sizeDelta = new Vector2(sizeDelta_x, 0.37f);
         optionBehaviour.transform.FindChild("Title Text").GetComponent<TMPro.TextMeshPro>().alignment = TMPro.TextAlignmentOptions.MidlineLeft;
         optionBehaviour.transform.FindChild("Title Text").GetComponent<TMPro.TextMeshPro>().fontStyle = TMPro.FontStyles.Bold;
         optionBehaviour.transform.FindChild("Title Text").GetComponent<TMPro.TextMeshPro>().outlineWidth = 0.17f;
-
         switch (type)
         {
             case OptionTypes.Checkbox:
                 optionBehaviour.transform.FindChild("Toggle").localPosition = new Vector3(1.46f, -0.042f);
                 break;
-
             case OptionTypes.String:
                 optionBehaviour.transform.FindChild("PlusButton").localPosition += new Vector3(1.7f, 0f, 0f);
                 optionBehaviour.transform.FindChild("MinusButton").localPosition += new Vector3(0.9f, 0f, 0f);
                 optionBehaviour.transform.FindChild("Value_TMP (1)").localPosition += new Vector3(1.3f, 0f, 0f);
                 optionBehaviour.transform.FindChild("Value_TMP (1)").GetComponent<RectTransform>().sizeDelta = new Vector2(2.3f, 0.4f);
                 goto default;
-
             case OptionTypes.Float:
             case OptionTypes.Int:
                 optionBehaviour.transform.FindChild("PlusButton").localPosition += new Vector3(1.7f, 0f, 0f);
                 optionBehaviour.transform.FindChild("MinusButton").localPosition += new Vector3(0.9f, 0f, 0f);
                 optionBehaviour.transform.FindChild("Value_TMP").localPosition += new Vector3(1.3f, 0f, 0f);
                 goto default;
-
             default:
                 optionBehaviour.transform.FindChild("ValueBox").localScale += new Vector3(0.2f, 0f, 0f);
                 optionBehaviour.transform.FindChild("ValueBox").localPosition += new Vector3(1.3f, 0f, 0f);
@@ -207,19 +192,14 @@ public static class GameOptionsMenuPatch
     private static bool ValueChangedPrefix(GameOptionsMenu __instance, OptionBehaviour option)
     {
         if (ModGameOptionsMenu.TabIndex < 3) return true;
-
         if (ModGameOptionsMenu.OptionList.TryGetValue(option, out var index))
         {
             var item = OptionItem.AllOptions[index];
             if (item != null)
             {
-                if (item is IntegerOptionItem)
-                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.ApplyFormat(item.GetInt().ToString()), true);
-                else if (item is FloatOptionItem)
-                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.ApplyFormat(item.GetFloat().ToString()), true);
-                else if (item is BooleanOptionItem)
-                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetBool() ? "ON" : "OFF", true);
-                else if (item is StringOptionItem || item is PresetOptionItem)
+                if (item is BooleanOptionItem)
+                    GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetBool() ? "On" : "Off", true);
+                else
                     GameManager.Instance.RpcAddCustomSettingsChangeMessage(item, item.GetString(), true);
                 if (item.Id == 0)
                 {
@@ -245,13 +225,11 @@ public static class GameOptionsMenuPatch
     {
         if (ModGameOptionsMenu.TabIndex < 3) return;
         var modTab = (TabGroup)(ModGameOptionsMenu.TabIndex - 3);
-
         float num = 2.0f;
         for (int index = 0; index < OptionItem.AllOptions.Count; index++)
         {
             var option = OptionItem.AllOptions[index];
             if (option.Tab != modTab) continue;
-
             var enabled = !option.IsHiddenOn(Options.CurrentGamemode) && (option.Parent == null || (!option.Parent.IsHiddenOn(Options.CurrentGamemode) && option.Parent.GetBool()));
 
             if (ModGameOptionsMenu.CategoryHeaderList.TryGetValue(index, out var categoryHeaderMasked))
@@ -267,7 +245,6 @@ public static class GameOptionsMenuPatch
                 if (enabled) num -= 0.45f;
             }
         }
-
         __instance.ControllerSelectable.Clear();
         foreach (var x in __instance.scrollBar.GetComponentsInChildren<UiElement>())
             __instance.ControllerSelectable.Add(x);
@@ -277,7 +254,6 @@ public static class GameOptionsMenuPatch
     public static BaseGameSetting GetSetting(OptionItem item)
     {
         BaseGameSetting baseGameSetting = null;
-
         if (item is BooleanOptionItem)
         {
             baseGameSetting = new CheckboxGameSetting
@@ -313,6 +289,34 @@ public static class GameOptionsMenuPatch
                 FormatString = string.Empty,
             };
         }
+        else if (item is RoleOptionItem)
+        {
+            RoleOptionItem roleItem = item as RoleOptionItem;
+            baseGameSetting = new IntGameSetting
+            {
+                Type = OptionTypes.Int,
+                Value = roleItem.GetInt(),
+                Increment = roleItem.Rule.Step,
+                ValidRange = new IntRange(roleItem.Rule.MinValue, roleItem.Rule.MaxValue),
+                ZeroIsInfinity = false,
+                SuffixType = NumberSuffixes.Multiplier,
+                FormatString = string.Empty,
+            };
+        }
+        else if (item is AddOnOptionItem)
+        {
+            AddOnOptionItem addOnItem = item as AddOnOptionItem;
+            baseGameSetting = new IntGameSetting
+            {
+                Type = OptionTypes.Int,
+                Value = addOnItem.GetInt(),
+                Increment = addOnItem.Rule.Step,
+                ValidRange = new IntRange(addOnItem.Rule.MinValue, addOnItem.Rule.MaxValue),
+                ZeroIsInfinity = false,
+                SuffixType = NumberSuffixes.Multiplier,
+                FormatString = string.Empty,
+            };
+        }
         else if (item is StringOptionItem)
         {
             StringOptionItem stringItem = item as StringOptionItem;
@@ -333,12 +337,10 @@ public static class GameOptionsMenuPatch
                 Index = presetItem.GetInt(),
             };
         }
-
         if (baseGameSetting != null)
         {
             baseGameSetting.Title = StringNames.Accept;
         }
-
         return baseGameSetting;
     }
 
@@ -411,7 +413,6 @@ public static class NumberOptionPatch
         if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
         {
             var item = OptionItem.AllOptions[index];
-
             if (item is IntegerOptionItem integerOptionItem)
             {
                 integerOptionItem.SetValue(integerOptionItem.Rule.GetNearestIndex(__instance.GetInt()));
@@ -420,7 +421,14 @@ public static class NumberOptionPatch
             {
                 floatOptionItem.SetValue(floatOptionItem.Rule.GetNearestIndex(__instance.GetFloat()));
             }
-
+            else if (item is RoleOptionItem roleOptionItem)
+            {
+                roleOptionItem.SetValue(roleOptionItem.Rule.GetNearestIndex(__instance.GetInt()));
+            }
+            else if (item is AddOnOptionItem addOnOptionItem)
+            {
+                addOnOptionItem.SetValue(addOnOptionItem.Rule.GetNearestIndex(__instance.GetInt()));
+            }
             return false;
         }
         return true;
@@ -431,21 +439,14 @@ public static class NumberOptionPatch
         if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
         {
             var item = OptionItem.AllOptions[index];
-
             if (__instance.oldValue != __instance.Value)
             {
                 __instance.oldValue = __instance.Value;
-                __instance.ValueText.text = GetValueString(__instance, __instance.Value, item);
+                __instance.ValueText.text = item.GetString();
             }
             return false;
         }
         return true;
-    }
-    public static string GetValueString(NumberOption __instance, float value, OptionItem item)
-    {
-        if (__instance.ZeroIsInfinity && Mathf.Abs(value) < 0.0001f) return "<b>∞</b>";
-        if (item == null) return value.ToString(__instance.FormatString);
-        return item.ApplyFormat(value.ToString());
     }
     [HarmonyPatch(nameof(NumberOption.Increase)), HarmonyPrefix]
     public static bool IncreasePrefix(NumberOption __instance)
@@ -455,7 +456,6 @@ public static class NumberOptionPatch
             __instance.Value = __instance.ValidRange.min;
             __instance.UpdateValue();
             __instance.OnValueChanged.Invoke(__instance);
-            __instance.AdjustButtonsActiveState();
             return false;
         }
         return true;
@@ -468,10 +468,16 @@ public static class NumberOptionPatch
             __instance.Value = __instance.ValidRange.max;
             __instance.UpdateValue();
             __instance.OnValueChanged.Invoke(__instance);
-            __instance.AdjustButtonsActiveState();
             return false;
         }
         return true;
+    }
+    [HarmonyPatch(nameof(NumberOption.AdjustButtonsActiveState)), HarmonyPrefix]
+    public static bool AdjustButtonsActiveStatePrefix(NumberOption __instance)
+    {
+        __instance.MinusBtn.SetInteractable(true);
+		__instance.PlusBtn.SetInteractable(true);
+        return false;
     }
 }
 [HarmonyPatch(typeof(StringOption))]
@@ -484,7 +490,6 @@ public static class StringOptionPatch
         {
             var item = OptionItem.AllOptions[index];
             __instance.TitleText.text = item.GetName();
-            __instance.AdjustButtonsActiveState();
             return false;
         }
         return true;
@@ -495,7 +500,6 @@ public static class StringOptionPatch
         if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
         {
             var item = OptionItem.AllOptions[index];
-
             item.SetValue(__instance.GetInt());
             return false;
         }
@@ -507,22 +511,10 @@ public static class StringOptionPatch
         if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
         {
             var item = OptionItem.AllOptions[index];
-
-            if (item is StringOptionItem stringOptionItem)
+            if (__instance.oldValue != __instance.Value)
             {
-                if (__instance.oldValue != __instance.Value)
-                {
-                    __instance.oldValue = __instance.Value;
-                    __instance.ValueText.text = stringOptionItem.Selections[stringOptionItem.Rule.GetValueByIndex(__instance.Value)];
-                }
-            }
-            if (item is PresetOptionItem presetOptionItem)
-            {
-                if (__instance.oldValue != __instance.Value)
-                {
-                    __instance.oldValue = __instance.Value;
-                    __instance.ValueText.text = presetOptionItem.GetString();
-                }
+                __instance.oldValue = __instance.Value;
+                __instance.ValueText.text = item.GetString();
             }
             return false;
         }
@@ -536,7 +528,6 @@ public static class StringOptionPatch
             __instance.Value = 0;
             __instance.UpdateValue();
             __instance.OnValueChanged.Invoke(__instance);
-            __instance.AdjustButtonsActiveState();
             return false;
         }
         return true;
@@ -549,9 +540,50 @@ public static class StringOptionPatch
             __instance.Value = __instance.Values.Length - 1;
             __instance.UpdateValue();
             __instance.OnValueChanged.Invoke(__instance);
-            __instance.AdjustButtonsActiveState();
             return false;
         }
         return true;
+    }
+    [HarmonyPatch(nameof(StringOption.AdjustButtonsActiveState)), HarmonyPrefix]
+    public static bool AdjustButtonsActiveStatePrefix(StringOption __instance)
+    {
+        __instance.MinusBtn.SetInteractable(true);
+		__instance.PlusBtn.SetInteractable(true);
+        return false;
+    }
+}
+[HarmonyPatch(typeof(PlayerOption))]
+public static class PlayerOptionPatch
+{
+    [HarmonyPatch(nameof(PlayerOption.Increase)), HarmonyPrefix]
+    public static bool IncreasePrefix(PlayerOption __instance)
+    {
+        if (__instance.Value == __instance.Values.Count - 1)
+        {
+            __instance.Value = -1;
+            __instance.UpdateValue();
+            __instance.OnValueChanged.Invoke(__instance);
+            return false;
+        }
+        return true;
+    }
+    [HarmonyPatch(nameof(PlayerOption.Decrease)), HarmonyPrefix]
+    public static bool DecreasePrefix(PlayerOption __instance)
+    {
+        if (__instance.Value < 0)
+        {
+            __instance.Value = __instance.Values.Count - 1;
+            __instance.UpdateValue();
+            __instance.OnValueChanged.Invoke(__instance);
+            return false;
+        }
+        return true;
+    }
+    [HarmonyPatch(nameof(PlayerOption.AdjustButtonsActiveState)), HarmonyPrefix]
+    public static bool AdjustButtonsActiveStatePrefix(PlayerOption __instance)
+    {
+        __instance.MinusBtn.SetInteractable(true);
+		__instance.PlusBtn.SetInteractable(true);
+        return false;
     }
 }

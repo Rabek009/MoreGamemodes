@@ -119,7 +119,6 @@ namespace MoreGamemodes
                     }
                 }
             }, 1.2f);
-            
         }
 
         public override void OnIntroDestroy()

@@ -6,7 +6,7 @@ namespace MoreGamemodes
     {
         public Display(string text, Vector2 position)
         {
-            CreateNetObject(text, position, CustomObjectTypes.Display);
+            CreateNetObject(text, position);
         }
     }
 }

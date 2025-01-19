@@ -25,7 +25,7 @@ namespace MoreGamemodes
         {
             if (MarkedPosition == null)
             {
-                Player.RpcMarkEscapistPosition(Player.transform.position);
+                Player.RpcMarkEscapistPosition(Player.GetRealPosition());
                 var room = Player.GetPlainShipRoom();
                 if (room != null)
                     MarkedPositionRoom = room.RoomId;
@@ -73,9 +73,7 @@ namespace MoreGamemodes
         public static OptionItem TeleportCooldown;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(500200, "Escapist", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Escapist])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(500200, CustomRoles.Escapist, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(500201, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             MarkCooldown = FloatOptionItem.Create(500202, "Mark cooldown", new(5f, 45f, 5f), 10f, TabGroup.ImpostorRoles, false)

@@ -191,7 +191,7 @@ namespace MoreGamemodes
                         name += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                     name += " remain.<size=0>";
 			        exiled.PlayerName = name;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
 		            writer.Write(exiled.Object.Data.NetId);
                     writer.Write(name);
 		            AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -227,6 +227,12 @@ namespace MoreGamemodes
             List<CustomRoles> EvilNeutralRoles = new();
             List<CustomRoles> KillingNeutralRoles = new();
 
+            List<CustomRoles> PriorityCrewmateRoles = new();
+            List<CustomRoles> PriorityImpostorRoles = new();
+            List<CustomRoles> PriorityBenignNeutralRoles = new();
+            List<CustomRoles> PriorityEvilNeutralRoles = new();
+            List<CustomRoles> PriorityKillingNeutralRoles = new();
+
             List<CustomRoles> ChosenCrewmateRoles = new();
             List<CustomRoles> ChosenImpostorRoles = new();
             List<CustomRoles> ChosenBenignNeutralRoles = new();
@@ -241,7 +247,9 @@ namespace MoreGamemodes
                 {
                     for (int i = 1; i <= CustomRolesHelper.GetRoleCount(role); ++i)
                     {
-                        if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        if (CustomRolesHelper.GetRoleChance(role) > 100)
+                            PriorityCrewmateRoles.Add(role);
+                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
                             CrewmateRoles.Add(role);
                     }
                 }
@@ -249,7 +257,9 @@ namespace MoreGamemodes
                 {
                     for (int i = 1; i <= CustomRolesHelper.GetRoleCount(role); ++i)
                     {
-                        if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        if (CustomRolesHelper.GetRoleChance(role) > 100)
+                            PriorityImpostorRoles.Add(role);
+                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
                             ImpostorRoles.Add(role);
                     }
                 }
@@ -257,7 +267,9 @@ namespace MoreGamemodes
                 {
                     for (int i = 1; i <= CustomRolesHelper.GetRoleCount(role); ++i)
                     {
-                        if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        if (CustomRolesHelper.GetRoleChance(role) > 100)
+                            PriorityBenignNeutralRoles.Add(role);
+                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
                             BenignNeutralRoles.Add(role);
                     }
                 }
@@ -265,7 +277,9 @@ namespace MoreGamemodes
                 {
                     for (int i = 1; i <= CustomRolesHelper.GetRoleCount(role); ++i)
                     {
-                        if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        if (CustomRolesHelper.GetRoleChance(role) > 100)
+                            PriorityEvilNeutralRoles.Add(role);
+                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
                             EvilNeutralRoles.Add(role);
                     }
                 }
@@ -273,7 +287,9 @@ namespace MoreGamemodes
                 {
                     for (int i = 1; i <= CustomRolesHelper.GetRoleCount(role); ++i)
                     {
-                        if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        if (CustomRolesHelper.GetRoleChance(role) > 100)
+                            PriorityKillingNeutralRoles.Add(role);
+                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
                             KillingNeutralRoles.Add(role);
                     }
                 }
@@ -283,6 +299,13 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
                 AllPlayers.Add(pc);
 
+            while (PriorityKillingNeutralRoles.Any() && killingNeutrals > 0 && ChosenKillingNeutralRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
+            {
+                var index = rand.Next(0, PriorityKillingNeutralRoles.Count);
+                ChosenKillingNeutralRoles.Add(PriorityKillingNeutralRoles[index]);
+                PriorityKillingNeutralRoles.RemoveAt(index);
+                --killingNeutrals;
+            }
             while (KillingNeutralRoles.Any() && killingNeutrals > 0 && ChosenKillingNeutralRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
             {
                 var index = rand.Next(0, KillingNeutralRoles.Count);
@@ -291,6 +314,13 @@ namespace MoreGamemodes
                 --killingNeutrals;
             }
 
+            while (PriorityEvilNeutralRoles.Any() && evilNeutrals > 0 && ChosenKillingNeutralRoles.Count + ChosenEvilNeutralRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
+            {
+                var index = rand.Next(0, PriorityEvilNeutralRoles.Count);
+                ChosenEvilNeutralRoles.Add(PriorityEvilNeutralRoles[index]);
+                PriorityEvilNeutralRoles.RemoveAt(index);
+                --evilNeutrals;
+            }
             while (EvilNeutralRoles.Any() && evilNeutrals > 0 && ChosenKillingNeutralRoles.Count + ChosenEvilNeutralRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
             {
                 var index = rand.Next(0, EvilNeutralRoles.Count);
@@ -299,6 +329,13 @@ namespace MoreGamemodes
                 --evilNeutrals;
             }
 
+            while (PriorityBenignNeutralRoles.Any() && benignNeutrals > 0 && ChosenKillingNeutralRoles.Count + ChosenEvilNeutralRoles.Count + ChosenBenignNeutralRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
+            {
+                var index = rand.Next(0, PriorityBenignNeutralRoles.Count);
+                ChosenBenignNeutralRoles.Add(PriorityBenignNeutralRoles[index]);
+                PriorityBenignNeutralRoles.RemoveAt(index);
+                --benignNeutrals;
+            }
             while (BenignNeutralRoles.Any() && benignNeutrals > 0 && ChosenKillingNeutralRoles.Count + ChosenEvilNeutralRoles.Count + ChosenBenignNeutralRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
             {
                 var index = rand.Next(0, BenignNeutralRoles.Count);
@@ -307,6 +344,12 @@ namespace MoreGamemodes
                 --benignNeutrals;
             }
 
+            while (PriorityCrewmateRoles.Any() && ChosenKillingNeutralRoles.Count + ChosenEvilNeutralRoles.Count + ChosenBenignNeutralRoles.Count + ChosenCrewmateRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
+            {
+                var index = rand.Next(0, PriorityCrewmateRoles.Count);
+                ChosenCrewmateRoles.Add(PriorityCrewmateRoles[index]);
+                PriorityCrewmateRoles.RemoveAt(index);
+            }
             while (CrewmateRoles.Any() && ChosenKillingNeutralRoles.Count + ChosenEvilNeutralRoles.Count + ChosenBenignNeutralRoles.Count + ChosenCrewmateRoles.Count < AllPlayers.Count - Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
             {
                 var index = rand.Next(0, CrewmateRoles.Count);
@@ -318,6 +361,12 @@ namespace MoreGamemodes
                 ChosenCrewmateRoles.Add(CustomRoles.Crewmate);
             }
 
+            while (PriorityImpostorRoles.Any() && ChosenImpostorRoles.Count < Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
+            {
+                var index = rand.Next(0, PriorityImpostorRoles.Count);
+                ChosenImpostorRoles.Add(PriorityImpostorRoles[index]);
+                PriorityImpostorRoles.RemoveAt(index);
+            }
             while (ImpostorRoles.Any() && ChosenImpostorRoles.Count < Main.RealOptions.GetInt(Int32OptionNames.NumImpostors))
             {
                 var index = rand.Next(0, ImpostorRoles.Count);
@@ -348,15 +397,50 @@ namespace MoreGamemodes
             }
 
             List<AddOns> ChosenAddOns = new();
+            List<AddOns> PriorityChosenAddOns = new();
             foreach (var addOn in Enum.GetValues<AddOns>())
             {
                 for (int i = 1; i <= AddOnsHelper.GetAddOnCount(addOn); ++i)
                 {
+                    if (AddOnsHelper.GetAddOnChance(addOn) > 100)
+                        PriorityChosenAddOns.Add(addOn);
                     if (rand.Next(1, 100) <= AddOnsHelper.GetAddOnChance(addOn))
                         ChosenAddOns.Add(addOn);
                 }
             }
 
+            while (PriorityChosenAddOns.Any())
+            {
+                var addOn = PriorityChosenAddOns[rand.Next(0, PriorityChosenAddOns.Count)];
+                List<PlayerControl> PotentialPlayers = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if ((pc.GetRole().IsCrewmate() && !AddOnsHelper.CrewmatesCanGet(addOn)) || (pc.GetRole().IsNeutral() && !AddOnsHelper.NeutralsCanGet(addOn)) || (pc.GetRole().IsImpostor() && !AddOnsHelper.ImpostorsCanGet(addOn)))
+                        continue;
+                    if (pc.GetAddOns().Count >= Options.MaxAddOnsForPlayer.GetInt())
+                        continue;
+                    if (!pc.GetRole().IsCompatible(addOn))
+                        continue;
+                    bool compatible = true;
+                    foreach (var addon in pc.GetAddOns())
+                    {
+                        if (!addon.IsCompatible(addOn))
+                        {
+                            compatible = false;
+                            break;
+                        }
+                    }
+                    if (!compatible)
+                        continue;
+                    PotentialPlayers.Add(pc);
+                }
+                if (PotentialPlayers.Any())
+                {
+                    var player = PotentialPlayers[rand.Next(0, PotentialPlayers.Count)];
+                    player.RpcSetAddOn(addOn);
+                }
+                PriorityChosenAddOns.Remove(addOn);
+            }
             while (ChosenAddOns.Any())
             {
                 var addOn = ChosenAddOns[rand.Next(0, ChosenAddOns.Count)];

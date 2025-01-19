@@ -133,7 +133,7 @@ namespace MoreGamemodes
                 livesText = "Lives: " + GetLives(player);
             livesText = Utils.ColorString(Color.red, livesText);
             if (Options.ArrowToNearestPlayer.GetBool() && player == seer && player.GetClosestPlayer() != null && !player.Data.IsDead)
-                name += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[player.GetClosestPlayer().PlayerId]], Utils.GetArrow(player.transform.position, player.GetClosestPlayer().transform.position));
+                name += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[player.GetClosestPlayer().PlayerId]], Utils.GetArrow(player.GetRealPosition(), player.GetClosestPlayer().transform.position));
             if (player == seer || Options.LivesVisibleToOthers.GetBool() || seer.Data.IsDead)
                 name += "\n" + livesText;
             return name;

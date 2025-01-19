@@ -78,7 +78,10 @@ namespace MoreGamemodes
             {
                 if (Options.DisableMeetings.GetBool())
                 {
+                    if (CheckAndEndGameForEveryoneDied()) return false;
                     if (CheckAndEndGameForHideAndSeek()) return false;
+                    if (CheckAndEndGameForTaskWin()) return false;
+                    if (CheckAndEndGameForCrewmateWin()) return false;
                     return false;
                 }
                 return true;    

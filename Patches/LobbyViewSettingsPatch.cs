@@ -81,24 +81,29 @@ namespace MoreGamemodes
 
         public static void DrawOptions(LobbyViewSettingsPane __instance, TabGroup tab)
         {
-            float num = 2.03f;
+            float num = 1.44f;
             int settingsCount = 0;
             foreach (var option in OptionItem.AllOptions)
             {
                 if (option.IsHiddenOn(Options.CurrentGamemode) || option.Tab != tab || (option.Parent != null && (option.Parent.IsHiddenOn(Options.CurrentGamemode) || !option.Parent.GetBool()))) continue;
                 if (option.IsHeader || option is TextOptionItem)
                 {
-                    num -= 0.59f;
+                    num -= 0.85f;
                     CategoryHeaderMasked categoryHeaderMasked = Object.Instantiate(__instance.categoryHeaderOrigin);
 			        categoryHeaderMasked.SetHeader(StringNames.None, 61);
 			        categoryHeaderMasked.transform.SetParent(__instance.settingsContainer);
 			        categoryHeaderMasked.transform.localScale = Vector3.one;
 			        categoryHeaderMasked.transform.localPosition = new Vector3(-9.77f, num, -2f);
 			        __instance.settingsInfo.Add(categoryHeaderMasked.gameObject);
-			        num -= 0.85f;
+			        num -= 1f;
                     categoryHeaderMasked.DestroyTranslator();
                     categoryHeaderMasked.Title.text = option.GetName();
                     settingsCount = 0;
+                }
+                if (option is RoleOptionItem || option is AddOnOptionItem)
+                {
+                    if (settingsCount % 2 == 1)
+                        ++settingsCount;
                 }
                 if (option is TextOptionItem) continue;
 
@@ -111,7 +116,7 @@ namespace MoreGamemodes
 					num2 = -8.95f;
 					if (settingsCount > 0)
 					{
-						num -= 0.59f;
+						num -= 0.85f;
 					}
 				}
 				else
@@ -124,15 +129,7 @@ namespace MoreGamemodes
                 {
                     viewSettingsInfoPanel.SetInfoCheckbox(StringNames.None, 61, option.GetBool());
                 }
-                else if (option is IntegerOptionItem)
-                {
-                    viewSettingsInfoPanel.SetInfo(StringNames.None, option.ApplyFormat(option.GetInt().ToString()), 61);
-                }
-                else if (option is FloatOptionItem)
-                {
-                    viewSettingsInfoPanel.SetInfo(StringNames.None, option.ApplyFormat(option.GetFloat().ToString()), 61);
-                }
-                else if (option is StringOptionItem || option is PresetOptionItem)
+                else
                 {
                     viewSettingsInfoPanel.SetInfo(StringNames.None, option.GetString(), 61);
                 }
@@ -154,7 +151,7 @@ namespace MoreGamemodes
                 __instance.settingsInfo.Add(viewSettingsInfoPanel.gameObject);
                 ++settingsCount;
             }
-            __instance.scrollBar.SetYBoundsMax(-num);
+            __instance.scrollBar.SetYBoundsMax(-num - 1.44f);
         }
 
         public static void ReCreateButtons(LobbyViewSettingsPane __instance)

@@ -13,34 +13,38 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CreatePlayer))]
     class CreatePlayerPatch
     {
-        public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
+        public static bool Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
-            if (!__instance.AmHost) return;
+            if (!__instance.AmHost) return true;
+            if (client != null && BanManager.BannedFriendCodes.Contains(client.FriendCode))
+            {
+                AmongUsClient.Instance.KickPlayer(client.Id, true);
+                return false;
+            }
             if (client != null && client.Id == __instance.ClientId)
             {
                 AntiCheat.Init();
                 PlayerTagManager.Initialize();
                 PlayerTagManager.PlayersWithTags.Add(new ModdedPlayerTag(client.FriendCode, "00ff00", "#Host"));
-                return;
+                return true;
             }
-            if (client != null && (client.FriendCode == "skewgram#9364" || client.FriendCode == "metersmall#7725"))
+            if (client != null && Options.AntiCheat.GetBool() && (!Utils.IsValidFriendCode(client.FriendCode) || client.ProductUserId == "") && AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
             {
                 AmongUsClient.Instance.KickPlayer(client.Id, true);
-                return;
+                return false;
             }
-            if (client != null && Options.AntiCheat.GetBool() && !Utils.IsValidFriendCode(client.FriendCode) && AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
+            if (client != null && BanManager.CheckBanPlayer(client))
             {
-                AmongUsClient.Instance.KickPlayer(client.Id, Options.CurrentCheatingPenalty == CheatingPenalties.Ban);
-                return;
+                AmongUsClient.Instance.KickPlayer(client.Id, true);
+                return false;
             }
             OptionItem.SyncAllOptions();
             new LateTask(() => 
             {
                 if (client != null && client.Character != null)
                     client.Character.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-                else if (client != null)
-                    __instance.KickPlayer(client.Id, false);
             }, 2f, "Welcome Message");
+            return true;
         }
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Patches/PlayerJoinAndLeftPatch.cs#L164
         public static bool IsDisconnected(ClientData client)
@@ -100,7 +104,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(BanMenu), nameof(BanMenu.SetVisible))]
     class BanMenuSetVisiblePatch
     {
-        public static bool Prefix(BanMenu __instance, bool show)
+        public static bool Prefix(BanMenu __instance, [HarmonyArgument(0)] bool show)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             show &= PlayerControl.LocalPlayer && PlayerControl.LocalPlayer.Data != null;
@@ -197,6 +201,16 @@ namespace MoreGamemodes
                 Object.Destroy(__instance.gameObject);
             }, 5f);
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BanMenu), nameof(BanMenu.Kick))]
+    class KickPatch
+    {
+        public static void Prefix(BanMenu __instance, [HarmonyArgument(0)] bool ban)
+        {
+            if (!AmongUsClient.Instance.AmHost || !Main.ApplyBanList.Value || !ban) return;
+            BanManager.AddBanPlayer(AmongUsClient.Instance.GetClient(__instance.selectedClientId));
         }
     }
 

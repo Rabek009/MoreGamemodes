@@ -11,6 +11,7 @@ namespace MoreGamemodes
         private static ClientOptionItem ShowFPS;
         private static ClientOptionItem DarkTheme;
         private static ClientOptionItem DisableLobbyMusic;
+        private static ClientOptionItem ApplyBanList;
 
         public static void Postfix(OptionsMenuBehaviour __instance)
         {
@@ -41,9 +42,9 @@ namespace MoreGamemodes
                         {
                             ChatBubble chatBubble = activeChildren[i].Cast<ChatBubble>();
                             if (chatBubble.Background.color == Color.white)
-                                chatBubble.Background.color = Color.black;
+                                chatBubble.Background.color = new Color(0.1f, 0.1f, 0.1f, 1f);
                             if (chatBubble.Background.color == Palette.HalfWhite)
-                                chatBubble.Background.color = new Color(0.0f, 0.0f, 0.0f, 0.6f);
+                                chatBubble.Background.color = new Color(0.1f, 0.1f, 0.1f, 0.6f);
                             chatBubble.TextArea.color = Color.white;
                         }
                     }
@@ -53,9 +54,9 @@ namespace MoreGamemodes
                         for (int i = 0; i < activeChildren.Count; ++i)
                         {
                             ChatBubble chatBubble = activeChildren[i].Cast<ChatBubble>();
-                            if (chatBubble.Background.color == Color.black)
+                            if (chatBubble.Background.color == new Color(0.1f, 0.1f, 0.1f, 1f))
                                 chatBubble.Background.color = Color.white;
-                            if (chatBubble.Background.color == new Color(0.0f, 0.0f, 0.0f, 0.6f))
+                            if (chatBubble.Background.color == new Color(0.1f, 0.1f, 0.1f, 0.6f))
                                 chatBubble.Background.color = Palette.HalfWhite;
                             chatBubble.TextArea.color = Color.black;
                         }
@@ -69,6 +70,10 @@ namespace MoreGamemodes
             if (DisableLobbyMusic == null || DisableLobbyMusic.ToggleButton == null)
             {
                 DisableLobbyMusic = ClientOptionItem.Create("Disable Lobby Music", Main.DisableLobbyMusic, __instance);
+            }
+            if (ApplyBanList == null || ApplyBanList.ToggleButton == null)
+            {
+                ApplyBanList = ClientOptionItem.Create("Apply Ban List", Main.ApplyBanList, __instance);
             }
         }
     }

@@ -55,7 +55,7 @@ namespace MoreGamemodes
             if (Target != byte.MaxValue)
             {
                 if (ShowArrowToTarget.GetBool() && Utils.GetPlayerById(Target) != null)
-                    return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>\n" + Utils.GetArrow(Player.transform.position, Utils.GetPlayerById(Target).transform.position));
+                    return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>\n" + Utils.GetArrow(Player.GetRealPosition(), Utils.GetPlayerById(Target).transform.position));
                 return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>");
             }
             return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: None</size>");
@@ -103,9 +103,7 @@ namespace MoreGamemodes
         public static OptionItem ShowArrowToTarget;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(600200, "Hitman", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Hitman])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(600200, CustomRoles.Hitman, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(600201, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             TargetChangeTime = FloatOptionItem.Create(600202, "Target change time", new(5f, 180f, 5f), 45f, TabGroup.ImpostorRoles, false)

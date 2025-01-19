@@ -39,9 +39,7 @@ namespace MoreGamemodes
         public static OptionItem CooldownDecreaseSpeed;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(1300100, "Lurker", new(0, 100, 5), 0, TabGroup.AddOns, false)
-                .SetColor(AddOnsHelper.AddOnColors[AddOns.Lurker])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = AddOnOptionItem.Create(1300100, AddOns.Lurker, TabGroup.AddOns, false);
             Count = IntegerOptionItem.Create(1300101, "Max", new(1, 15, 1), 1, TabGroup.AddOns, false)
                 .SetParent(Chance);
             CooldownDecreaseSpeed = IntegerOptionItem.Create(1300102, "Cooldown decrease speed", new(10, 300, 5), 65, TabGroup.AddOns, false)

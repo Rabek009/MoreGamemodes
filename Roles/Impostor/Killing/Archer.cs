@@ -54,16 +54,14 @@ namespace MoreGamemodes
         public static OptionItem AbilityUseGainWithEachRegularKill;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(600300, "Archer", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Archer])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(600300, CustomRoles.Archer, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(600301, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             CanKillImpostors = BooleanOptionItem.Create(600302, "Can kill impostors", true, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             InitialAbilityUseLimit = FloatOptionItem.Create(600303, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            AbilityUseGainWithEachRegularKill = FloatOptionItem.Create(600304, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.5f, TabGroup.ImpostorRoles, false)
+            AbilityUseGainWithEachRegularKill = FloatOptionItem.Create(600304, "Ability use gain with each kill", new(0f, 2f, 0.1f), 0.5f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Archer] = Chance;
             Options.RolesCount[CustomRoles.Archer] = Count;

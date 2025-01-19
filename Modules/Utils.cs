@@ -9,6 +9,8 @@ using InnerNet;
 using System.IO;
 using System.Reflection;
 using System;
+using System.Security.Cryptography;
+using System.Text;
 
 using Object = UnityEngine.Object;
 
@@ -171,7 +173,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc == PlayerControl.LocalPlayer) continue;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None, pc.GetClientId());
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, pc.GetClientId());
                     writer.Write("");
                     AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
@@ -544,14 +546,7 @@ namespace MoreGamemodes
                 if (option is TextOptionItem) continue;
 
                 Messages[tab] += ": ";
-                if (option is BooleanOptionItem)
-                    Messages[tab] += option.GetBool() ? "✓" : "X";
-                else if (option is IntegerOptionItem)
-                    Messages[tab] += option.ApplyFormat(option.GetInt().ToString());
-                else if (option is FloatOptionItem)
-                    Messages[tab] += option.ApplyFormat(option.GetFloat().ToString());
-                else if (option is StringOptionItem)
-                    Messages[tab] += option.GetString();
+                Messages[tab] += option.GetString();
             }
             foreach (var tab in Enum.GetValues<TabGroup>())
             {
@@ -762,14 +757,7 @@ namespace MoreGamemodes
                 text += option.GetName(option.NameColor == Color.white);
 
                 text += ": ";
-                if (option is BooleanOptionItem)
-                    text += option.GetBool() ? "✓" : "X";
-                else if (option is IntegerOptionItem)
-                    text += option.ApplyFormat(option.GetInt().ToString());
-                else if (option is FloatOptionItem)
-                    text += option.ApplyFormat(option.GetFloat().ToString());
-                else if (option is StringOptionItem)
-                    text += option.GetString();
+                text += option.GetString();
             }
             return text;
         }
@@ -794,16 +782,20 @@ namespace MoreGamemodes
                 text += option.GetName(option.NameColor == Color.white);
 
                 text += ": ";
-                if (option is BooleanOptionItem)
-                    text += option.GetBool() ? "✓" : "X";
-                else if (option is IntegerOptionItem)
-                    text += option.ApplyFormat(option.GetInt().ToString());
-                else if (option is FloatOptionItem)
-                    text += option.ApplyFormat(option.GetFloat().ToString());
-                else if (option is StringOptionItem)
-                    text += option.GetString();
+                text += option.GetString();
             }
             return text;
         }
+
+        // https://github.com/Gurge44/EndlessHostRoles/blob/main/Modules/BanManager.cs#L81
+         public static string GetHashedPuid(this ClientData player)
+        {
+            if (player == null) return string.Empty;
+            string puid = player.ProductUserId;
+            using var sha256 = SHA256.Create();
+            byte[] sha256Bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(puid));
+            string sha256Hash = BitConverter.ToString(sha256Bytes).Replace("-", "").ToLower();
+            return string.Concat(sha256Hash.AsSpan(0, 5), sha256Hash.AsSpan(sha256Hash.Length - 4));
+		}
     }
 }

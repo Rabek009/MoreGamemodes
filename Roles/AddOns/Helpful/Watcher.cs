@@ -21,9 +21,7 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(1100200, "Watcher", new(0, 100, 5), 0, TabGroup.AddOns, false)
-                .SetColor(AddOnsHelper.AddOnColors[AddOns.Watcher])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = AddOnOptionItem.Create(1100200, AddOns.Watcher, TabGroup.AddOns, false);
             Count = IntegerOptionItem.Create(1100201, "Max", new(1, 15, 1), 1, TabGroup.AddOns, false)
                 .SetParent(Chance);
             Options.AddOnsChance[AddOns.Watcher] = Chance;

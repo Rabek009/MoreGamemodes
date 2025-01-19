@@ -59,10 +59,8 @@ public class GameSettingMenuPatch
             var setTab = Object.Instantiate(templateGameOptionsMenu, __instance.GameSettingsTab.transform.parent);
             setTab.name = Utils.GetTabName(tab);
             setTab.gameObject.SetActive(false);
-
             ModSettingsTabs.Add(tab, setTab);
         }
-
         foreach (var tab in Enum.GetValues<TabGroup>())
         {
             if (ModSettingsButtons.TryGetValue(tab, out var button))
@@ -92,7 +90,6 @@ public class GameSettingMenuPatch
     public static bool ChangeTabPrefix(GameSettingMenu __instance, ref int tabNum, [HarmonyArgument(1)] bool previewOnly)
     {
         ModGameOptionsMenu.TabIndex = tabNum;
-
         GameOptionsMenu settingsTab;
         PassiveButton button;
 
@@ -115,9 +112,7 @@ public class GameSettingMenuPatch
                 }
             }
         }
-
         if (tabNum < 3) return true;
-
         if ((previewOnly && Controller.currentTouchType == Controller.TouchType.Joystick) || !previewOnly)
         {
             __instance.PresetsTab.gameObject.SetActive(false);
@@ -169,7 +164,6 @@ public class GameSettingMenuPatch
         {
             button.SelectButton(true);
         }
-
         return false;
     }
 
@@ -187,9 +181,7 @@ public class GameSettingMenuPatch
             templateGameSettingsButton = Object.Instantiate(__instance.GameSettingsButton, __instance.GameSettingsButton.transform.parent);
             templateGameSettingsButton.gameObject.SetActive(false);
         }
-
         SetDefaultButton(__instance);
-
         ControllerManager.Instance.OpenOverlayMenu(__instance.name, __instance.BackButton, __instance.DefaultButtonSelected, __instance.ControllerSelectable, false);
         DestroyableSingleton<HudManager>.Instance.menuNavigationPrompts.SetActive(false);
         if (Controller.currentTouchType != Controller.TouchType.Joystick)
@@ -197,7 +189,6 @@ public class GameSettingMenuPatch
             __instance.ChangeTab(1, Controller.currentTouchType == Controller.TouchType.Joystick);
         }
         __instance.StartCoroutine(__instance.CoSelectDefault());
-
         return false;
     }
 

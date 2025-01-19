@@ -322,7 +322,7 @@ namespace MoreGamemodes
                 {
                     var nearest = GetClosestZombie(player);
                     if (nearest != null)
-                        name += "\n" + Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.transform.position, nearest.transform.position)); 
+                        name += "\n" + Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.GetRealPosition(), nearest.transform.position)); 
                 }
                 else if (Options.CurrentTrackingZombiesMode == TrackingZombiesModes.Every && GetClosestZombie(player) != null)
                 {
@@ -330,7 +330,7 @@ namespace MoreGamemodes
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
                         if (GetZombieType(pc) == ZombieTypes.FullZombie && !pc.Data.IsDead)
-                            name += Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.transform.position, pc.transform.position));
+                            name += Utils.ColorString(Palette.PlayerColors[2], Utils.GetArrow(player.GetRealPosition(), pc.transform.position));
                     }
                 }
                 if (GetKillsRemain(player) > 0)
@@ -362,7 +362,7 @@ namespace MoreGamemodes
 
         public PlayerControl GetClosestZombie(PlayerControl player)
         {
-            Vector2 playerpos = player.transform.position;
+            Vector2 playerpos = player.GetRealPosition();
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)

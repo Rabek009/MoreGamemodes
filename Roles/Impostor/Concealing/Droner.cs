@@ -87,9 +87,9 @@ namespace MoreGamemodes
         {
             if (AbilityDuration > 0f) return false;
             if (TimeSinceAbilityUse < 1f) return false;
-            ControlledDrone = Utils.RpcCreateDrone(Player, Player.transform.position);
-            DronePosition = Player.transform.position;
-            Player.RpcSetDronerRealPosition(Player.transform.position);
+            ControlledDrone = Utils.RpcCreateDrone(Player, Player.GetRealPosition());
+            DronePosition = Player.GetRealPosition();
+            Player.RpcSetDronerRealPosition(Player.GetRealPosition());
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player || pc.AmOwner) continue;
@@ -274,9 +274,7 @@ namespace MoreGamemodes
         };
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(500300, "Droner", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Droner])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(500300, CustomRoles.Droner, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(500301, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             DroneCooldown = FloatOptionItem.Create(500302, "Drone cooldown", new(10f, 60f, 5f), 25f, TabGroup.ImpostorRoles, false)

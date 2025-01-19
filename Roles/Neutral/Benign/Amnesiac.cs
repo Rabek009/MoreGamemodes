@@ -25,7 +25,7 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (SeeArrowToNearestBody.GetBool() && !Player.Data.IsDead && Player.GetClosestDeadBody() != null)
-                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.transform.position, Player.GetClosestDeadBody().transform.position));
+                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.GetRealPosition(), Player.GetClosestDeadBody().transform.position));
             return "";
         }
 
@@ -43,12 +43,10 @@ namespace MoreGamemodes
         public static OptionItem SeeArrowToNearestBody;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(800200, "Amnesiac", new(0, 100, 5), 0, TabGroup.NeutralRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Amnesiac])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(800200, CustomRoles.Amnesiac, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(800201, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            SeeArrowToNearestBody = BooleanOptionItem.Create(800202, "See arrow to nearest body", false, TabGroup.CrewmateRoles, false)
+            SeeArrowToNearestBody = BooleanOptionItem.Create(800202, "See arrow to nearest body", false, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Amnesiac] = Chance;
             Options.RolesCount[CustomRoles.Amnesiac] = Count;

@@ -18,7 +18,7 @@ namespace MoreGamemodes
 
         public override string GetString()
         {
-            return GetBool() ? "ON" : "OFF";
+            return GetBool() ? "✓" : "X";
         }
 
         public override void SetValue(int value)

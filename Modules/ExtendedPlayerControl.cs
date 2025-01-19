@@ -164,7 +164,7 @@ namespace MoreGamemodes
                 return;
             }
             var clientId = seer.GetClientId();
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.None, clientId);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, clientId);
             writer.Write(player.Data.NetId);
             writer.Write(name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -253,7 +253,7 @@ namespace MoreGamemodes
 
         public static PlayerControl GetClosestPlayer(this PlayerControl player, bool forTarget = false)
         {
-            Vector2 playerpos = player.transform.position;
+            Vector2 playerpos = player.GetRealPosition();
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
@@ -385,7 +385,7 @@ namespace MoreGamemodes
 
         public static Vent GetClosestVent(this PlayerControl player)
         {
-            Vector2 playerpos = player.transform.position;
+            Vector2 playerpos = player.GetRealPosition();
             if (ClassicGamemode.instance != null && player.GetRole().Role == CustomRoles.Droner)
             {
                 Droner dronerRole = player.GetRole() as Droner;
@@ -407,7 +407,7 @@ namespace MoreGamemodes
 
         public static DeadBody GetClosestDeadBody(this PlayerControl player)
         {
-            Vector2 playerpos = player.transform.position;
+            Vector2 playerpos = player.GetRealPosition();
             Dictionary<DeadBody, float> bodydistance = new();
             float dis;
             foreach (DeadBody body in Object.FindObjectsOfType<DeadBody>())
@@ -489,7 +489,7 @@ namespace MoreGamemodes
             string toSend = appearance + ": " + message;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (Vector2.Distance(player.transform.position, pc.transform.position) <= Options.MessagesRadius.GetFloat() * 2.5f && pc != player)
+                if (Vector2.Distance(player.GetRealPosition(), pc.transform.position) <= Options.MessagesRadius.GetFloat() * 2.5f && pc != player)
                 {
                     if (player.Data.IsDead && !pc.Data.IsDead) continue;
                     pc.Notify(Utils.ColorString(Color.white, toSend));
@@ -852,7 +852,7 @@ namespace MoreGamemodes
 
         public static List<Vent> GetVentsFromClosest(this PlayerControl player)
         {
-            Vector2 playerpos = player.transform.position;
+            Vector2 playerpos = player.GetRealPosition();
             if (ClassicGamemode.instance != null && player.GetRole().Role == CustomRoles.Droner)
             {
                 Droner dronerRole = player.GetRole() as Droner;
@@ -875,7 +875,7 @@ namespace MoreGamemodes
 
         public static PlayerControl GetClosestImpostor(this PlayerControl player)
         {
-            Vector2 playerpos = player.transform.position;
+            Vector2 playerpos = player.GetRealPosition();
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
@@ -904,7 +904,7 @@ namespace MoreGamemodes
             {
                 if (!pc.AmOwner && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != player)
                 {
-                    CustomRpcSender sender = CustomRpcSender.Create("ResetInvisibility", SendOption.None);
+                    CustomRpcSender sender = CustomRpcSender.Create("ResetInvisibility", SendOption.Reliable);
                     sender.StartMessage(pc.GetClientId());
                     sender.StartRpc(player.NetId, (byte)RpcCalls.Exiled)
                         .EndRpc();
@@ -982,6 +982,16 @@ namespace MoreGamemodes
             writer.EndMessage();
             AmongUsClient.Instance.SendOrDisconnect(writer);
             writer.Recycle();
+        }
+
+        public static Vector2 GetRealPosition(this PlayerControl player)
+        {
+            if (player.AmOwner) return player.transform.position;
+            if (player.NetTransform.incomingPosQueue.Count > 0)
+		    {
+			    return player.NetTransform.incomingPosQueue.ToArray().Last();
+		    }
+            return player.transform.position;
         }
     }
 }

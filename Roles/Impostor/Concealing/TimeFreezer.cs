@@ -97,9 +97,7 @@ namespace MoreGamemodes
         public static OptionItem CanUseVents;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(500100, "Time freezer", new(0, 100, 5), 0, TabGroup.ImpostorRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.TimeFreezer])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(500100, CustomRoles.TimeFreezer, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(500101, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             FreezeCooldown = FloatOptionItem.Create(500102, "Freeze cooldown", new(10f, 60f, 5f), 25f, TabGroup.ImpostorRoles, false)

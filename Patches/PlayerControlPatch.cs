@@ -139,10 +139,11 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Shapeshift))]
     class ShapeshiftPatch
     {
-        public static void Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
+        public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             var shapeshifter = __instance;
+            if (shapeshifter.PlayerId == 254) return;
             var shapeshifting = shapeshifter != target;
             switch (shapeshifting)
             {
@@ -159,7 +160,6 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     shapeshifter.RpcSetNamePrivate(shapeshifter.BuildPlayerName(pc, false), pc, true);
             }, 1.2f, "Set Shapeshift Appearance");
-            new LateTask(() => shapeshifter.Data.MarkDirty(), 1.3f, "Fix chat name");
             CustomGamemode.Instance.OnShapeshift(shapeshifter, target);
         }
     }
@@ -179,10 +179,7 @@ namespace MoreGamemodes
                     pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true, false), ar, true);  
             }
             foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
-            {
-                if (netObject.DespawnOnMeeting)
-                    new LateTask(() => netObject.Despawn(), 0f);
-            }
+                netObject.OnMeeting();
             AntiCheat.OnMeeting();
             return true;
         }
@@ -351,7 +348,6 @@ namespace MoreGamemodes
     {
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
-            if (!AmongUsClient.Instance.AmHost) return;
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic) return;
             if (!Main.StandardRoles.ContainsKey(__instance.PlayerId) && !RoleManager.IsGhostRole(roleType))
                 Main.StandardRoles[__instance.PlayerId] = roleType;
@@ -599,7 +595,7 @@ namespace MoreGamemodes
 		    {
 			    __instance.SetName(name);
 		    }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
 		    writer.Write(__instance.Data.NetId);
             writer.Write(name);
 		    AmongUsClient.Instance.FinishRpcImmediately(writer);

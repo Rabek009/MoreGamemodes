@@ -75,9 +75,7 @@ namespace MoreGamemodes
         public static OptionItem CanBeGuessed;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(300100, "Immortal", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Immortal])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(300100, CustomRoles.Immortal, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(300101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             ProtectionAfterCompletingTaskDuration = FloatOptionItem.Create(300102, "Protection after completing task duration", new(0f, 30f, 1f), 10f, TabGroup.CrewmateRoles, false)

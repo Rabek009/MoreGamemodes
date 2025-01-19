@@ -241,9 +241,7 @@ namespace MoreGamemodes
         public static OptionItem ResetKillCooldown;
         public static void SetupOptionItem()
         {
-            Chance = IntegerOptionItem.Create(300200, "Medic", new(0, 100, 5), 0, TabGroup.CrewmateRoles, false)
-                .SetColor(CustomRolesHelper.RoleColors[CustomRoles.Medic])
-                .SetValueFormat(OptionFormat.Percent);
+            Chance = RoleOptionItem.Create(300200, CustomRoles.Medic, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(300201, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             ShieldCooldown = FloatOptionItem.Create(300202, "Shield cooldown", new(5f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)
