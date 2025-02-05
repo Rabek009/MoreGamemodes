@@ -710,6 +710,7 @@ namespace MoreGamemodes
             if (report)
             {
                 Shaman.OnGlobalReportDeadBody(__instance, target);
+                Arsonist.OnGlobalReportDeadBody(__instance, target);
                 if (CustomRolesHelper.GetRoleChance(CustomRoles.Altruist) > 0)
                 {
                     foreach (var playerId in PlayersDiedThisRound)

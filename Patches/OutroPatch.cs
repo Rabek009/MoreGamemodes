@@ -270,6 +270,10 @@ namespace MoreGamemodes
                         WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Pelican], "Pelican");
                         __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Pelican];
                         break;
+                    case CustomWinners.Arsonist:
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Arsonist], "Arsonist");
+                        __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Arsonist];
+                        break;
                 }
                 if (!(ClassicGamemode.instance.Winner is CustomWinners.None or CustomWinners.Terminated or CustomWinners.NoOne))
                 {

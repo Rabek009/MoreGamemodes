@@ -58,7 +58,7 @@ namespace MoreGamemodes
                     if (romanticRole != null && romanticRole.LoverId != byte.MaxValue)
                     {
                         var lover = Utils.GetPlayerById(romanticRole.LoverId);
-                        if (lover != null && lover.Data != null && !lover.Data.Disconnected)
+                        if (lover != null)
                             lover.Notify(Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Romantic], "[Lover] " + Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + ": " + message));
                     }
                 }
@@ -66,7 +66,7 @@ namespace MoreGamemodes
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
-                        if (pc.Data != null && !pc.Data.Disconnected && pc.GetRole().Role == CustomRoles.Romantic)
+                        if (pc.GetRole().Role == CustomRoles.Romantic)
                         {
                             Romantic romanticRole = pc.GetRole() as Romantic;
                             if (romanticRole != null && romanticRole.LoverId == PlayerControl.LocalPlayer.PlayerId)
@@ -1579,7 +1579,7 @@ namespace MoreGamemodes
                     if (romanticRole != null && romanticRole.LoverId != byte.MaxValue)
                     {
                         var lover = Utils.GetPlayerById(romanticRole.LoverId);
-                        if (lover != null && lover.Data != null && !lover.Data.Disconnected)
+                        if (lover != null)
                             lover.Notify(Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Romantic], "[Lover] " + Main.StandardNames[player.PlayerId] + ": " + message));
                     }
                 }
@@ -1587,7 +1587,7 @@ namespace MoreGamemodes
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
-                        if (pc.Data != null && !pc.Data.Disconnected && pc.GetRole().Role == CustomRoles.Romantic)
+                        if (pc.GetRole().Role == CustomRoles.Romantic)
                         {
                             Romantic romanticRole = pc.GetRole() as Romantic;
                             if (romanticRole != null && romanticRole.LoverId == player.PlayerId)

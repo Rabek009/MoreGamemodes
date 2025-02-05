@@ -78,6 +78,11 @@ namespace MoreGamemodes
             return "";
         }
 
+        public override bool IsCompatible(AddOns addOn)
+        {
+            return addOn != AddOns.Lurker || CanUseVents.GetBool();
+        }
+
         public TimeFreezer(PlayerControl player)
         {
             Role = CustomRoles.TimeFreezer;

@@ -167,7 +167,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return;
             var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.Data.IsDead).FirstOrDefault();
             if (player == null) return;
-            for (int i = 1; i <= 20; ++i)
+            for (int i = 1; i <= 30; ++i)
             {
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, "");
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -184,7 +184,7 @@ namespace MoreGamemodes
         {
             foreach (var playerinfo in GameData.Instance.AllPlayers)
             {
-                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(5);
                 {
                     writer.Write(AmongUsClient.Instance.GameId);
@@ -355,6 +355,7 @@ namespace MoreGamemodes
             if (reason == DeathReasons.Cursed) return "Cursed";
             if (reason == DeathReasons.Shot) return "Shot";
             if (reason == DeathReasons.Heartbroken) return "Heartbroken";
+            if (reason == DeathReasons.Burned) return "Burned";
             return "???";
         }
 
@@ -449,7 +450,7 @@ namespace MoreGamemodes
                     player.StartCoroutine(player.CoSetRole(pc == player ? selfRole : othersRole, true));
                     continue;
                 }
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(pc.GetClientId());
                 bool disconnected = player.Data.Disconnected;
@@ -481,7 +482,7 @@ namespace MoreGamemodes
                     player.StartCoroutine(player.CoSetRole(list.Contains(pc) ? listRole : othersRole, true));
                     continue;
                 }
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(pc.GetClientId());
                 bool disconnected = player.Data.Disconnected;

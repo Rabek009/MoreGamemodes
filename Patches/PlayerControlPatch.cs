@@ -190,12 +190,6 @@ namespace MoreGamemodes
     {
         public static void Postfix(PlayerControl __instance)
         {
-            ushort num = (ushort)(PlayerControl.LocalPlayer.NetTransform.lastSequenceId + 2);
-		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.None, -1);
-		    NetHelpers.WriteVector2(PlayerControl.LocalPlayer.transform.position, messageWriter);
-		    messageWriter.Write(num);
-		    AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
-            PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 2;
             if (Main.GameStarted && __instance.AmOwner)
             {
                 Main.Timer += Time.fixedDeltaTime;
@@ -374,7 +368,7 @@ namespace MoreGamemodes
             if (RoleManager.IsGhostRole(roleType)) return true;
             RoleAssigned[__instance.PlayerId] = true;
             __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
-            CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
+            CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             bool disconnected = __instance.Data.Disconnected;
@@ -1024,7 +1018,7 @@ namespace MoreGamemodes
             if (!Main.GameStarted)
             {
                 __instance.SetTasks(taskTypeIds);
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetTasks fix blackscreen", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetTasks fix blackscreen", SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
                 writer.StartMessage(1);
@@ -1093,6 +1087,43 @@ namespace MoreGamemodes
                     return false;
             }
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcSetColor))]
+    class RpcSetColorPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] byte bodyColor)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (AmongUsClient.Instance.AmClient)
+		    {
+			    __instance.SetColor((int)bodyColor);
+		    }
+		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetColor, SendOption.None, -1);
+		    messageWriter.Write(__instance.Data.NetId);
+		    messageWriter.Write(bodyColor);
+		    AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(CustomNetworkTransform), nameof(CustomNetworkTransform.RpcSnapTo))]
+    class RpcSnapToPatch
+    {
+        public static bool Prefix(CustomNetworkTransform __instance, [HarmonyArgument(0)] Vector2 position)
+        {
+            if (!AmongUsClient.Instance.AmHost) return true;
+            if (AmongUsClient.Instance.AmClient)
+		    {
+			    __instance.SnapTo(position, (ushort)(__instance.lastSequenceId + 1));
+		    }
+		    ushort num = (ushort)(__instance.lastSequenceId + 2);
+		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SnapTo, SendOption.None, -1);
+		    NetHelpers.WriteVector2(position, messageWriter);
+		    messageWriter.Write(num);
+		    AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+            return false;
         }
     }
 }

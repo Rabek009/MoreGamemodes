@@ -10,7 +10,7 @@ namespace MoreGamemodes
         {
             if (LoverId == byte.MaxValue || exiled == null) return;
             var lover = Utils.GetPlayerById(LoverId);
-            if (lover != null && lover.Data != null && !lover.Data.Disconnected && lover.GetRole().Role != CustomRoles.Romantic)
+            if (lover != null && lover.GetRole().Role != CustomRoles.Romantic)
             {
                 if (exiled.PlayerId == Player.PlayerId && !lover.Data.IsDead)
                 {
@@ -131,7 +131,7 @@ namespace MoreGamemodes
             }
             if (LoverId == byte.MaxValue) return;
             var lover = Utils.GetPlayerById(LoverId);
-            if (lover != null && lover.Data != null && !lover.Data.Disconnected && !lover.Data.IsDead && lover.GetRole().Role != CustomRoles.Romantic)
+            if (lover != null && !lover.Data.IsDead && lover.GetRole().Role != CustomRoles.Romantic)
             {
                 lover.RpcSetDeathReason(DeathReasons.Heartbroken);
                 lover.RpcMurderPlayer(lover, true);
@@ -142,7 +142,7 @@ namespace MoreGamemodes
         {
             if (Player.Data.IsDead || LoverId == byte.MaxValue) return;
             var lover = Utils.GetPlayerById(LoverId);
-            if (lover != null && lover.Data != null && !lover.Data.Disconnected && lover.GetRole().Role != CustomRoles.Romantic && target == lover)
+            if (lover != null && lover.GetRole().Role != CustomRoles.Romantic && target == lover)
             {
                 Player.RpcSetDeathReason(DeathReasons.Heartbroken);
                 Player.RpcMurderPlayer(Player, true);
@@ -176,7 +176,7 @@ namespace MoreGamemodes
             }
             if (LoverId == byte.MaxValue) return;
             var lover = Utils.GetPlayerById(LoverId);
-            if (lover == null || lover.Data == null || lover.Data.Disconnected || lover.GetRole().Role == CustomRoles.Romantic)
+            if (lover == null || lover.GetRole().Role == CustomRoles.Romantic)
             {
                 LoverId = byte.MaxValue;
                 Player.RpcSetRomanticLover(LoverId);
@@ -248,7 +248,7 @@ namespace MoreGamemodes
         {
             if (LoverId == byte.MaxValue) return true;
             var lover = Utils.GetPlayerById(LoverId);
-            if (lover != null && lover.Data != null && !lover.Data.Disconnected && (lover.GetRole().IsImpostor() || lover.GetRole().IsNeutralKilling()))
+            if (lover != null && !lover.Data.IsDead && (lover.GetRole().IsImpostor() || lover.GetRole().IsNeutralKilling()))
                 return false;
             return true;
         }

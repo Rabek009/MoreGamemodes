@@ -24,7 +24,8 @@ namespace MoreGamemodes
 
         public override void OnMeeting()
         {
-
+            if (Owner == null)
+                Despawn();
         }
 
         public Drone(PlayerControl owner, Vector2 position)

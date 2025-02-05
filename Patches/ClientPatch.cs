@@ -222,7 +222,7 @@ namespace MoreGamemodes
         public static bool Prefix(InnerNetClient __instance, [HarmonyArgument(0)] int clientId)
         {
             if (!Constants.IsVersionModded() || __instance.NetworkMode != NetworkModes.OnlineGame) return true;
-            MessageWriter messageWriter = MessageWriter.Get(SendOption.None);
+            MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
             messageWriter.StartMessage(6);
             messageWriter.Write(__instance.GameId);
             messageWriter.WritePacked(clientId);
@@ -260,7 +260,7 @@ namespace MoreGamemodes
             while (players.Count > 0)
             {
                 var batch = players.Take(5).ToList();
-                MessageWriter messageWriter = MessageWriter.Get(SendOption.None);
+                MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
                 messageWriter.StartMessage(6);
                 messageWriter.Write(__instance.GameId);
                 messageWriter.WritePacked(clientId);
@@ -402,7 +402,7 @@ namespace MoreGamemodes
             if (player != null)
             {
                 Timer = 0;
-                MessageWriter messageWriter = MessageWriter.Get(SendOption.None);
+                MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
                 messageWriter.StartMessage(5);
                 messageWriter.Write(__instance.GameId);
                 messageWriter.StartMessage(1);

@@ -31,7 +31,7 @@ namespace MoreGamemodes
             List<PlayerControl> PotentialTargets = new();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc.Data != null && !pc.Data.IsDead && !pc.Data.Disconnected && pc.GetRole().IsCrewmate())
+                if (!pc.Data.IsDead && pc.GetRole().IsCrewmate())
                     PotentialTargets.Add(pc);
             }
             if (PotentialTargets.Any())
@@ -45,7 +45,7 @@ namespace MoreGamemodes
         public override void OnFixedUpdate()
         {
             PlayerControl targetPlayer = Utils.GetPlayerById(Target);
-            if (Target == byte.MaxValue || targetPlayer == null || targetPlayer.Data == null || targetPlayer.Data.IsDead || targetPlayer.Data.Disconnected || !targetPlayer.GetRole().IsCrewmate())
+            if (Target == byte.MaxValue || targetPlayer == null || targetPlayer.Data.IsDead || !targetPlayer.GetRole().IsCrewmate())
             {
                 switch (CurrentRoleAfterTargetDeath)
                 {

@@ -51,14 +51,14 @@ namespace MoreGamemodes
                 if (!GameManager.Instance.ShouldCheckForGameEnd) return;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.Data != null && pc.Data.IsDead && !pc.Data.Disconnected)
+                    if (pc.Data.IsDead)
                         pc.SetChatVisible(true);
                 }
                 if (Options.EnableMidGameChat.GetBool())
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
-                        if (pc.Data != null && !pc.Data.IsDead && !pc.Data.Disconnected)
+                        if (!pc.Data.IsDead)
                             pc.SetChatVisible(true);
                     }
                 }

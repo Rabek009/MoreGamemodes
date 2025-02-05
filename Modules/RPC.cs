@@ -54,6 +54,7 @@ namespace MoreGamemodes
         SetShamanTarget,
         SetDronerRealPosition,
         SetRomanticLover,
+        SetArsonistDouseState,
     }
 
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
@@ -231,6 +232,9 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.SetRomanticLover:
                     __instance.SetRomanticLover(reader.ReadByte());
+                    break;
+                case CustomRPC.SetArsonistDouseState:
+                    __instance.SetArsonistDouseState(reader.ReadNetObject<PlayerControl>(), (DouseStates)reader.ReadInt32());
                     break;
             }
         }
@@ -705,6 +709,14 @@ namespace MoreGamemodes
                 HudManager.Instance.SetHudActive(!MeetingHud.Instance);
         }
 
+        public static void SetArsonistDouseState(this PlayerControl player, PlayerControl target, DouseStates douseState)
+        {
+            if (ClassicGamemode.instance == null || player.GetRole().Role != CustomRoles.Arsonist) return;
+            Arsonist arsonistRole = player.GetRole() as Arsonist;
+            if (arsonistRole == null) return;
+            arsonistRole.DouseState[target.PlayerId] = douseState;
+        }
+
         public static void RpcVersionCheck(this PlayerControl player, string version)
         {
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.VersionCheck, SendOption.None, AmongUsClient.Instance.HostId);
@@ -1068,6 +1080,15 @@ namespace MoreGamemodes
                 HudManager.Instance.SetHudActive(!MeetingHud.Instance);
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetRomanticLover, SendOption.None, -1);
             writer.Write(targetId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public static void RpcSetArsonistDouseState(this PlayerControl player, PlayerControl target, DouseStates douseState)
+        {
+            player.SetArsonistDouseState(target, douseState);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SetArsonistDouseState, SendOption.None, -1);
+            writer.WriteNetObject(target);
+            writer.Write((int)douseState);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
     }

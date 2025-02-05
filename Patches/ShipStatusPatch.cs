@@ -79,9 +79,9 @@ namespace MoreGamemodes
 		                Vector2 vector = Utils.GetVentById(ventId).transform.position;
 		                vector -= player.Collider.offset;
 		                player.NetTransform.SnapTo(vector);
-                        MessageWriter writer = AmongUsClient.Instance.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.None);
+                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.None, -1);
 		                writer.WritePacked(ventId);
-		                writer.EndMessage();
+		                AmongUsClient.Instance.FinishRpcImmediately(writer);
                         CoEnterVentPatch.PlayersToKick.Remove(playerId);
                         return false;
                     }

@@ -116,9 +116,9 @@ namespace MoreGamemodes
             if (Utils.IsActive(SystemTypes.Comms) && mapId != 5) return false;
             if (mapId is 0 or 2 or 3 or 4 && UsingCameras)  
                 return true;
-            if (mapId == 1 && Vector2.Distance(Player.GetTruePosition(), new Vector2(16.22f, 5.82f)) <= 1.5f)
+            if (mapId == 1 && Vector2.Distance(Player.GetRealPosition(), new Vector2(16.22f, 5.82f)) <= 1.5f)
                 return true;
-            if (mapId == 5 && Vector2.Distance(Player.GetTruePosition(), new Vector2(6.20f, 0.10f)) <= 1.8f)
+            if (mapId == 5 && Vector2.Distance(Player.GetRealPosition(), new Vector2(6.20f, 0.10f)) <= 1.8f)
                 return true;
             return false;
         }

@@ -18,7 +18,7 @@ namespace MoreGamemodes
 
         public override void OnAddVote(PlayerControl target)
         {
-            if (target == null || target.Data == null || target.Data.IsDead || target.Data.Disconnected || AbilityUsed || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)) return;
+            if (target == null || target.Data.IsDead || AbilityUsed || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)) return;
             MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[]{ new ()
             {
                 VoterId = Player.PlayerId,

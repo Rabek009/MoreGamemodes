@@ -281,4 +281,5 @@ public enum DeathReasons
     Cursed,
     Shot,
     Heartbroken,
+    Burned,
 }

@@ -1184,7 +1184,7 @@ namespace MoreGamemodes
             Jester.SetupOptionItem();
             NeutralKilling = TextOptionItem.Create(1000000, "Neutral killing", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
-            // Arsonist.SetupOptionItem(); Work in progress
+            Arsonist.SetupOptionItem();
             Pelican.SetupOptionItem();
             SerialKiller.SetupOptionItem();
 

@@ -1,6 +1,7 @@
 using Hazel;
 using AmongUs.GameOptions;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MoreGamemodes
 {
@@ -45,6 +46,24 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnCheckMurder(PlayerControl target)
+        {
+            if (DouseState[target.PlayerId] == DouseStates.NotDoused)
+            {
+                Player.RpcSetArsonistDouseState(target, DouseStates.Doused);
+                Player.RpcSetKillTimer(DouseIgniteCooldown.GetFloat());
+                Main.NameColors[(target.PlayerId, Player.PlayerId)] = Color.black;
+            }
+            else if (DouseState[target.PlayerId] == DouseStates.Doused)
+            {
+                Player.RpcSetArsonistDouseState(target, DouseStates.Ignited);
+                IgniteTimer[target.PlayerId] = IgniteDuration.GetFloat();
+                Player.RpcSetKillTimer(DouseIgniteCooldown.GetFloat());
+                Main.NameColors[(target.PlayerId, Player.PlayerId)] = Palette.Orange;
+            }
+            return false;
+        }
+
         public override void OnMurderPlayerAsTarget(PlayerControl killer)
         {
             if (BaseRole == BaseRoles.DesyncImpostor)
@@ -61,6 +80,21 @@ namespace MoreGamemodes
                 }
                 Player.Data.RpcSetTasks(new byte[0]);
                 Player.SyncPlayerSettings();
+            }
+        }
+
+        public void OnReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (DouseState[pc.PlayerId] == DouseStates.Ignited && pc != Player && !pc.Data.IsDead)
+                {
+                    pc.RpcSetDeathReason(DeathReasons.Burned);
+                    pc.RpcMurderPlayer(pc, true);
+                    IgniteTimer[pc.PlayerId] = -1f;
+                    ++Main.PlayerKills[Player.PlayerId];
+                    ClassicGamemode.instance.PlayerKiller[pc.PlayerId] = Player.PlayerId;
+                }
             }
         }
 
@@ -81,6 +115,36 @@ namespace MoreGamemodes
                 Player.Data.RpcSetTasks(new byte[0]);
                 Player.SyncPlayerSettings();
             }
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (DouseState[pc.PlayerId] != DouseStates.Ignited || pc == Player || pc.Data.IsDead) continue;
+                if (IgniteTimer[pc.PlayerId] <= -1f)
+                {
+                    Player.RpcSetArsonistDouseState(pc, DouseStates.Doused);
+                    continue;
+                }
+                if (IgniteTimer[pc.PlayerId] > 0f)
+                {
+                    IgniteTimer[pc.PlayerId] -= Time.fixedDeltaTime;
+                    foreach (var ar in PlayerControl.AllPlayerControls)
+                    {
+                        if (DouseState[ar.PlayerId] == DouseStates.Doused && Vector2.Distance(pc.transform.position, ar.transform.position) <= IgniteRadius.GetFloat())
+                        {
+                            Player.RpcSetArsonistDouseState(ar, DouseStates.Ignited);
+                            IgniteTimer[ar.PlayerId] = IgniteDuration.GetFloat();
+                            Main.NameColors[(ar.PlayerId, Player.PlayerId)] = Palette.Orange;
+                        }
+                    }
+                }
+                if (IgniteTimer[pc.PlayerId] <= 0f && IgniteTimer[pc.PlayerId] > -1f)
+                {
+                    pc.RpcSetDeathReason(DeathReasons.Burned);
+                    pc.RpcMurderPlayer(pc, true);
+                    IgniteTimer[pc.PlayerId] = -1f;
+                    ++Main.PlayerKills[Player.PlayerId];
+                    ClassicGamemode.instance.PlayerKiller[pc.PlayerId] = Player.PlayerId;
+                }
+            }
         }
 
         public override bool OnEnterVent(int id)
@@ -96,7 +160,7 @@ namespace MoreGamemodes
 
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
         {
-            opt.SetFloat(FloatOptionNames.KillCooldown, DouseCooldown.GetFloat());
+            opt.SetFloat(FloatOptionNames.KillCooldown, DouseIgniteCooldown.GetFloat());
             return opt;
         }
 
@@ -122,6 +186,19 @@ namespace MoreGamemodes
             return false;
         }
 
+        public static void OnGlobalReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.GetRole().Role == CustomRoles.Arsonist)
+                {
+                    Arsonist arsonistRole = pc.GetRole() as Arsonist;
+                    if (arsonistRole == null) continue;
+                    arsonistRole.OnReportDeadBody(reporter, target);
+                }
+            }
+        }
+
         public Arsonist(PlayerControl player)
         {
             Role = CustomRoles.Arsonist;
@@ -134,7 +211,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 DouseState[pc.PlayerId] = DouseStates.NotDoused;
-                IgniteTimer[pc.PlayerId] = 0f;
+                IgniteTimer[pc.PlayerId] = -1f;
             }
         }
 
@@ -143,8 +220,7 @@ namespace MoreGamemodes
 
         public static OptionItem Chance;
         public static OptionItem Count;
-        public static OptionItem DouseCooldown;
-        public static OptionItem IgniteCooldown;
+        public static OptionItem DouseIgniteCooldown;
         public static OptionItem IgniteDuration;
         public static OptionItem IgniteRadius;
         public static OptionItem CanUseVents;
@@ -153,19 +229,16 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(1000300, CustomRoles.Arsonist, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(1000301, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            DouseCooldown = FloatOptionItem.Create(1000302, "Douse cooldown", new(2.5f, 60f, 2.5f), 10f, TabGroup.NeutralRoles, false)
+            DouseIgniteCooldown = FloatOptionItem.Create(1000302, "Douse/Ignite cooldown", new(2.5f, 60f, 2.5f), 12.5f, TabGroup.NeutralRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            IgniteCooldown = FloatOptionItem.Create(1000303, "Ignite cooldown", new(5f, 60f, 2.5f), 20f, TabGroup.NeutralRoles, false)
+            IgniteDuration = FloatOptionItem.Create(1000303, "Ignite duration", new(1f, 30f, 0.5f), 10f, TabGroup.NeutralRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            IgniteDuration = FloatOptionItem.Create(1000304, "Ignite duration", new(1f, 30f, 0.5f), 10f, TabGroup.NeutralRoles, false)
-                .SetParent(Chance)
-                .SetValueFormat(OptionFormat.Seconds);
-            IgniteRadius = FloatOptionItem.Create(1000305, "Ignite radius", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.NeutralRoles, false)
+            IgniteRadius = FloatOptionItem.Create(1000304, "Ignite radius", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.NeutralRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Multiplier);
-            CanUseVents = BooleanOptionItem.Create(1000306, "Can use vents", true, TabGroup.NeutralRoles, false)
+            CanUseVents = BooleanOptionItem.Create(1000305, "Can use vents", true, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Arsonist] = Chance;
             Options.RolesCount[CustomRoles.Arsonist] = Count;

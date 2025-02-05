@@ -44,7 +44,7 @@ namespace MoreGamemodes
             foreach (KeyValuePair<byte, byte> pair in TrappedPlayers)
             {
                 var player = Utils.GetPlayerById(pair.Value);
-                if (pair.Value != byte.MaxValue && (player == null || player.Data == null || player.Data.IsDead || player.Data.Disconnected))
+                if (pair.Value != byte.MaxValue && (player == null || player.Data.IsDead))
                 {
                     ClassicGamemode.instance.FreezeTimer[pair.Value] = 0f;
                     ClassicGamemode.instance.RoleblockTimer[pair.Value] = 0f;

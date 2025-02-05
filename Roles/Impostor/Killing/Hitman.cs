@@ -40,7 +40,7 @@ namespace MoreGamemodes
         {
             Timer += Time.fixedDeltaTime;
             PlayerControl targetPlayer = Utils.GetPlayerById(Target);
-            if (Target == byte.MaxValue || targetPlayer == null || targetPlayer.Data == null || targetPlayer.Data.IsDead || targetPlayer.Data.Disconnected || targetPlayer.GetRole().IsImpostor() || Timer >= TargetChangeTime.GetFloat())
+            if (Target == byte.MaxValue || targetPlayer == null || targetPlayer.Data.IsDead || targetPlayer.GetRole().IsImpostor() || Timer >= TargetChangeTime.GetFloat())
                 ChangeTarget();
         }
 

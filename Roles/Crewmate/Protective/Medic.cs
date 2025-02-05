@@ -124,7 +124,7 @@ namespace MoreGamemodes
                 return;
             }
             var player = Utils.GetPlayerById(ShieldedPlayer);
-            if (player == null || player.Data == null || player.Data.IsDead || player.Data.Disconnected)
+            if (player == null || player.Data.IsDead)
             {
                 ShieldedPlayer = byte.MaxValue;
                 Player.RpcSetAbilityUses(1f);

@@ -11,7 +11,7 @@ namespace MoreGamemodes
         {
             if (Target == byte.MaxValue) return;
             var player = Utils.GetPlayerById(Target);
-            if (player == null || player.Data == null || player.Data.IsDead || player.Data.Disconnected || !(player.GetRole().IsImpostor() || player.GetRole().IsNeutralKilling() || player.GetRole().Role == CustomRoles.Sheriff))
+            if (player == null || player.Data.IsDead || !(player.GetRole().IsImpostor() || player.GetRole().IsNeutralKilling() || player.GetRole().Role == CustomRoles.Sheriff))
             {
                 Target = byte.MaxValue;
                 Player.RpcSetShamanTarget(Target);
@@ -42,7 +42,7 @@ namespace MoreGamemodes
 
         public override void OnAddVote(PlayerControl target)
         {
-            if (target == null || target.Data == null || target.Data.IsDead || target.Data.Disconnected || AbilityUses < 1f || Target != byte.MaxValue || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)) return;
+            if (target == null || target.Data.IsDead || AbilityUses < 1f || Target != byte.MaxValue || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)) return;
             Target = target.PlayerId;
             Player.RpcSetShamanTarget(Target);
             Player.RpcSendMessage("You cursed " + Main.StandardNames[Target] + "!", "Shaman");
@@ -53,7 +53,7 @@ namespace MoreGamemodes
         {
             if (Target == byte.MaxValue) return;
             var player = Utils.GetPlayerById(Target);
-            if (player != null && player.Data != null && !player.Data.IsDead && !player.Data.Disconnected && (player.GetRole().IsImpostor() || player.GetRole().IsNeutralKilling() || player.GetRole().Role == CustomRoles.Sheriff))
+            if (player != null && !player.Data.IsDead && (player.GetRole().IsImpostor() || player.GetRole().IsNeutralKilling() || player.GetRole().Role == CustomRoles.Sheriff))
             {
                 player.RpcSetDeathReason(DeathReasons.Cursed);
                 player.RpcMurderPlayer(player, true);
@@ -68,7 +68,7 @@ namespace MoreGamemodes
         {
             if (Target == byte.MaxValue) return;
             var player = Utils.GetPlayerById(Target);
-            if (player == null || player.Data == null || player.Data.IsDead || player.Data.Disconnected) return;
+            if (player == null || player.Data.IsDead) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == player || pc.Data.IsDead)

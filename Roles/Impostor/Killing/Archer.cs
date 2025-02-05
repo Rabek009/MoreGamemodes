@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace MoreGamemodes
 {
     public class Archer : CustomRole
@@ -14,7 +16,7 @@ namespace MoreGamemodes
         {
             if (Main.KillCooldowns[Player.PlayerId] > 0f || AbilityUses < 1f) return;
             PlayerControl target = Player.GetClosestPlayer(true);
-            if (target == null || (target.GetRole().IsImpostor() && !CanKillImpostors.GetBool())) return;
+            if (target == null || (target.GetRole().IsImpostor() && !CanKillImpostors.GetBool()) || Vector2.Distance(Player.GetRealPosition(), target.transform.position) > ArrowDistance.GetFloat() * 5f) return;
             ClassicGamemode.instance.PlayerKiller[target.PlayerId] = Player.PlayerId;
             ++Main.PlayerKills[Player.PlayerId];
             target.RpcSetDeathReason(DeathReasons.Shot);
@@ -50,6 +52,7 @@ namespace MoreGamemodes
         public static OptionItem Chance;
         public static OptionItem Count;
         public static OptionItem CanKillImpostors;
+        public static OptionItem ArrowDistance;
         public static OptionItem InitialAbilityUseLimit;
         public static OptionItem AbilityUseGainWithEachRegularKill;
         public static void SetupOptionItem()
@@ -59,9 +62,12 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             CanKillImpostors = BooleanOptionItem.Create(600302, "Can kill impostors", true, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            InitialAbilityUseLimit = FloatOptionItem.Create(600303, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.ImpostorRoles, false)
+            ArrowDistance = FloatOptionItem.Create(600303, "Arrow distance", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.ImpostorRoles, false)
+                .SetParent(Chance)
+                .SetValueFormat(OptionFormat.Multiplier);
+            InitialAbilityUseLimit = FloatOptionItem.Create(600304, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            AbilityUseGainWithEachRegularKill = FloatOptionItem.Create(600304, "Ability use gain with each kill", new(0f, 2f, 0.1f), 0.5f, TabGroup.ImpostorRoles, false)
+            AbilityUseGainWithEachRegularKill = FloatOptionItem.Create(600305, "Ability use gain with each kill", new(0f, 2f, 0.1f), 0.5f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Archer] = Chance;
             Options.RolesCount[CustomRoles.Archer] = Count;

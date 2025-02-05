@@ -4,6 +4,7 @@ using InnerNet;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using AmongUs.QuickChat;
 
 using Object = UnityEngine.Object;
 
@@ -44,43 +45,31 @@ namespace MoreGamemodes
             switch (rpc)
             {
                 case RpcCalls.PlayAnimation:
-                    if (rpc == RpcCalls.SetScanner && !sr.ReadBoolean()) break;
                     if (!gameStarted)
                     {
-                        HandleCheat(pc, "PlayAnimation/SetScanner Rpc in lobby");
+                        HandleCheat(pc, "PlayAnimation Rpc in lobby");
                         return true;
                     }
                     if (!GameManager.Instance.LogicOptions.GetVisualTasks())
                     {
-                        HandleCheat(pc, "PlayAnimation/SetScanner Rpc with visuals off");
+                        HandleCheat(pc, "PlayAnimation Rpc with visuals off");
                         return true;
                     }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
                     {
-                        HandleCheat(pc, "PlayAnimation/SetScanner Rpc during meeting");
+                        HandleCheat(pc, "PlayAnimation Rpc during meeting");
                         return true;
                     }
                     if (pc.GetSelfRole().IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
                     {
-                        HandleCheat(pc, "PlayAnimation/SetScanner Rpc as impostor");
+                        HandleCheat(pc, "PlayAnimation Rpc as impostor");
                         return true;
                     }
-                    if (rpc == RpcCalls.PlayAnimation)
+                    var animation = sr.ReadByte();
+                    if (!pc.HasTask((TaskTypes)animation) && !ChangedTasks.Contains(pc.PlayerId))
                     {
-                        var animation = sr.ReadByte();
-                        if (!pc.HasTask((TaskTypes)animation) && !ChangedTasks.Contains(pc.PlayerId))
-                        {
-                            HandleCheat(pc, "Hack sent animation");
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        if (!pc.HasTask(TaskTypes.SubmitScan) && !ChangedTasks.Contains(pc.PlayerId))
-                        {
-                            HandleCheat(pc, "Hack sent scan");
-                            return true;
-                        }
+                        HandleCheat(pc, "Hack sent animation");
+                        return true;
                     }
                     break;
                 case RpcCalls.CompleteTask:
@@ -127,7 +116,7 @@ namespace MoreGamemodes
                     HandleCheat(pc, "Invalid Rpc");
                     return true;
                 case RpcCalls.CheckName:
-                    if (gameStarted)
+                    if (Main.GameStarted)
                     {
                         HandleCheat(pc, "Changing name mid game");
                         return true;
@@ -140,7 +129,7 @@ namespace MoreGamemodes
                     }
                     break;
                 case RpcCalls.CheckColor:
-                    if (gameStarted)
+                    if (Main.GameStarted)
                     {
                         HandleCheat(pc, "Changing color mid game");
                         return true;
@@ -198,10 +187,38 @@ namespace MoreGamemodes
                     return true;
                 case RpcCalls.SendChat:
                     var text = sr.ReadString();
-                    if (text.Length > 500)
+                    if (text.Length > 300)
                     {
                         HandleCheat(pc, "Too long chat message");
                         return true; 
+                    }
+                    break;
+                case RpcCalls.SetScanner:
+                    if (!GameManager.Instance.LogicOptions.GetVisualTasks())
+                    {
+                        HandleCheat(pc, "SetScanner Rpc with visuals off");
+                        return true;
+                    }
+                    if (!sr.ReadBoolean()) break;
+                    if (!gameStarted)
+                    {
+                        HandleCheat(pc, "SetScanner Rpc in lobby");
+                        return true;
+                    }
+                    if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
+                    {
+                        HandleCheat(pc, "SetScanner Rpc during meeting");
+                        return true;
+                    }
+                    if (pc.GetSelfRole().IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
+                    {
+                        HandleCheat(pc, "SetScanner Rpc as impostor");
+                        return true;
+                    }
+                    if (!pc.HasTask(TaskTypes.SubmitScan) && !ChangedTasks.Contains(pc.PlayerId))
+                    {
+                        HandleCheat(pc, "Hack sent scan");
+                        return true;
                     }
                     break;
                 case RpcCalls.UsePlatform:
@@ -226,13 +243,48 @@ namespace MoreGamemodes
                         return true;
                     }
                     break;
+                case RpcCalls.SendQuickChat:
+                    QuickChatPhraseType quickChatPhraseType = (QuickChatPhraseType)sr.ReadByte();
+                    if (quickChatPhraseType == QuickChatPhraseType.Empty)
+                    {
+                        HandleCheat(pc, "Empty message in quick chat");
+                        return true;
+                    }
+                    if (quickChatPhraseType == QuickChatPhraseType.PlayerId)
+                    {
+                        byte playerID = sr.ReadByte();
+                        if (playerID == 255)
+                        {
+                            HandleCheat(pc, "Sending invalid player in quick chat");
+                            return true;
+                        }
+                        if (gameStarted && GameData.Instance.GetPlayerById(playerID) == null)
+                        {
+                            HandleCheat(pc, "Sending non existing player in quick chat");
+                            return true;
+                        }
+                    }
+                    if (quickChatPhraseType != QuickChatPhraseType.ComplexPhrase) break;
+                    sr.ReadUInt16();
+                    int num = sr.ReadByte();
+                    if (num == 0)
+                    {
+                        HandleCheat(pc, "Complex phrase without arguments");
+                        return true;
+                    }
+                    if (num > 3)
+                    {
+                        HandleCheat(pc, "Trying to crash or lag other players");
+                        return true;
+                    }
+                    break;
                 case RpcCalls.SetLevel:
                 case RpcCalls.SetHatStr:
                 case RpcCalls.SetSkinStr:
                 case RpcCalls.SetPetStr:
                 case RpcCalls.SetVisorStr:
                 case RpcCalls.SetNamePlateStr:
-                    if (gameStarted)
+                    if (Main.GameStarted)
                     {
                         HandleCheat(pc, "Set outfit/level mid game");
                         return true;
@@ -493,9 +545,9 @@ namespace MoreGamemodes
                         return true;
                     }
                     break;
-                case RpcCalls.BootFromVent:
-                    HandleCheat(physics.myPlayer, "Invalid Rpc");
-                    return true;
+                // case RpcCalls.BootFromVent:
+                //     HandleCheat(physics.myPlayer, "Invalid Rpc");
+                //     return true;
                 case RpcCalls.Pet:
                 case RpcCalls.CancelPet:
                     if (physics.myPlayer.inVent)
@@ -744,6 +796,7 @@ namespace MoreGamemodes
         public static void HandleCheat(PlayerControl pc, string reason)
         {
             if (!Options.AntiCheat.GetBool()) return;
+            Main.Instance.Log.LogInfo("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
             switch (Options.CurrentCheatingPenalty)
             {
                 case CheatingPenalties.WarnHost:
