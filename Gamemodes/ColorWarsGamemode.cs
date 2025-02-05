@@ -19,16 +19,16 @@ namespace MoreGamemodes
             __instance.SabotageButton.ToggleVisible(false);
             if (!IsDead[player.PlayerId] && !player.Data.IsDead && GetTeam(player) != byte.MaxValue)
             {
-                if (player.GetClosestPlayer(true) != null && GetTeam(player.GetClosestPlayer(true)) == byte.MaxValue && IsLeader(player))
+                if (__instance.KillButton.currentTarget != null && GetTeam(__instance.KillButton.currentTarget) == byte.MaxValue && IsLeader(player))
                     __instance.KillButton.OverrideText("Recruit");
-                else if (player.GetClosestPlayer(true) != null && IsLeader(player.GetClosestPlayer(true)))
+                else if (__instance.KillButton.currentTarget != null && IsLeader(__instance.KillButton.currentTarget))
                     __instance.KillButton.OverrideText("Attack");
                 else
                     __instance.KillButton.OverrideText("Kill");
                 __instance.KillButton.ToggleVisible(true);
-                if (player.GetClosestPlayer(true) != null && GetTeam(player.GetClosestPlayer(true)) == GetTeam(player))
+                if (__instance.KillButton.currentTarget != null && GetTeam(__instance.KillButton.currentTarget) == GetTeam(player))
                     __instance.KillButton.SetTarget(null);
-                if (player.GetClosestPlayer(true) != null && GetTeam(player.GetClosestPlayer(true)) == byte.MaxValue && !IsLeader(player))
+                if (__instance.KillButton.currentTarget != null && GetTeam(__instance.KillButton.currentTarget) == byte.MaxValue && !IsLeader(player))
                     __instance.KillButton.SetTarget(null);
             }
             else if (IsDead[player.PlayerId])

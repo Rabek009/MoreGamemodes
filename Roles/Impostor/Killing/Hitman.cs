@@ -12,7 +12,7 @@ namespace MoreGamemodes
             base.OnHudUpate(__instance);
             if (Player.Data.IsDead) return;
             __instance.AbilityButton.OverrideText("Target Change");
-            if (Player.GetClosestPlayer(true) != null && Player.GetClosestPlayer(true).PlayerId != Target)
+            if (__instance.KillButton.currentTarget != null && __instance.KillButton.currentTarget.PlayerId != Target)
                 __instance.KillButton.SetTarget(null);
         }
 
@@ -70,7 +70,15 @@ namespace MoreGamemodes
             foreach (var player in GameData.Instance.AllPlayers)
             {
                 if (player != null && player.Object != null && !player.IsDead && !player.Disconnected && !player.GetRole().IsImpostor())
+                {
+                    if (player.GetRole().Role == CustomRoles.Romantic)
+                    {
+                        Romantic romanticRole = player.GetRole() as Romantic;
+                        if (romanticRole != null && romanticRole.LoverId == Player.PlayerId)
+                            break;
+                    }
                     PotentialTargets.Add(player);
+                }
             }
             if (PotentialTargets.Any())
             {

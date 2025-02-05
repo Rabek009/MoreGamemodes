@@ -286,7 +286,7 @@ namespace MoreGamemodes
             }
             else
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
                 writer.Write(message);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
             }

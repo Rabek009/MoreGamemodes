@@ -1,4 +1,5 @@
 using AmongUs.GameOptions;
+using Hazel;
 using UnityEngine;
 
 namespace MoreGamemodes
@@ -10,7 +11,7 @@ namespace MoreGamemodes
             base.OnHudUpate(__instance);
             if (Player.Data.IsDead) return;
             __instance.AbilityButton.OverrideText("Freeze Time");
-            if ((Utils.IsActive(SystemTypes.Reactor) || Utils.IsActive(SystemTypes.LifeSupp) || Utils.IsActive(SystemTypes.Laboratory) || Utils.IsActive(SystemTypes.HeliSabotage)) && !CanFreezeDuringCriticalSabotage.GetBool())
+            if (Utils.IsSabotage())
                 __instance.AbilityButton.SetDisabled();
             if (!CanUseVents.GetBool())
             {
@@ -21,10 +22,6 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
-            if (AbilityDuration <= -1f)
-            {
-                TimeSinceAbilityUse += Time.fixedDeltaTime;
-            }
             if (AbilityDuration > -1f)
             {
                 AbilityDuration -= Time.fixedDeltaTime;
@@ -32,17 +29,17 @@ namespace MoreGamemodes
             if (AbilityDuration <= 0f && AbilityDuration > -1f)
             {
                 AbilityDuration = -1f;
-                TimeSinceAbilityUse = 0f;
                 Player.RpcResetAbilityCooldown();
             }
         }
 
         public override bool OnCheckVanish()
         {
-            if (AbilityDuration > 0f) return false;
-            if (TimeSinceAbilityUse < 1f) return false;
-            if ((Utils.IsActive(SystemTypes.Reactor) || Utils.IsActive(SystemTypes.LifeSupp) || Utils.IsActive(SystemTypes.Laboratory) || Utils.IsActive(SystemTypes.HeliSabotage)) && !CanFreezeDuringCriticalSabotage.GetBool())
+            if (Utils.IsSabotage())
+            {
+                new LateTask(() => Player.RpcSetAbilityCooldown(0.001f), 0.2f);
                 return false;
+            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player) continue;
@@ -60,6 +57,12 @@ namespace MoreGamemodes
         public override bool OnEnterVent(int id)
         {
             return CanUseVents.GetBool();
+        }
+
+        public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, MessageReader reader)
+        {
+            if (systemType == SystemTypes.Sabotage && AbilityDuration > 0f) return false;
+            return true;
         }
 
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
@@ -83,17 +86,14 @@ namespace MoreGamemodes
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
             AbilityDuration = -1f;
-            TimeSinceAbilityUse = 0f;
         }
 
         public float AbilityDuration;
-        public float TimeSinceAbilityUse;
 
         public static OptionItem Chance;
         public static OptionItem Count;
         public static OptionItem FreezeCooldown;
         public static OptionItem FreezeDuration;
-        public static OptionItem CanFreezeDuringCriticalSabotage;
         public static OptionItem CanUseVents;
         public static void SetupOptionItem()
         {
@@ -106,9 +106,7 @@ namespace MoreGamemodes
             FreezeDuration = FloatOptionItem.Create(500103, "Freeze duration", new(1f, 20f, 1f), 5f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            CanFreezeDuringCriticalSabotage = BooleanOptionItem.Create(500104, "Can freeze during critical sabotage", false, TabGroup.ImpostorRoles, false)
-                .SetParent(Chance);
-            CanUseVents = BooleanOptionItem.Create(500105, "Can use vents", false, TabGroup.ImpostorRoles, false)
+            CanUseVents = BooleanOptionItem.Create(500104, "Can use vents", false, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.TimeFreezer] = Chance;
             Options.RolesCount[CustomRoles.TimeFreezer] = Count;

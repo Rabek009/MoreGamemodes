@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using System;
 using InnerNet;
+using Hazel;
+using AmongUs.GameOptions;
 
 using Object = UnityEngine.Object;
 

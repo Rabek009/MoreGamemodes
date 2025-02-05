@@ -924,7 +924,7 @@ namespace MoreGamemodes
             player.RpcSetDeathReason(DeathReasons.Escaped);
             player.RpcSetRole(RoleTypes.GuardianAngel, true);
             player.Die(DeathReason.Exile, false);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.None, -1);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             player.SyncPlayerSettings();
             foreach (var pc in PlayerControl.AllPlayerControls)

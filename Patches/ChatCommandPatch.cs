@@ -38,6 +38,47 @@ namespace MoreGamemodes
                 return false;
             }
             var canceled = false;
+            if (Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode == Gamemodes.Classic && args[0] == "/lc" && Romantic.CanChatWithLover.GetBool() && !PlayerControl.LocalPlayer.Data.IsDead)
+            {
+                if (Utils.IsActive(SystemTypes.Comms) && Romantic.DisableChatDuringCommsSabotage.GetBool())
+                {
+                    __instance.freeChatField.textArea.Clear();
+                    __instance.freeChatField.textArea.SetText("");
+                    return false;
+                }
+                var message = "";
+                for (int i = 1; i <= args.Length; ++i)
+                {
+                    subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                    message += subArgs;
+                }
+                if (PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Romantic)
+                {
+                    Romantic romanticRole = PlayerControl.LocalPlayer.GetRole() as Romantic;
+                    if (romanticRole != null && romanticRole.LoverId != byte.MaxValue)
+                    {
+                        var lover = Utils.GetPlayerById(romanticRole.LoverId);
+                        if (lover != null && lover.Data != null && !lover.Data.Disconnected)
+                            lover.Notify(Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Romantic], "[Lover] " + Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + ": " + message));
+                    }
+                }
+                else
+                {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc.Data != null && !pc.Data.Disconnected && pc.GetRole().Role == CustomRoles.Romantic)
+                        {
+                            Romantic romanticRole = pc.GetRole() as Romantic;
+                            if (romanticRole != null && romanticRole.LoverId == PlayerControl.LocalPlayer.PlayerId)
+                                pc.Notify(Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Romantic], "[Lover] " + Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + ": " + message));
+                        }
+                    }
+                }
+                Utils.SendSpam();
+                __instance.freeChatField.textArea.Clear();
+                __instance.freeChatField.textArea.SetText("");
+                return false;
+            }
             if (!Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !PlayerControl.LocalPlayer.Data.IsDead)
             {
                 __instance.freeChatField.textArea.Clear();
@@ -52,7 +93,7 @@ namespace MoreGamemodes
                     __instance.freeChatField.textArea.SetText("");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && PlayerControl.LocalPlayer.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !PlayerControl.LocalPlayer.Data.IsDead)
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && Main.StandardRoles[PlayerControl.LocalPlayer.PlayerId].IsImpostor() && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !PlayerControl.LocalPlayer.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -95,7 +136,6 @@ namespace MoreGamemodes
             }
             switch (args[0])
             {
-               
                 case "/cs":
                 case "/changesetting":
                     canceled = true;
@@ -1520,6 +1560,44 @@ namespace MoreGamemodes
             var canceled = false;
             string[] args = text.Split(' ');
             string subArgs = "";
+            if (Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode == Gamemodes.Classic && args[0] == "/lc" && Romantic.CanChatWithLover.GetBool() && !player.Data.IsDead)
+            {
+                if (Utils.IsActive(SystemTypes.Comms) && Romantic.DisableChatDuringCommsSabotage.GetBool())
+                {
+                    Utils.SendSpam();
+                    return false;
+                }
+                var message = "";
+                for (int i = 1; i <= args.Length; ++i)
+                {
+                    subArgs = args.Length < i + 1 ? "" : " " + args[i];
+                    message += subArgs;
+                }
+                if (player.GetRole().Role == CustomRoles.Romantic)
+                {
+                    Romantic romanticRole = player.GetRole() as Romantic;
+                    if (romanticRole != null && romanticRole.LoverId != byte.MaxValue)
+                    {
+                        var lover = Utils.GetPlayerById(romanticRole.LoverId);
+                        if (lover != null && lover.Data != null && !lover.Data.Disconnected)
+                            lover.Notify(Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Romantic], "[Lover] " + Main.StandardNames[player.PlayerId] + ": " + message));
+                    }
+                }
+                else
+                {
+                    foreach (var pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc.Data != null && !pc.Data.Disconnected && pc.GetRole().Role == CustomRoles.Romantic)
+                        {
+                            Romantic romanticRole = pc.GetRole() as Romantic;
+                            if (romanticRole != null && romanticRole.LoverId == player.PlayerId)
+                                pc.Notify(Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Romantic], "[Lover] " + Main.StandardNames[player.PlayerId] + ": " + message));
+                        }
+                    }
+                }
+                Utils.SendSpam();
+                return false;
+            }
             if (!Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
             {
                 Utils.SendSpam();
@@ -1532,7 +1610,7 @@ namespace MoreGamemodes
                     Utils.SendSpam();
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && player.Data.Role.IsImpostor && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !player.Data.IsDead)
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && Main.StandardRoles[player.PlayerId].IsImpostor() && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !player.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -2453,7 +2531,7 @@ namespace MoreGamemodes
                     {
                         new LateTask(() =>
                         {
-                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.Reliable);
+                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.None);
                             var writer = sender.stream;
                             sender.StartMessage(clientId2);
                             sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
@@ -2509,7 +2587,7 @@ namespace MoreGamemodes
             }
             if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
                 writer.Write(chatText);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 __result = true;
@@ -2524,7 +2602,7 @@ namespace MoreGamemodes
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
             if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
                 DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable);
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
             messageWriter.Write(chatText);
             messageWriter.EndMessage();
             __result = true;

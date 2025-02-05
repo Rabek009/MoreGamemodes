@@ -247,6 +247,16 @@ namespace MoreGamemodes
             return "";
         }
 
+        public virtual bool SeePlayerRole(PlayerControl player)
+        {
+            return false;
+        }
+
+        public virtual bool IsRoleRevealed(PlayerControl seer)
+        {
+            return false;
+        }
+
         public virtual bool CanGuess(PlayerControl target, CustomRoles role)
         {
             return false;
@@ -268,6 +278,11 @@ namespace MoreGamemodes
         }
 
         public virtual bool IsCompatible(AddOns addOn)
+        {
+            return true;
+        }
+
+        public virtual bool IsCounted()
         {
             return true;
         }

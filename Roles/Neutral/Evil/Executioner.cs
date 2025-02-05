@@ -74,6 +74,7 @@ namespace MoreGamemodes
             AbilityUses = -1f;
             Target = byte.MaxValue;
         }
+        
         public byte Target;
 
         public static OptionItem Chance;

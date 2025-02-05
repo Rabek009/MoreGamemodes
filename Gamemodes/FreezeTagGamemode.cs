@@ -328,7 +328,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner || Main.IsModded[pc.PlayerId] || pc == player || (pc.Data.Role.IsImpostor && !GameManager.Instance.LogicOptions.GetNoisemakerImpostorAlert())) continue;
-                CustomRpcSender sender = CustomRpcSender.Create("SendNoisemakerAlert", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create("SendNoisemakerAlert", SendOption.None);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(player.NetId, (byte)RpcCalls.MurderPlayer)
                     .WriteNetObject(player)

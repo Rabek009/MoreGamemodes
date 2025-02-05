@@ -1177,12 +1177,14 @@ namespace MoreGamemodes
                 .SetColor(Color.gray);
             Amnesiac.SetupOptionItem();
             Opportunist.SetupOptionItem();
+            Romantic.SetupOptionItem();
             NeutralEvil = TextOptionItem.Create(900000, "Neutral evil", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
             Executioner.SetupOptionItem();
             Jester.SetupOptionItem();
             NeutralKilling = TextOptionItem.Create(1000000, "Neutral killing", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
+            // Arsonist.SetupOptionItem(); Work in progress
             Pelican.SetupOptionItem();
             SerialKiller.SetupOptionItem();
 

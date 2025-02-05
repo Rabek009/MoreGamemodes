@@ -172,7 +172,7 @@ namespace MoreGamemodes
                     ++impostors;
                 if (pc.GetRole().IsNeutralKilling() && !pc.Data.IsDead)
                     isKillerAlive = true;
-                if (!pc.Data.IsDead)
+                if (pc.GetRole().IsCounted() && !pc.Data.IsDead)
                     ++playerCount;
             }
             if (!isKillerAlive && impostors * 2 >= playerCount)
@@ -551,6 +551,21 @@ namespace MoreGamemodes
                             {
                                 if (!ClassicGamemode.instance.AdditionalWinners.Contains(AdditionalWinners.Opportunist))
                                     ClassicGamemode.instance.AdditionalWinners.Add(AdditionalWinners.Opportunist);
+                                winners.Add(pc.PlayerId);
+                            }
+                            break;
+                    }
+                }
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    switch (pc.GetRole().Role)
+                    {
+                        case CustomRoles.Romantic:
+                            Romantic romanticRole = pc.GetRole() as Romantic;
+                            if (romanticRole != null && romanticRole.LoverId != byte.MaxValue && winners.Contains(romanticRole.LoverId) && !winners.Contains(pc.PlayerId))
+                            {
+                                if (!ClassicGamemode.instance.AdditionalWinners.Contains(AdditionalWinners.Romantic))
+                                    ClassicGamemode.instance.AdditionalWinners.Add(AdditionalWinners.Romantic);
                                 winners.Add(pc.PlayerId);
                             }
                             break;

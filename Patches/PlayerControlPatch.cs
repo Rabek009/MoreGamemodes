@@ -190,6 +190,12 @@ namespace MoreGamemodes
     {
         public static void Postfix(PlayerControl __instance)
         {
+            ushort num = (ushort)(PlayerControl.LocalPlayer.NetTransform.lastSequenceId + 2);
+		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.None, -1);
+		    NetHelpers.WriteVector2(PlayerControl.LocalPlayer.transform.position, messageWriter);
+		    messageWriter.Write(num);
+		    AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+            PlayerControl.LocalPlayer.NetTransform.lastSequenceId += 2;
             if (Main.GameStarted && __instance.AmOwner)
             {
                 Main.Timer += Time.fixedDeltaTime;
@@ -211,7 +217,7 @@ namespace MoreGamemodes
                 {
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, false), ar, false);
-                    if ((pc.moveable || pc.petting) && !pc.inVent && !pc.shapeshifting)
+                    if (((pc.moveable || pc.petting) && !pc.inVent && !pc.shapeshifting) || pc.ForceKillTimerContinue)
                     {
                         Main.KillCooldowns[pc.PlayerId] -= Time.fixedDeltaTime;
                         if (Main.KillCooldowns[pc.PlayerId] < 0f)
@@ -368,7 +374,7 @@ namespace MoreGamemodes
             if (RoleManager.IsGhostRole(roleType)) return true;
             RoleAssigned[__instance.PlayerId] = true;
             __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
-            CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
+            CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             bool disconnected = __instance.Data.Disconnected;
@@ -404,7 +410,7 @@ namespace MoreGamemodes
 		    {
 		    	__instance.MurderPlayer(target, murderResultFlags);
 		    }
-		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, -1);
+		    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, -1);
 		    messageWriter.WriteNetObject(target);
 		    messageWriter.Write((int)murderResultFlags);
 		    AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
@@ -453,7 +459,7 @@ namespace MoreGamemodes
                         __instance.SetPet("pet_test");
                     else
                     {
-                        CustomRpcSender sender = CustomRpcSender.Create("SetDesyncPet", SendOption.Reliable);
+                        CustomRpcSender sender = CustomRpcSender.Create("SetDesyncPet", SendOption.None);
                         MessageWriter writer = sender.stream;
                         sender.StartMessage(__instance.GetClientId());
                         sender.StartRpc(__instance.NetId, (byte)RpcCalls.SetPetStr)
@@ -595,7 +601,7 @@ namespace MoreGamemodes
 		    {
 			    __instance.SetName(name);
 		    }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
 		    writer.Write(__instance.Data.NetId);
             writer.Write(name);
 		    AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -669,7 +675,7 @@ namespace MoreGamemodes
                     phantom.Data.Role.SetCooldown();
                     return false;
                 }
-                CustomRpcSender sender = CustomRpcSender.Create("Cancel vanish", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create("Cancel vanish", SendOption.None);
                 sender.StartMessage(phantom.GetClientId());
                 sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                     .Write((ushort)RoleTypes.Phantom)
@@ -759,7 +765,7 @@ namespace MoreGamemodes
                 if (pc.AmOwner) continue;
                 if (!pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
-                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.Reliable);
+                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
                     sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                         .Write((ushort)RoleTypes.Phantom)
@@ -776,7 +782,7 @@ namespace MoreGamemodes
                     sender.SendMessage();
                     new LateTask(() => {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected || pc == null || pc.Data == null || pc.Data.Disconnected) return;
-                        CustomRpcSender sender = CustomRpcSender.Create("PhantomVanish", SendOption.Reliable);
+                        CustomRpcSender sender = CustomRpcSender.Create("PhantomVanish", SendOption.None);
                         sender.StartMessage(pc.GetClientId());
                         sender.StartRpc(phantom.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                             .WriteVector2(new Vector2(50f, 50f))
@@ -792,7 +798,7 @@ namespace MoreGamemodes
                 }
                 else
                 {
-                    MessageWriter msg = AmongUsClient.Instance.StartRpcImmediately(phantom.NetId, (byte)RpcCalls.StartVanish, SendOption.Reliable, pc.GetClientId());
+                    MessageWriter msg = AmongUsClient.Instance.StartRpcImmediately(phantom.NetId, (byte)RpcCalls.StartVanish, SendOption.None, pc.GetClientId());
 		            AmongUsClient.Instance.FinishRpcImmediately(msg);
                 }
             }
@@ -818,7 +824,7 @@ namespace MoreGamemodes
                 if (pc.AmOwner) continue;
                 if (shouldAnimate && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
-                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.Reliable);
+                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAnimation", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
                     sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                         .Write((ushort)RoleTypes.Phantom)
@@ -835,7 +841,7 @@ namespace MoreGamemodes
                     sender.SendMessage();
                     new LateTask(() => {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected || pc == null || pc.Data == null || pc.Data.Disconnected) return;
-                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.Reliable);
+                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.None);
                         sender.StartMessage(pc.GetClientId());
                         sender.StartRpc(phantom.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                             .WriteVector2(new Vector2(50f, 50f))
@@ -868,7 +874,7 @@ namespace MoreGamemodes
                     }, 1f);
                     new LateTask(() => {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected || pc == null || pc.Data == null || pc.Data.Disconnected) return;
-                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.Reliable);
+                        CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.None);
                         sender.StartMessage(pc.GetClientId());
                         sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                             .Write((ushort)RoleTypes.Phantom)
@@ -888,7 +894,7 @@ namespace MoreGamemodes
                 }
                 else if (!shouldAnimate && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != phantom)
                 {
-                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.Reliable);
+                    CustomRpcSender sender = CustomRpcSender.Create("PhantomAppear", SendOption.None);
                     sender.StartMessage(pc.GetClientId());
                     sender.StartRpc(phantom.NetId, (byte)RpcCalls.SetRole)
                         .Write((ushort)RoleTypes.Phantom)
@@ -907,7 +913,7 @@ namespace MoreGamemodes
                 }
                 else
                 {
-                    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(phantom.NetId, (byte)RpcCalls.StartAppear, SendOption.Reliable, pc.GetClientId());
+                    MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(phantom.NetId, (byte)RpcCalls.StartAppear, SendOption.None, pc.GetClientId());
 		            messageWriter.Write(shouldAnimate);
 		            AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
                 }
@@ -1018,7 +1024,7 @@ namespace MoreGamemodes
             if (!Main.GameStarted)
             {
                 __instance.SetTasks(taskTypeIds);
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetTasks fix blackscreen", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetTasks fix blackscreen", SendOption.None);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
                 writer.StartMessage(1);

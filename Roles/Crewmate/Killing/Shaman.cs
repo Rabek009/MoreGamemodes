@@ -135,7 +135,7 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             InitialAbilityUseLimit = FloatOptionItem.Create(200302, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(200303, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.2f, TabGroup.CrewmateRoles, false)
+            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(200303, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.4f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Shaman] = Chance;
             Options.RolesCount[CustomRoles.Shaman] = Count;

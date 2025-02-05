@@ -21,7 +21,7 @@ namespace MoreGamemodes
             {
                 __instance.KillButton.OverrideText("Attack");
                 __instance.KillButton.ToggleVisible(true);
-                if (player.GetClosestPlayer(true) != null && GetTeam(player.GetClosestPlayer(true)) == GetTeam(player))
+                if (__instance.KillButton.currentTarget != null && GetTeam(__instance.KillButton.currentTarget) == GetTeam(player))
                     __instance.KillButton.SetTarget(null);
             }
             else

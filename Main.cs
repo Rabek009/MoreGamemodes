@@ -63,7 +63,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> OptionProtectCooldowns;
     public static Dictionary<byte, float> TimeSinceLastPet;
 
-    public const string CurrentVersion = "2.1.0 beta2.1";
+    public const string CurrentVersion = "2.1.0 dev3";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -280,4 +280,5 @@ public enum DeathReasons
     Eaten,
     Cursed,
     Shot,
+    Heartbroken,
 }

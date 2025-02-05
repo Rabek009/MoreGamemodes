@@ -4,6 +4,8 @@ namespace MoreGamemodes
 {
     class ExileControllerWrapUpPatch
     {
+        public static NetworkedPlayerInfo AntiBlackout_LastExiled;
+
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.WrapUp))]
         class BaseExileControllerPatch
         {
@@ -31,8 +33,14 @@ namespace MoreGamemodes
                 exiled.IsDead = true;
             if (AntiBlackout.ShowDoubleAnimation && exiled != null)
             {
+                AntiBlackout_LastExiled = exiled;
                 Utils.ShowExileAnimation();
                 return;
+            }
+            if (AntiBlackout.ShowDoubleAnimation && exiled == null && AntiBlackout_LastExiled != null)
+            {
+                exiled = AntiBlackout_LastExiled;
+                AntiBlackout_LastExiled = null;
             }
             new LateTask(() => {
                 if (!GameManager.Instance.ShouldCheckForGameEnd) return;

@@ -125,7 +125,7 @@ namespace MoreGamemodes
         public static void SyncSettings(IGameOptions opt, int targetClientId = -1)
         {
             Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(targetClientId == -1 ? Tags.GameData : Tags.GameDataTo);
             {
                 writer.Write(AmongUsClient.Instance.GameId);
@@ -173,7 +173,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc == PlayerControl.LocalPlayer) continue;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, pc.GetClientId());
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None, pc.GetClientId());
                     writer.Write("");
                     AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
@@ -184,7 +184,7 @@ namespace MoreGamemodes
         {
             foreach (var playerinfo in GameData.Instance.AllPlayers)
             {
-                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+                MessageWriter writer = MessageWriter.Get(SendOption.None);
                 writer.StartMessage(5);
                 {
                     writer.Write(AmongUsClient.Instance.GameId);
@@ -224,7 +224,7 @@ namespace MoreGamemodes
         {
             if (deadBodyParent == null || !Main.GameStarted) return;
             CreateDeadBody(position, colorId, deadBodyParent);
-            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.Reliable);
+            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.None);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
@@ -354,6 +354,7 @@ namespace MoreGamemodes
             if (reason == DeathReasons.Eaten) return "Eaten";
             if (reason == DeathReasons.Cursed) return "Cursed";
             if (reason == DeathReasons.Shot) return "Shot";
+            if (reason == DeathReasons.Heartbroken) return "Heartbroken";
             return "???";
         }
 
@@ -448,7 +449,7 @@ namespace MoreGamemodes
                     player.StartCoroutine(player.CoSetRole(pc == player ? selfRole : othersRole, true));
                     continue;
                 }
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(pc.GetClientId());
                 bool disconnected = player.Data.Disconnected;
@@ -480,7 +481,7 @@ namespace MoreGamemodes
                     player.StartCoroutine(player.CoSetRole(list.Contains(pc) ? listRole : othersRole, true));
                     continue;
                 }
-                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.None);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(pc.GetClientId());
                 bool disconnected = player.Data.Disconnected;

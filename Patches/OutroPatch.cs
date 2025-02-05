@@ -247,27 +247,27 @@ namespace MoreGamemodes
                         __instance.BackgroundBar.material.color = Color.red;
                         break;
                     case CustomWinners.Crewmates:
-                        WinnerText.text += Utils.ColorString(Palette.CrewmateBlue, "Crewmates ");
+                        WinnerText.text += Utils.ColorString(Palette.CrewmateBlue, "Crewmates");
                         __instance.BackgroundBar.material.color = Palette.CrewmateBlue;
                         break;
                     case CustomWinners.Impostors:
-                        WinnerText.text += Utils.ColorString(Palette.ImpostorRed, "Impostors ");
+                        WinnerText.text += Utils.ColorString(Palette.ImpostorRed, "Impostors");
                         __instance.BackgroundBar.material.color = Palette.ImpostorRed;
                         break;
                     case CustomWinners.Jester:
-                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Jester], "Jester ");
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Jester], "Jester");
                         __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Jester];
                         break;
                     case CustomWinners.SerialKiller:
-                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.SerialKiller], "Serial Killer ");
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.SerialKiller], "Serial Killer");
                         __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.SerialKiller];
                         break;
                     case CustomWinners.Executioner:
-                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Executioner], "Executioner ");
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Executioner], "Executioner");
                         __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Executioner];
                         break;
                     case CustomWinners.Pelican:
-                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Pelican], "Pelican ");
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Pelican], "Pelican");
                         __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Pelican];
                         break;
                 }
@@ -275,16 +275,18 @@ namespace MoreGamemodes
                 {
                     foreach (var winner in ClassicGamemode.instance.AdditionalWinners)
                     {
-                        WinnerText.text += "& ";
+                        WinnerText.text += " & ";
                         switch (winner)
                         {
                             case AdditionalWinners.Opportunist:
-                                ColorUtility.TryParseHtmlString("#1dde16", out Color opportunistColor);
-                                WinnerText.text += Utils.ColorString(opportunistColor, "Opportunist ");
+                                WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Opportunist], "Opportunist");
+                                break;
+                            case AdditionalWinners.Romantic:
+                                WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Romantic], "Romantic");
                                 break;
                         }
                     }
-                    WinnerText.text += "win!";
+                    WinnerText.text += " win!";
                 }
             }
 

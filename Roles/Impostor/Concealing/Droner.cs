@@ -67,10 +67,6 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
-            if (AbilityDuration <= -1f)
-            {
-                TimeSinceAbilityUse += Time.fixedDeltaTime;
-            }
             if (AbilityDuration > -1f)
             {
                 AbilityDuration -= Time.fixedDeltaTime;
@@ -85,15 +81,13 @@ namespace MoreGamemodes
 
         public override bool OnCheckVanish()
         {
-            if (AbilityDuration > 0f) return false;
-            if (TimeSinceAbilityUse < 1f) return false;
             ControlledDrone = Utils.RpcCreateDrone(Player, Player.GetRealPosition());
             DronePosition = Player.GetRealPosition();
             Player.RpcSetDronerRealPosition(Player.GetRealPosition());
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player || pc.AmOwner) continue;
-                CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityStart", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityStart", SendOption.None);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                     .WriteVector2(Player.transform.position)
@@ -140,11 +134,10 @@ namespace MoreGamemodes
         public void EndAbility()
         {
             AbilityDuration = -1f;
-            TimeSinceAbilityUse = 0f;
             if (Player.AmOwner)
                 Player.Visible = true;
             Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityEnd", SendOption.Reliable);
+            CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityEnd", SendOption.None);
             sender.StartMessage(-1);
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(Player.transform.position)
@@ -177,7 +170,7 @@ namespace MoreGamemodes
             Player.StartCoroutine(Player.CoSetRole(role, true));
             Player.MyPhysics.CancelPet();
             Player.NetTransform.SnapTo(Player.transform.position, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("CancelLadderDroner", SendOption.Reliable);
+            CustomRpcSender sender = CustomRpcSender.Create("CancelLadderDroner", SendOption.None);
             sender.StartMessage(Player.GetClientId());
             sender.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
                 .EndRpc();
@@ -198,7 +191,7 @@ namespace MoreGamemodes
             {
                 if (!pc.AmOwner && pc != Player)
                 {
-                    CustomRpcSender sender2 = CustomRpcSender.Create("CancelLadder", SendOption.Reliable);
+                    CustomRpcSender sender2 = CustomRpcSender.Create("CancelLadder", SendOption.None);
                     sender2.StartMessage(pc.GetClientId());
                     sender2.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
                         .EndRpc();
@@ -249,14 +242,12 @@ namespace MoreGamemodes
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
             AbilityDuration = -1f;
-            TimeSinceAbilityUse = 0f;
             ControlledDrone = null;
             DronePosition = Vector2.zero;
             RealPosition = null;
         }
 
         public float AbilityDuration;
-        public float TimeSinceAbilityUse;
         public Drone ControlledDrone;
         public Vector2 DronePosition;
         public Vector2? RealPosition;

@@ -39,10 +39,12 @@ namespace MoreGamemodes
             {"parasite", CustomRoles.Parasite},
             {"opportunist", CustomRoles.Opportunist},
             {"amnesiac", CustomRoles.Amnesiac},
+            {"romantic", CustomRoles.Romantic},
             {"jester", CustomRoles.Jester},
             {"executioner", CustomRoles.Executioner},
             {"serialkiller", CustomRoles.SerialKiller},
             {"pelican", CustomRoles.Pelican},
+            {"arsonist", CustomRoles.Arsonist},
         };
 
         public static Dictionary<CustomRoles, string> RoleNames = new() 
@@ -77,10 +79,12 @@ namespace MoreGamemodes
             {CustomRoles.Parasite, "Parasite"},
             {CustomRoles.Opportunist, "Opportunist"},
             {CustomRoles.Amnesiac, "Amnesiac"},
+            {CustomRoles.Romantic, "Romantic"},
             {CustomRoles.Jester, "Jester"},
             {CustomRoles.Executioner, "Executioner"},
             {CustomRoles.SerialKiller, "Serial Killer"},
             {CustomRoles.Pelican, "Pelican"},
+            {CustomRoles.Arsonist, "Arsonist"},
         };
 
         public static Dictionary<CustomRoles, string> RoleDescriptions = new() 
@@ -116,9 +120,11 @@ namespace MoreGamemodes
             {CustomRoles.Opportunist, "Survive to win"},
             {CustomRoles.Amnesiac, "Remember role from dead body"},
             {CustomRoles.Jester, "Get voted out"},
+            {CustomRoles.Romantic, "Choose your lover and help him win"},
             {CustomRoles.Executioner, "Vote your target out"},
             {CustomRoles.SerialKiller, "Kill everyone"},
             {CustomRoles.Pelican, "Eat every player"},
+            {CustomRoles.Arsonist, "Douse and ignite everyone"},
         };
 
         public static Dictionary<CustomRoles, string> RoleDescriptionsLong = new() 
@@ -143,20 +149,22 @@ namespace MoreGamemodes
             {CustomRoles.Impostor, "Impostor (Impostor): Regular impostor without any ability.<size=0>"},
             {CustomRoles.Shapeshifter, "Shapeshifter (Impostor): You can shapeshift into other players. You can stay in shapeshifted form for limited time. When shapeshifting there is animation and depending on options you leave shapeshift evidence."},
             {CustomRoles.Phantom, "Phantom (Impostor): You can turn invisible for limited amount of time. When disappearing or appearing there is animation. While invisible, you can't kill, vent, repair sabotages, use platform and zipline. Other impostors can see you, when you're invisible. While invisible you're 10% faster."},
-            {CustomRoles.TimeFreezer, "Time Freezer (Impostor): Click vanish button to freeze time for short period of time. When time is frozen other players can't move and are blind. They can't use their abilities, kill, report bodies, call meeting, sabotage, vent. You can kill during freeze, just make sure no one realize that you moved."},
+            {CustomRoles.TimeFreezer, "Time Freezer (Impostor): Click vanish button to freeze time for short period of time. When time is frozen other players can't move and are blind. They can't use their abilities, kill, report bodies, call meeting, sabotage, vent. You can't freeze time during sabotage."},
             {CustomRoles.Escapist, "Escapist (Impostor): You can mark position with your vanish button. You can teleport to that position by using vanish button again. After teleporting or after meeting your marked position reset and you have to mark again."},
             {CustomRoles.Droner, "Droner (Impostor): You can use vanish button to launch the drone from your position. You can control this drone and everyone can see it. Drone can stay on map for limited amount of time. When controlling drone you can kill people using it. Use pet button to stop using it or it will stop automatically when ability duration is over. After that you have cooldown before you can use your ability again. When you're using a drone, your real character is not moving (other people see you standing still). People can still interact with you when you're using a drone. When using drone you can't vent, report, call meetings and interact with objects."},
             {CustomRoles.EvilGuesser, "Evil Guesser (Impostor): You can guess roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 2 is sheriff, you should type <i>/guess 2 sheriff</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead. During rounds you can kill like regular impostor."},
             {CustomRoles.Hitman, "Hitman (Impostor): Your target is random non impostor and you're only allowed to kill that target. After killing you have 1 second kill cooldown and your target changes. Target changes when your current target dies, after meeting or when your shift timer goes to 0. Depending on options you have arrow pointing to your target. You can see your target name at any time and you see target's name in black."},
-            {CustomRoles.Archer, "Archer (Impostor): You can use pet button to kill nearest player from any distance without teleporting to them, but it uses arrow. You can kill normally without usign it. You have limited arrows, but you can get more by killing. You can only shoot, when your cooldown is 0."},
+            {CustomRoles.Archer, "Archer (Impostor): You can use pet button to kill nearest player without teleporting to them, but it uses arrow. Kill range is limited and you can't kill through walls. You can kill normally without usign it. You have limited arrows, but you can get more by killing. You can only shoot, when your cooldown is 0."},
             {CustomRoles.Trapster, "Trapster (Impostor): After killing someone, you place trap on dead body. Next player, who tries to report that body (or interact with it in any way) will be trapped on it unable to move and use abilities. Dead body can trap only 1 person at the time. If someone gets trapped on your body, your kill cooldown will decrease and you will get alerted."},
             {CustomRoles.Parasite, "Parasite (Impostor): You can use pet button to turn nearby player into impostor, but you die after doing it. Depending on options that person becomes regular impostor, parasite or random impostor role. You can kill like regular impostor, but after kill your ability cooldown reset. You can use ability when you're suspicious to turn someone less suspicious into impostor."},
             {CustomRoles.Opportunist, "Opportunist (Neutral): Survive to the end to win with winning team. If you die, you lose."},
             {CustomRoles.Amnesiac, "Amnesiac (Neutral): Use report button on dead body to steal role of dead player. Depending on options you have arrow pointing to nearest dead body. You don't have win condition, you have to steal role from dead body and then win."},
             {CustomRoles.Jester, "Jester (Neutral): Get voted out to win alone. Act suspicious to make people think you're impostor."},
+            {CustomRoles.Romantic, "Romantic (Neutral): Use kill button to choose your lover. Your goal is to protect your lover and help him win. If your lover wins, you win. If your lover loses, you lose. If one of you die, the other one dies too. Your role/team can't change and other romantics can't select you as lover. Depending on options after choosing target, you can use vanish button to protect both of you for some time. You might know lover's role and be able to chat with him privately during round by typing /lc MESSAGE"},
             {CustomRoles.Executioner, "Executioner (Neutral): You have random target that is crewmate. If your target is ejected, you win alone. You see your target name in black. If your target dies, you either become amnesiac, opportunist, jester or crewmate depending on options."},
             {CustomRoles.SerialKiller, "Serial Killer (Neutral): Your goal is to kill everyone. You have lower kill cooldown, so you can kill faster than impostors."},
             {CustomRoles.Pelican, "Pelican (Neutral): You can eat players by using your kill button. It means you can kill players without leaving bodies. Eat everyone to win alone."},
+            {CustomRoles.Arsonist, "Arsonist (Neutral): Use kill button on not doused player to douse him. If you click kill button on doused player, you ignite him. Ignited player will ignite every doused player that he touches and die after some time. Doused players have black name, ignited have orange name. Kill everyone to win alone."},
         };
 
         public static Dictionary<CustomRoles, Color> RoleColors = new() 
@@ -191,10 +199,12 @@ namespace MoreGamemodes
             {CustomRoles.Parasite, Palette.ImpostorRed},
             {CustomRoles.Opportunist, Utils.HexToColor("#1dde16")},
             {CustomRoles.Amnesiac, Utils.HexToColor("#0fbcbf")},
+            {CustomRoles.Romantic, Utils.HexToColor("#bf0d96")},
             {CustomRoles.Jester, Utils.HexToColor("#db72e0")},
             {CustomRoles.Executioner, Utils.HexToColor("#c9ba95")},
             {CustomRoles.SerialKiller, Utils.HexToColor("#63188f")},
             {CustomRoles.Pelican, Utils.HexToColor("#35ab15")},
+            {CustomRoles.Arsonist, Utils.HexToColor("#d67d24")},
         };
 
         public static Dictionary<CustomRoles, CustomRoleTypes> CRoleTypes = new() 
@@ -229,10 +239,12 @@ namespace MoreGamemodes
             {CustomRoles.Parasite, CustomRoleTypes.ImpostorSupport},
             {CustomRoles.Opportunist, CustomRoleTypes.NeutralBenign},
             {CustomRoles.Amnesiac, CustomRoleTypes.NeutralBenign},
+            {CustomRoles.Romantic, CustomRoleTypes.NeutralBenign},
             {CustomRoles.Jester, CustomRoleTypes.NeutralEvil},
             {CustomRoles.Executioner, CustomRoleTypes.NeutralEvil},
             {CustomRoles.SerialKiller, CustomRoleTypes.NeutralKilling},
             {CustomRoles.Pelican, CustomRoleTypes.NeutralKilling},
+            {CustomRoles.Arsonist, CustomRoleTypes.NeutralKilling},
         };
 
         public static void SetCustomRole(this PlayerControl player, CustomRoles role)
@@ -331,6 +343,9 @@ namespace MoreGamemodes
                 case CustomRoles.Amnesiac:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Amnesiac(player);
                     break;
+                case CustomRoles.Romantic:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Romantic(player);
+                    break;
                 case CustomRoles.Jester:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Jester(player);
                     break;
@@ -342,6 +357,9 @@ namespace MoreGamemodes
                     break;
                 case CustomRoles.Pelican:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Pelican(player);
+                    break;
+                case CustomRoles.Arsonist:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Arsonist(player);
                     break;
             }
             if (player.GetRole().ForceKillButton())
@@ -504,10 +522,12 @@ public enum CustomRoles
     //Neutral
     Opportunist,
     Amnesiac,
+    Romantic,
     Jester,
     Executioner,
     SerialKiller,
     Pelican,
+    Arsonist,
 }
 
 public enum BaseRoles
@@ -552,9 +572,11 @@ public enum CustomWinners
     SerialKiller,
     Executioner,
     Pelican,
+    Arsonist,
 }
 
 public enum AdditionalWinners
 {
     Opportunist,
+    Romantic,
 }

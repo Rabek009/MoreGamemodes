@@ -49,7 +49,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost || !IsCached || !player.Disconnected) return;
             isDeadCache[player.PlayerId] = (true, true);
             player.IsDead = player.Disconnected = false;
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
             writer.StartMessage(5);
             {
                 writer.Write(AmongUsClient.Instance.GameId);

@@ -260,7 +260,7 @@ namespace MoreGamemodes
 
         public override void OnCompleteTask(PlayerControl __instance)
         {
-            if (Options.CanKillZombiesAfterTasks.GetBool() && __instance.AllTasksCompleted() && !IsZombie(__instance))
+            if (Options.CanKillZombiesAfterTasks.GetBool() && __instance.AllTasksCompleted() && !IsZombie(__instance) && !__instance.Data.IsDead)
             {
                 __instance.RpcSetKillsRemain(Options.NumberOfKills.GetInt());
                 __instance.RpcSetDesyncRole(RoleTypes.Impostor, __instance);

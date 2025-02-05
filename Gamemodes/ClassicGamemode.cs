@@ -191,7 +191,7 @@ namespace MoreGamemodes
                         name += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                     name += " remain.<size=0>";
 			        exiled.PlayerName = name;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
 		            writer.Write(exiled.Object.Data.NetId);
                     writer.Write(name);
 		            AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -640,6 +640,7 @@ namespace MoreGamemodes
             if (cancel)
                 return false;
             if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
+            if (!Romantic.OnGlobalCheckMurder(killer, target)) return false;
             if (!killer.GetRole().OnCheckMurderLate(target))
                 return false;
             return true;
@@ -920,12 +921,12 @@ namespace MoreGamemodes
         {
             string prefix = "";
             string postfix = "";
-            if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
+            if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()) || player.GetRole().IsRoleRevealed(seer) || seer.GetRole().SeePlayerRole(player))
             {
                 foreach (var addOn in player.GetAddOns())
                     prefix += "<size=1.8>" + Utils.ColorString(addOn.Color, "(" + addOn.AddOnName + ")") + " </size>";
             }
-            if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()))
+            if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()) || player.GetRole().IsRoleRevealed(seer) || seer.GetRole().SeePlayerRole(player))
                 prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "</size>\n";
             foreach (var symbol in NameSymbols[(player.PlayerId, seer.PlayerId)].Values)
                 postfix += Utils.ColorString(symbol.Item2, symbol.Item1);

@@ -41,7 +41,7 @@ namespace MoreGamemodes
             {
                 __instance.KillButton.ToggleVisible(true);
                 __instance.KillButton.OverrideText("Bomb");
-                if (player.GetClosestPlayer(true) != null && HasBomb(player.GetClosestPlayer(true)))
+                if (__instance.KillButton.currentTarget != null && HasBomb(__instance.KillButton.currentTarget))
                     __instance.KillButton.SetTarget(null);
             }
             else

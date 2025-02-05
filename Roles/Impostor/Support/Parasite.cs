@@ -43,6 +43,11 @@ namespace MoreGamemodes
                 Player.Notify(Utils.ColorString(Color.red, "(!) You can't infect impostor (!)"));
                 return;
             }
+            if (target.GetRole().Role == CustomRoles.Romantic)
+            {
+                Player.Notify(Utils.ColorString(Color.red, "(!) Target can't be infected (!)"));
+                return;
+            }
             switch (CurrentTurnedImpostorRole)
             {
                 case TurnedImpostorRoles.Impostor:
@@ -119,6 +124,7 @@ namespace MoreGamemodes
             AbilityUses = -1f;
             Cooldown = 10f;
         }
+        
         public float Cooldown;
 
         public static OptionItem Chance;

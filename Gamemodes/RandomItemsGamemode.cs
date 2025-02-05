@@ -194,7 +194,7 @@ namespace MoreGamemodes
                         bool showReactorFlash = false;
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if (player.Data.Role.IsImpostor && Vector2.Distance(pc.GetRealPosition(), player.transform.position) <= Options.RadarRange.GetFloat() * 9 && !player.Data.IsDead)
+                            if (player.Data.Role.IsImpostor && Vector2.Distance(pc.GetRealPosition(), player.transform.position) <= Options.RadarRange.GetFloat() * 9f && !player.Data.IsDead)
                                 showReactorFlash = true;
                         }
                         if (showReactorFlash)

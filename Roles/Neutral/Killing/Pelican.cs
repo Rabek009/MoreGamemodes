@@ -1,4 +1,3 @@
-using UnityEngine;
 using Hazel;
 using AmongUs.GameOptions;
 using System.Collections.Generic;
@@ -43,7 +42,7 @@ namespace MoreGamemodes
         public override bool OnCheckMurderLate(PlayerControl target)
         {
             Player.RpcTeleport(target.transform.position);
-            Player.RpcSetDeathReason(DeathReasons.Eaten);
+            target.RpcSetDeathReason(DeathReasons.Eaten);
             target.RpcExileV2();
             target.RpcSetScanner(false);
             Player.RpcSetKillTimer(EatCooldown.GetFloat());
@@ -117,7 +116,7 @@ namespace MoreGamemodes
             {
                 if ((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling()) && !pc.Data.IsDead && pc != Player)
                     isKillerAlive = true;
-                if (!pc.Data.IsDead)
+                if (pc.GetRole().IsCounted() && !pc.Data.IsDead)
                     ++playerCount;
             }
             if (!isKillerAlive && playerCount <= 2 && isPlayerAlive)
