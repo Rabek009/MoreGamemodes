@@ -136,6 +136,11 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual void OnRevive()
+        {
+
+        }
+
         public AddOns Type;
         public PlayerControl Player;
         public Color Color;

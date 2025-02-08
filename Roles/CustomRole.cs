@@ -287,6 +287,11 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual void OnRevive()
+        {
+
+        }
+
         public CustomRoles Role;
         public BaseRoles BaseRole;
         public PlayerControl Player;

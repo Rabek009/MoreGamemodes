@@ -166,23 +166,18 @@ namespace MoreGamemodes
                 Player.Data.RpcSetTasks(new byte[0]);
                 Player.SyncPlayerSettings();
             }
-            if (ProtectionTimer > 0f)
-                ProtectionTimer -= Time.fixedDeltaTime;
-            if (ProtectionTimer <= 0f && ProtectionTimer > -1f)
-            {
-                Cooldown = ProtectCooldown.GetFloat();
-                ProtectionTimer = -1f;
-                Player.RpcResetAbilityCooldown();
-            }
             if (LoverId == byte.MaxValue) return;
             var lover = Utils.GetPlayerById(LoverId);
             if (lover == null || lover.GetRole().Role == CustomRoles.Romantic)
             {
                 LoverId = byte.MaxValue;
                 Player.RpcSetRomanticLover(LoverId);
-                Player.RpcSetKillTimer(RomanceCooldown.GetFloat());
-                if (!MeetingHud.Instance && !Options.EnableMidGameChat.GetBool())
-                    Player.SetChatVisible(false);
+                if (!Player.Data.IsDead)
+                {
+                    Player.RpcSetKillTimer(RomanceCooldown.GetFloat());
+                    if (!MeetingHud.Instance && !Options.EnableMidGameChat.GetBool())
+                        Player.SetChatVisible(false);
+                }
             }
             if (LoverId == byte.MaxValue) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -192,6 +187,14 @@ namespace MoreGamemodes
                     ClassicGamemode.instance.NameSymbols[(Player.PlayerId, pc.PlayerId)][CustomRoles.Romantic] = ("♥", Color);
                     ClassicGamemode.instance.NameSymbols[(LoverId, pc.PlayerId)][CustomRoles.Romantic] = ("♥", Color);
                 }
+            }
+            if (Player.Data.IsDead) return;
+            if (ProtectionTimer > 0f)
+                ProtectionTimer -= Time.fixedDeltaTime;
+            if (ProtectionTimer <= 0f && ProtectionTimer > -1f)
+            {
+                ProtectionTimer = -1f;
+                Player.RpcResetAbilityCooldown();
             }
         }
 
@@ -253,6 +256,23 @@ namespace MoreGamemodes
             return true;
         }
 
+        public override void OnRevive()
+        {
+            if (BaseRole == BaseRoles.Crewmate)
+            {
+                BaseRole = BaseRoles.DesyncImpostor;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().BaseRole is BaseRoles.Impostor or BaseRoles.Shapeshifter or BaseRoles.Phantom && !pc.Data.IsDead)
+                        pc.RpcSetDesyncRole(RoleTypes.Crewmate, Player);
+                }
+                Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
+                Player.SyncPlayerSettings();
+                new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
+            }
+            ProtectionTimer = -1f;
+        }
+
         public bool OnCheckMurder(PlayerControl killer, PlayerControl target)
         {
             if (target.PlayerId == LoverId && ProtectionTimer > 0f)
@@ -306,7 +326,6 @@ namespace MoreGamemodes
         }
 
         public byte LoverId;
-        public float Cooldown;
         public float ProtectionTimer;
 
         public static OptionItem Chance;

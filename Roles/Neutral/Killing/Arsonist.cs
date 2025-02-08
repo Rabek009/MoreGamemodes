@@ -128,7 +128,7 @@ namespace MoreGamemodes
                     IgniteTimer[pc.PlayerId] -= Time.fixedDeltaTime;
                     foreach (var ar in PlayerControl.AllPlayerControls)
                     {
-                        if (DouseState[ar.PlayerId] == DouseStates.Doused && Vector2.Distance(pc.transform.position, ar.transform.position) <= IgniteRadius.GetFloat())
+                        if (DouseState[ar.PlayerId] == DouseStates.Doused && Vector2.Distance(pc.transform.position, ar.transform.position) <= IgniteRadius.GetFloat() * 1.5f)
                         {
                             Player.RpcSetArsonistDouseState(ar, DouseStates.Ignited);
                             IgniteTimer[ar.PlayerId] = IgniteDuration.GetFloat();
@@ -184,6 +184,22 @@ namespace MoreGamemodes
                 return true;
             }
             return false;
+        }
+
+        public override void OnRevive()
+        {
+            if (BaseRole == BaseRoles.Crewmate)
+            {
+                BaseRole = BaseRoles.DesyncImpostor;
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.GetRole().BaseRole is BaseRoles.Impostor or BaseRoles.Shapeshifter or BaseRoles.Phantom && !pc.Data.IsDead)
+                        pc.RpcSetDesyncRole(RoleTypes.Crewmate, Player);
+                }
+                Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
+                Player.SyncPlayerSettings();
+                new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
+            }
         }
 
         public static void OnGlobalReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)

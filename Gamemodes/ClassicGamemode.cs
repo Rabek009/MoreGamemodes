@@ -191,7 +191,7 @@ namespace MoreGamemodes
                         name += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                     name += " remain.<size=0>";
 			        exiled.PlayerName = name;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.None, -1);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
 		            writer.Write(exiled.Object.Data.NetId);
                     writer.Write(name);
 		            AmongUsClient.Instance.FinishRpcImmediately(writer);
@@ -499,40 +499,40 @@ namespace MoreGamemodes
                         Main.StandardRoles[pc.PlayerId] = RoleTypes.Tracker;
                         break;
                     case BaseRoles.Impostor:
-                        List<PlayerControl> list = new();
+                        List<byte> list = new();
                         foreach (var ar in PlayerControl.AllPlayerControls)
                         {
                             if (ar.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
-                                list.Add(ar);
+                                list.Add(ar.PlayerId);
                         }
                         Utils.SetDesyncRoleForPlayers(pc, list, RoleTypes.Crewmate, RoleTypes.Impostor);
                         Main.StandardRoles[pc.PlayerId] = RoleTypes.Impostor;
                         foreach (var ar in list)
-                            Main.DesyncRoles[(pc.PlayerId, ar.PlayerId)] = RoleTypes.Crewmate;
+                            Main.DesyncRoles[(pc.PlayerId, ar)] = RoleTypes.Crewmate;
                         break;
                     case BaseRoles.Shapeshifter:
-                        List<PlayerControl> list2 = new();
+                        List<byte> list2 = new();
                         foreach (var ar in PlayerControl.AllPlayerControls)
                         {
                             if (ar.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
-                                list2.Add(ar);
+                                list2.Add(ar.PlayerId);
                         }
                         Utils.SetDesyncRoleForPlayers(pc, list2, RoleTypes.Crewmate, RoleTypes.Shapeshifter);
                         Main.StandardRoles[pc.PlayerId] = RoleTypes.Shapeshifter;
                         foreach (var ar in list2)
-                            Main.DesyncRoles[(pc.PlayerId, ar.PlayerId)] = RoleTypes.Crewmate;
+                            Main.DesyncRoles[(pc.PlayerId, ar)] = RoleTypes.Crewmate;
                         break;
                     case BaseRoles.Phantom:
-                        List<PlayerControl> list3 = new();
+                        List<byte> list3 = new();
                         foreach (var ar in PlayerControl.AllPlayerControls)
                         {
                             if (ar.GetRole().BaseRole is BaseRoles.DesyncImpostor or BaseRoles.DesyncShapeshifter or BaseRoles.DesyncPhantom)
-                                list3.Add(ar);
+                                list3.Add(ar.PlayerId);
                         }
                         Utils.SetDesyncRoleForPlayers(pc, list3, RoleTypes.Crewmate, RoleTypes.Phantom);
                         Main.StandardRoles[pc.PlayerId] = RoleTypes.Phantom;
                         foreach (var ar in list3)
-                            Main.DesyncRoles[(pc.PlayerId, ar.PlayerId)] = RoleTypes.Crewmate;
+                            Main.DesyncRoles[(pc.PlayerId, ar)] = RoleTypes.Crewmate;
                         break;
                     case BaseRoles.DesyncImpostor:
                         Utils.SetDesyncRoleForPlayer(pc, RoleTypes.Impostor, RoleTypes.Crewmate);
@@ -564,9 +564,9 @@ namespace MoreGamemodes
             }  
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!pc.GetRole().HasTasks())
+                if (!pc.GetRole().IsCrewmate())
                 {
-                    if (!pc.GetRole().CanUseKillButton() && !pc.AmOwner && !Main.IsModded[pc.PlayerId])
+                    if (!pc.GetRole().CanUseKillButton() && !pc.GetRole().HasTasks() && !pc.AmOwner && !Main.IsModded[pc.PlayerId])
                     {
                         foreach (var task in pc.Data.Tasks)
                         {
@@ -800,8 +800,7 @@ namespace MoreGamemodes
                     TimeSinceDeath[pc.PlayerId] += Time.fixedDeltaTime;
                 else
                     TimeSinceDeath[pc.PlayerId] = 0f;
-
-                if (pc.Data.IsDead) continue;
+                
                 pc.GetRole().OnFixedUpdate();
                 foreach (var addOn in pc.GetAddOns())
                     addOn.OnFixedUpdate();
@@ -831,7 +830,6 @@ namespace MoreGamemodes
 
         public override void OnCompleteTask(PlayerControl __instance)
         {
-            if (__instance.Data.IsDead) return;
             __instance.GetRole().OnCompleteTask();
             foreach (var addOn in __instance.GetAddOns())
                 addOn.OnCompleteTask();
@@ -1101,16 +1099,10 @@ namespace MoreGamemodes
             }
             else if (player.Data.Tasks.Count == 0 && DefaultTasks.ContainsKey(player.PlayerId))
             {
-                player.Data.Tasks = DefaultTasks[player.PlayerId];
-                List<byte> playerTasks = new();
-                List<uint> completedTasks = CompletedTasks[player.PlayerId];
-                foreach (var task in player.Data.Tasks)
-                    playerTasks.Add(task.TypeId);     
-                player.Data.RpcSetTasks(playerTasks.ToArray());
-                foreach (var idx in completedTasks)
-                    player.RpcCompleteTask(idx);
-                if (!AntiCheat.ChangedTasks.Contains(player.PlayerId))
-                    AntiCheat.ChangedTasks.Add(player.PlayerId);
+                player.Data.Tasks.Clear();
+		        for (int i = 0; i < DefaultTasks[player.PlayerId].Count; i++)
+			        player.Data.Tasks.Add(new NetworkedPlayerInfo.TaskInfo(DefaultTasks[player.PlayerId][i].TypeId, DefaultTasks[player.PlayerId][i].Id));
+                player.Data.MarkDirty();
             }
             new LateTask(() => player.RpcSetKillTimer(9.8f), 0.2f);
             player.RpcResetAbilityCooldown();

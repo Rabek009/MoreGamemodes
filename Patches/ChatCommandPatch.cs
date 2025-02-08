@@ -2531,7 +2531,7 @@ namespace MoreGamemodes
                     {
                         new LateTask(() =>
                         {
-                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.None);
+                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.Reliable);
                             var writer = sender.stream;
                             sender.StartMessage(clientId2);
                             sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
@@ -2587,7 +2587,7 @@ namespace MoreGamemodes
             }
             if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None, AmongUsClient.Instance.HostId);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
                 writer.Write(chatText);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 __result = true;
@@ -2602,7 +2602,7 @@ namespace MoreGamemodes
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
             if (chatText.Contains("who", StringComparison.OrdinalIgnoreCase))
                 DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.None);
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable);
             messageWriter.Write(chatText);
             messageWriter.EndMessage();
             __result = true;

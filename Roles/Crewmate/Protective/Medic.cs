@@ -112,17 +112,17 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
-            if (Cooldown > 0f)
-                Cooldown -= Time.fixedDeltaTime;
-            if (Cooldown < 0f)
-                Cooldown = 0f;
-            if (ShieldedPlayer == byte.MaxValue) return;
             if (Player.Data.IsDead)
             {
                 ShieldedPlayer = byte.MaxValue;
                 Player.RpcSetAbilityUses(-1f);
                 return;
             }
+            if (Cooldown > 0f)
+                Cooldown -= Time.fixedDeltaTime;
+            if (Cooldown < 0f)
+                Cooldown = 0f;
+            if (ShieldedPlayer == byte.MaxValue) return;
             var player = Utils.GetPlayerById(ShieldedPlayer);
             if (player == null || player.Data.IsDead)
             {
@@ -172,6 +172,13 @@ namespace MoreGamemodes
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>");
             }
             return "";
+        }
+
+        public override void OnRevive()
+        {
+            Cooldown = 10f;
+            ShieldedPlayer = byte.MaxValue;
+            Player.RpcSetAbilityUses(1f);
         }
 
         public bool OnCheckMurder(PlayerControl killer, PlayerControl target)

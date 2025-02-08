@@ -67,6 +67,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             if (AbilityDuration > -1f)
             {
                 AbilityDuration -= Time.fixedDeltaTime;
@@ -87,7 +88,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player || pc.AmOwner) continue;
-                CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityStart", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityStart", SendOption.Reliable);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                     .WriteVector2(Player.transform.position)
@@ -131,13 +132,21 @@ namespace MoreGamemodes
             return opt;
         }
 
+        public override void OnRevive()
+        {
+            AbilityDuration = -1f;
+            ControlledDrone = null;
+            DronePosition = Vector2.zero;
+            RealPosition = null;
+        }
+
         public void EndAbility()
         {
             AbilityDuration = -1f;
             if (Player.AmOwner)
                 Player.Visible = true;
             Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityEnd", SendOption.None);
+            CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityEnd", SendOption.Reliable);
             sender.StartMessage(-1);
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(Player.transform.position)
@@ -170,7 +179,7 @@ namespace MoreGamemodes
             Player.StartCoroutine(Player.CoSetRole(role, true));
             Player.MyPhysics.CancelPet();
             Player.NetTransform.SnapTo(Player.transform.position, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("CancelLadderDroner", SendOption.None);
+            CustomRpcSender sender = CustomRpcSender.Create("CancelLadderDroner", SendOption.Reliable);
             sender.StartMessage(Player.GetClientId());
             sender.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
                 .EndRpc();
@@ -191,7 +200,7 @@ namespace MoreGamemodes
             {
                 if (!pc.AmOwner && pc != Player)
                 {
-                    CustomRpcSender sender2 = CustomRpcSender.Create("CancelLadder", SendOption.None);
+                    CustomRpcSender sender2 = CustomRpcSender.Create("CancelLadder", SendOption.Reliable);
                     sender2.StartMessage(pc.GetClientId());
                     sender2.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
                         .EndRpc();

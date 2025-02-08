@@ -31,6 +31,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             if (ProtectionTime > 0f)
                 ProtectionTime -= Time.fixedDeltaTime;
             if (ProtectionTime < 0f)
@@ -52,6 +53,11 @@ namespace MoreGamemodes
             if (ProtectionTime > 0f)
                 return Utils.ColorString(Color.cyan, "\n<size=1.8>[PROTECTED]</size>");
             return "";
+        }
+
+        public override void OnRevive()
+        {
+            ProtectionTime = 0f;
         }
 
         public Immortal(PlayerControl player)

@@ -39,7 +39,7 @@ namespace MoreGamemodes
 
             PlayerControl pc = __instance.myPlayer;
             if (CustomGamemode.Instance.PetAction && callId == 49)
-                AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.None, -1));
+                AmongUsClient.Instance.FinishRpcImmediately(AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.Reliable, -1));
             if (pc.Data.IsDead || MeetingHud.Instance || Main.TimeSinceLastPet[pc.PlayerId] < 0.5f) return true;
             if (CustomGamemode.Instance.PetAction)
             {

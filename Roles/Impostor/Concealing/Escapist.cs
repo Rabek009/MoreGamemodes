@@ -53,6 +53,12 @@ namespace MoreGamemodes
             return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Marked position: " + TranslationController.Instance.GetString((SystemTypes)MarkedPositionRoom) + "</size>");
         }
 
+        public override void OnRevive()
+        {
+            MarkedPosition = null;
+            MarkedPositionRoom = null;
+        }
+
         public Escapist(PlayerControl player)
         {
             Role = CustomRoles.Escapist;

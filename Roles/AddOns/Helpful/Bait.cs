@@ -24,7 +24,7 @@ namespace MoreGamemodes
                         break;
                     }
                 }
-                if (!MeetingHud.Instance && killer != null && killer.Data != null && !killer.Data.IsDead && !killer.Data.Disconnected && Player != null && Player.Data != null && bodyExists)
+                if (!MeetingHud.Instance && killer != null && killer != Player && !killer.Data.IsDead && Player != null && Player.Data.IsDead && bodyExists)
                     killer.ForceReportDeadBody(Player.Data);
             }, Math.Max(0.15f, ReportDelay.GetFloat()), "Bait self report");
         }

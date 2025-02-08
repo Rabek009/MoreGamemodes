@@ -22,6 +22,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             if (AbilityDuration > -1f)
             {
                 AbilityDuration -= Time.fixedDeltaTime;
@@ -81,6 +82,11 @@ namespace MoreGamemodes
         public override bool IsCompatible(AddOns addOn)
         {
             return addOn != AddOns.Lurker || CanUseVents.GetBool();
+        }
+
+        public override void OnRevive()
+        {
+            AbilityDuration = -1f;
         }
 
         public TimeFreezer(PlayerControl player)

@@ -19,7 +19,7 @@ namespace MoreGamemodes
             var skinId = player.Data.Outfits[PlayerOutfitType.Default].SkinId;
             var petId = player.Data.Outfits[PlayerOutfitType.Default].PetId;
             var visorId = player.Data.Outfits[PlayerOutfitType.Default].VisorId;
-            CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.None);
+            CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.Reliable);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + sprite;
@@ -74,7 +74,7 @@ namespace MoreGamemodes
                 playerControl.Visible = false;
                 return;
             }
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage(6);
             writer.Write(AmongUsClient.Instance.GameId);
             writer.WritePacked(player.GetClientId());
@@ -93,7 +93,7 @@ namespace MoreGamemodes
 
         public virtual void OnMeeting()
         {
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
 			writer.StartMessage(5);
 			writer.Write(AmongUsClient.Instance.GameId);
 			writer.StartMessage(5);
@@ -111,7 +111,7 @@ namespace MoreGamemodes
                 playerControl.notRealPlayer = true;
                 playerControl.NetTransform.SnapTo(new Vector2(50f, 50f));
                 AmongUsClient.Instance.NetIdCnt += 1U;
-                MessageWriter msg = MessageWriter.Get(SendOption.None);
+                MessageWriter msg = MessageWriter.Get(SendOption.Reliable);
 			    msg.StartMessage(5);
 			    msg.Write(AmongUsClient.Instance.GameId);
 			    AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
@@ -143,7 +143,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner) continue;
-                    CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.None);
+                    CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.Reliable);
                     MessageWriter writer = sender.stream;
                     sender.StartMessage(pc.GetClientId());
                     writer.StartMessage(1);
@@ -177,7 +177,7 @@ namespace MoreGamemodes
                 var skinId = player.Data.Outfits[PlayerOutfitType.Default].SkinId;
                 var petId = player.Data.Outfits[PlayerOutfitType.Default].PetId;
                 var visorId = player.Data.Outfits[PlayerOutfitType.Default].VisorId;
-                CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
                 player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + Sprite;
@@ -222,7 +222,7 @@ namespace MoreGamemodes
             playerControl.notRealPlayer = true;
             playerControl.NetTransform.SnapTo(new Vector2(50f, 50f));
             AmongUsClient.Instance.NetIdCnt += 1U;
-            MessageWriter msg = MessageWriter.Get(SendOption.None);
+            MessageWriter msg = MessageWriter.Get(SendOption.Reliable);
 			msg.StartMessage(5);
 			msg.Write(AmongUsClient.Instance.GameId);
 			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
@@ -257,7 +257,7 @@ namespace MoreGamemodes
                 var skinId = player.Data.Outfits[PlayerOutfitType.Default].SkinId;
                 var petId = player.Data.Outfits[PlayerOutfitType.Default].PetId;
                 var visorId = player.Data.Outfits[PlayerOutfitType.Default].VisorId;
-                CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.None);
+                CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
                 player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + sprite;
@@ -303,7 +303,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner) continue;
-                    CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.None);
+                    CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.Reliable);
                     MessageWriter writer = sender.stream;
                     sender.StartMessage(pc.GetClientId());
                     writer.StartMessage(1);

@@ -1,4 +1,3 @@
-using UnityEngine;
 using AmongUs.GameOptions;
 using System.Collections.Generic;
 

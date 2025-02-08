@@ -4,6 +4,7 @@ namespace MoreGamemodes
     {
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             if (IsRevealed())
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)

@@ -79,7 +79,7 @@ namespace MoreGamemodes
 		                Vector2 vector = Utils.GetVentById(ventId).transform.position;
 		                vector -= player.Collider.offset;
 		                player.NetTransform.SnapTo(vector);
-                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.None, -1);
+                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, -1);
 		                writer.WritePacked(ventId);
 		                AmongUsClient.Instance.FinishRpcImmediately(writer);
                         CoEnterVentPatch.PlayersToKick.Remove(playerId);
@@ -140,7 +140,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsRoleblocked[pc.PlayerId]) continue;
-                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(6);
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.WritePacked(pc.GetClientId());
@@ -160,7 +160,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsFrozen[pc.PlayerId]) continue;
-                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(6);
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.WritePacked(pc.GetClientId());
@@ -197,7 +197,7 @@ namespace MoreGamemodes
                     }
                     if (pc.GetClosestVent().Id == LastClosestVent[pc.PlayerId]) continue;
                     LastClosestVent[pc.PlayerId] = pc.GetClosestVent().Id; 
-                    MessageWriter writer = MessageWriter.Get(SendOption.None);
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -264,7 +264,7 @@ namespace MoreGamemodes
                 if (player != null && pc != player) continue;
                 if (BlockVentInteraction(pc))
                 {
-                    MessageWriter writer = MessageWriter.Get(SendOption.None);
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -311,7 +311,7 @@ namespace MoreGamemodes
                 }
                 else
                 {
-                    MessageWriter writer = MessageWriter.Get(SendOption.None);
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());

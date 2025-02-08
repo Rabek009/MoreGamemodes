@@ -15,6 +15,9 @@ namespace MoreGamemodes
             player.RpcRevive();
             Player.RpcSetDeathReason(DeathReasons.Suicide);
             Player.RpcExileV2();
+            player.GetRole().OnRevive();
+            foreach (var addOn in player.GetAddOns())
+                addOn.OnRevive();
             return false;
         }
 

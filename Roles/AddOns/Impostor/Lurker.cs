@@ -7,6 +7,7 @@ namespace MoreGamemodes
     {
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             if ((Player.inVent || Player.walkingToVent || Player.MyPhysics.Animations.IsPlayingEnterVentAnimation() ||Player.MyPhysics.Animations.Animator.GetCurrentAnimation() == Player.MyPhysics.Animations.group.ExitVentAnim) && Main.KillCooldowns[Player.PlayerId] > 0.001f)
             {
                 Timer += Time.fixedDeltaTime;

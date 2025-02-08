@@ -44,6 +44,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             PlayerControl targetPlayer = Utils.GetPlayerById(Target);
             if (Target == byte.MaxValue || targetPlayer == null || targetPlayer.Data.IsDead || !targetPlayer.GetRole().IsCrewmate())
             {

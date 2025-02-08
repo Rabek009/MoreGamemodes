@@ -101,6 +101,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             if (Cooldown > -1f)
                 Cooldown -= Time.fixedDeltaTime;
             if (Cooldown <= 0f && Cooldown > -1f)
@@ -113,6 +114,11 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             return Utils.ColorString(Color.red, "\n<size=1.8>Infect cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
+        }
+
+        public override void OnRevive()
+        {
+            Cooldown = 10f;
         }
 
         public Parasite(PlayerControl player)

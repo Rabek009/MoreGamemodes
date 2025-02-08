@@ -109,6 +109,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             if (Cooldown > 0f)
                 Cooldown -= Time.fixedDeltaTime;
             if (Cooldown < 0f)
@@ -147,6 +148,11 @@ namespace MoreGamemodes
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>");
             }
             return "";
+        }
+
+        public override void OnRevive()
+        {
+            Cooldown = 10f;
         }
 
         public bool CanKill(PlayerControl target)

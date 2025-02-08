@@ -38,6 +38,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            if (Player.Data.IsDead) return;
             Timer += Time.fixedDeltaTime;
             PlayerControl targetPlayer = Utils.GetPlayerById(Target);
             if (Target == byte.MaxValue || targetPlayer == null || targetPlayer.Data.IsDead || targetPlayer.GetRole().IsImpostor() || Timer >= TargetChangeTime.GetFloat())
@@ -59,6 +60,11 @@ namespace MoreGamemodes
                 return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>");
             }
             return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: None</size>");
+        }
+
+        public override void OnRevive()
+        {
+            ChangeTarget();
         }
 
         public void ChangeTarget()

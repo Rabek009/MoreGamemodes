@@ -125,7 +125,7 @@ namespace MoreGamemodes
         public static void SyncSettings(IGameOptions opt, int targetClientId = -1)
         {
             Il2CppStructArray<byte> byteArray = GameManager.Instance.LogicOptions.gameOptionsFactory.ToBytes(opt, false);
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage(targetClientId == -1 ? Tags.GameData : Tags.GameDataTo);
             {
                 writer.Write(AmongUsClient.Instance.GameId);
@@ -173,7 +173,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc == PlayerControl.LocalPlayer) continue;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.None, pc.GetClientId());
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, pc.GetClientId());
                     writer.Write("");
                     AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
@@ -224,7 +224,7 @@ namespace MoreGamemodes
         {
             if (deadBodyParent == null || !Main.GameStarted) return;
             CreateDeadBody(position, colorId, deadBodyParent);
-            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.None);
+            var sender = CustomRpcSender.Create("Create Dead Body", SendOption.Reliable);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             sender.StartRpc(deadBodyParent.NetId, (byte)RpcCalls.SetColor)
@@ -472,14 +472,14 @@ namespace MoreGamemodes
             }, 0.5f);
         }
 
-        public static void SetDesyncRoleForPlayers(PlayerControl player, List<PlayerControl> list, RoleTypes listRole, RoleTypes othersRole)
+        public static void SetDesyncRoleForPlayers(PlayerControl player, List<byte> list, RoleTypes listRole, RoleTypes othersRole)
         {
             RpcSetRolePatch.RoleAssigned[player.PlayerId] = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner)
                 {
-                    player.StartCoroutine(player.CoSetRole(list.Contains(pc) ? listRole : othersRole, true));
+                    player.StartCoroutine(player.CoSetRole(list.Contains(pc.PlayerId) ? listRole : othersRole, true));
                     continue;
                 }
                 CustomRpcSender sender = CustomRpcSender.Create("RpcSetRole fix blackscreen", SendOption.Reliable);
@@ -493,7 +493,7 @@ namespace MoreGamemodes
                 writer.EndMessage();
                 player.Data.Disconnected = disconnected;
                 sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
-                    .Write((ushort)(list.Contains(pc) ? listRole : othersRole))
+                    .Write((ushort)(list.Contains(pc.PlayerId) ? listRole : othersRole))
                     .Write(true)
                     .EndRpc();
                 sender.EndMessage();

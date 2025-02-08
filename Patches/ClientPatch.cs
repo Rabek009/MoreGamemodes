@@ -16,7 +16,7 @@ namespace MoreGamemodes
         public static bool Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ClientData client)
         {
             if (!__instance.AmHost) return true;
-            if (client != null && BanManager.BannedFriendCodes.Contains(client.FriendCode))
+            if (client != null && (BanManager.BannedFriendCodes.Contains(client.FriendCode) || BanManager.BannedHashedPuids.Contains(client.GetHashedPuid())))
             {
                 AmongUsClient.Instance.KickPlayer(client.Id, true);
                 return false;
@@ -186,7 +186,7 @@ namespace MoreGamemodes
             VoteBanSystem.Instance = Object.Instantiate(AmongUsClient.Instance.VoteBanPrefab);
 			AmongUsClient.Instance.Spawn(VoteBanSystem.Instance, -2, SpawnFlags.None);
             new LateTask(() => {
-                MessageWriter writer = MessageWriter.Get(SendOption.None);
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(5);
                 writer.Write(AmongUsClient.Instance.GameId);
 			    writer.StartMessage(5);
