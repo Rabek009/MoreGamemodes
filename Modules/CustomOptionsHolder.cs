@@ -1182,9 +1182,11 @@ namespace MoreGamemodes
                 .SetColor(Color.gray);
             Executioner.SetupOptionItem();
             Jester.SetupOptionItem();
+            SoulCollector.SetupOptionItem();
             NeutralKilling = TextOptionItem.Create(1000000, "Neutral killing", TabGroup.NeutralRoles)
                 .SetColor(Color.gray);
             Arsonist.SetupOptionItem();
+            Ninja.SetupOptionItem();
             Pelican.SetupOptionItem();
             SerialKiller.SetupOptionItem();
 

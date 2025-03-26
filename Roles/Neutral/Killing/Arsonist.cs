@@ -180,7 +180,7 @@ namespace MoreGamemodes
             {
                 List<byte> winners = new();
                 winners.Add(Player.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.Arsonist);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorsByKill, winners, CustomWinners.Arsonist);
                 return true;
             }
             return false;

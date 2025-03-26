@@ -5,6 +5,7 @@ using Il2CppSystem.Collections.Generic;
 using InnerNet;
 using UnityEngine;
 using System.Linq;
+using AmongUs.GameOptions;
 
 using Object = UnityEngine.Object;
 
@@ -145,7 +146,7 @@ namespace MoreGamemodes
                 System.Collections.Generic.List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     winners.Add(pc.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.CrewmatesByVote, winners);
             }
             else
             {
@@ -211,6 +212,33 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost || !Main.ApplyBanList.Value || !ban) return;
             BanManager.AddBanPlayer(AmongUsClient.Instance.GetClient(__instance.selectedClientId));
+        }
+    }
+
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HostGame))]
+    class HostGamePatch
+    {
+        public static void Prefix(InnerNetClient __instance, [HarmonyArgument(0)] ref IGameOptions settings)
+        {
+            if (settings.MaxPlayers < 4)
+                settings.SetInt(Int32OptionNames.MaxPlayers, 4);
+            if (settings.MaxPlayers > 15)
+                settings.SetInt(Int32OptionNames.MaxPlayers, 15);
+            if (settings.NumImpostors < 1)
+                settings.SetInt(Int32OptionNames.NumImpostors, 1);
+            if (settings.NumImpostors > 3)
+                settings.SetInt(Int32OptionNames.NumImpostors, 3);
+            if (settings.GameMode == GameModes.Normal || settings.GameMode == GameModes.NormalFools)
+            {
+                if (settings.GetInt(Int32OptionNames.KillDistance) < 0)
+                    settings.SetInt(Int32OptionNames.KillDistance, 0);
+                if (settings.GetInt(Int32OptionNames.KillDistance) > 2)
+                    settings.SetInt(Int32OptionNames.KillDistance, 2);
+                if (settings.GetFloat(FloatOptionNames.PlayerSpeedMod) <= 0f)
+                    settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 0.0001f);
+                if (settings.GetFloat(FloatOptionNames.PlayerSpeedMod) > 3f)
+                    settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 3f);
+            }
         }
     }
 

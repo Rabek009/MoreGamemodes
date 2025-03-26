@@ -100,7 +100,7 @@ namespace MoreGamemodes
             {
                 List<byte> winners = new();
                 winners.Add(Player.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorByKill, winners, CustomWinners.SerialKiller);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorsByKill, winners, CustomWinners.SerialKiller);
                 return true;
             }
             return false;

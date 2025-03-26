@@ -15,7 +15,7 @@ namespace MoreGamemodes
                     if (BaseWarsGamemode.instance.GetTeam(pc) != Team)
                         winners.Add(pc.PlayerId);
                 }
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorBySabotage, winners);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorsBySabotage, winners);
                 Bottom.Despawn();
                 Top.Despawn();
                 HealthDisplay.Despawn();

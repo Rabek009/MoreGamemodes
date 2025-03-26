@@ -20,6 +20,12 @@ namespace MoreGamemodes
             }
         }
 
+        public override bool OnCheckMurder(PlayerControl target)
+        {
+            if (AbilityDuration > 0f && !CanKillDuringFreeze.GetBool()) return false;
+            return true;
+        }
+
         public override void OnFixedUpdate()
         {
             if (Player.Data.IsDead) return;
@@ -47,8 +53,8 @@ namespace MoreGamemodes
                 ClassicGamemode.instance.SetFreezeTimer(pc, FreezeDuration.GetFloat());
                 ClassicGamemode.instance.SetBlindTimer(pc, FreezeDuration.GetFloat());
                 ClassicGamemode.instance.SetRoleblockTimer(pc, FreezeDuration.GetFloat());
+                pc.SyncPlayerSettings();
             }
-            Utils.SyncAllSettings();
             Utils.SetAllVentInteractions();
             AbilityDuration = FreezeDuration.GetFloat();
             new LateTask(() => Player.RpcSetAbilityCooldown(FreezeDuration.GetFloat()), 0.2f);
@@ -75,7 +81,7 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (AbilityDuration > 0f)
-                return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>[TIME FROZEN]</size>");
+                return Utils.ColorString(Color, "\n<size=1.8>[TIME FROZEN]</size>");
             return "";
         }
 
@@ -106,6 +112,7 @@ namespace MoreGamemodes
         public static OptionItem FreezeCooldown;
         public static OptionItem FreezeDuration;
         public static OptionItem CanUseVents;
+        public static OptionItem CanKillDuringFreeze;
         public static void SetupOptionItem()
         {
             Chance = RoleOptionItem.Create(500100, CustomRoles.TimeFreezer, TabGroup.ImpostorRoles, false);
@@ -118,6 +125,8 @@ namespace MoreGamemodes
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
             CanUseVents = BooleanOptionItem.Create(500104, "Can use vents", false, TabGroup.ImpostorRoles, false)
+                .SetParent(Chance);
+            CanKillDuringFreeze = BooleanOptionItem.Create(500105, "Can kill during freeze", true, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.TimeFreezer] = Chance;
             Options.RolesCount[CustomRoles.TimeFreezer] = Count;

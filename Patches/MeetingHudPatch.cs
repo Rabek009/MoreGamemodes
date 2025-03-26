@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using AmongUs.GameOptions;
 using UnityEngine;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -59,7 +60,7 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             foreach (var netObject in CustomNetObject.CustomObjects)
-                netObject.RpcTeleport(netObject.Position);
+                netObject.RpcTeleport(netObject.Position, SendOption.Reliable);
             CustomGamemode.Instance.OnVotingComplete(__instance, states, exiled, tie);
         }
     }

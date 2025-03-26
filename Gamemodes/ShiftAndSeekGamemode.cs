@@ -10,7 +10,11 @@ namespace MoreGamemodes
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
-            Utils.SyncAllSettings();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor)
+                    pc.SyncPlayerSettings();
+            }
         }
         
         public override void OnSetFilterText(HauntMenuMinigame __instance)
@@ -157,7 +161,11 @@ namespace MoreGamemodes
         {
             if (Main.Timer >= Options.SnSImpostorsBlindTime.GetFloat() && Main.Timer < Options.SnSImpostorsBlindTime.GetFloat() + 1f && Main.GameStarted)
             {
-                Utils.SyncAllSettings();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data.Role.IsImpostor)
+                        pc.SyncPlayerSettings();
+                }
                 Main.Timer += 1f;
             }
         }

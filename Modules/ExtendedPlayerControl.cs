@@ -7,6 +7,7 @@ using Il2CppInterop.Runtime.InteropTypes;
 using System.Collections.Generic;
 using System.Data;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using System;
 
 using Object = UnityEngine.Object;
 
@@ -51,45 +52,55 @@ namespace MoreGamemodes
         public static void RpcTeleport(this PlayerControl player, Vector2 position)
         {
             if (MeetingHud.Instance) return;
-            if ((player.inVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation()) && !player.inMovingPlat)
+            if (player.onLadder || player.MyPhysics.Animations.IsPlayingAnyLadderAnimation())
             {
-                player.MyPhysics.RpcExitVent(player.GetClosestVent().Id);
-                new LateTask(() => player.RpcTeleport(position), 0.5f, "Retry Teleport");
+                player.RpcCancelLadder();
+                new LateTask(() => player.RpcTeleport(position), 0.2f, "Retry Teleport");
                 return;
             }
-            if (player.onLadder || player.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || player.inMovingPlat)
+            if (player.inMovingPlat)
             {
                 new LateTask(() => player.RpcTeleport(position), 0.1f, "Retry Teleport");
+                return;
+            }
+            if (player.inVent || player.MyPhysics.Animations.IsPlayingEnterVentAnimation())
+            {
+                player.MyPhysics.RpcExitVent(player.GetClosestVent().Id);
+                new LateTask(() => player.RpcTeleport(position), 0.2f, "Retry Teleport");
                 return;
             }
             if (Main.GameStarted && CustomGamemode.Instance.Gamemode == Gamemodes.Classic && player.GetRole().Role == CustomRoles.Droner)
             {
                 var dronerRole = player.GetRole() as Droner;
-                if (dronerRole != null)
+                if (dronerRole != null && dronerRole.ControlledDrone != null)
                 {
                     player.RpcSetDronerRealPosition(position);
                     if (AmongUsClient.Instance.AmClient && !player.AmOwner)
                     {
-                        player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 328));
+                        player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 128));
                     }
+                    CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
                         if (pc.AmOwner || pc == player) continue;
-                        MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable, pc.GetClientId());
-                        NetHelpers.WriteVector2(position, writer2);
-                        writer2.Write((ushort)(player.NetTransform.lastSequenceId + 16383 + 8));
-                        AmongUsClient.Instance.FinishRpcImmediately(writer2);
+                        sender.AutoStartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, pc.GetClientId())
+                            .WriteVector2(position)
+                            .Write((ushort)(player.NetTransform.lastSequenceId + 16383 + 2))
+                            .EndRpc();
+                        sender.EndMessage();
                     }
+                    sender.SendMessage();
+                    return;
                 }
             }
             if (AmongUsClient.Instance.AmClient)
             {
-                player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 328));
+                player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 128));
             }
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable);
             NetHelpers.WriteVector2(position, writer);
-            writer.Write((ushort)(player.NetTransform.lastSequenceId + 8));
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            writer.Write((ushort)(player.NetTransform.lastSequenceId + 2));
+            writer.EndMessage();
         }
 
         public static void RpcRandomVentTeleport(this PlayerControl player)
@@ -153,6 +164,31 @@ namespace MoreGamemodes
             writer.Write(name);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
             Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
+        }
+
+        public static void SyncPlayerName(this PlayerControl player, bool isMeeting, bool force, bool classicMeeting = false)
+        {
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+            bool doSend = false;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                var name = player.BuildPlayerName(pc, isMeeting, classicMeeting);
+                if (!force && Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] == name) continue;
+                Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] = name;
+                if (pc.AmOwner)
+                {
+                    player.cosmetics.nameText.SetText(name);
+                    continue;
+                }
+                sender.AutoStartRpc(player.NetId, (byte)RpcCalls.SetName, pc.GetClientId())
+                    .Write(player.Data.NetId)
+                    .Write(name)
+                    .EndRpc();
+                sender.EndMessage();
+                doSend = true;
+            }
+            if (doSend)
+                sender.SendMessage();
         }
 
         public static bool TryCast<T>(this Il2CppObjectBase obj, out T casted)
@@ -319,8 +355,7 @@ namespace MoreGamemodes
         public static void RpcExileV2(this PlayerControl player)
         {
             player.Exiled();
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            AmongUsClient.Instance.SendRpc(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable);
         }
 
         public static void RpcUnmoddedReactorFlash(this PlayerControl pc, float duration)
@@ -336,7 +371,6 @@ namespace MoreGamemodes
             writer.WriteNetObject(pc);
             writer.Write((byte)128);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
-
             new LateTask(() =>
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(ShipStatus.Instance.NetId, (byte)RpcCalls.UpdateSystem, SendOption.Reliable, clientId);
@@ -345,7 +379,6 @@ namespace MoreGamemodes
                 writer.Write((byte)16);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
             }, duration, "Fix Desync Reactor");
-
             if (GameOptionsManager.Instance.CurrentGameOptions.MapId == 4)
                 new LateTask(() =>
                 {
@@ -407,12 +440,10 @@ namespace MoreGamemodes
 
         public static IGameOptions BuildGameOptions(this PlayerControl player, float killCooldown = -1f, float abilityCooldown = -1f)
         {
-            IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV08(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
+            IGameOptions opt = Main.RealOptions.Restore(new NormalGameOptionsV09(new UnityLogger().Cast<Hazel.ILogger>()).Cast<IGameOptions>());
             opt = CustomGamemode.Instance.BuildGameOptions(player, opt);
             if (ExplosionHole.LastSpeedDecrease[player.PlayerId] > 0)
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * ((100f - ExplosionHole.LastSpeedDecrease[player.PlayerId]) / 100f));
-            if (opt.GetByte(ByteOptionNames.MapId) == 3)
-                opt.RoleOptions.SetRoleRate(RoleTypes.Engineer, 0, 0);
             if (killCooldown >= 0) opt.SetFloat(FloatOptionNames.KillCooldown, killCooldown);
             if (abilityCooldown >= 0)
             {
@@ -446,7 +477,7 @@ namespace MoreGamemodes
                             prefix += "<size=1.6>" + Utils.ColorString(addOn.Color, "(" + addOn.AddOnName + ")") + " </size>";
                     }
                     if (player == seer || seer.Data.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()) || player.GetRole().IsRoleRevealed(seer) || seer.GetRole().SeePlayerRole(player))
-                        prefix += "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "\n</size>";
+                        prefix += "<size=1.6>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText(false)) + "\n</size>";
                     foreach (var symbol in ClassicGamemode.instance.NameSymbols[(player.PlayerId, seer.PlayerId)].Values)
                         postfix += Utils.ColorString(symbol.Item2, symbol.Item1);
                     if (seer.GetRole().Role == CustomRoles.EvilGuesser || seer.GetRole().Role == CustomRoles.NiceGuesser)
@@ -513,10 +544,10 @@ namespace MoreGamemodes
             if (player == null) return;
             Main.StandardRoles[player.PlayerId] = role;
             player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable);
             writer.Write((ushort)role);
             writer.Write(true);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            writer.EndMessage();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)))
@@ -527,18 +558,14 @@ namespace MoreGamemodes
             Main.KillCooldowns[player.PlayerId] = 0f;
         }
 
-        public static void RpcSetRoleV3(this PlayerControl player, RoleTypes role, bool forEndGame)
+        public static void RpcSetRoleV3(this PlayerControl player, RoleTypes role)
         {
             if (player == null) return;
-            if (forEndGame)
-                RoleManager.Instance.SetRole(player, role);
-            else
-                player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
+            player.StartCoroutine(player.CoSetRole(role, true));
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable);
             writer.Write((ushort)role);
             writer.Write(true);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-            Main.KillCooldowns[player.PlayerId] = 0f;
+            writer.EndMessage();
         }
 
         public static PlainShipRoom GetPlainShipRoom(this PlayerControl pc)
@@ -569,6 +596,7 @@ namespace MoreGamemodes
                 new LateTask(() => {
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
+                        bool syncSettings = ClassicGamemode.instance.IsFrozen[pc.PlayerId] || ClassicGamemode.instance.IsBlinded[pc.PlayerId];
                         ClassicGamemode.instance.FreezeTimer[pc.PlayerId] = 0f;
                         ClassicGamemode.instance.BlindTimer[pc.PlayerId] = 0f;
                         ClassicGamemode.instance.RoleblockTimer[pc.PlayerId] = 0f;
@@ -579,16 +607,14 @@ namespace MoreGamemodes
                         pc.GetRole().OnMeeting();
                         foreach (var addOn in pc.GetAddOns())
                             addOn.OnMeeting();
-                        Utils.SyncAllSettings();
+                        if (syncSettings)
+                            pc.SyncPlayerSettings();
                         Utils.SetAllVentInteractions();
                     }
                 }, 0.01f);
                 new LateTask(() => {
                     foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                            pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true, true), ar, true);
-                    }
+                        pc.SyncPlayerName(true, true, true);
                 }, 0.5f);
             }
         }
@@ -597,7 +623,7 @@ namespace MoreGamemodes
         {
             if (!Main.StandardRoles.ContainsKey(player.PlayerId))
             {
-                player.RpcSetRoleV3(RoleTypes.Crewmate, false);
+                player.RpcSetRoleV3(RoleTypes.Crewmate);
                 PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
                 return;
             }
@@ -749,6 +775,7 @@ namespace MoreGamemodes
                 player.RpcSetPet(Main.StandardPets[player.PlayerId]);
                 player.RpcSetDeathReason(DeathReasons.Alive);
                 PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
+                return;
             }
             player.RpcSetRoleV2(Main.StandardRoles[player.PlayerId]);
             foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
@@ -791,7 +818,7 @@ namespace MoreGamemodes
             new LateTask(() => {
                 player.RpcSetNamePrivate(player.BuildPlayerName(player, false), player, true);
                 var outfit = player.Data.Outfits[PlayerOutfitType.Default];
-                var sender = CustomRpcSender.Create("Set Unshift Button", SendOption.Reliable);
+                var sender = CustomRpcSender.Create(SendOption.Reliable);
                 sender.StartMessage(player.GetClientId());
                 sender.StartRpc(player.NetId, RpcCalls.SetColor)
                     .Write(player.Data.NetId)
@@ -881,44 +908,99 @@ namespace MoreGamemodes
             Main.NameMessages[player.PlayerId].Add((message, 0f));
         }
 
-        public static void RpcResetInvisibility(this PlayerControl player)
+        public static void RpcMakeInvisible(this PlayerControl player, bool isPhantom = false)
         {
-            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic || player == null) return;
+            if (Main.IsInvisible[player.PlayerId]) return;
+            if (isPhantom && CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return;
+            player.RpcSetPet("");
+            if (!isPhantom)
+                player.RpcMakeInvisibleModded();
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!pc.AmOwner && !pc.GetRole().IsImpostor() && pc.GetRole().BaseRole != BaseRoles.Tracker && pc != player)
-                {
-                    CustomRpcSender sender = CustomRpcSender.Create("ResetInvisibility", SendOption.Reliable);
-                    sender.StartMessage(pc.GetClientId());
-                    sender.StartRpc(player.NetId, (byte)RpcCalls.Exiled)
-                        .EndRpc();
-                    var role = Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, pc.PlayerId)] : Main.StandardRoles[player.PlayerId];
-                    sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
-                        .Write((ushort)role)
-                        .Write(true)
-                        .EndRpc();
-                    sender.StartRpc(player.NetId, (byte)RpcCalls.CancelPet)
-                        .EndRpc();
-                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(new Vector2(50f, 50f))
-                        .Write((ushort)(player.NetTransform.lastSequenceId + 32767))
-                        .EndRpc();
-                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(new Vector2(50f, 50f))
-                        .Write((ushort)(player.NetTransform.lastSequenceId + 32767 + 16383))
-                        .EndRpc();
-                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(new Vector2(50f, 50f))
-                        .Write(player.NetTransform.lastSequenceId)
-                        .EndRpc();
-                    sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(new Vector2(50f, 50f))
-                        .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
-                        .EndRpc();
-                    sender.EndMessage();
-                    sender.SendMessage();
-                }
+                if (pc.AmOwner || pc == player || (!isPhantom && Main.IsModded[pc.PlayerId]) || (isPhantom && pc.GetRole().IsImpostor())) continue;
+                sender.StartMessage(pc.GetClientId());
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write(player.NetTransform.lastSequenceId)
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
+                    .EndRpc();
+                sender.EndMessage();
             }
+            sender.SendMessage();
+            Main.IsInvisible[player.PlayerId] = true;
+        }
+
+        public static void RpcMakeVisible(this PlayerControl player, bool isPhantom = false)
+        {
+            if (!Main.IsInvisible[player.PlayerId]) return;
+            if (isPhantom && CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return;
+            player.RpcSetPet(Main.StandardPets[player.PlayerId]);
+            if (!isPhantom)
+                player.RpcMakeVisibleModded();
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.AmOwner || pc == player || (!isPhantom && Main.IsModded[pc.PlayerId]) || (isPhantom && pc.GetRole().IsImpostor())) continue;
+                sender.StartMessage(pc.GetClientId());
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write((ushort)(player.NetTransform.lastSequenceId + 32767))
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write((ushort)(player.NetTransform.lastSequenceId + 32767 + 16383))
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(player.transform.position)
+                    .Write(player.NetTransform.lastSequenceId)
+                    .EndRpc();
+                sender.EndMessage();
+            }
+            sender.SendMessage();
+            Main.IsInvisible[player.PlayerId] = false;
+        }
+
+        public static void RpcResetInvisibility(this PlayerControl player, bool isPhantom = false)
+        {
+            if (!Main.IsInvisible[player.PlayerId]) return;
+            if (isPhantom && CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return;
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.AmOwner || pc == player || (!isPhantom && Main.IsModded[pc.PlayerId]) || (isPhantom && pc.GetRole().IsImpostor())) continue;
+                sender.StartMessage(pc.GetClientId());
+                sender.StartRpc(player.NetId, (byte)RpcCalls.Exiled)
+                    .EndRpc();
+                var role = Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, pc.PlayerId)] : Main.StandardRoles[player.PlayerId];
+                sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)role)
+                    .Write(true)
+                    .EndRpc();
+                sender.StartRpc(player.NetId, (byte)RpcCalls.CancelPet)
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write((ushort)(player.NetTransform.lastSequenceId + 32767))
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write((ushort)(player.NetTransform.lastSequenceId + 32767 + 16383))
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write(player.NetTransform.lastSequenceId)
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(new Vector2(50f, 50f))
+                    .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
+                    .EndRpc();
+                sender.EndMessage();
+            }
+            sender.SendMessage();
         }
 
         public static void SetChatVisible(this PlayerControl player, bool visible)
@@ -971,11 +1053,77 @@ namespace MoreGamemodes
         public static Vector2 GetRealPosition(this PlayerControl player)
         {
             if (player.AmOwner) return player.transform.position;
-            if (player.NetTransform.incomingPosQueue.Count > 0)
+            if (player.NetTransform.incomingPosQueue.Count > 0 && player.NetTransform.isActiveAndEnabled && !player.NetTransform.isPaused)
 		    {
 			    return player.NetTransform.incomingPosQueue.ToArray().Last();
 		    }
             return player.transform.position;
+        }
+
+        public static void RpcCancelLadder(this PlayerControl player)
+        {
+            if (player.Data.IsDead || MeetingHud.Instance) return;
+            bool isDroner = false;
+            Vector2 position = player.transform.position;
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && player.GetRole().Role == CustomRoles.Droner)
+            {
+                Droner dronerRole = player.GetRole() as Droner;
+                if (dronerRole != null && dronerRole.ControlledDrone != null)
+                {
+                    isDroner = true;
+                    position = dronerRole.DronePosition;
+                }
+            }
+            player.NetTransform.SnapTo(player.transform.position, (ushort)(player.NetTransform.lastSequenceId + 128));
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+            sender.StartMessage(-1);
+            sender.StartRpc(player.NetId, (byte)RpcCalls.Exiled)
+                .EndRpc();
+            var role = player.GetSelfRole();
+            sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                .Write((ushort)role)
+                .Write(true)
+                .EndRpc();
+            sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
+                .EndRpc();
+            sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                .WriteVector2(position)
+                .Write(player.NetTransform.lastSequenceId)
+                .EndRpc();
+            sender.EndMessage();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.AmOwner || pc == player) continue;
+                sender.StartMessage(pc.GetClientId());
+                sender.StartRpc(player.NetId, (byte)RpcCalls.Exiled)
+                    .EndRpc();
+                var role2 = RoleTypes.Crewmate;
+                if (!(CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars))
+                    role2 = Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(player.PlayerId, pc.PlayerId)] : Main.StandardRoles[player.PlayerId];
+                sender.StartRpc(player.NetId, (byte)RpcCalls.SetRole)
+                    .Write((ushort)role2)
+                    .Write(true)
+                    .EndRpc();
+                sender.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
+                    .EndRpc();
+                sender.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(player.transform.position)
+                    .Write(player.shouldAppearInvisible || player.invisibilityAlpha < 1f || isDroner ? (ushort)(player.NetTransform.lastSequenceId + 16383) : player.NetTransform.lastSequenceId)
+                    .EndRpc();
+                sender.EndMessage();
+            }
+            sender.SendMessage();
+            new LateTask(() => {
+                if (!MeetingHud.Instance)
+                {
+                    if (player.GetSelfRole().IsImpostor())
+                        player.RpcSetKillTimer(Math.Max(Main.KillCooldowns[player.PlayerId], 0.001f));
+                    if (player.GetSelfRole() != RoleTypes.Crewmate && player.GetSelfRole() != RoleTypes.Impostor && player.GetSelfRole() != RoleTypes.Noisemaker && !isDroner)
+                        player.RpcResetAbilityCooldown();
+                    if (Options.EnableMidGameChat.GetBool())
+                        player.SetChatVisible(true);
+                }        
+            }, 0.2f);
         }
     }
 }

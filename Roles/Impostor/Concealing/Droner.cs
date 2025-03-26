@@ -85,10 +85,10 @@ namespace MoreGamemodes
             ControlledDrone = Utils.RpcCreateDrone(Player, Player.GetRealPosition());
             DronePosition = Player.GetRealPosition();
             Player.RpcSetDronerRealPosition(Player.GetRealPosition());
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player || pc.AmOwner) continue;
-                CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityStart", SendOption.Reliable);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                     .WriteVector2(Player.transform.position)
@@ -99,8 +99,8 @@ namespace MoreGamemodes
                     .Write((ushort)(Player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
-                sender.SendMessage();
             }
+            sender.SendMessage();
             if (Player.AmOwner)
                 Player.Visible = false;
             Player.SyncPlayerSettings();
@@ -118,6 +118,37 @@ namespace MoreGamemodes
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, MessageReader reader)
         {
             return ControlledDrone == null;
+        }
+
+        public override bool OnClimbLadder(Ladder source, bool ladderUsed)
+        {
+            if (RealPosition != null)
+            {
+                if (ladderUsed && AbilityDuration > 0.2f)
+                {
+                    new LateTask(() => {
+                        if (!MeetingHud.Instance)
+                            Player.RpcSetAbilityCooldown(AbilityDuration + 0.99f);
+                    }, 0.2f);
+                }
+                return false;
+            }
+            return true;
+        }
+
+        public override bool OnUsePlatform()
+        {
+            return RealPosition == null;
+        }
+
+        public override bool OnCheckUseZipline(ZiplineBehaviour ziplineBehaviour, bool fromTop)
+        {
+            return RealPosition == null;
+        }
+
+        public override bool OnCheckSporeTrigger(Mushroom mushroom)
+        {
+            return RealPosition == null;
         }
 
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
@@ -145,8 +176,8 @@ namespace MoreGamemodes
             AbilityDuration = -1f;
             if (Player.AmOwner)
                 Player.Visible = true;
-            Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("DronerAbilityEnd", SendOption.Reliable);
+            Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 128));
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             sender.StartMessage(-1);
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(Player.transform.position)
@@ -169,78 +200,6 @@ namespace MoreGamemodes
             Player.SyncPlayerSettings();
             Player.RpcSetVentInteraction();
             Player.RpcResetAbilityCooldown();
-        }
-
-        public void CancelLadder()
-        {
-            if (Player.Data.IsDead || MeetingHud.Instance) return;
-            Player.Die(DeathReason.Exile, false);
-            var role = Main.DesyncRoles.ContainsKey((Player.PlayerId, PlayerControl.LocalPlayer.PlayerId)) ? Main.DesyncRoles[(Player.PlayerId, PlayerControl.LocalPlayer.PlayerId)] : Main.StandardRoles[Player.PlayerId];
-            Player.StartCoroutine(Player.CoSetRole(role, true));
-            Player.MyPhysics.CancelPet();
-            Player.NetTransform.SnapTo(Player.transform.position, (ushort)(Player.NetTransform.lastSequenceId + 328));
-            CustomRpcSender sender = CustomRpcSender.Create("CancelLadderDroner", SendOption.Reliable);
-            sender.StartMessage(Player.GetClientId());
-            sender.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
-                .EndRpc();
-            var role2 = Main.DesyncRoles.ContainsKey((Player.PlayerId, Player.PlayerId)) ? Main.DesyncRoles[(Player.PlayerId, Player.PlayerId)] : Main.StandardRoles[Player.PlayerId];
-            sender.StartRpc(Player.NetId, (byte)RpcCalls.SetRole)
-                .Write((ushort)role2)
-                .Write(true)
-                .EndRpc();
-            sender.StartRpc(Player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
-                .EndRpc();
-            sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                .WriteVector2(DronePosition)
-                .Write(Player.NetTransform.lastSequenceId)
-                .EndRpc();
-            sender.EndMessage();
-            sender.SendMessage();
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (!pc.AmOwner && pc != Player)
-                {
-                    CustomRpcSender sender2 = CustomRpcSender.Create("CancelLadder", SendOption.Reliable);
-                    sender2.StartMessage(pc.GetClientId());
-                    sender2.StartRpc(Player.NetId, (byte)RpcCalls.Exiled)
-                        .EndRpc();
-                    var role3 = Main.DesyncRoles.ContainsKey((Player.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(Player.PlayerId, pc.PlayerId)] : Main.StandardRoles[Player.PlayerId];
-                    sender2.StartRpc(Player.NetId, (byte)RpcCalls.SetRole)
-                        .Write((ushort)role3)
-                        .Write(true)
-                        .EndRpc();
-                    sender2.StartRpc(Player.MyPhysics.NetId, (byte)RpcCalls.CancelPet)
-                        .EndRpc();
-                    sender2.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(Player.transform.position)
-                        .Write((ushort)(Player.NetTransform.lastSequenceId + 32767))
-                        .EndRpc();
-                    sender2.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(Player.transform.position)
-                        .Write((ushort)(Player.NetTransform.lastSequenceId + 32767 + 16383))
-                        .EndRpc();
-                    sender2.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(Player.transform.position)
-                        .Write(Player.NetTransform.lastSequenceId)
-                        .EndRpc();
-                    sender2.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
-                        .WriteVector2(Player.transform.position)
-                        .Write((ushort)(Player.NetTransform.lastSequenceId + 16383))
-                        .EndRpc();
-                    sender2.EndMessage();
-                    sender2.SendMessage();
-                }
-            }
-            new LateTask(() => {
-                if (!MeetingHud.Instance)
-                {
-                    Player.RpcSetKillTimer(Math.Max(Main.KillCooldowns[Player.PlayerId], 0.001f));
-                    if (AbilityDuration > 0f)
-                        Player.RpcSetAbilityCooldown(AbilityDuration + 0.99f);
-                    if (Options.EnableMidGameChat.GetBool())
-                        Player.SetChatVisible(true);
-                }        
-            }, 0.2f);
         }
 
         public Droner(PlayerControl player)

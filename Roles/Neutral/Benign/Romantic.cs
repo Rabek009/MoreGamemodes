@@ -260,13 +260,13 @@ namespace MoreGamemodes
         {
             if (BaseRole == BaseRoles.Crewmate)
             {
-                BaseRole = BaseRoles.DesyncImpostor;
+                BaseRole = CanProtect.GetBool() ? BaseRoles.DesyncPhantom : BaseRoles.DesyncImpostor;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.GetRole().BaseRole is BaseRoles.Impostor or BaseRoles.Shapeshifter or BaseRoles.Phantom && !pc.Data.IsDead)
                         pc.RpcSetDesyncRole(RoleTypes.Crewmate, Player);
                 }
-                Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
+                Player.RpcSetDesyncRole(CanProtect.GetBool() ? RoleTypes.Phantom : RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
                 new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
             }

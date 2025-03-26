@@ -256,7 +256,6 @@ namespace MoreGamemodes
                     case Items.Hack:
                         HackTimer = Options.HackDuration.GetFloat();
                         GameManager.Instance.RpcSetHackActive(true);
-                        Utils.SyncAllSettings();
                         Utils.SetAllVentInteractions();
                         foreach (var ar in PlayerControl.AllPlayerControls)
                             Main.NameColors[(ar.PlayerId, ar.PlayerId)] = Color.yellow;
@@ -307,7 +306,7 @@ namespace MoreGamemodes
                                 if (player.Data.Role.IsImpostor)
                                     winners.Add(player.PlayerId);
                             }
-                            CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorByKill, winners);            
+                            CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorsByKill, winners);            
                         }
                         break;
                     case Items.Trap:
@@ -451,7 +450,6 @@ namespace MoreGamemodes
             {
                 HackTimer = 0f;
                 GameManager.Instance.RpcSetHackActive(false);
-                Utils.SyncAllSettings();
                 Utils.SetAllVentInteractions();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(pc.PlayerId, pc.PlayerId)] = Color.clear;
@@ -544,6 +542,27 @@ namespace MoreGamemodes
             return true;
         }
 
+        public override bool OnClimbLadder(PlayerControl player, Ladder source, bool ladderUsed)
+        {
+            if ((!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && IsHackActive)
+                return false;
+            return true;
+        }
+
+        public override bool OnUsePlatform(PlayerControl __instance)
+        {
+            if ((!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && IsHackActive)
+                return false;
+            return true;
+        }
+
+        public override bool OnCheckUseZipline(PlayerControl target, ZiplineBehaviour ziplineBehaviour, bool fromTop)
+        {
+            if ((!target.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && IsHackActive)
+                return false;
+            return true;
+        }
+
         public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
         {
             int increasedDiscussionTime = TimeSlowersUsed * Options.DiscussionTimeIncrease.GetInt();
@@ -556,17 +575,6 @@ namespace MoreGamemodes
             {
                 opt.SetFloat(FloatOptionNames.CrewLightMod, 0f);
                 opt.SetFloat(FloatOptionNames.ImpostorLightMod, Options.ImpostorVisionInFlash.GetFloat());
-            }
-            if (IsHackActive)
-            {
-                opt.SetFloat(FloatOptionNames.EngineerInVentMaxTime, 1f);
-                opt.SetFloat(FloatOptionNames.EngineerCooldown, 0.001f);
-                opt.SetFloat(FloatOptionNames.ScientistBatteryCharge, 1f);
-                opt.SetFloat(FloatOptionNames.ScientistCooldown, 0.001f);
-                opt.SetFloat(FloatOptionNames.ScientistBatteryCharge, 1f);
-                opt.SetFloat(FloatOptionNames.TrackerCooldown, 0.001f);
-                opt.SetFloat(FloatOptionNames.TrackerDuration, 1f);
-                opt.SetFloat(FloatOptionNames.TrackerDelay, 255f);
             }
             if (BoosterTimer[player.PlayerId] > -1f)
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (Options.BoosterSpeedIncrease.GetInt() / 100f)));

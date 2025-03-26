@@ -1,16 +1,16 @@
 using Hazel;
 using AmongUs.GameOptions;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MoreGamemodes
 {
-    public class Pelican : CustomRole
+    public class Ninja : CustomRole
     {
         public override void OnHudUpate(HudManager __instance)
         {
             base.OnHudUpate(__instance);
             if (Player.Data.IsDead) return;
-            __instance.KillButton.OverrideText("Eat");
             __instance.SabotageButton.SetDisabled();
             __instance.SabotageButton.ToggleVisible(false);
             if (!CanUseVents.GetBool())
@@ -19,9 +19,20 @@ namespace MoreGamemodes
                 __instance.ImpostorVentButton.ToggleVisible(false);
             }
         }
+
+        public override bool OnCheckMurderLate(PlayerControl target)
+        {
+            if (AbilityDuration <= 0f) return true;
+            ClassicGamemode.instance.PlayerKiller[target.PlayerId] = Player.PlayerId;
+            ++Main.PlayerKills[Player.PlayerId];
+            target.RpcMurderPlayer(target, true);
+            Player.RpcSetKillTimer(Main.OptionKillCooldowns[Player.PlayerId]);
+            return false;
+        }
+
         public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
-            if (exiled != null && exiled.Object != null && exiled.Object == Player && BaseRole == BaseRoles.DesyncImpostor)
+            if (exiled != null && exiled.Object != null && exiled.Object == Player && BaseRole == BaseRoles.DesyncPhantom)
             {
                 BaseRole = BaseRoles.Crewmate;
                 Player.RpcSetDesyncRole(RoleTypes.Crewmate, Player);
@@ -39,22 +50,9 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnCheckMurderLate(PlayerControl target)
-        {
-            Player.RpcTeleport(target.transform.position);
-            target.RpcSetDeathReason(DeathReasons.Eaten);
-            target.RpcExileV2();
-            target.RpcSetScanner(false);
-            Player.RpcSetKillTimer(EatCooldown.GetFloat());
-            ++Main.PlayerKills[Player.PlayerId];
-            ClassicGamemode.instance.PlayerKiller[target.PlayerId] = Player.PlayerId;
-            ClassicGamemode.instance.OnMurderPlayer(Player, target);
-            return false;
-        }
-
         public override void OnMurderPlayerAsTarget(PlayerControl killer)
         {
-            if (BaseRole == BaseRoles.DesyncImpostor)
+            if (BaseRole == BaseRoles.DesyncPhantom)
             {
                 BaseRole = BaseRoles.Crewmate;
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -73,7 +71,7 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
-            if (Player.Data.IsDead && BaseRole == BaseRoles.DesyncImpostor)
+            if (Player.Data.IsDead && BaseRole == BaseRoles.DesyncPhantom)
             {
                 BaseRole = BaseRoles.Crewmate;
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -88,6 +86,34 @@ namespace MoreGamemodes
                 Player.Data.RpcSetTasks(new byte[0]);
                 Player.SyncPlayerSettings();
             }
+            if (Player.Data.IsDead) return;
+            if (AbilityDuration > -1f)
+            {
+                AbilityDuration -= Time.fixedDeltaTime;
+            }
+            if (AbilityDuration <= 0f && AbilityDuration > -1f)
+            {
+                AbilityDuration = -1f;
+                Player.RpcMakeVisible();
+                Player.SyncPlayerSettings();
+                Player.RpcSetVentInteraction();
+                Player.RpcResetAbilityCooldown();
+            }
+        }
+
+        public override bool OnCheckVanish()
+        {
+            if (Utils.IsSabotage())
+            {
+                new LateTask(() => Player.RpcSetAbilityCooldown(0.001f), 0.2f);
+                return false;
+            }
+            Player.RpcMakeInvisible();
+            Player.SyncPlayerSettings();
+            Player.RpcSetVentInteraction();
+            AbilityDuration = VanishDuration.GetFloat();
+            new LateTask(() => Player.RpcSetAbilityCooldown(VanishDuration.GetFloat()), 0.2f);
+            return false;
         }
 
         public override bool OnEnterVent(int id)
@@ -103,8 +129,18 @@ namespace MoreGamemodes
 
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
         {
-            opt.SetFloat(FloatOptionNames.KillCooldown, EatCooldown.GetFloat());
+            opt.SetFloat(FloatOptionNames.KillCooldown, KillCooldown.GetFloat());
+            opt.SetFloat(FloatOptionNames.PhantomCooldown, VanishCooldown.GetFloat());
+            if (Player.shouldAppearInvisible || Player.invisibilityAlpha < 1f)
+                opt.SetFloat(FloatOptionNames.PlayerSpeedMod, opt.GetFloat(FloatOptionNames.PlayerSpeedMod) * (1f + (SpeedIncreaseWhileInvisible.GetInt() / 100f)));
             return opt;
+        }
+
+        public override string GetNamePostfix()
+        {
+            if (AbilityDuration > 0f)
+                return Utils.ColorString(Color, "\n<size=1.8>[INVISIBLE]</size>");
+            return "";
         }
 
         public override bool CheckEndCriteria()
@@ -123,7 +159,7 @@ namespace MoreGamemodes
             {
                 List<byte> winners = new();
                 winners.Add(Player.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorsByKill, winners, CustomWinners.Pelican);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.ImpostorsByKill, winners, CustomWinners.Ninja);
                 return true;
             }
             return false;
@@ -131,45 +167,61 @@ namespace MoreGamemodes
 
         public override void OnRevive()
         {
+            AbilityDuration = -1f;
             if (BaseRole == BaseRoles.Crewmate)
             {
-                BaseRole = BaseRoles.DesyncImpostor;
+                BaseRole = BaseRoles.DesyncPhantom;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.GetRole().BaseRole is BaseRoles.Impostor or BaseRoles.Shapeshifter or BaseRoles.Phantom && !pc.Data.IsDead)
                         pc.RpcSetDesyncRole(RoleTypes.Crewmate, Player);
                 }
-                Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
+                Player.RpcSetDesyncRole(RoleTypes.Phantom, Player);
                 Player.SyncPlayerSettings();
                 new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
             }
         }
 
-        public Pelican(PlayerControl player)
+        public Ninja(PlayerControl player)
         {
-            Role = CustomRoles.Pelican;
-            BaseRole = BaseRoles.DesyncImpostor;
+            Role = CustomRoles.Ninja;
+            BaseRole = BaseRoles.DesyncPhantom;
             Player = player;
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
+            AbilityDuration = -1f;
         }
+
+        public float AbilityDuration;
 
         public static OptionItem Chance;
         public static OptionItem Count;
-        public static OptionItem EatCooldown;
+        public static OptionItem KillCooldown;
+        public static OptionItem VanishCooldown;
+        public static OptionItem VanishDuration;
+        public static OptionItem SpeedIncreaseWhileInvisible;
         public static OptionItem CanUseVents;
         public static void SetupOptionItem()
         {
-            Chance = RoleOptionItem.Create(1000200, CustomRoles.Pelican, TabGroup.NeutralRoles, false);
-            Count = IntegerOptionItem.Create(1000201, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
+            Chance = RoleOptionItem.Create(1000400, CustomRoles.Ninja, TabGroup.NeutralRoles, false);
+            Count = IntegerOptionItem.Create(1000401, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            EatCooldown = FloatOptionItem.Create(1000202, "Eat cooldown", new(10f, 60f, 2.5f), 30f, TabGroup.NeutralRoles, false)
+            KillCooldown = FloatOptionItem.Create(1000402, "Kill cooldown", new(10f, 60f, 2.5f), 25f, TabGroup.NeutralRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            CanUseVents = BooleanOptionItem.Create(1000203, "Can use vents", true, TabGroup.NeutralRoles, false)
+            VanishCooldown = FloatOptionItem.Create(1000403, "Vanish cooldown", new(10f, 60f, 5f), 25f, TabGroup.NeutralRoles, false)
+                .SetParent(Chance)
+                .SetValueFormat(OptionFormat.Seconds);
+            VanishDuration = FloatOptionItem.Create(1000404, "Vanish duration", new(1f, 15f, 1f), 3f, TabGroup.NeutralRoles, false)
+                .SetParent(Chance)
+                .SetValueFormat(OptionFormat.Seconds);
+            SpeedIncreaseWhileInvisible = IntegerOptionItem.Create(1000405, "Speed increase while invisible", new(10, 300, 10), 100, TabGroup.NeutralRoles, false)
+                .SetParent(Chance)
+                .SetValueFormat(OptionFormat.Percent);
+            CanUseVents = BooleanOptionItem.Create(1000406, "Can use vents", true, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            Options.RolesChance[CustomRoles.Pelican] = Chance;
-            Options.RolesCount[CustomRoles.Pelican] = Count;
+            Options.RolesChance[CustomRoles.Ninja] = Chance;
+            Options.RolesCount[CustomRoles.Ninja] = Count;
         }
     }
 }

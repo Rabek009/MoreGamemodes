@@ -138,21 +138,8 @@ namespace MoreGamemodes
         public static bool Prefix(PlatformConsole __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
-                return false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && (PlayerControl.LocalPlayer.shouldAppearInvisible || PlayerControl.LocalPlayer.invisibilityAlpha < 1f))
-                return false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
-                return false;
-            if (Options.EnableDisableGapPlatform.GetBool())
-                return false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
-            {
-                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
-                if (dronerRole != null && dronerRole.RealPosition != null)
-                    return false;
-            }
-            return true;
+            if (Options.EnableDisableGapPlatform.GetBool()) return false;
+            return CustomGamemode.Instance.OnUsePlatform(pc.Object);
         }
     }
 
@@ -162,21 +149,8 @@ namespace MoreGamemodes
         public static bool Prefix(ZiplineConsole __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && ClassicGamemode.instance.IsRoleblocked[PlayerControl.LocalPlayer.PlayerId])
-                return false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && (PlayerControl.LocalPlayer.shouldAppearInvisible || PlayerControl.LocalPlayer.invisibilityAlpha < 1f))
-                return false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems && (!pc.Role.IsImpostor || Options.HackAffectsImpostors.GetBool()) && RandomItemsGamemode.instance.IsHackActive)
-                return false;
-            if (Options.EnableDisableZipline.GetBool())
-                return false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
-            {
-                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
-                if (dronerRole != null && dronerRole.RealPosition != null)
-                    return false;
-            }
-            return true;
+            if (Options.EnableDisableZipline.GetBool()) return false;
+            return CustomGamemode.Instance.OnCheckUseZipline(pc.Object, __instance.zipline, __instance.atTop);
         }
     }
 
@@ -235,13 +209,7 @@ namespace MoreGamemodes
         public static bool Prefix(Ladder __instance, [HarmonyArgument(0)] NetworkedPlayerInfo pc, [HarmonyArgument(1)] out bool canUse, [HarmonyArgument(2)] out bool couldUse)
         {
             canUse = couldUse = false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer.GetRole().Role == CustomRoles.Droner)
-            {
-                Droner dronerRole = PlayerControl.LocalPlayer.GetRole() as Droner;
-                if (dronerRole != null && dronerRole.RealPosition != null)
-                    return false;
-            }
-            return true;
+            return CustomGamemode.Instance.OnClimbLadder(pc.Object, __instance, false);
         }
     }
 

@@ -19,7 +19,7 @@ namespace MoreGamemodes
             var skinId = player.Data.Outfits[PlayerOutfitType.Default].SkinId;
             var petId = player.Data.Outfits[PlayerOutfitType.Default].PetId;
             var visorId = player.Data.Outfits[PlayerOutfitType.Default].VisorId;
-            CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.Reliable);
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + sprite;
@@ -55,9 +55,13 @@ namespace MoreGamemodes
             sender.SendMessage();
         }
 
-        public void RpcTeleport(Vector2 position)
+        public void RpcTeleport(Vector2 position, SendOption sendOption)
         {
-            playerControl.NetTransform.RpcSnapTo(position);
+			playerControl.NetTransform.SnapTo(position, (ushort)(playerControl.NetTransform.lastSequenceId + 1));
+		    MessageWriter writer = AmongUsClient.Instance.StartRpc(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo, sendOption);
+		    NetHelpers.WriteVector2(position, writer);
+		    writer.Write(playerControl.NetTransform.lastSequenceId);
+		    writer.EndMessage();
             Position = position;
         }
 
@@ -140,11 +144,11 @@ namespace MoreGamemodes
                 playerControl.cosmetics.colorBlindText.color = Color.clear;
             }, 5f);
             new LateTask(() => {
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                MessageWriter writer = sender.stream;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner) continue;
-                    CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.Reliable);
-                    MessageWriter writer = sender.stream;
                     sender.StartMessage(pc.GetClientId());
                     writer.StartMessage(1);
                     {
@@ -163,8 +167,8 @@ namespace MoreGamemodes
                     }
                     writer.EndMessage();
                     sender.EndMessage();
-                    sender.SendMessage();
                 }
+                sender.SendMessage();
                 playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
             }, 5.1f);
             new LateTask(() => {
@@ -177,7 +181,7 @@ namespace MoreGamemodes
                 var skinId = player.Data.Outfits[PlayerOutfitType.Default].SkinId;
                 var petId = player.Data.Outfits[PlayerOutfitType.Default].PetId;
                 var visorId = player.Data.Outfits[PlayerOutfitType.Default].VisorId;
-                CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
                 player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + Sprite;
@@ -257,7 +261,7 @@ namespace MoreGamemodes
                 var skinId = player.Data.Outfits[PlayerOutfitType.Default].SkinId;
                 var petId = player.Data.Outfits[PlayerOutfitType.Default].PetId;
                 var visorId = player.Data.Outfits[PlayerOutfitType.Default].VisorId;
-                CustomRpcSender sender = CustomRpcSender.Create("SetSprite", SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
                 player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + sprite;
@@ -300,11 +304,11 @@ namespace MoreGamemodes
             Id = MaxId;
             CustomObjects.Add(this);
             new LateTask(() => {
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                MessageWriter writer = sender.stream;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner) continue;
-                    CustomRpcSender sender = CustomRpcSender.Create("SetFakeData", SendOption.Reliable);
-                    MessageWriter writer = sender.stream;
                     sender.StartMessage(pc.GetClientId());
                     writer.StartMessage(1);
                     {
@@ -323,9 +327,8 @@ namespace MoreGamemodes
                     }
                     writer.EndMessage();
                     sender.EndMessage();
-                    sender.SendMessage();
-                
                 }
+                sender.SendMessage();
                 playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
             }, 0.1f);
         }

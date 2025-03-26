@@ -2,6 +2,7 @@
 using AmongUs.GameOptions;
 using System.Collections.Generic;
 using System;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -56,13 +57,7 @@ namespace MoreGamemodes
                 var rand = new Random();
                 byte map = maps[rand.Next(0, maps.Count)];
                 GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, map);
-                if (map == 3)
-                    CreateOptionsPickerPatch.SetDleks = true;
-                else
-                    CreateOptionsPickerPatch.SetDleks = false;
             }
-            else if (CreateOptionsPickerPatch.SetDleks)
-                GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 3);
             if (Options.CurrentGamemode == Gamemodes.PaintBattle)
                 GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
             if (Options.CurrentGamemode is Gamemodes.Jailbreak or Gamemodes.BaseWars && GameOptionsManager.Instance.CurrentGameOptions.MapId != 0 && GameOptionsManager.Instance.CurrentGameOptions.MapId != 3)
@@ -72,7 +67,45 @@ namespace MoreGamemodes
         }
     }
 
-    // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Patches/DleksPatch.cs
+    [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Start))]
+    class GameStartManagerStartPatch
+    {
+        public static void Prefix(GameStartManager __instance)
+        {
+            MapIconByName dleksMap = new()
+            {
+                Name = MapNames.Dleks,
+                MapIcon = __instance.AllMapIcons[0].MapIcon,
+                MapImage = __instance.AllMapIcons[0].MapImage,
+                NameImage = __instance.AllMapIcons[0].NameImage,
+            };
+            __instance.AllMapIcons.Insert(3, dleksMap);
+        }
+    }
+
+    [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.UpdateMapImage))]
+    class UpdateMapImagePatch
+    {
+        public static void Postfix(GameStartManager __instance, [HarmonyArgument(0)] MapNames map)
+        {
+			__instance.MapImage.flipX = map == MapNames.Dleks;
+        }
+    }
+
+    [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.RpcExtendLobbyTimer))]
+    class RpcExtendLobbyTimerPatch
+    {
+        public static bool Prefix(LobbyBehaviour __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost || DestroyableSingleton<TutorialManager>.InstanceExists) return true;
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.ExtendLobbyTimer, SendOption.Reliable);
+		    writer.WritePacked(__instance.currentExtensionId);
+		    writer.EndMessage();
+            return false;
+        }
+    }
+
+    // https://github.com/SuperNewRoles/SuperNewRoles/blob/master/SuperNewRoles/Patches/LobbyBehaviourPatch.cs
     [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Update))]
     public class LobbyBehaviourUpdatePatch
     {

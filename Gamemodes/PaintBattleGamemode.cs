@@ -218,7 +218,7 @@ namespace MoreGamemodes
             }
             foreach (var id in bestPlayers)
                 winners.Add(id);
-            CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByTask, winners);
+            CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.CrewmatesByTask, winners);
         }
 
         public Vector2 GetPaintBattleLocation(byte playerId)

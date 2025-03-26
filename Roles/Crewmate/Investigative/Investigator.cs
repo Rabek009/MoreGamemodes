@@ -63,7 +63,11 @@ namespace MoreGamemodes
         {
             if (!Main.IsModded[Player.PlayerId] && Cooldown > 0f) return false;
             if (AbilityUses < 1f) return false;
-            Main.NameColors[(target.PlayerId, Player.PlayerId)] = ShowRed(target) ? Palette.ImpostorRed : Palette.AcceptedGreen;
+            bool showRed = ShowRed(target);
+            var rand = new System.Random();
+            if (rand.Next(1, 101) <= IncorrectResultChance.GetInt())
+                showRed = !showRed;
+            Main.NameColors[(target.PlayerId, Player.PlayerId)] = showRed ? Palette.ImpostorRed : Palette.AcceptedGreen;
             Player.RpcSetAbilityUses(AbilityUses - 1f);
             Player.RpcSetKillTimer(InvestigateCooldown.GetFloat());
             Cooldown = InvestigateCooldown.GetFloat();
@@ -188,6 +192,7 @@ namespace MoreGamemodes
         public static OptionItem NeutralEvilShowRed;
         public static OptionItem NeutralBenignShowRed;
         public static OptionItem CrewmateKillingShowRed;
+        public static OptionItem IncorrectResultChance;
         public static OptionItem InitialAbilityUseLimit;
         public static OptionItem AbilityUseGainWithEachTaskCompleted;
         public static void SetupOptionItem()
@@ -206,9 +211,12 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             CrewmateKillingShowRed = BooleanOptionItem.Create(100106, "Crewmate killing show red", false, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            InitialAbilityUseLimit = FloatOptionItem.Create(100107, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.CrewmateRoles, false)
+            IncorrectResultChance = IntegerOptionItem.Create(100107, "Incorrect result chance", new(0, 40, 5), 0, TabGroup.CrewmateRoles, false)
+                .SetParent(Chance)
+                .SetValueFormat(OptionFormat.Percent);
+            InitialAbilityUseLimit = FloatOptionItem.Create(100108, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(100108, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.5f, TabGroup.CrewmateRoles, false)
+            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(100109, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.5f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Investigator] = Chance;
             Options.RolesCount[CustomRoles.Investigator] = Count;

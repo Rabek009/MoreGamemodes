@@ -121,6 +121,26 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual bool OnClimbLadder(Ladder source, bool ladderUsed)
+        {
+            return true;
+        }
+
+        public virtual bool OnUsePlatform()
+        {
+            return true;
+        }
+
+        public virtual bool OnCheckUseZipline(ZiplineBehaviour ziplineBehaviour, bool fromTop)
+        {
+            return true;
+        }
+
+        public virtual bool OnCheckSporeTrigger(Mushroom mushroom)
+        {
+            return true;
+        }
+
         public virtual IGameOptions ApplyGameOptions(IGameOptions opt)
         {
             return opt;

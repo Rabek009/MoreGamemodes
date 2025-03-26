@@ -71,6 +71,7 @@ namespace MoreGamemodes
             if (isDeadCache == null) isDeadCache = new();
             isDeadCache.Clear();
             IsCached = false;
+            ExileControllerWrapUpPatch.AntiBlackout_LastExiled = null;
         }
     }
 }

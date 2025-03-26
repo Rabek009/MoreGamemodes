@@ -62,8 +62,9 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> ProtectCooldowns;
     public static Dictionary<byte, float> OptionProtectCooldowns;
     public static Dictionary<byte, float> TimeSinceLastPet;
+    public static Dictionary<byte, bool> IsInvisible;
 
-    public const string CurrentVersion = "2.1.0 dev4";
+    public const string CurrentVersion = "2.1.0 dev5";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -138,13 +139,12 @@ public partial class Main : BasePlugin
         ProtectCooldowns = new Dictionary<byte, float>();
         OptionProtectCooldowns = new Dictionary<byte, float>();
         TimeSinceLastPet = new Dictionary<byte, float>();
+        IsInvisible = new Dictionary<byte, bool>();
         CustomNetObject.CustomObjects = new List<CustomNetObject>();
         CustomNetObject.MaxId = -1;
         RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
         ChatUpdatePatch.SendingSystemMessage = false;
-        CreateOptionsPickerPatch.SetDleks = false;
         CoEnterVentPatch.PlayersToKick = new List<byte>();
-        VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
         ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
         PlayerTagManager.Initialize();
         AntiBlackout.Reset();
@@ -217,13 +217,12 @@ public partial class Main : BasePlugin
                 ProtectCooldowns = new Dictionary<byte, float>();
                 OptionProtectCooldowns = new Dictionary<byte, float>();
                 TimeSinceLastPet = new Dictionary<byte, float>();
+                IsInvisible = new Dictionary<byte, bool>();
                 CustomNetObject.CustomObjects = new List<CustomNetObject>();
                 CustomNetObject.MaxId = -1;
                 RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
                 ChatUpdatePatch.SendingSystemMessage = false;
-                CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
                 CoEnterVentPatch.PlayersToKick = new List<byte>();
-                VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
                 ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
                 AntiBlackout.Reset();
             }

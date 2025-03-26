@@ -74,7 +74,7 @@ namespace MoreGamemodes
                         }
                     }
                 }
-                Utils.SendSpam();
+                Utils.SendSpam(true);
                 __instance.freeChatField.textArea.Clear();
                 __instance.freeChatField.textArea.SetText("");
                 return false;
@@ -93,7 +93,7 @@ namespace MoreGamemodes
                     __instance.freeChatField.textArea.SetText("");
                     return false;
                 }
-                if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && Main.StandardRoles[PlayerControl.LocalPlayer.PlayerId].IsImpostor() && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !PlayerControl.LocalPlayer.Data.IsDead)
+                if ((args[0] == "/radio" || args[0] == "/rd") && Options.EnableMidGameChat.GetBool() && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && Main.StandardRoles[PlayerControl.LocalPlayer.PlayerId].IsImpostor() && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !PlayerControl.LocalPlayer.Data.IsDead)
                 {
                     var message = "";
                     for (int i = 1; i <= args.Length; ++i)
@@ -106,12 +106,11 @@ namespace MoreGamemodes
                         if (PlayerControl.LocalPlayer != pc && pc.Data.Role.IsImpostor)
                             pc.Notify(Utils.ColorString(Palette.ImpostorRed, "[Radio] " + Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + ": " + message));
                     }
-                    Utils.SendSpam();
                     __instance.freeChatField.textArea.Clear();
                     __instance.freeChatField.textArea.SetText("");
                     return false;
                 }
-                if (Options.ProximityChat.GetBool())
+                if (Options.EnableMidGameChat.GetBool() && Options.ProximityChat.GetBool())
                 {
                     var message = "";
                     for (int i = 0; i <= args.Length; ++i)
@@ -127,7 +126,6 @@ namespace MoreGamemodes
                             appearance = "???";
                     }
                     PlayerControl.LocalPlayer.SendProximityMessage(appearance, message);
-                    Utils.SendSpam();
                     __instance.freeChatField.textArea.Clear();
                     __instance.freeChatField.textArea.SetText("");
                     return false;
@@ -151,42 +149,25 @@ namespace MoreGamemodes
                             {
                                 case "theskeld":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "mirahq":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 1);
-                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "polus":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 2);
-                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "dlekseht":
-                                    var mapPicker = Object.FindObjectOfType<GameOptionsMapPicker>();
-                                    if (mapPicker) mapPicker.selectedMapId = 3;
-                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-                                    CreateOptionsPickerPatch.SetDleks = true;
+                                    GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 3);
                                     break;
                                 case "airship":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 4);
-                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "thefungle":
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 5);
-                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                                 case "custom":
                                     subArgs = args.Length < 4 ? "" : args[3];
-                                    if (byte.Parse(subArgs) == 3)
-                                    {
-                                        var mapPicker2 = Object.FindObjectOfType<GameOptionsMapPicker>();
-                                        if (mapPicker2) mapPicker2.selectedMapId = 3;
-                                        GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, 0);
-                                        CreateOptionsPickerPatch.SetDleks = true;
-                                        break;
-                                    }
                                     GameOptionsManager.Instance.CurrentGameOptions.SetByte(ByteOptionNames.MapId, byte.Parse(subArgs));
-                                    CreateOptionsPickerPatch.SetDleks = false;
                                     break;
                             }
                             break;
@@ -845,8 +826,9 @@ namespace MoreGamemodes
                                     Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                     break;
                                 case "jailbreak":
-                                    Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
-                                    Utils.SendChat("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                    Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft.", "Gamemodes");
+                                    Utils.SendChat("You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item", "Gamemodes");
+                                    Utils.SendChat("All prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                     break;
                                 case "deathrun":
                                     Utils.SendChat("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
@@ -909,8 +891,9 @@ namespace MoreGamemodes
                                             Utils.SendChat("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                             break;
                                         case Gamemodes.Jailbreak:
-                                            Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
-                                            Utils.SendChat("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                            Utils.SendChat("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft.", "Gamemodes");
+                                            Utils.SendChat("You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item", "Gamemodes");
+                                            Utils.SendChat("All prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                             break;
                                         case Gamemodes.Deathrun:
                                             Utils.SendChat("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
@@ -1073,7 +1056,7 @@ namespace MoreGamemodes
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);    
                         PlayerControl.LocalPlayer.RpcSetItem(Items.None);
-                        Utils.SendSpam();
+                        Utils.SendSpam(true);
                     }
                     break;
                 case "/n":
@@ -1361,7 +1344,7 @@ namespace MoreGamemodes
                             Utils.GetPlayerById(playerId).RpcExileV2();
                             Utils.GetPlayerById(playerId).RpcGuessPlayer();
                             ++Main.PlayerKills[PlayerControl.LocalPlayer.PlayerId];
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[playerId] + " was guessed", "Guesser"), 1f);
                         }
                         else
@@ -1369,7 +1352,7 @@ namespace MoreGamemodes
                             PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Guessed);
                             PlayerControl.LocalPlayer.RpcExileV2();
                             PlayerControl.LocalPlayer.RpcGuessPlayer();
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + " was guessed", "Guesser"), 1f);
                         }
                     }
@@ -1387,7 +1370,7 @@ namespace MoreGamemodes
                             Utils.GetPlayerById(playerId).RpcExileV2();
                             Utils.GetPlayerById(playerId).RpcGuessPlayer();
                             ++Main.PlayerKills[PlayerControl.LocalPlayer.PlayerId];
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[playerId] + " was guessed", "Guesser"), 1f);
                         }
                         else
@@ -1395,7 +1378,7 @@ namespace MoreGamemodes
                             PlayerControl.LocalPlayer.RpcSetDeathReason(DeathReasons.Guessed);
                             PlayerControl.LocalPlayer.RpcExileV2();
                             PlayerControl.LocalPlayer.RpcGuessPlayer();
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[PlayerControl.LocalPlayer.PlayerId] + " was guessed", "Guesser"), 1f);
                         }
                     }
@@ -1564,7 +1547,7 @@ namespace MoreGamemodes
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Romantic.DisableChatDuringCommsSabotage.GetBool())
                 {
-                    Utils.SendSpam();
+                    Utils.SendSpam(true);
                     return false;
                 }
                 var message = "";
@@ -1595,19 +1578,20 @@ namespace MoreGamemodes
                         }
                     }
                 }
-                Utils.SendSpam();
+                Utils.SendSpam(true);
                 return false;
             }
             if (!Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle && !player.Data.IsDead)
             {
-                Utils.SendSpam();
+                Utils.SendSpam(true);
                 return false;
             }
             if (Options.EnableMidGameChat.GetBool() && Main.GameStarted && !MeetingHud.Instance && CustomGamemode.Instance.Gamemode != Gamemodes.PaintBattle)
             {
                 if (Utils.IsActive(SystemTypes.Comms) && Options.DisableDuringCommsSabotage.GetBool())
                 {
-                    Utils.SendSpam();
+                    if (!Options.ProximityChat.GetBool())
+                        Utils.SendSpam(true);
                     return false;
                 }
                 if ((args[0] == "/radio" || args[0] == "/rd") && Options.ProximityChat.GetBool() && Options.ImpostorRadio.GetBool() && Main.StandardRoles[player.PlayerId].IsImpostor() && (CustomGamemode.Instance.Gamemode == Gamemodes.Classic || CustomGamemode.Instance.Gamemode == Gamemodes.HideAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.ShiftAndSeek || CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems || CustomGamemode.Instance.Gamemode == Gamemodes.Deathrun  || CustomGamemode.Instance.Gamemode == Gamemodes.FreezeTag) && !player.Data.IsDead)
@@ -1623,7 +1607,6 @@ namespace MoreGamemodes
                         if (player != pc && pc.Data.Role.IsImpostor)
                             pc.Notify(Utils.ColorString(Palette.ImpostorRed, "[Radio] " + Main.StandardNames[player.PlayerId] + ": " + message));
                     }
-                    Utils.SendSpam();
                     return false;
                 }
                 if (Options.ProximityChat.GetBool())
@@ -1642,7 +1625,6 @@ namespace MoreGamemodes
                             appearance = "???";
                     }
                     player.SendProximityMessage(appearance, message);
-                    Utils.SendSpam();
                     return false;
                 }
                 return true;
@@ -1810,8 +1792,9 @@ namespace MoreGamemodes
                                     player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                     break;
                                 case "jailbreak":
-                                    player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
-                                    player.RpcSendMessage("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                    player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft.", "Gamemodes");
+                                    player.RpcSendMessage("You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item", "Gamemodes");
+                                    player.RpcSendMessage("All prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                     break;
                                 case "deathrun":
                                     player.RpcSendMessage("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
@@ -1874,8 +1857,9 @@ namespace MoreGamemodes
                                             player.RpcSendMessage("Zombies: Players killed by impostor are turned into zombies and are on impostors side. Zombies can kill crewmates. Zombies have green name and can see impostors. Depending on options crewmate can kill zombies after completing all tasks. Depending on options you become zombie after being killed by zombie. When you get turned into zombie, you can move after next meeting. Depending on options you see arrow pointing to zombie(s). Impostors and zombies can vent if option is turned on.", "Gamemodes");
                                             break;
                                         case Gamemodes.Jailbreak:
-                                            player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft. You can also repair wall in reactor by using shift button.", "Gamemodes");
-                                            player.RpcSendMessage("If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item\n\nAll prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
+                                            player.RpcSendMessage("Jailbreak: There are prisoners and guards. Prisoner win, if he escape. Guards win together, if less than half of prisoners escape. Prisoners can only vent, if they have screwdriver, but guards can vent anytime. As prisoner you can use pet button to switch current recipe. Use shift button to craft item in current recipe or destroy wall in reactor. You use resources to craft. Also use kill button to attack someone. If you beat up prisoner, you steal all his items. If you beat up guard, you get 100 resources and steal his weapon. When your health go down to 0, you get eliminated and respawn after some time. Guards can only attack wanted prisoners. Prisoner will become wanted, when he do something illegal near guard. Guards can use kill button on not wanted players to check them. If that player has illegal (red) item, he becomes wanted. When player is beaten up, he is no longer wanted. As guard you can buy things with money like prisoners craft.", "Gamemodes");
+                                            player.RpcSendMessage("You can also repair wall in reactor by using shift button. If guard beat up prisoner, then prisoner lose all illegal items. Depending on options prisoners can help other after escaping.\nItems:\nResources - prisoners use it to craft items.\nScrewdriver (illegal) - gives prisoner ability to vent\nWeapon (illegal) - has 10 levels. Increase damage depending on level.\nSpaceship part (illegal) - used to craft spaceship.\nSpaceship (illegal) - used to escape.\nBreathing mask - used to escape.\nPickaxe (illegal) - has 10 levels and gives you ability to destroy wall in reactor. Destroying speed depends on level.\nGuard outfit (illegal) - gives you ability to disguise into guard. While disguised as guard, guards can use kill button on you to check uf you're fake guard.\nMoney - used to buy items by guards.\nEnergy drink - increase your speed temporarily.\n\nIllegal actions:\nAttacking\nVenting\nBeing in forbidden room\nDisguising as guard\nHaving illegal item", "Gamemodes");
+                                            player.RpcSendMessage("All prisoners are orange and all guards are blue.\nDo /help jailbreak to see how to play in actual map.", "Gamemodes");
                                             break;
                                         case Gamemodes.Deathrun:
                                             player.RpcSendMessage("Deathrun: Deathrun is normal among us, but there are no cooldowns. There is no kill cooldown and ability cooldown for roles. There is only cooldown at the start of every round. Crewmates have only 1 short tasks (it can't be download data). Depending on options impostors can vent. Meetings can be disabled by host in options.", "Gamemodes");
@@ -2038,7 +2022,7 @@ namespace MoreGamemodes
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);  
                         player.RpcSetItem(Items.None);
-                        Utils.SendSpam();
+                        Utils.SendSpam(true);
                     }
                     break;
                 case "/n":
@@ -2291,7 +2275,7 @@ namespace MoreGamemodes
                             Utils.GetPlayerById(playerId).RpcExileV2();
                             Utils.GetPlayerById(playerId).RpcGuessPlayer();
                             ++Main.PlayerKills[player.PlayerId];
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[playerId] + " was guessed", "Guesser"), 1f);
                         }
                         else
@@ -2299,7 +2283,7 @@ namespace MoreGamemodes
                             player.RpcSetDeathReason(DeathReasons.Guessed);
                             player.RpcExileV2();
                             player.RpcGuessPlayer();
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[player.PlayerId] + " was guessed", "Guesser"), 1f);
                         }
                     }
@@ -2317,7 +2301,7 @@ namespace MoreGamemodes
                             Utils.GetPlayerById(playerId).RpcExileV2();
                             Utils.GetPlayerById(playerId).RpcGuessPlayer();
                             ++Main.PlayerKills[player.PlayerId];
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[playerId] + " was guessed", "Guesser"), 1f);
                         }
                         else
@@ -2325,7 +2309,7 @@ namespace MoreGamemodes
                             player.RpcSetDeathReason(DeathReasons.Guessed);
                             player.RpcExileV2();
                             player.RpcGuessPlayer();
-                            Utils.SendSpam();
+                            Utils.SendSpam(true);
                             new LateTask(() => Utils.SendChat(Main.StandardNames[player.PlayerId] + " was guessed", "Guesser"), 1f);
                         }
                     }
@@ -2531,7 +2515,7 @@ namespace MoreGamemodes
                     {
                         new LateTask(() =>
                         {
-                            var sender = CustomRpcSender.Create("MessagesToSend", SendOption.Reliable);
+                            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                             var writer = sender.stream;
                             sender.StartMessage(clientId2);
                             sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)

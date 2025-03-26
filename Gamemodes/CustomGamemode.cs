@@ -169,7 +169,7 @@ namespace MoreGamemodes
 
         public virtual bool OnEnterVent(PlayerControl player, int id)
         {
-            return (player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor) && GameManager.Instance.LogicOptions.MapId != 3;
+            return (player.Data.Role.Role == RoleTypes.Engineer || player.Data.Role.IsImpostor) && !Main.IsInvisible[player.PlayerId];
         }
 
         public virtual void OnCompleteTask(PlayerControl __instance)
@@ -205,6 +205,26 @@ namespace MoreGamemodes
         public virtual void OnAddVote(int srcClient, int clientId)
         {
             
+        }
+
+        public virtual bool OnClimbLadder(PlayerControl player, Ladder source, bool ladderUsed)
+        {
+            return true;
+        }
+
+        public virtual bool OnUsePlatform(PlayerControl __instance)
+        {
+            return true;
+        }
+
+        public virtual bool OnCheckUseZipline(PlayerControl target, ZiplineBehaviour ziplineBehaviour, bool fromTop)
+        {
+            return true;
+        }
+
+        public virtual bool OnCheckSporeTrigger(PlayerControl __instance, Mushroom mushroom)
+        {
+            return true;
         }
 
         public virtual IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)

@@ -135,7 +135,7 @@ namespace MoreGamemodes
             if (ShieldedPlayer == byte.MaxValue) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc == Player || pc == player || pc.Data.IsDead)
+                if (pc == Player || pc.Data.IsDead)
                     ClassicGamemode.instance.NameSymbols[(ShieldedPlayer, pc.PlayerId)][CustomRoles.Medic] = ("✚", Color);
             }
         }

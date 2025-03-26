@@ -33,12 +33,14 @@ namespace MoreGamemodes
                 exiled.IsDead = true;
             if (AntiBlackout.ShowDoubleAnimation && exiled != null)
             {
+                GameManager.Instance.ShouldCheckForGameEnd = false;
                 AntiBlackout_LastExiled = exiled;
                 Utils.ShowExileAnimation();
                 return;
             }
             if (AntiBlackout.ShowDoubleAnimation && exiled == null && AntiBlackout_LastExiled != null)
             {
+                GameManager.Instance.ShouldCheckForGameEnd = true;
                 exiled = AntiBlackout_LastExiled;
                 AntiBlackout_LastExiled = null;
             }

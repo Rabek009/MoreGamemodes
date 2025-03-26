@@ -96,10 +96,10 @@ namespace MoreGamemodes
 		        {
 			        pc.SetName(name);
 		        }
-		        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(pc.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
+		        MessageWriter writer = AmongUsClient.Instance.StartRpc(pc.NetId, (byte)RpcCalls.SetName, SendOption.Reliable);
 		        writer.Write(pc.Data.NetId);
                 writer.Write(name);
-		        AmongUsClient.Instance.FinishRpcImmediately(writer);
+		        writer.EndMessage();
             }
         }
 

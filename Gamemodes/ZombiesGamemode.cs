@@ -28,7 +28,11 @@ namespace MoreGamemodes
                 }
             }
             Main.Timer = 0f;
-            Utils.SyncAllSettings();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (IsZombie(pc) && GetZombieType(pc) != ZombieTypes.JustTurned)
+                    pc.SyncPlayerSettings();
+            }
             new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -128,7 +132,7 @@ namespace MoreGamemodes
                     if ((IsZombie(pc) && GetZombieType(pc) != ZombieTypes.Dead) || (exiled != null && pc.PlayerId == exiled.PlayerId && Options.EjectedPlayersAreZombies.GetBool()))
                     {
                         var rand = new System.Random();
-                        pc.MyPhysics.RpcBootFromVent(rand.Next(0, ShipStatus.Instance.AllVents.Count));
+                        pc.MyPhysics.RpcExitVent(rand.Next(0, ShipStatus.Instance.AllVents.Count));
                         pc.RpcShapeshift(pc, false);
                     }
                 }
@@ -248,14 +252,19 @@ namespace MoreGamemodes
         {
             if (Main.Timer >= Options.ZombieBlindTime.GetFloat() && Main.Timer < Options.ZombieBlindTime.GetFloat() + 1f && Main.GameStarted)
             {
-                Utils.SyncAllSettings();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (IsZombie(pc) && GetZombieType(pc) != ZombieTypes.JustTurned)
+                        pc.SyncPlayerSettings();
+                }
+                Main.Timer += 1f;
                 Main.Timer += 1f;
             }
         }
 
         public override bool OnEnterVent(PlayerControl player, int id)
         {
-            return ((Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (GetZombieType(player) == ZombieTypes.FullZombie && Options.ZombiesCanVent.GetBool()) || (Main.StandardRoles[player.PlayerId] == RoleTypes.Engineer && !IsZombie(player) && GetKillsRemain(player) <= 0)) && GameManager.Instance.LogicOptions.MapId != 3;
+            return ((Main.StandardRoles[player.PlayerId].IsImpostor() && Options.ZoImpostorsCanVent.GetBool()) || (GetZombieType(player) == ZombieTypes.FullZombie && Options.ZombiesCanVent.GetBool()) || (Main.StandardRoles[player.PlayerId] == RoleTypes.Engineer && !IsZombie(player) && GetKillsRemain(player) <= 0)) && !Main.IsInvisible[player.PlayerId];
         }
 
         public override void OnCompleteTask(PlayerControl __instance)

@@ -10,7 +10,11 @@ namespace MoreGamemodes
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
             Main.Timer = 0f;
-            Utils.SyncAllSettings();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor)
+                    pc.SyncPlayerSettings();
+            }
         }
         
         public override void OnSetFilterText(HauntMenuMinigame __instance)
@@ -202,7 +206,11 @@ namespace MoreGamemodes
         {
             if (Main.Timer >= Options.FtImpostorsBlindTime.GetFloat() && Main.Timer < Options.FtImpostorsBlindTime.GetFloat() + 1f && Main.GameStarted)
             {
-                Utils.SyncAllSettings();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data.Role.IsImpostor)
+                        pc.SyncPlayerSettings();
+                }
                 Main.Timer += 1f;
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -267,6 +275,26 @@ namespace MoreGamemodes
             return true;
         }
 
+        public override bool OnClimbLadder(PlayerControl player, Ladder source, bool ladderUsed)
+        {
+            return !IsFrozen(player);
+        }
+
+        public override bool OnUsePlatform(PlayerControl __instance)
+        {
+            return !IsFrozen(__instance);
+        }
+
+        public override bool OnCheckUseZipline(PlayerControl target, ZiplineBehaviour ziplineBehaviour, bool fromTop)
+        {
+            return !IsFrozen(target);
+        }
+
+        public override bool OnCheckSporeTrigger(PlayerControl __instance, Mushroom mushroom)
+        {
+            return !IsFrozen(__instance);
+        }
+
         public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
         {
             opt.SetInt(Int32OptionNames.NumEmergencyMeetings, 0);
@@ -325,10 +353,10 @@ namespace MoreGamemodes
         {
             AntiCheat.RemovedBodies.Add(player.PlayerId);
             player.RpcSendNoisemakerAlert();
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner || Main.IsModded[pc.PlayerId] || pc == player || (pc.Data.Role.IsImpostor && !GameManager.Instance.LogicOptions.GetNoisemakerImpostorAlert())) continue;
-                CustomRpcSender sender = CustomRpcSender.Create("SendNoisemakerAlert", SendOption.Reliable);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(player.NetId, (byte)RpcCalls.MurderPlayer)
                     .WriteNetObject(player)
@@ -339,8 +367,8 @@ namespace MoreGamemodes
                     .Write(true)
                     .EndRpc();
                 sender.EndMessage();
-                sender.SendMessage();
             }
+            sender.SendMessage();
         }
 
         public FreezeTagGamemode()

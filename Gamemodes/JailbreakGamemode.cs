@@ -226,7 +226,7 @@ namespace MoreGamemodes
             {
                 if (IsGuard(pc))
                 {
-                     pc.RpcSetColor(1);
+                    pc.RpcSetColor(1);
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.blue;
                     pc.RpcSetCurrentRecipe(1000);
@@ -551,6 +551,12 @@ namespace MoreGamemodes
 
         public override void OnFixedUpdate()
         {
+            IsGuardAlive = false;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (IsGuard(pc) && !IsDead[pc.PlayerId])
+                    IsGuardAlive = true;
+            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (HasEscaped(pc)) continue;
@@ -701,7 +707,7 @@ namespace MoreGamemodes
 
         public override bool OnEnterVent(PlayerControl player, int id)
         {
-            return IsGuard(player) || HasItem(player, InventoryItems.Screwdriver);
+            return (IsGuard(player) || HasItem(player, InventoryItems.Screwdriver)) && !Main.IsInvisible[player.PlayerId];
         }
 
         public override bool OnCloseDoors(ShipStatus __instance)
@@ -773,7 +779,7 @@ namespace MoreGamemodes
             }
             else if (!IsGuard(player) && !HasEscaped(player) && player == seer)
             {
-                name += "\nHealth: " + (int)(JailbreakGamemode.instance.PlayerHealth[player.PlayerId] + 0.99f) + "/" + Options.PrisonerHealth.GetFloat();
+                name += "\nHealth: " + (int)(PlayerHealth[player.PlayerId] + 0.99f) + "/" + Options.PrisonerHealth.GetFloat();
                 name += "<" + Utils.ColorToHex(Color.green) + ">";
                 name += "\nResources: " + GetItemAmount(player, InventoryItems.Resources) + "/" + Options.MaximumPrisonerResources.GetInt();
                 if (HasItem(player, InventoryItems.BreathingMaskWithoutOxygen))
@@ -827,21 +833,11 @@ namespace MoreGamemodes
                 }
             }
             if (player.GetPlainShipRoom() != null && player.GetPlainShipRoom().RoomId == SystemTypes.Reactor && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && player == seer)
-                name += "\nWALL [" + ReactorWallHealth + "%]";
+                name += Utils.ColorString(Color.red, "\nWALL [" + ReactorWallHealth + "%]");
             if (ReactorWallHealth <= 0f && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && player == seer)
-                name += "\nWALL DESTROYED!";
-                   
-            if (!IsGuard(player) && player == seer)
-            {
-                bool isGuardAlive = false;
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (IsGuard(pc) && !IsDead[pc.PlayerId])
-                        isGuardAlive = true;
-                }
-                if (!isGuardAlive)
-                    name += "\nNO GUARDS!";
-            }
+                name += Utils.ColorString(Color.red, "\nWALL DESTROYED!");
+            if (!IsGuard(player) && !IsGuardAlive && player == seer)
+                name += Utils.ColorString(Color.red, "\nNO GUARDS!");
             if (TakeoverTimer > 0f && player == seer)
                 name += Utils.ColorString(Color.red, "\nTAKEOVER [" + (int)(TakeoverTimer / Options.PrisonTakeoverDuration.GetFloat() * 100f + 0.99f) + "%]");
             if (player == seer)
@@ -924,8 +920,7 @@ namespace MoreGamemodes
             player.RpcSetDeathReason(DeathReasons.Escaped);
             player.RpcSetRole(RoleTypes.GuardianAngel, true);
             player.Die(DeathReason.Exile, false);
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            AmongUsClient.Instance.SendRpc(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable);
             player.SyncPlayerSettings();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -952,6 +947,7 @@ namespace MoreGamemodes
             OneSecondTimer = 0f;
             ChangeRecipeCooldown = new Dictionary<byte, float>();
             IsDead = new Dictionary<byte, bool>();
+            IsGuardAlive = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 PlayerType[pc.PlayerId] = JailbreakPlayerTypes.None;
@@ -982,6 +978,7 @@ namespace MoreGamemodes
         public float OneSecondTimer;
         public Dictionary<byte, float> ChangeRecipeCooldown;
         public Dictionary<byte, bool> IsDead;
+        public bool IsGuardAlive;
     }
 
     public enum JailbreakPlayerTypes

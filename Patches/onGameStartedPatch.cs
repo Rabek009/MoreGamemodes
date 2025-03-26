@@ -37,9 +37,9 @@ namespace MoreGamemodes
             Main.ProtectCooldowns = new Dictionary<byte, float>();
             Main.OptionProtectCooldowns = new Dictionary<byte, float>();
             Main.TimeSinceLastPet = new Dictionary<byte, float>();
+            Main.IsInvisible = new Dictionary<byte, bool>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
-            VentilationSystemDeterioratePatch.LastClosestVent = new Dictionary<byte, int>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
             PlayerTagManager.ResetPlayerTags();
             AntiBlackout.Reset();
@@ -65,6 +65,7 @@ namespace MoreGamemodes
                 Main.ProtectCooldowns[pc.PlayerId] = 0f;
                 Main.OptionProtectCooldowns[pc.PlayerId] = 0f;
                 Main.TimeSinceLastPet[pc.PlayerId] = 0f;
+                Main.IsInvisible[pc.PlayerId] = false;
                 ExplosionHole.LastSpeedDecrease[pc.PlayerId] = 0;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
@@ -83,7 +84,7 @@ namespace MoreGamemodes
         public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            Utils.SyncAllSettings();
+            PlayerControl.LocalPlayer.SyncPlayerSettings();
             new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
 					PlayerNameColor.Set(pc);
@@ -143,11 +144,10 @@ namespace MoreGamemodes
             bool shouldPerformVentInteractions = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                VentilationSystemDeterioratePatch.LastClosestVent[pc.PlayerId] = pc.GetVentsFromClosest()[0].Id;
                 if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
                 {
-                    VentilationSystemDeterioratePatch.LastClosestVent[pc.PlayerId] = pc.GetVentsFromClosest()[0].Id;
                     shouldPerformVentInteractions = true;
+                    break;
                 }
             }
             if (shouldPerformVentInteractions)

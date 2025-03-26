@@ -56,10 +56,10 @@ namespace MoreGamemodes
             if (Target != byte.MaxValue)
             {
                 if (ShowArrowToTarget.GetBool() && Utils.GetPlayerById(Target) != null)
-                    return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>\n" + Utils.GetArrow(Player.GetRealPosition(), Utils.GetPlayerById(Target).transform.position));
-                return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>");
+                    return Utils.ColorString(Color, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>\n" + Utils.GetArrow(Player.GetRealPosition(), Utils.GetPlayerById(Target).transform.position));
+                return Utils.ColorString(Color, "\n<size=1.8>Target: " + Main.StandardNames[Target] + "</size>");
             }
-            return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Target: None</size>");
+            return Utils.ColorString(Color, "\n<size=1.8>Target: None</size>");
         }
 
         public override void OnRevive()

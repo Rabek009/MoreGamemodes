@@ -12,10 +12,7 @@ namespace MoreGamemodes
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
             if (exiled != null && exiled.Object != null)
-            {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                    exiled.Object.RpcSetNamePrivate(exiled.Object.BuildPlayerName(pc, false), pc, true);
-            }
+                exiled.Object.SyncPlayerName(false, true);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 pc.GetRole().OnExile(exiled);
@@ -191,10 +188,10 @@ namespace MoreGamemodes
                         name += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                     name += " remain.<size=0>";
 			        exiled.PlayerName = name;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpc(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.Reliable);
 		            writer.Write(exiled.Object.Data.NetId);
                     writer.Write(name);
-		            AmongUsClient.Instance.FinishRpcImmediately(writer);
+		            writer.EndMessage();
                 }
             }, 5f, "Custom exile message");
         }
@@ -249,7 +246,7 @@ namespace MoreGamemodes
                     {
                         if (CustomRolesHelper.GetRoleChance(role) > 100)
                             PriorityCrewmateRoles.Add(role);
-                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        else if (rand.Next(1, 101) <= CustomRolesHelper.GetRoleChance(role))
                             CrewmateRoles.Add(role);
                     }
                 }
@@ -259,7 +256,7 @@ namespace MoreGamemodes
                     {
                         if (CustomRolesHelper.GetRoleChance(role) > 100)
                             PriorityImpostorRoles.Add(role);
-                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        else if (rand.Next(1, 101) <= CustomRolesHelper.GetRoleChance(role))
                             ImpostorRoles.Add(role);
                     }
                 }
@@ -269,7 +266,7 @@ namespace MoreGamemodes
                     {
                         if (CustomRolesHelper.GetRoleChance(role) > 100)
                             PriorityBenignNeutralRoles.Add(role);
-                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        else if (rand.Next(1, 101) <= CustomRolesHelper.GetRoleChance(role))
                             BenignNeutralRoles.Add(role);
                     }
                 }
@@ -279,7 +276,7 @@ namespace MoreGamemodes
                     {
                         if (CustomRolesHelper.GetRoleChance(role) > 100)
                             PriorityEvilNeutralRoles.Add(role);
-                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        else if (rand.Next(1, 101) <= CustomRolesHelper.GetRoleChance(role))
                             EvilNeutralRoles.Add(role);
                     }
                 }
@@ -289,7 +286,7 @@ namespace MoreGamemodes
                     {
                         if (CustomRolesHelper.GetRoleChance(role) > 100)
                             PriorityKillingNeutralRoles.Add(role);
-                        else if (rand.Next(1, 100) <= CustomRolesHelper.GetRoleChance(role))
+                        else if (rand.Next(1, 101) <= CustomRolesHelper.GetRoleChance(role))
                             KillingNeutralRoles.Add(role);
                     }
                 }
@@ -404,7 +401,7 @@ namespace MoreGamemodes
                 {
                     if (AddOnsHelper.GetAddOnChance(addOn) > 100)
                         PriorityChosenAddOns.Add(addOn);
-                    if (rand.Next(1, 100) <= AddOnsHelper.GetAddOnChance(addOn))
+                    if (rand.Next(1, 101) <= AddOnsHelper.GetAddOnChance(addOn))
                         ChosenAddOns.Add(addOn);
                 }
             }
@@ -727,6 +724,7 @@ namespace MoreGamemodes
                     __instance.Data.IsDead = isDead;
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
+                        bool syncSettings = IsFrozen[pc.PlayerId] || IsBlinded[pc.PlayerId];
                         FreezeTimer[pc.PlayerId] = 0f;
                         BlindTimer[pc.PlayerId] = 0f;
                         RoleblockTimer[pc.PlayerId] = 0f;
@@ -737,16 +735,14 @@ namespace MoreGamemodes
                         pc.GetRole().OnMeeting();
                         foreach (var addOn in pc.GetAddOns())
                             addOn.OnMeeting();
-                        Utils.SyncAllSettings();
+                        if (syncSettings)
+                            pc.SyncPlayerSettings();
                         Utils.SetAllVentInteractions();
                     }
                 }, 0.01f);
                 new LateTask(() => {
                     foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                            pc.RpcSetNamePrivate(pc.BuildPlayerName(ar, true, true), ar, true);
-                    }
+                        pc.SyncPlayerName(true, true, true);
                 }, 0.5f);
             }
             return report;
@@ -790,7 +786,6 @@ namespace MoreGamemodes
                 {
                     RoleblockTimer[pc.PlayerId] = 0f;
                     pc.RpcSetRoleblock(false);
-                    syncSettings = true;
                     pc.RpcSetVentInteraction();
                 }
                 if (syncSettings)
@@ -809,13 +804,11 @@ namespace MoreGamemodes
 
         public override bool OnEnterVent(PlayerControl player, int id)
         {
-            if (GameManager.Instance.LogicOptions.MapId == 3)
-                return false;
             if (RoleblockTimer[player.PlayerId] > 0f)
                 return false;
             if (BlockedVents.Contains(id))
                 return false;
-            if (player.shouldAppearInvisible || player.invisibilityAlpha < 1f)
+            if (Main.IsInvisible[player.PlayerId])
                 return false;
             if (!player.GetRole().OnEnterVent(id))
                 return false;
@@ -882,6 +875,68 @@ namespace MoreGamemodes
                 addOn.OnAddVote(target);
         }
 
+        public override bool OnClimbLadder(PlayerControl player, Ladder source, bool ladderUsed)
+        {
+            if (!player.GetRole().OnClimbLadder(source, ladderUsed))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in player.GetAddOns())
+            {
+                if (!addOn.OnClimbLadder(source, ladderUsed))
+                    cancel = true;
+            }
+            if (!cancel && ladderUsed && (player.shouldAppearInvisible || player.invisibilityAlpha < 1f))
+                player.RpcResetInvisibility();
+            return !cancel;
+        }
+
+        public override bool OnUsePlatform(PlayerControl __instance)
+        {
+            if (IsRoleblocked[__instance.PlayerId])
+                return false;
+            if (__instance.shouldAppearInvisible || __instance.invisibilityAlpha < 1f)
+                return false;
+            if (!__instance.GetRole().OnUsePlatform())
+                return false;
+            bool cancel = false;
+            foreach (var addOn in __instance.GetAddOns())
+            {
+                if (!addOn.OnUsePlatform())
+                    cancel = true;
+            }
+            return !cancel;
+        }
+
+        public override bool OnCheckUseZipline(PlayerControl target, ZiplineBehaviour ziplineBehaviour, bool fromTop)
+        {
+            if (IsRoleblocked[target.PlayerId])
+                return false;
+            if (target.shouldAppearInvisible || target.invisibilityAlpha < 1f)
+                return false;
+            if (!target.GetRole().OnCheckUseZipline(ziplineBehaviour, fromTop))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in target.GetAddOns())
+            {
+                if (!addOn.OnCheckUseZipline(ziplineBehaviour, fromTop))
+                    cancel = true;
+            }
+            return !cancel;
+        }
+
+        public override bool OnCheckSporeTrigger(PlayerControl __instance, Mushroom mushroom)
+        {
+            if (!__instance.GetRole().OnCheckSporeTrigger(mushroom))
+                return false;
+            bool cancel = false;
+            foreach (var addOn in __instance.GetAddOns())
+            {
+                if (!addOn.OnCheckSporeTrigger(mushroom))
+                    cancel = true;
+            }
+            return !cancel;
+        }
+
         public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
         {
             if (player.GetRole() == null) return opt;
@@ -926,7 +981,7 @@ namespace MoreGamemodes
                     prefix += "<size=1.8>" + Utils.ColorString(addOn.Color, "(" + addOn.AddOnName + ")") + " </size>";
             }
             if (player == seer || seer.Data.Role.IsDead || (player.GetRole().IsImpostor() && seer.GetRole().IsImpostor() && Options.SeeTeammateRoles.GetBool()) || player.GetRole().IsRoleRevealed(seer) || seer.GetRole().SeePlayerRole(player))
-                prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText()) + "</size>\n";
+                prefix += "<size=1.8>" + Utils.ColorString(player.GetRole().Color, player.GetRole().RoleName + player.GetRole().GetProgressText(false)) + "</size>\n";
             foreach (var symbol in NameSymbols[(player.PlayerId, seer.PlayerId)].Values)
                 postfix += Utils.ColorString(symbol.Item2, symbol.Item1);
             if (player == seer && !player.Data.IsDead)

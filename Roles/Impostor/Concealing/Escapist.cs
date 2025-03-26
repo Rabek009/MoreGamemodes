@@ -13,6 +13,11 @@ namespace MoreGamemodes
                 __instance.AbilityButton.OverrideText("Mark");
             else
                 __instance.AbilityButton.OverrideText("Teleport");
+            if (!CanUseVents.GetBool())
+            {
+                __instance.ImpostorVentButton.SetDisabled();
+                __instance.ImpostorVentButton.ToggleVisible(false);
+            }
         }
 
         public override void OnMeeting()
@@ -38,6 +43,11 @@ namespace MoreGamemodes
             return false;
         }
 
+        public override bool OnEnterVent(int id)
+        {
+            return CanUseVents.GetBool();
+        }
+
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
         {
             opt.SetFloat(FloatOptionNames.PhantomCooldown, MarkCooldown.GetFloat());
@@ -47,10 +57,15 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (MarkedPosition == null)
-                return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Marked position: None</size>");
+                return Utils.ColorString(Color, "\n<size=1.8>Marked position: None</size>");
             if (MarkedPositionRoom == null)
-                return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Marked position: " + (Main.RealOptions.GetByte(ByteOptionNames.MapId) is 2 or 5 ? "Outside" : "Hallway") + "</size>");
-            return Utils.ColorString(Palette.ImpostorRed, "\n<size=1.8>Marked position: " + TranslationController.Instance.GetString((SystemTypes)MarkedPositionRoom) + "</size>");
+                return Utils.ColorString(Color, "\n<size=1.8>Marked position: " + (Main.RealOptions.GetByte(ByteOptionNames.MapId) is 2 or 5 ? "Outside" : "Hallway") + "</size>");
+            return Utils.ColorString(Color, "\n<size=1.8>Marked position: " + TranslationController.Instance.GetString((SystemTypes)MarkedPositionRoom) + "</size>");
+        }
+
+        public override bool IsCompatible(AddOns addOn)
+        {
+            return addOn != AddOns.Lurker || CanUseVents.GetBool();
         }
 
         public override void OnRevive()
@@ -77,6 +92,7 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static OptionItem MarkCooldown;
         public static OptionItem TeleportCooldown;
+        public static OptionItem CanUseVents;
         public static void SetupOptionItem()
         {
             Chance = RoleOptionItem.Create(500200, CustomRoles.Escapist, TabGroup.ImpostorRoles, false);
@@ -88,6 +104,8 @@ namespace MoreGamemodes
             TeleportCooldown = FloatOptionItem.Create(500203, "Teleport cooldown", new(5f, 45f, 5f), 15f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
+            CanUseVents = BooleanOptionItem.Create(500204, "Can use vents", true, TabGroup.ImpostorRoles, false)
+                .SetParent(Chance);
             Options.RolesChance[CustomRoles.Escapist] = Chance;
             Options.RolesCount[CustomRoles.Escapist] = Count;
         }

@@ -8,11 +8,11 @@ namespace MoreGamemodes
     {
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
-            if (exiled != null && exiled.PlayerId == Target)
+            if (exiled != null && exiled.PlayerId == Target && GameManager.Instance.ShouldCheckForGameEnd && !Options.NoGameEnd.GetBool())
             {
                 List<byte> winners = new();
                 winners.Add(Player.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners, CustomWinners.Executioner);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.CrewmatesByVote, winners, CustomWinners.Executioner);
             }
         }
 

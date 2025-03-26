@@ -220,9 +220,9 @@ namespace MoreGamemodes
                     player.RpcSetColor(6);
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.black;
+                    player.SyncPlayerSettings();
                     AllPlayers.Remove(player);
                 }
-                Utils.SyncAllSettings();
                 if (Options.TeleportAfterExplosion.GetBool())
                 {
                     foreach (var pc in PlayerControl.AllPlayerControls)

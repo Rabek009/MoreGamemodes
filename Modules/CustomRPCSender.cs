@@ -10,7 +10,6 @@ namespace MoreGamemodes
     public class CustomRpcSender
     {
         public MessageWriter stream;
-        public readonly string name;
         public readonly SendOption sendOption;
 
         private State currentState = State.BeforeInit;
@@ -18,19 +17,16 @@ namespace MoreGamemodes
         private int currentRpcTarget;
 
         private CustomRpcSender() { }
-        public CustomRpcSender(string name, SendOption sendOption)
+        public CustomRpcSender(SendOption sendOption)
         {
             stream = MessageWriter.Get(sendOption);
-
-            this.name = name;
             this.sendOption = sendOption;
-            this.currentRpcTarget = -2;
-
+            currentRpcTarget = -2;
             currentState = State.Ready;
         }
-        public static CustomRpcSender Create(string name = "No Name Sender", SendOption sendOption = SendOption.None)
+        public static CustomRpcSender Create(SendOption sendOption = SendOption.None)
         {
-            return new CustomRpcSender(name, sendOption);
+            return new CustomRpcSender(sendOption);
         }
 
         public CustomRpcSender StartMessage(int targetClientId = -1)
@@ -46,12 +42,11 @@ namespace MoreGamemodes
                 stream.Write(AmongUsClient.Instance.GameId);
                 stream.WritePacked(targetClientId);
             }
-
             currentRpcTarget = targetClientId;
             currentState = State.InRootMessage;
             return this;
         }
-        public CustomRpcSender EndMessage(int targetClientId = -1)
+        public CustomRpcSender EndMessage()
         {
             stream.EndMessage();
             currentRpcTarget = -2;
@@ -61,14 +56,11 @@ namespace MoreGamemodes
 
         public CustomRpcSender StartRpc(uint targetNetId, RpcCalls rpcCall)
             => StartRpc(targetNetId, (byte)rpcCall);
-        public CustomRpcSender StartRpc(
-            uint targetNetId,
-            byte callId)
+        public CustomRpcSender StartRpc(uint targetNetId, byte callId)
         {
             stream.StartMessage(2);
             stream.WritePacked(targetNetId);
             stream.Write(callId);
-
             currentState = State.InRpc;
             return this;
         }
@@ -79,23 +71,20 @@ namespace MoreGamemodes
             return this;
         }
 
-        public CustomRpcSender AutoStartRpc(
-            uint targetNetId,
-            byte callId,
-            int targetClientId = -1)
+        public CustomRpcSender AutoStartRpc(uint targetNetId, byte callId, int targetClientId = -1)
         {
             if (targetClientId == -2) targetClientId = -1;
             if (currentRpcTarget != targetClientId)
             {
-                if (currentState == State.InRootMessage) this.EndMessage();
-                this.StartMessage(targetClientId);
+                if (currentState == State.InRootMessage) EndMessage();
+                StartMessage(targetClientId);
             }
-            this.StartRpc(targetNetId, callId);
+            StartRpc(targetNetId, callId);
             return this;
         }
         public void SendMessage()
         {
-            if (currentState == State.InRootMessage) this.EndMessage();
+            if (currentState == State.InRootMessage) EndMessage();
             AmongUsClient.Instance.SendOrDisconnect(stream);
             currentState = State.Finished;
             stream.Recycle();

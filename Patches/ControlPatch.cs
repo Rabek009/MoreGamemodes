@@ -29,7 +29,7 @@ namespace MoreGamemodes
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     winners.Add(pc.PlayerId);
-                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.HumansByVote, winners, CustomWinners.Terminated);
+                CheckEndCriteriaNormalPatch.StartEndGame(GameOverReason.CrewmatesByVote, winners, CustomWinners.Terminated);
             }
 
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.Z, KeyCode.LeftShift }) && Main.GameStarted && !PlayerControl.LocalPlayer.Data.IsDead &&

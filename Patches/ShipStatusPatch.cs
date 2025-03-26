@@ -79,9 +79,9 @@ namespace MoreGamemodes
 		                Vector2 vector = Utils.GetVentById(ventId).transform.position;
 		                vector -= player.Collider.offset;
 		                player.NetTransform.SnapTo(vector);
-                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, -1);
+                        MessageWriter writer = AmongUsClient.Instance.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable);
 		                writer.WritePacked(ventId);
-		                AmongUsClient.Instance.FinishRpcImmediately(writer);
+		                writer.EndMessage();
                         CoEnterVentPatch.PlayersToKick.Remove(playerId);
                         return false;
                     }
@@ -137,10 +137,10 @@ namespace MoreGamemodes
         }
         public static void SerializeHudOverrideSystemV2(HudOverrideSystemType __instance)
         {
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsRoleblocked[pc.PlayerId]) continue;
-                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(6);
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.WritePacked(pc.GetClientId());
@@ -151,16 +151,16 @@ namespace MoreGamemodes
 			    writer.EndMessage();
                 writer.EndMessage();
                 writer.EndMessage();
-                AmongUsClient.Instance.SendOrDisconnect(writer);
-                writer.Recycle();
             }
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
         public static void SerializeHqHudSystemV2(HqHudSystemType __instance)
         {
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsFrozen[pc.PlayerId]) continue;
-                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(6);
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.WritePacked(pc.GetClientId());
@@ -171,54 +171,52 @@ namespace MoreGamemodes
 			    writer.EndMessage();
                 writer.EndMessage();
                 writer.EndMessage();
-                AmongUsClient.Instance.SendOrDisconnect(writer);
-                writer.Recycle();
             }
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
     }
 
     [HarmonyPatch(typeof(VentilationSystem), nameof(VentilationSystem.Deteriorate))]
     class VentilationSystemDeterioratePatch
     {
-        public static Dictionary<byte, int> LastClosestVent;
         public static void Postfix(VentilationSystem __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (!Main.GameStarted) return;
+            int players = 0;
+            foreach (var playerInfo in GameData.Instance.AllPlayers)
+            {
+                if (playerInfo != null && !playerInfo.Disconnected)
+                    ++players;
+            }
+            List<NetworkedPlayerInfo> AllPlayers = new();
+            foreach (var playerInfo in GameData.Instance.AllPlayers)
+            {
+                if (playerInfo != null && !playerInfo.Disconnected)
+                    AllPlayers.Add(playerInfo);
+            }
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
+            bool doSend = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (BlockVentInteraction(pc))
                 {
-                    int players = 0;
-                    foreach (var playerInfo in GameData.Instance.AllPlayers)
-                    {
-                        if (playerInfo != null && !playerInfo.Disconnected)
-                            ++players;
-                    }
-                    if (pc.GetClosestVent().Id == LastClosestVent[pc.PlayerId]) continue;
-                    LastClosestVent[pc.PlayerId] = pc.GetClosestVent().Id; 
-                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
-                    writer.StartMessage(6);
-                    writer.Write(AmongUsClient.Instance.GameId);
-                    writer.WritePacked(pc.GetClientId());
-                    writer.StartMessage(1);
-                    writer.WritePacked(ShipStatus.Instance.NetId);
-                    writer.StartMessage((byte)SystemTypes.Ventilation);
                     int vents = 0;
                     foreach (var vent in ShipStatus.Instance.AllVents)
                     {
                         if (!CustomGamemode.Instance.OnEnterVent(pc, vent.Id))
                             ++vents;
                     }
-                    List<NetworkedPlayerInfo> AllPlayers = new();
-                    foreach (var playerInfo in GameData.Instance.AllPlayers)
-                    {
-                        if (playerInfo != null && !playerInfo.Disconnected)
-                            AllPlayers.Add(playerInfo);
-                    }
-                    int maxVents = Math.Min(vents, AllPlayers.Count);
+                    if (players >= vents) continue;
+                    writer.StartMessage(6);
+                    writer.Write(AmongUsClient.Instance.GameId);
+                    writer.WritePacked(pc.GetClientId());
+                    writer.StartMessage(1);
+                    writer.WritePacked(ShipStatus.Instance.NetId);
+                    writer.StartMessage((byte)SystemTypes.Ventilation);
                     int blockedVents = 0;
-				    writer.WritePacked(maxVents);
+				    writer.WritePacked(AllPlayers.Count);
                     foreach (var vent in pc.GetVentsFromClosest())
                     {
                         if (!CustomGamemode.Instance.OnEnterVent(pc, vent.Id))
@@ -227,7 +225,7 @@ namespace MoreGamemodes
 			                writer.Write((byte)vent.Id);
                             ++blockedVents;
                         }
-                        if (blockedVents >= maxVents)
+                        if (blockedVents >= AllPlayers.Count)
                             break;
                     }
                     writer.WritePacked(__instance.PlayersInsideVents.Count);
@@ -239,9 +237,13 @@ namespace MoreGamemodes
 				    writer.EndMessage();
                     writer.EndMessage();
                     writer.EndMessage();
-                    AmongUsClient.Instance.SendOrDisconnect(writer);
-                    writer.Recycle();
+                    doSend = true;
                 }
+            }
+            if (doSend)
+            {
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
             }
         }
         public static bool BlockVentInteraction(PlayerControl pc)
@@ -258,13 +260,13 @@ namespace MoreGamemodes
         }
         public static void SerializeV2(VentilationSystem __instance, PlayerControl player = null)
         {
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner) continue;
                 if (player != null && pc != player) continue;
                 if (BlockVentInteraction(pc))
                 {
-                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -306,12 +308,10 @@ namespace MoreGamemodes
 				    writer.EndMessage();
                     writer.EndMessage();
                     writer.EndMessage();
-                    AmongUsClient.Instance.SendOrDisconnect(writer);
-                    writer.Recycle();
+                    
                 }
                 else
                 {
-                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -322,10 +322,10 @@ namespace MoreGamemodes
 			        writer.EndMessage();
                     writer.EndMessage();
                     writer.EndMessage();
-                    AmongUsClient.Instance.SendOrDisconnect(writer);
-                    writer.Recycle();
                 }
             }
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
     }
 
@@ -334,8 +334,12 @@ namespace MoreGamemodes
     {
         public static void Postfix()
         {
-            if (!AmongUsClient.Instance.AmHost) return;
-            Utils.SyncAllSettings();
+            if (!AmongUsClient.Instance.AmHost || CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling()) && !pc.GetRole().CanUseKillButton()) || ((pc.GetRole().IsCrewmate() || pc.GetRole().IsNeutralBenign() || pc.GetRole().IsNeutralEvil()) && pc.GetRole().CanUseKillButton()) || (pc.GetRole().Role == CustomRoles.Jester && Jester.HasImpostorVision.GetBool()))
+                    pc.SyncPlayerSettings();
+            }
         }
     }
 
@@ -344,8 +348,12 @@ namespace MoreGamemodes
     {
         public static void Postfix()
         {
-            if (!AmongUsClient.Instance.AmHost) return;
-            Utils.SyncAllSettings();
+            if (!AmongUsClient.Instance.AmHost || CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling()) && !pc.GetRole().CanUseKillButton()) || ((pc.GetRole().IsCrewmate() || pc.GetRole().IsNeutralBenign() || pc.GetRole().IsNeutralEvil()) && pc.GetRole().CanUseKillButton()) || (pc.GetRole().Role == CustomRoles.Jester && Jester.HasImpostorVision.GetBool()))
+                    pc.SyncPlayerSettings();
+            }
         }
     }
 }

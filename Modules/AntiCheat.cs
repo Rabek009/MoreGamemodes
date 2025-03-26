@@ -98,13 +98,8 @@ namespace MoreGamemodes
                 case RpcCalls.Exiled:
                 case RpcCalls.SetName:
                 case RpcCalls.SetColor:
-                case RpcCalls.SetHat:
-                case RpcCalls.SetSkin:
                 case RpcCalls.StartMeeting:
                 case RpcCalls.SendChatNote:
-                case RpcCalls.SetPet:
-                case RpcCalls.SetVisor:
-                case RpcCalls.SetNamePlate:
                 case RpcCalls.SetRole:
                 case RpcCalls.ProtectPlayer:
                 case RpcCalls.Shapeshift:
@@ -303,16 +298,16 @@ namespace MoreGamemodes
                         return true;
                     }
                     if (target2 == null) break;
-                    if (CustomGamemode.Instance.Gamemode is Gamemodes.Classic or Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars) break;
+                    if (CustomGamemode.Instance.Gamemode is Gamemodes.BombTag or Gamemodes.BattleRoyale or Gamemodes.PaintBattle or Gamemodes.KillOrDie or Gamemodes.Jailbreak or Gamemodes.BaseWars or Gamemodes.ColorWars) break;
                     var targetRole = Main.DesyncRoles.ContainsKey((target2.PlayerId, pc.PlayerId)) ? Main.DesyncRoles[(target2.PlayerId, pc.PlayerId)] : Main.StandardRoles[target2.PlayerId];
-                    if (!pc.GetSelfRole().IsImpostor())
+                    if (!pc.GetSelfRole().IsImpostor() && !Main.IsModded[pc.PlayerId])
                     {
                         if (!TimeSinceRoleChange.ContainsKey(pc.PlayerId) || TimeSinceRoleChange[pc.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to kill as crewmate");
                         pc.RpcMurderPlayer(target2, false);
                         return true;
                     }
-                    if (targetRole.IsImpostor())
+                    if (targetRole.IsImpostor() && !Main.IsModded[pc.PlayerId])
                     {
                         if (!TimeSinceRoleChange.ContainsKey(target2.PlayerId) || TimeSinceRoleChange[target2.PlayerId] > 5f)
                             HandleCheat(pc, "Trying to kill impostor");
@@ -545,9 +540,6 @@ namespace MoreGamemodes
                         return true;
                     }
                     break;
-                // case RpcCalls.BootFromVent:
-                //     HandleCheat(physics.myPlayer, "Invalid Rpc");
-                //     return true;
                 case RpcCalls.Pet:
                 case RpcCalls.CancelPet:
                     if (physics.myPlayer.inVent)

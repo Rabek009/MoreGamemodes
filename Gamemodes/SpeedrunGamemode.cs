@@ -77,8 +77,7 @@ namespace MoreGamemodes
                 {
                     pc.RpcSetDeathReason(DeathReasons.Command);
                     pc.Die(DeathReason.Exile, false);
-                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(pc.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
-                    AmongUsClient.Instance.FinishRpcImmediately(writer);
+                    AmongUsClient.Instance.SendRpc(pc.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable);
                 }       
             }
         }

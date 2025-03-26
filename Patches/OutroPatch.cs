@@ -41,7 +41,7 @@ namespace MoreGamemodes
                         foreach (var addOn in ClassicGamemode.instance.AllPlayersAddOns[playerInfo.PlayerId])
                             lastResult += Utils.ColorString(addOn.Color, "(" + addOn.AddOnName + ")") + " ";
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
-                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText()) + " (";
+                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText(true)) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.HideAndSeek:
@@ -69,10 +69,8 @@ namespace MoreGamemodes
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], "★" + Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
                             lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") + " (";
-                        else if (Main.StandardRoles[playerInfo.PlayerId] == RoleTypes.Impostor)
-                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
                         else
-                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
+                            lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(playerInfo.Role.Role)) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.Jailbreak:
@@ -136,7 +134,7 @@ namespace MoreGamemodes
                         foreach (var addOn in ClassicGamemode.instance.AllPlayersAddOns[playerInfo.PlayerId])
                             lastResult += Utils.ColorString(addOn.Color, "(" + addOn.AddOnName + ")") + " ";
                         lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].RoleName);
-                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText()) + " (";
+                        lastResult += Utils.ColorString(ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].Color, ClassicGamemode.instance.AllPlayersRole[playerInfo.PlayerId].GetProgressText(true)) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.HideAndSeek:
@@ -164,10 +162,8 @@ namespace MoreGamemodes
                         lastResult += Utils.ColorString(Palette.PlayerColors[Main.StandardColors[playerInfo.PlayerId]], Main.StandardNames[playerInfo.PlayerId]) + " - ";
                         if (ZombiesGamemode.instance.ZombieType[playerInfo.PlayerId] != ZombieTypes.None)
                             lastResult += Utils.ColorString(Palette.PlayerColors[2], "Zombie") + " (";
-                        else if (Main.StandardRoles[playerInfo.PlayerId] == RoleTypes.Impostor)
-                            lastResult += Utils.ColorString(Palette.ImpostorRed, "Impostor") + " (";
                         else
-                            lastResult += Utils.ColorString(Palette.CrewmateBlue, "Crewmate") + " (";
+                            lastResult += Utils.ColorString(Main.StandardRoles[playerInfo.PlayerId].IsImpostor() ? Palette.ImpostorRed : Palette.CrewmateBlue, Utils.RoleToString(playerInfo.Role.Role)) + " (";
                         lastResult += Utils.ColorString(Main.AllPlayersDeathReason[playerInfo.PlayerId] == DeathReasons.Alive ? Color.green : Color.red, Utils.DeathReasonToString(Main.AllPlayersDeathReason[playerInfo.PlayerId])) + ")";
                         break;
                     case Gamemodes.Jailbreak:
@@ -274,6 +270,14 @@ namespace MoreGamemodes
                         WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Arsonist], "Arsonist");
                         __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Arsonist];
                         break;
+                    case CustomWinners.SoulCollector:
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.SoulCollector], "Soul Collector");
+                        __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.SoulCollector];
+                        break;
+                    case CustomWinners.Ninja:
+                        WinnerText.text += Utils.ColorString(CustomRolesHelper.RoleColors[CustomRoles.Ninja], "Ninja");
+                        __instance.BackgroundBar.material.color = CustomRolesHelper.RoleColors[CustomRoles.Ninja];
+                        break;
                 }
                 if (!(ClassicGamemode.instance.Winner is CustomWinners.None or CustomWinners.Terminated or CustomWinners.NoOne))
                 {
@@ -332,8 +336,8 @@ namespace MoreGamemodes
             Main.ProtectCooldowns = new Dictionary<byte, float>();
             Main.OptionProtectCooldowns = new Dictionary<byte, float>();
             Main.TimeSinceLastPet = new Dictionary<byte, float>();
+            Main.IsInvisible = new Dictionary<byte, bool>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
-            CreateOptionsPickerPatch.SetDleks = GameOptionsManager.Instance.CurrentGameOptions.MapId == 3;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)

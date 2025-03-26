@@ -129,6 +129,26 @@ namespace MoreGamemodes
             return true;
         }
 
+        public virtual bool OnClimbLadder(Ladder source, bool ladderUsed)
+        {
+            return true;
+        }
+
+        public virtual bool OnUsePlatform()
+        {
+            return true;
+        }
+
+        public virtual bool OnCheckUseZipline(ZiplineBehaviour ziplineBehaviour, bool fromTop)
+        {
+            return true;
+        }
+
+        public virtual bool OnCheckSporeTrigger(Mushroom mushroom)
+        {
+            return true;
+        }
+
         public virtual IGameOptions ApplyGameOptions(IGameOptions opt)
         {
             return opt;
@@ -225,7 +245,7 @@ namespace MoreGamemodes
             CustomRoles.Medic;
         }
 
-        public virtual string GetProgressText()
+        public virtual string GetProgressText(bool gameEnded)
         {
             string text = "";
             if (AbilityUses > -1)
@@ -234,7 +254,7 @@ namespace MoreGamemodes
             {
                 int totalTasks = ClassicGamemode.instance.DefaultTasks[Player.PlayerId].Count;
                 int completedTasks = ClassicGamemode.instance.CompletedTasks[Player.PlayerId].Count;
-                if (Utils.IsActive(SystemTypes.Comms))
+                if (Utils.IsActive(SystemTypes.Comms) && !gameEnded)
                     text += " (?/" + totalTasks + ")";
                 else
                     text += " (" + completedTasks + "/" + totalTasks + ")";
@@ -285,6 +305,11 @@ namespace MoreGamemodes
         public virtual bool IsCounted()
         {
             return true;
+        }
+
+        public virtual bool PreventGameEnd()
+        {
+            return false;
         }
 
         public virtual void OnRevive()

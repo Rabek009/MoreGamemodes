@@ -3,7 +3,7 @@
 ## About the mod
 
 More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
-Among Us version: 2024.11.26s<br>
+Among Us version: 16.0.0 (2025.3.25)<br>
 Join to discord server: https://discord.gg/jJe5kPpbFJ
 
 ## Hotkeys
@@ -576,7 +576,7 @@ You can play dleks eht (reversed skeld) map! Venting is bugged, but everything e
 ## Others
 
 ### Max 15 players lobby
-When you set players to 16 or higher, still max 15 players can join.
+When you set players to 16 or higher, still max 15 players can join. But on custom servers you can host lobbies with more players.
 
 ### Bugged cooldown
 If you set cooldown to 0 or lower, you disable this function. 0 second cooldown don't working. Set this value to 0,001 seconds, if you want no kill cooldown.
@@ -597,10 +597,7 @@ https://github.com/Yumenopai/TownOfHost_Y
 5. Delayed spawn from EHR
 https://github.com/Gurge44/EndlessHostRoles
 
-6. Using Mini.RegionInstall to add modded servers
-https://github.com/miniduikboot/Mini.RegionInstall
-
-7. Security guard role idea from The Other Roles
+6. Security guard role idea from The Other Roles
 https://github.com/TheOtherRolesAU/TheOtherRoles
 
 This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.
