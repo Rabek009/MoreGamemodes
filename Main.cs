@@ -64,7 +64,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> TimeSinceLastPet;
     public static Dictionary<byte, bool> IsInvisible;
 
-    public const string CurrentVersion = "2.1.0 dev6";
+    public const string CurrentVersion = "2.1.0 dev5";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
