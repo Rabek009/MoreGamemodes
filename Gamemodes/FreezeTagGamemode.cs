@@ -353,6 +353,7 @@ namespace MoreGamemodes
         {
             AntiCheat.RemovedBodies.Add(player.PlayerId);
             player.RpcSendNoisemakerAlert();
+            bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -367,8 +368,9 @@ namespace MoreGamemodes
                     .Write(true)
                     .EndRpc();
                 sender.EndMessage();
+                doSend = true;
             }
-            sender.SendMessage();
+            sender.SendMessage(doSend);
         }
 
         public FreezeTagGamemode()

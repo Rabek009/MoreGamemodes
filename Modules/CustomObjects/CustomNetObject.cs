@@ -144,6 +144,7 @@ namespace MoreGamemodes
                 playerControl.cosmetics.colorBlindText.color = Color.clear;
             }, 5f);
             new LateTask(() => {
+                bool doSend = false;
                 CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -167,8 +168,9 @@ namespace MoreGamemodes
                     }
                     writer.EndMessage();
                     sender.EndMessage();
+                    doSend = true;
                 }
-                sender.SendMessage();
+                sender.SendMessage(doSend);
                 playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
             }, 5.1f);
             new LateTask(() => {
@@ -304,6 +306,7 @@ namespace MoreGamemodes
             Id = MaxId;
             CustomObjects.Add(this);
             new LateTask(() => {
+                bool doSend = false;
                 CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -327,8 +330,9 @@ namespace MoreGamemodes
                     }
                     writer.EndMessage();
                     sender.EndMessage();
+                    doSend = true;
                 }
-                sender.SendMessage();
+                sender.SendMessage(doSend);
                 playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
             }, 0.1f);
         }

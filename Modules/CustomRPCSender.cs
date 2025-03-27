@@ -82,10 +82,10 @@ namespace MoreGamemodes
             StartRpc(targetNetId, callId);
             return this;
         }
-        public void SendMessage()
+        public void SendMessage(bool doSend = true)
         {
             if (currentState == State.InRootMessage) EndMessage();
-            AmongUsClient.Instance.SendOrDisconnect(stream);
+            if (doSend) AmongUsClient.Instance.SendOrDisconnect(stream);
             currentState = State.Finished;
             stream.Recycle();
         }

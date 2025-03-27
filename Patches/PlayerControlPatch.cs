@@ -757,6 +757,7 @@ namespace MoreGamemodes
                 return false;
             }
             PlayerControl phantom = __instance;
+            bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -783,8 +784,9 @@ namespace MoreGamemodes
 		                .EndRpc();
                     sender.EndMessage();
                 }
+                doSend = true;
             }
-            sender.SendMessage();
+            sender.SendMessage(doSend);
             new LateTask(() => {
                 if (!MeetingHud.Instance && phantom != null && phantom.Data != null && !phantom.Data.IsDead && !phantom.Data.Disconnected)
                     phantom.RpcMakeInvisible(true);
@@ -808,6 +810,7 @@ namespace MoreGamemodes
                 return false;
             }
             PlayerControl phantom = __instance;
+            bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -852,9 +855,11 @@ namespace MoreGamemodes
                         .EndRpc();
 		            sender.EndMessage();
                 }
+                doSend = true;
             }
-            sender.SendMessage();
+            sender.SendMessage(doSend);
             new LateTask(() => {
+                bool doSend = false;
                 CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -873,10 +878,12 @@ namespace MoreGamemodes
                         .Write(true)
                         .EndRpc();
                     sender.EndMessage();
-                    sender.SendMessage();
+                    doSend = true;
                 }
+                sender.SendMessage(doSend);
             }, 1f);
             new LateTask(() => {
+                bool doSend = false;
                 CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
@@ -895,8 +902,9 @@ namespace MoreGamemodes
                         .Write(true)
                         .EndRpc();
                     sender.EndMessage();
-                    sender.SendMessage();
+                    doSend = true;
                 }
+                sender.SendMessage(doSend);
             }, 1.2f);
             if (shouldAnimate)
             {

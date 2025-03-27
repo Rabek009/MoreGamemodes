@@ -314,9 +314,18 @@ namespace MoreGamemodes
             DeathrunGamemode.instance = null;
             BaseWarsGamemode.instance = null;
             FreezeTagGamemode.instance = null;
+            ColorWarsGamemode.instance = null;
             
             if (!AmongUsClient.Instance.AmHost) return;
+            Main.StandardColors = new Dictionary<byte, byte>();
+            Main.StandardNames = new Dictionary<byte, string>();
+            Main.StandardHats = new Dictionary<byte, string>();
+            Main.StandardSkins = new Dictionary<byte, string>();
+            Main.StandardPets = new Dictionary<byte, string>();
+            Main.StandardVisors = new Dictionary<byte, string>();
+            Main.StandardNamePlates = new Dictionary<byte, string>();
             Main.AllShapeshifts = new Dictionary<byte, byte>();  
+            Main.LastNotifyNames = new Dictionary<(byte, byte), string>();
             Main.RealOptions.Restore(GameOptionsManager.Instance.CurrentGameOptions);
             Main.RealOptions = null;
             Main.AllPlayersDeathReason = new Dictionary<byte, DeathReasons>();
@@ -329,7 +338,6 @@ namespace MoreGamemodes
             CustomNetObject.CustomObjects = new List<CustomNetObject>();
             CustomNetObject.MaxId = -1;
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
-            Main.RoleFakePlayer = new Dictionary<byte, uint>();
             Main.PlayerKills = new Dictionary<byte, int>();
             Main.KillCooldowns = new Dictionary<byte, float>();
             Main.OptionKillCooldowns = new Dictionary<byte, float>();

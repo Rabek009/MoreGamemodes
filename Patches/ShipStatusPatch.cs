@@ -137,6 +137,7 @@ namespace MoreGamemodes
         }
         public static void SerializeHudOverrideSystemV2(HudOverrideSystemType __instance)
         {
+            bool doSend = false;
             MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -151,12 +152,14 @@ namespace MoreGamemodes
 			    writer.EndMessage();
                 writer.EndMessage();
                 writer.EndMessage();
+                doSend = true;
             }
-            AmongUsClient.Instance.SendOrDisconnect(writer);
+            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
             writer.Recycle();
         }
         public static void SerializeHqHudSystemV2(HqHudSystemType __instance)
         {
+            bool doSend = false;
             MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -171,8 +174,9 @@ namespace MoreGamemodes
 			    writer.EndMessage();
                 writer.EndMessage();
                 writer.EndMessage();
+                doSend = true;
             }
-            AmongUsClient.Instance.SendOrDisconnect(writer);
+            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
             writer.Recycle();
         }
     }
@@ -184,20 +188,14 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             if (!Main.GameStarted) return;
-            int players = 0;
-            foreach (var playerInfo in GameData.Instance.AllPlayers)
-            {
-                if (playerInfo != null && !playerInfo.Disconnected)
-                    ++players;
-            }
             List<NetworkedPlayerInfo> AllPlayers = new();
             foreach (var playerInfo in GameData.Instance.AllPlayers)
             {
                 if (playerInfo != null && !playerInfo.Disconnected)
                     AllPlayers.Add(playerInfo);
             }
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
             bool doSend = false;
+            MessageWriter writer = MessageWriter.Get(SendOption.None);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (BlockVentInteraction(pc))
@@ -208,7 +206,7 @@ namespace MoreGamemodes
                         if (!CustomGamemode.Instance.OnEnterVent(pc, vent.Id))
                             ++vents;
                     }
-                    if (players >= vents) continue;
+                    if (AllPlayers.Count >= vents) continue;
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -240,11 +238,8 @@ namespace MoreGamemodes
                     doSend = true;
                 }
             }
-            if (doSend)
-            {
-                AmongUsClient.Instance.SendOrDisconnect(writer);
-                writer.Recycle();
-            }
+            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
         public static bool BlockVentInteraction(PlayerControl pc)
         {
@@ -260,6 +255,7 @@ namespace MoreGamemodes
         }
         public static void SerializeV2(VentilationSystem __instance, PlayerControl player = null)
         {
+            bool doSend = false;
             MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -323,8 +319,9 @@ namespace MoreGamemodes
                     writer.EndMessage();
                     writer.EndMessage();
                 }
+                doSend = true;
             }
-            AmongUsClient.Instance.SendOrDisconnect(writer);
+            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
             writer.Recycle();
         }
     }

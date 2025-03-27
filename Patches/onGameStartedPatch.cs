@@ -30,7 +30,6 @@ namespace MoreGamemodes
             Main.DesyncRoles = new Dictionary<(byte, byte), RoleTypes>();
             Main.NameMessages = new Dictionary<byte, List<(string, float)>>();
             Main.NameColors = new Dictionary<(byte, byte), Color>();
-            Main.RoleFakePlayer = new Dictionary<byte, uint>();
             Main.PlayerKills = new Dictionary<byte, int>();
             Main.KillCooldowns = new Dictionary<byte, float>();
             Main.OptionKillCooldowns = new Dictionary<byte, float>();
@@ -58,7 +57,6 @@ namespace MoreGamemodes
                 pc.RpcSetDeathReason(DeathReasons.Alive);
                 Main.NameMessages[pc.PlayerId] = new List<(string, float)>();
                 RpcSetRolePatch.RoleAssigned[pc.PlayerId] = false;
-                Main.RoleFakePlayer[pc.PlayerId] = pc.NetId;
                 Main.PlayerKills[pc.PlayerId] = 0;
                 Main.KillCooldowns[pc.PlayerId] = 0f;
                 Main.OptionKillCooldowns[pc.PlayerId] = 0f;

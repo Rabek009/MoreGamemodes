@@ -85,6 +85,7 @@ namespace MoreGamemodes
             ControlledDrone = Utils.RpcCreateDrone(Player, Player.GetRealPosition());
             DronePosition = Player.GetRealPosition();
             Player.RpcSetDronerRealPosition(Player.GetRealPosition());
+            bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -99,8 +100,9 @@ namespace MoreGamemodes
                     .Write((ushort)(Player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
+                doSend = true;
             }
-            sender.SendMessage();
+            sender.SendMessage(doSend);
             if (Player.AmOwner)
                 Player.Visible = false;
             Player.SyncPlayerSettings();

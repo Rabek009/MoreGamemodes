@@ -119,6 +119,7 @@ namespace MoreGamemodes
                     else
                     {
                         Main.IsModded[__instance.PlayerId] = true;
+                        bool doSend = false;
                         CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                         sender.StartMessage(__instance.GetClientId());
                         foreach (var pc in PlayerControl.AllPlayerControls)
@@ -127,9 +128,10 @@ namespace MoreGamemodes
                             sender.StartRpc(pc.NetId, (byte)CustomRPC.SetCustomRole)
                                 .Write(Main.StandardNames[pc.PlayerId])
                                 .EndRpc();
+                            doSend = true;
                         }
                         sender.EndMessage();
-                        sender.SendMessage();
+                        sender.SendMessage(doSend);
                     }
                     break;
                 case CustomRPC.SetBomb:

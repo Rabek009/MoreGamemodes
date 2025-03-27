@@ -55,7 +55,6 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, List<(string, float)>> NameMessages;
     public static Dictionary<(byte, byte), Color> NameColors;
     public static Dictionary<byte, bool> IsModded;
-    public static Dictionary<byte, uint> RoleFakePlayer;
     public static Dictionary<byte, int> PlayerKills;
     public static Dictionary<byte, float> KillCooldowns;
     public static Dictionary<byte, float> OptionKillCooldowns;
@@ -64,7 +63,7 @@ public partial class Main : BasePlugin
     public static Dictionary<byte, float> TimeSinceLastPet;
     public static Dictionary<byte, bool> IsInvisible;
 
-    public const string CurrentVersion = "2.1.0 dev5";
+    public const string CurrentVersion = "2.1.0 dev6";
     public bool isDev = CurrentVersion.Contains("dev");
     public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -132,7 +131,6 @@ public partial class Main : BasePlugin
         NameMessages = new Dictionary<byte, List<(string, float)>>();
         NameColors = new Dictionary<(byte, byte), Color>();
         IsModded = new Dictionary<byte, bool>();
-        RoleFakePlayer = new Dictionary<byte, uint>();
         PlayerKills = new Dictionary<byte, int>();
         KillCooldowns = new Dictionary<byte, float>();
         OptionKillCooldowns = new Dictionary<byte, float>();
@@ -159,7 +157,7 @@ public partial class Main : BasePlugin
     {
         public static bool Prefix(PlayerControl __instance)
         {
-            if (!AmongUsClient.Instance.AmHost && __instance.PlayerId == 254)
+            if (!AmongUsClient.Instance.AmHost && (__instance.PlayerId == 254 || __instance.PlayerId == 255))
             {
                 __instance.cosmetics.currentBodySprite.BodySprite.color = Color.clear;
                 __instance.cosmetics.colorBlindText.color = Color.clear;
@@ -210,7 +208,6 @@ public partial class Main : BasePlugin
                 NameColors = new Dictionary<(byte, byte), Color>();
                 IsModded = new Dictionary<byte, bool>();
                 IsModded[__instance.PlayerId] = true;
-                RoleFakePlayer = new Dictionary<byte, uint>();
                 PlayerKills = new Dictionary<byte, int>();
                 KillCooldowns = new Dictionary<byte, float>();
                 OptionKillCooldowns = new Dictionary<byte, float>();
@@ -226,7 +223,7 @@ public partial class Main : BasePlugin
                 ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
                 AntiBlackout.Reset();
             }
-            else if (__instance.PlayerId != 255)
+            else if (__instance.PlayerId != 254 && __instance.PlayerId != 255)
                 IsModded[__instance.PlayerId] = false;
         }
     }

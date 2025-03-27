@@ -79,6 +79,7 @@ namespace MoreGamemodes
                     {
                         player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 128));
                     }
+                    bool doSend = false;
                     CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
@@ -88,8 +89,9 @@ namespace MoreGamemodes
                             .Write((ushort)(player.NetTransform.lastSequenceId + 16383 + 2))
                             .EndRpc();
                         sender.EndMessage();
+                        doSend = true;
                     }
-                    sender.SendMessage();
+                    sender.SendMessage(doSend);
                     return;
                 }
             }
@@ -168,8 +170,8 @@ namespace MoreGamemodes
 
         public static void SyncPlayerName(this PlayerControl player, bool isMeeting, bool force, bool classicMeeting = false)
         {
-            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             bool doSend = false;
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 var name = player.BuildPlayerName(pc, isMeeting, classicMeeting);
@@ -187,8 +189,7 @@ namespace MoreGamemodes
                 sender.EndMessage();
                 doSend = true;
             }
-            if (doSend)
-                sender.SendMessage();
+            sender.SendMessage(doSend);
         }
 
         public static bool TryCast<T>(this Il2CppObjectBase obj, out T casted)
@@ -915,6 +916,7 @@ namespace MoreGamemodes
             player.RpcSetPet("");
             if (!isPhantom)
                 player.RpcMakeInvisibleModded();
+            bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -929,8 +931,9 @@ namespace MoreGamemodes
                     .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
+                doSend = true;
             }
-            sender.SendMessage();
+            sender.SendMessage(doSend);
             Main.IsInvisible[player.PlayerId] = true;
         }
 
@@ -941,6 +944,7 @@ namespace MoreGamemodes
             player.RpcSetPet(Main.StandardPets[player.PlayerId]);
             if (!isPhantom)
                 player.RpcMakeVisibleModded();
+            bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -959,8 +963,9 @@ namespace MoreGamemodes
                     .Write(player.NetTransform.lastSequenceId)
                     .EndRpc();
                 sender.EndMessage();
+                doSend = true;
             }
-            sender.SendMessage();
+            sender.SendMessage(doSend);
             Main.IsInvisible[player.PlayerId] = false;
         }
 
@@ -968,6 +973,7 @@ namespace MoreGamemodes
         {
             if (!Main.IsInvisible[player.PlayerId]) return;
             if (isPhantom && CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return;
+            bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -999,8 +1005,9 @@ namespace MoreGamemodes
                     .Write((ushort)(player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
+                doSend = true;
             }
-            sender.SendMessage();
+            sender.SendMessage(doSend);
         }
 
         public static void SetChatVisible(this PlayerControl player, bool visible)

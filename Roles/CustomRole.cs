@@ -15,7 +15,8 @@ namespace MoreGamemodes
         {
             __instance.PetButton.SetDisabled();
             __instance.PetButton.ToggleVisible(false);
-            __instance.ReportButton.OverrideText(TranslationController.Instance.GetString(StringNames.ReportButton));
+            __instance.ReportButton.OverrideText("Report");
+            __instance.KillButton.OverrideText("Kill");
         }
 
         public virtual void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)

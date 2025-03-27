@@ -2513,25 +2513,22 @@ namespace MoreGamemodes
                     }
                     else
                     {
-                        new LateTask(() =>
-                        {
-                            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
-                            var writer = sender.stream;
-                            sender.StartMessage(clientId2);
-                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                                .Write(player.Data.NetId)
-                                .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
-                                .EndRpc();
-                            sender.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
-                                .Write(msg)
-                                .EndRpc();
-                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
-                                .Write(player.Data.NetId)
-                                .Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name)
-                                .EndRpc();
-                            sender.EndMessage();
-                            sender.SendMessage();
-                        }, 0f, "Send Message");
+                        CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                        MessageWriter writer = sender.stream;
+                        sender.StartMessage(clientId2);
+                        sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                            .Write(player.Data.NetId)
+                            .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
+                            .EndRpc();
+                        sender.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
+                            .Write(msg)
+                            .EndRpc();
+                        sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                            .Write(player.Data.NetId)
+                            .Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name)
+                            .EndRpc();
+                        sender.EndMessage();
+                        sender.SendMessage();
                     }
                 }
             }

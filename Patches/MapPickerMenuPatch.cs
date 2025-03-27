@@ -1,6 +1,4 @@
-using System.Linq;
 using HarmonyLib;
-using Il2CppSystem;
 
 namespace MoreGamemodes
 {

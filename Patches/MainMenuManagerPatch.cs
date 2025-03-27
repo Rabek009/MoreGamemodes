@@ -112,6 +112,7 @@ namespace MoreGamemodes
         }
 
         [HarmonyPatch(nameof(MainMenuManager.OpenGameModeMenu))]
+        [HarmonyPatch(nameof(MainMenuManager.OpenOnlineMenu))]
         [HarmonyPatch(nameof(MainMenuManager.OpenAccountMenu))]
         [HarmonyPatch(nameof(MainMenuManager.OpenCredits))]
         [HarmonyPostfix]
