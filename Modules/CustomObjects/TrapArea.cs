@@ -11,12 +11,12 @@ namespace MoreGamemodes
             Timer += Time.deltaTime;
             if (Timer >= WaitDuration * 0.75f && State == 0)
             {
-                RpcChangeSprite($"<size={Size}><font=\"VCR SDF\"><#fff70069>●");
+                RpcChangeSprite($"<size={Size}><font=\"VCR SDF\"><#fff70096>●");
                 State = 1;
             }
             if (Timer >= WaitDuration * 0.95f && State == 1)
             {
-                RpcChangeSprite($"<size={Size}><font=\"VCR SDF\"><#ff000069>●");
+                RpcChangeSprite($"<size={Size}><font=\"VCR SDF\"><#ff000096>●");
                 State = 2;
             }
             if (Timer < WaitDuration) return;

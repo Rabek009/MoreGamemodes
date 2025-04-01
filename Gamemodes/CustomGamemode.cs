@@ -157,7 +157,7 @@ namespace MoreGamemodes
 
         }
 
-        public virtual bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public virtual bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return true;
         }
@@ -235,6 +235,16 @@ namespace MoreGamemodes
         public virtual string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
         {
             return name;
+        }
+
+        public virtual void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+
+        }
+
+        public virtual void ReceiveRPC(GameManager manager, MessageReader reader)
+        {
+
         }
 
         public static CustomGamemode Instance;

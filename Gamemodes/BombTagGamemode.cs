@@ -122,7 +122,7 @@ namespace MoreGamemodes
             for (int i = 0; i < bombs; ++i)
             {
                 var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-                player.RpcSetBomb(true);
+                SendRPC(player, true);
                 AllPlayers.Remove(player);
             }
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -152,8 +152,8 @@ namespace MoreGamemodes
         {
             if (HasBomb(killer) && !HasBomb(target))
             {
-                killer.RpcSetBomb(false);
-                target.RpcSetBomb(true);
+                SendRPC(killer, false);
+                SendRPC(target, true);
                 killer.RpcSetColor(2);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(killer.PlayerId, pc.PlayerId)] = Color.green;
@@ -171,7 +171,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return false;
         }
@@ -216,7 +216,7 @@ namespace MoreGamemodes
                 for (int i = 0; i < bombs; ++i)
                 {
                     var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-                    player.RpcSetBomb(true);
+                    SendRPC(player, true);
                     player.RpcSetColor(6);
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.black;
@@ -275,6 +275,24 @@ namespace MoreGamemodes
             if (HasBomb(player) && Options.ArrowToNearestNonBombed.GetBool() && player == seer && GetClosestNonBombed(player) != null && !player.Data.IsDead)
                 name += "\n" + Utils.ColorString(Color.green, Utils.GetArrow(player.GetRealPosition(), GetClosestNonBombed(player).transform.position));
             return name;
+        }
+
+        public void SendRPC(PlayerControl player, bool hasBomb)
+        {
+            if (PlayerHasBomb[player.PlayerId] == hasBomb) return;
+            PlayerHasBomb[player.PlayerId] = hasBomb;
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write(hasBomb);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            PlayerHasBomb[player.PlayerId] = reader.ReadBoolean();
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
         }
 
         public bool HasBomb(PlayerControl player)

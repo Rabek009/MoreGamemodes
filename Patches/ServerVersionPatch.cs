@@ -7,7 +7,11 @@ namespace MoreGamemodes
     {
         public static void Postfix(ref int __result)
         {
-            if (AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame)
+            if (!Main.ModdedProtocol.Value)
+			{
+				Main.Instance.Log.LogMessage("Modded protocol disabled");
+			}
+            if (AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame && Main.ModdedProtocol.Value)
             {
                 __result += 25;
             }
@@ -23,7 +27,7 @@ namespace MoreGamemodes
     {
         public static bool Prefix(ref bool __result)
         {
-            __result = true;
+            __result = Main.ModdedProtocol.Value;
             return false;
         }
     }

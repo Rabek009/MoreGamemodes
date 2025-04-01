@@ -318,6 +318,11 @@ namespace MoreGamemodes
 
         }
 
+        public virtual void ReceiveRPC(MessageReader reader)
+        {
+
+        }
+
         public CustomRoles Role;
         public BaseRoles BaseRole;
         public PlayerControl Player;

@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
+// https://github.com/tukasa0001/TownOfHost/blob/main/Patches/MainMenuManagerPatch.cs
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(MainMenuManager))]
@@ -26,6 +27,7 @@ namespace MoreGamemodes
             logoTransform.localPosition = new(0f, 0.15f, 1f);
             logoTransform.localScale *= 1.2f;
             MGM_Logo.sprite = Utils.LoadSprite("MoreGamemodes.Resources.MoreGamemodes-Logo.png", 400f);
+            MGM_Logo.flipX = true;
         }
 
         [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.Normal)]
@@ -43,7 +45,7 @@ namespace MoreGamemodes
                     new(88, 101, 242, byte.MaxValue),
                     new(148, 161, byte.MaxValue, byte.MaxValue),
                     () => Application.OpenURL("https://discord.gg/jJe5kPpbFJ"),
-                    "Discord");
+                    "Suscord");
             }
 
             if (gitHubButton == null)
@@ -54,7 +56,7 @@ namespace MoreGamemodes
                     new(153, 153, 153, byte.MaxValue),
                     new(209, 209, 209, byte.MaxValue),
                     () => Application.OpenURL("https://github.com/Rabek009/MoreGamemodes"),
-                    "GitHub");
+                    "SusHub");
             }
 
             var howToPlayButton = __instance.howToPlayButton;
@@ -113,11 +115,20 @@ namespace MoreGamemodes
 
         [HarmonyPatch(nameof(MainMenuManager.OpenGameModeMenu))]
         [HarmonyPatch(nameof(MainMenuManager.OpenOnlineMenu))]
+        [HarmonyPatch(nameof(MainMenuManager.OpenEnterCodeMenu))]
         [HarmonyPatch(nameof(MainMenuManager.OpenAccountMenu))]
         [HarmonyPatch(nameof(MainMenuManager.OpenCredits))]
         [HarmonyPostfix]
         public static void OpenMenuPostfix()
         {
+            if (discordButton != null)
+            {
+                discordButton.gameObject.SetActive(false);
+            }
+            if (gitHubButton != null)
+            {
+                gitHubButton.gameObject.SetActive(false);
+            }
             if (MGM_Logo != null)
             {
                 MGM_Logo.gameObject.SetActive(false);
@@ -126,6 +137,14 @@ namespace MoreGamemodes
         [HarmonyPatch(nameof(MainMenuManager.ResetScreen)), HarmonyPostfix]
         public static void ResetScreenPostfix()
         {
+            if (discordButton != null)
+            {
+                discordButton.gameObject.SetActive(true);
+            }
+            if (gitHubButton != null)
+            {
+                gitHubButton.gameObject.SetActive(true);
+            }
             if (MGM_Logo != null)
             {
                 MGM_Logo.gameObject.SetActive(true);

@@ -150,11 +150,11 @@ namespace MoreGamemodes
             while (AllPlayers.Count > blueTeamSize)
             {
                 var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-                player.RpcSetBaseWarsTeam(BaseWarsTeams.Red);
+                SendRPC(player, BaseWarsTeams.Red, IsDead[player.PlayerId], CanTeleport[player.PlayerId]);
                 AllPlayers.Remove(player);
             }
             foreach (var player in AllPlayers)
-                player.RpcSetBaseWarsTeam(BaseWarsTeams.Blue);
+                SendRPC(player, BaseWarsTeams.Blue, IsDead[player.PlayerId], CanTeleport[player.PlayerId]);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (GetTeam(pc) == BaseWarsTeams.Red)
@@ -212,7 +212,7 @@ namespace MoreGamemodes
             {
                 SpawnPlayer(pc);
                 TeleportCooldown[pc.PlayerId] = Options.TeleportCooldown.GetFloat();
-                pc.RpcSetCanTeleport(false);
+                SendRPC(pc, GetTeam(pc), IsDead[pc.PlayerId], false);
             }
         }
 
@@ -265,7 +265,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return false;
         }
@@ -283,7 +283,7 @@ namespace MoreGamemodes
                     if (RespawnCooldown[pc.PlayerId] <= 0f)
                     {
                         RespawnCooldown[pc.PlayerId] = 0f;
-                        pc.RpcSetIsDead(false);
+                        SendRPC(pc, GetTeam(pc), false, CanTeleport[pc.PlayerId]);
                         PlayerHealth[pc.PlayerId] = Options.StartingHealth.GetFloat() + (Options.HealthIncrease.GetFloat() * GetLevel(pc));
                         SpawnPlayer(pc);
                         pc.SyncPlayerSettings();
@@ -301,7 +301,7 @@ namespace MoreGamemodes
                     {
                         TeleportCooldown[pc.PlayerId] = 0f;
                         if (!CanTeleport[pc.PlayerId])
-                            pc.RpcSetCanTeleport(true);
+                            SendRPC(pc, GetTeam(pc), IsDead[pc.PlayerId], true);
                     }
                 }
                 if (Options.TurretSlowEnemies.GetBool())
@@ -411,6 +411,49 @@ namespace MoreGamemodes
             return name;
         }
 
+        public void SendRPC(PlayerControl player, BaseWarsTeams team, bool isDead, bool canTeleport)
+        {
+            if (PlayerTeam[player.PlayerId] == team && IsDead[player.PlayerId] == isDead && (!Options.CanTeleportToBase.GetBool() || CanTeleport[player.PlayerId] == canTeleport)) return;
+            PlayerTeam[player.PlayerId] = team;
+            IsDead[player.PlayerId] = isDead;
+            if (Options.CanTeleportToBase.GetBool())
+                CanTeleport[player.PlayerId] = canTeleport;
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((int)team);
+            writer.Write(isDead);
+            if (Options.CanTeleportToBase.GetBool())
+                writer.Write(canTeleport);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            PlayerTeam[player.PlayerId] = (BaseWarsTeams)reader.ReadInt32();
+            IsDead[player.PlayerId] = reader.ReadBoolean();
+            if (Options.CanTeleportToBase.GetBool())
+                CanTeleport[player.PlayerId] = reader.ReadBoolean();
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+        }
+
+        public void SendRPC(GameManager manager, SystemTypes room)
+        {
+            if (!AllTurretsPosition.Contains(room)) return;
+            AllTurretsPosition.Remove(room);
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((byte)room);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(GameManager manager, MessageReader reader)
+        {
+            SystemTypes room = (SystemTypes)reader.ReadByte();
+            if (AllTurretsPosition.Contains(room))
+                AllTurretsPosition.Remove(room);
+        }
+
         public BaseWarsTeams GetTeam(PlayerControl player)
         {
             if (player == null) return BaseWarsTeams.None;
@@ -440,7 +483,7 @@ namespace MoreGamemodes
             {
                 PlayerHealth[player.PlayerId] = 0f;
                 player.RpcTeleport(Utils.GetOutsideMapPosition());
-                player.RpcSetIsDead(true);
+                SendRPC(player, GetTeam(player), true, CanTeleport[player.PlayerId]);
                 RespawnCooldown[player.PlayerId] = Options.BwRespawnCooldown.GetFloat();
                 player.SyncPlayerSettings();
                 if (attacker != null)

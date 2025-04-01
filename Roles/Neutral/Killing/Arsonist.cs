@@ -2,6 +2,7 @@ using Hazel;
 using AmongUs.GameOptions;
 using System.Collections.Generic;
 using UnityEngine;
+using InnerNet;
 
 namespace MoreGamemodes
 {
@@ -50,13 +51,13 @@ namespace MoreGamemodes
         {
             if (DouseState[target.PlayerId] == DouseStates.NotDoused)
             {
-                Player.RpcSetArsonistDouseState(target, DouseStates.Doused);
+                SendRPC(target, DouseStates.Doused);
                 Player.RpcSetKillTimer(DouseIgniteCooldown.GetFloat());
                 Main.NameColors[(target.PlayerId, Player.PlayerId)] = Color.black;
             }
             else if (DouseState[target.PlayerId] == DouseStates.Doused)
             {
-                Player.RpcSetArsonistDouseState(target, DouseStates.Ignited);
+                SendRPC(target, DouseStates.Ignited);
                 IgniteTimer[target.PlayerId] = IgniteDuration.GetFloat();
                 Player.RpcSetKillTimer(DouseIgniteCooldown.GetFloat());
                 Main.NameColors[(target.PlayerId, Player.PlayerId)] = Palette.Orange;
@@ -120,7 +121,7 @@ namespace MoreGamemodes
                 if (DouseState[pc.PlayerId] != DouseStates.Ignited || pc == Player || pc.Data.IsDead) continue;
                 if (IgniteTimer[pc.PlayerId] <= -1f)
                 {
-                    Player.RpcSetArsonistDouseState(pc, DouseStates.Doused);
+                    SendRPC(pc, DouseStates.Doused);
                     continue;
                 }
                 if (IgniteTimer[pc.PlayerId] > 0f)
@@ -130,7 +131,7 @@ namespace MoreGamemodes
                     {
                         if (DouseState[ar.PlayerId] == DouseStates.Doused && Vector2.Distance(pc.transform.position, ar.transform.position) <= IgniteRadius.GetFloat() * 1.5f)
                         {
-                            Player.RpcSetArsonistDouseState(ar, DouseStates.Ignited);
+                            SendRPC(ar, DouseStates.Ignited);
                             IgniteTimer[ar.PlayerId] = IgniteDuration.GetFloat();
                             Main.NameColors[(ar.PlayerId, Player.PlayerId)] = Palette.Orange;
                         }
@@ -200,6 +201,22 @@ namespace MoreGamemodes
                 Player.SyncPlayerSettings();
                 new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
             }
+        }
+
+        public void SendRPC(PlayerControl target, DouseStates douseState)
+        {
+            DouseState[target.PlayerId] = douseState;
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.WriteNetObject(target);
+            writer.Write((int)douseState);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            PlayerControl target = reader.ReadNetObject<PlayerControl>();
+            DouseStates douseState = (DouseStates)reader.ReadInt32();
+            DouseState[target.PlayerId] = douseState;
         }
 
         public static void OnGlobalReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)

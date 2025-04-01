@@ -52,8 +52,8 @@ namespace MoreGamemodes
             if (ventilationSystem != null)
                 ventilationSystem.BootImpostorsFromVent(vent.Id);
             Player.RpcSetAbilityUses(AbilityUses - 1f);
-            Utils.RpcCreateDisplay("<size=2><line-height=97%><cspace=0.16em><mark=#8f6647>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W<br>W</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W<br>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W<br>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W<br>W</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W<br>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W", vent.transform.position);
-            GameManager.Instance.RpcBlockVent(vent.Id);
+            Utils.RpcCreateDisplay("<size=1.6><line-height=97%><cspace=0.16em><mark=#8f6647>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W", vent.transform.position);
+            SendRPC(vent.Id);
             Utils.SetAllVentInteractions();
             Cooldown = BlockVentCooldown.GetFloat();
             Player.RpcSetPetAbilityCooldown(true);
@@ -116,6 +116,25 @@ namespace MoreGamemodes
             UsingCameras = false;
         }
 
+        public void SendRPC(int ventId)
+        {
+            ClassicGamemode.instance.BlockedVents.Add(ventId);
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
+            if (ventilationSystem != null)
+                ventilationSystem.UpdateVentArrows();
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.Write(ventId);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            ClassicGamemode.instance.BlockedVents.Add(reader.ReadInt32());
+            var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
+            if (ventilationSystem != null)
+                ventilationSystem.UpdateVentArrows();
+        }
+
         public bool SeeKillFlash()
         {
             if (Player.Data.IsDead) return false;
@@ -125,7 +144,7 @@ namespace MoreGamemodes
                 return true;
             if (mapId == 1 && Vector2.Distance(Player.GetRealPosition(), new Vector2(16.22f, 5.82f)) <= 1.5f)
                 return true;
-            if (mapId == 5 && Vector2.Distance(Player.GetRealPosition(), new Vector2(6.20f, 0.10f)) <= 1.8f)
+            if (mapId >= 5 && Vector2.Distance(Player.GetRealPosition(), new Vector2(6.20f, 0.10f)) <= 1.8f)
                 return true;
             return false;
         }
@@ -156,7 +175,7 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(400100, CustomRoles.SecurityGuard, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(400101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            BlockVentCooldown = FloatOptionItem.Create(400102, "Block vent cooldown", new(10f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)
+            BlockVentCooldown = FloatOptionItem.Create(400102, "Block vent cooldown", new(5f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
             InitialAbilityUseLimit = FloatOptionItem.Create(400103, "Initial ability use limit", new(0f, 14f, 1f), 1f, TabGroup.CrewmateRoles, false)
@@ -165,7 +184,7 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             HideCameraUsage = BooleanOptionItem.Create(400105, "Hide camera usage", false, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanBeGuessed = BooleanOptionItem.Create(400106, "Can be guessed", true, TabGroup.CrewmateRoles, false)
+            CanBeGuessed = BooleanOptionItem.Create(400108, "Can be guessed", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.SecurityGuard] = Chance;
             Options.RolesCount[CustomRoles.SecurityGuard] = Count;

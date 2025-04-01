@@ -75,6 +75,7 @@ namespace MoreGamemodes
         public static OptionItem MaximumNameLength;
         public static OptionItem CanUseTpoutCommand;
         public static OptionItem CanUseKcountCommand;
+        public static OptionItem Amogus;
 
         //Hide and seek
         public static OptionItem Seekers;
@@ -415,6 +416,8 @@ namespace MoreGamemodes
                 .SetColor(Color.blue);
             CheatingPenalty = StringOptionItem.Create(5, "Cheating Penalty", cheatingPenalties, 0, TabGroup.ModSettings, false)
                 .SetParent(AntiCheat);
+            Amogus = BooleanOptionItem.Create(6, "Amogus", true, TabGroup.ModSettings, false)
+                .SetColor(Color.red);
             Commands = TextOptionItem.Create(10, "Commands", TabGroup.ModSettings)
                 .SetColor(Color.cyan);
             CanUseColorCommand = BooleanOptionItem.Create(11, "Can use /color command", false, TabGroup.ModSettings, false);

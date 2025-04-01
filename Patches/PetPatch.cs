@@ -31,11 +31,11 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             if (!Main.GameStarted) return true;
-            if (callId != 85)
+            if (callId != 75)
             {
                 if (AntiCheat.PlayerPhysicsReceiveRpc(__instance, callId, reader)) return false;
             }
-            if (callId != 49 && callId != 85) return true;
+            if (callId != 49 && callId != 75) return true;
 
             PlayerControl pc = __instance.myPlayer;
             if (pc.Data.IsDead || MeetingHud.Instance || Main.TimeSinceLastPet[pc.PlayerId] < 0.5f) return true;

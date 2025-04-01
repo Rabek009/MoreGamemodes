@@ -688,20 +688,24 @@ namespace MoreGamemodes
                 addOn.OnShapeshift(target);
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
-            if (RoleblockTimer[__instance.PlayerId] > 0f)
+            if (!force && RoleblockTimer[__instance.PlayerId] > 0f)
             {
                 return false;
             }
-            if (!Trapster.OnGlobalReportDeadBody(__instance, target)) return false;
-            bool report = __instance.GetRole().OnReportDeadBody(target);
-            if (report)
+            if (!force && !Trapster.OnGlobalReportDeadBody(__instance, target)) return false;
+            bool report = true;
+            if (!force)
             {
-                foreach (var addOn in __instance.GetAddOns())
+                report = __instance.GetRole().OnReportDeadBody(target);
+                if (report)
                 {
-                    if (!addOn.OnReportDeadBody(target))
-                        report = false;
+                    foreach (var addOn in __instance.GetAddOns())
+                    {
+                        if (!addOn.OnReportDeadBody(target))
+                            report = false;
+                    }
                 }
             }
             if (report)

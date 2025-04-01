@@ -13,7 +13,7 @@ namespace MoreGamemodes
         {
             if (exiled != null && exiled.Object != null && Options.EjectedPlayersAreZombies.GetBool() && !Main.StandardRoles[exiled.PlayerId].IsImpostor())
             {
-                exiled.Object.RpcSetZombieType(ZombieTypes.FullZombie);
+                SendRPC(exiled.Object, ZombieTypes.FullZombie, 0);
                 new LateTask(() => exiled.Object.RpcSetRoleV2(RoleTypes.Crewmate), 0.5f);
                 new LateTask(() => exiled.Object.RpcSetDesyncRole(RoleTypes.Impostor, exiled.Object), 1f);
                 exiled.Object.RpcSetOutfit(18, "", "", "", "");
@@ -109,7 +109,7 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (GetZombieType(pc) == ZombieTypes.JustTurned)
-                    pc.RpcSetZombieType(ZombieTypes.FullZombie);
+                    SendRPC(pc, ZombieTypes.FullZombie, 0);
                 if (IsZombie(pc) && GetZombieType(pc) != ZombieTypes.Dead)
                 {
                     pc.Data.IsDead = false;
@@ -186,8 +186,8 @@ namespace MoreGamemodes
         {
             if (!Main.StandardRoles[killer.PlayerId].IsImpostor() && IsZombie(target))
             {
-                target.RpcSetZombieType(ZombieTypes.Dead);
-                killer.RpcSetKillsRemain(GetKillsRemain(killer) - 1);
+                SendRPC(target, ZombieTypes.Dead, 0);
+                SendRPC(killer, ZombieTypes.None, GetKillsRemain(killer) - 1);
                 killer.RpcSetVentInteraction();
                 if (GetKillsRemain(killer) <= 0)
                 {
@@ -210,7 +210,7 @@ namespace MoreGamemodes
             }
             if (Main.StandardRoles[killer.PlayerId].IsImpostor() || (IsZombie(killer) && Options.ZombieKillsTurnIntoZombie.GetBool()))
             {
-                target.RpcSetZombieType(ZombieTypes.JustTurned);
+                SendRPC(target, ZombieTypes.JustTurned, 0);
                 new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate), 0.5f);
                 new LateTask(() => target.RpcSetDesyncRole(RoleTypes.Impostor, target), 1f);
                 target.RpcSetOutfit(18, "", "", "", "");
@@ -233,9 +233,9 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
-            if (IsZombie(__instance))
+            if (!force && IsZombie(__instance))
                 return false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -271,7 +271,7 @@ namespace MoreGamemodes
         {
             if (Options.CanKillZombiesAfterTasks.GetBool() && __instance.AllTasksCompleted() && !IsZombie(__instance) && !__instance.Data.IsDead)
             {
-                __instance.RpcSetKillsRemain(Options.NumberOfKills.GetInt());
+                SendRPC(__instance, ZombieTypes.None, Options.NumberOfKills.GetInt());
                 __instance.RpcSetDesyncRole(RoleTypes.Impostor, __instance);
                 __instance.RpcSetVentInteraction();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -348,6 +348,27 @@ namespace MoreGamemodes
             if (player != seer && seer.Data.IsDead && !player.Data.IsDead && GetKillsRemain(player) > 0)
                 name += "\n" + Utils.ColorString(Color.cyan, "CAN KILL " + GetKillsRemain(player) + " " + (GetKillsRemain(player) == 1 ? "ZOMBIE" : "ZOMBIES") + "!");
             return name;
+        }
+
+        public void SendRPC(PlayerControl player, ZombieTypes zombieType, int killsRemain)
+        {
+            if (ZombieType[player.PlayerId] == zombieType && KillsRemain[player.PlayerId] == killsRemain) return;
+            ZombieType[player.PlayerId] = zombieType;
+            KillsRemain[player.PlayerId] = killsRemain;
+            if (player.AmOwner && ZombieType[player.PlayerId] != ZombieTypes.None)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((int)zombieType);
+            writer.Write(killsRemain);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            ZombieType[player.PlayerId] = (ZombieTypes)reader.ReadInt32();
+            KillsRemain[player.PlayerId] = reader.ReadInt32();
+            if (player.AmOwner && ZombieType[player.PlayerId] != ZombieTypes.None)
+                HudManager.Instance.TaskPanel.SetTaskText("");
         }
 
         public ZombieTypes GetZombieType(PlayerControl player)

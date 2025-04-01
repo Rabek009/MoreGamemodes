@@ -217,11 +217,11 @@ namespace MoreGamemodes
             {
                 if (AllPlayers.Count == 0) break;
                 var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-                player.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Guard);
+                SendRPC_SetPlayerType(player, JailbreakPlayerTypes.Guard);
                 AllPlayers.Remove(player);
             }
             foreach (var player in AllPlayers)
-                player.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Prisoner);
+                SendRPC_SetPlayerType(player, JailbreakPlayerTypes.Prisoner);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (IsGuard(pc))
@@ -229,14 +229,14 @@ namespace MoreGamemodes
                     pc.RpcSetColor(1);
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.blue;
-                    pc.RpcSetCurrentRecipe(1000);
+                    SendRPC_SetCurrentRecipe(pc, 1000);
                 }   
                 else
                 {
                     pc.RpcSetColor(4);
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Palette.Orange;
-                    pc.RpcSetCurrentRecipe(Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3 ? 1 : 0);
+                    SendRPC_SetCurrentRecipe(pc, Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3 ? 1 : 0);
                 }
             }
         }
@@ -248,8 +248,8 @@ namespace MoreGamemodes
                 if (IsGuard(pc))
                 {
                     SearchCooldown[pc.PlayerId] = Options.SearchCooldown.GetFloat();
-                    pc.RpcSetItemAmount(InventoryItems.Weapon, 3);
-                    pc.RpcSetItemAmount(InventoryItems.Armor, 3);
+                    SendRPC_SetItemAmount(pc, InventoryItems.Weapon, 3);
+                    SendRPC_SetItemAmount(pc, InventoryItems.Armor, 3);
                 }
                 pc.RpcResetAbilityCooldown();
                 PlayerHealth[pc.PlayerId] = IsGuard(pc) ? Options.GuardHealth.GetFloat() : Options.PrisonerHealth.GetFloat();
@@ -276,7 +276,7 @@ namespace MoreGamemodes
                 recipeId = 1001;
             if (IsGuard(pc) && recipeId == 1002 && GetItemAmount(pc, InventoryItems.Armor) >= 10)
                 recipeId = 1000;
-            pc.RpcSetCurrentRecipe(recipeId);
+            SendRPC_SetCurrentRecipe(pc, recipeId);
             ChangeRecipeCooldown[pc.PlayerId] = 0.5f;
         }
 
@@ -284,7 +284,7 @@ namespace MoreGamemodes
         {
             if (!HasEscaped(guardian)) return false;
             if (IsGuard(target) || HasEscaped(target) || IsDead[target.PlayerId]) return false;
-            target.RpcSetItemAmount(InventoryItems.Resources, Math.Min(GetItemAmount(target, InventoryItems.Resources) + Options.GivenResources.GetInt(), Options.MaximumPrisonerResources.GetInt()));
+            SendRPC_SetItemAmount(target, InventoryItems.Resources, Math.Min(GetItemAmount(target, InventoryItems.Resources) + Options.GivenResources.GetInt(), Options.MaximumPrisonerResources.GetInt()));
             guardian.RpcResetAbilityCooldown();
             return false;
         } 
@@ -301,10 +301,10 @@ namespace MoreGamemodes
                     if (!IsGuard(target))
                     {
                         target.RpcShapeshift(target, false);
-                        target.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Wanted);
+                        SendRPC_SetPlayerType(target, JailbreakPlayerTypes.Wanted);
                         foreach (var pc in PlayerControl.AllPlayerControls)
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Color.red;
-                        target.RpcSetItemAmount(InventoryItems.GuardOutfit, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.GuardOutfit, 0);
                     }
                     killer.RpcSetKillTimer();
                 }
@@ -318,21 +318,21 @@ namespace MoreGamemodes
                     PlayerHealth[target.PlayerId] -= damage;
                     if (PlayerHealth[target.PlayerId] <= 0f)
                     {
-                        target.RpcSetItemAmount(InventoryItems.Screwdriver, 0);
-                        target.RpcSetItemAmount(InventoryItems.Weapon, 0);
-                        target.RpcSetItemAmount(InventoryItems.Pickaxe, 0);
-                        target.RpcSetItemAmount(InventoryItems.SpaceshipParts, 0);
-                        target.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, 0);
-                        target.RpcSetItemAmount(InventoryItems.SpaceshipWithFuel, 0);
-                        target.RpcSetItemAmount(InventoryItems.GuardOutfit, 0);
-                        target.RpcSetItemAmount(InventoryItems.Armor, 0);
-                        killer.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(killer, InventoryItems.Resources) + 50);
+                        SendRPC_SetItemAmount(target, InventoryItems.Screwdriver, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.Weapon, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.Pickaxe, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.SpaceshipParts, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.SpaceshipWithoutFuel, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.SpaceshipWithFuel, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.GuardOutfit, 0);
+                        SendRPC_SetItemAmount(target, InventoryItems.Armor, 0);
+                        SendRPC_SetItemAmount(killer, InventoryItems.Resources, GetItemAmount(killer, InventoryItems.Resources) + 50);
                         target.RpcShapeshift(target, false);
-                        target.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Prisoner);
+                        SendRPC_SetPlayerType(target, JailbreakPlayerTypes.Prisoner);
                         foreach (var pc in PlayerControl.AllPlayerControls)
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.Orange;
                         RespawnCooldown[target.PlayerId] = Options.JbRespawnCooldown.GetFloat();
-                        target.RpcSetIsDead(true);
+                        SendRPC_SetIsDead(target, true);
                         target.Data.MarkDirty();
                         target.SyncPlayerSettings();
                         target.RpcSetVentInteraction();
@@ -347,7 +347,7 @@ namespace MoreGamemodes
                     SearchCooldown[killer.PlayerId] = Options.SearchCooldown.GetFloat();
                     if (HasIllegalItem(target))
                     {
-                        target.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Wanted);
+                        SendRPC_SetPlayerType(target, JailbreakPlayerTypes.Wanted);
                         foreach (var pc in PlayerControl.AllPlayerControls)
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Color.red;
                     }
@@ -364,7 +364,7 @@ namespace MoreGamemodes
             }
             if (guardNearby)
             {
-                killer.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Wanted);
+                SendRPC_SetPlayerType(killer, JailbreakPlayerTypes.Wanted);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(killer.PlayerId, pc.PlayerId)] = Color.red;
             }
@@ -379,45 +379,45 @@ namespace MoreGamemodes
                 if (IsGuard(target))
                 {
                     if (GetItemAmount(target, InventoryItems.Weapon) > GetItemAmount(killer, InventoryItems.Weapon))
-                        killer.RpcSetItemAmount(InventoryItems.Weapon, GetItemAmount(target, InventoryItems.Weapon));
+                        SendRPC_SetItemAmount(killer, InventoryItems.Weapon, GetItemAmount(target, InventoryItems.Weapon));
                     if (GetItemAmount(target, InventoryItems.Armor) > GetItemAmount(killer, InventoryItems.Armor))
-                        killer.RpcSetItemAmount(InventoryItems.Armor, GetItemAmount(target, InventoryItems.Armor));
-                    target.RpcSetItemAmount(InventoryItems.Weapon, 3);
-                    target.RpcSetItemAmount(InventoryItems.Armor, 3);
-                    killer.RpcSetItemAmount(InventoryItems.Resources, Math.Min(GetItemAmount(killer, InventoryItems.Resources) + 100, Options.MaximumPrisonerResources.GetInt()));
+                        SendRPC_SetItemAmount(killer, InventoryItems.Armor, GetItemAmount(target, InventoryItems.Armor));
+                    SendRPC_SetItemAmount(target, InventoryItems.Weapon, 3);
+                    SendRPC_SetItemAmount(target, InventoryItems.Armor, 3);
+                    SendRPC_SetItemAmount(killer, InventoryItems.Resources, Math.Min(GetItemAmount(killer, InventoryItems.Resources) + 100, Options.MaximumPrisonerResources.GetInt()));
                 }
                 else
                 {
-                    killer.RpcSetItemAmount(InventoryItems.Resources, Math.Min(GetItemAmount(killer, InventoryItems.Resources) + GetItemAmount(target, InventoryItems.Resources), Options.MaximumPrisonerResources.GetInt()));
-                    killer.RpcSetItemAmount(InventoryItems.Screwdriver, GetItemAmount(killer, InventoryItems.Screwdriver) + GetItemAmount(target, InventoryItems.Screwdriver));
+                    SendRPC_SetItemAmount(killer, InventoryItems.Resources, Math.Min(GetItemAmount(killer, InventoryItems.Resources) + GetItemAmount(target, InventoryItems.Resources), Options.MaximumPrisonerResources.GetInt()));
+                    SendRPC_SetItemAmount(killer, InventoryItems.Screwdriver, GetItemAmount(killer, InventoryItems.Screwdriver) + GetItemAmount(target, InventoryItems.Screwdriver));
                     if (GetItemAmount(target, InventoryItems.Weapon) > GetItemAmount(killer, InventoryItems.Weapon))
-                        killer.RpcSetItemAmount(InventoryItems.Weapon, GetItemAmount(target, InventoryItems.Weapon));
+                        SendRPC_SetItemAmount(killer, InventoryItems.Weapon, GetItemAmount(target, InventoryItems.Weapon));
                     if (GetItemAmount(target, InventoryItems.Pickaxe) > GetItemAmount(killer, InventoryItems.Pickaxe))
-                        killer.RpcSetItemAmount(InventoryItems.Pickaxe, GetItemAmount(target, InventoryItems.Pickaxe));
-                    killer.RpcSetItemAmount(InventoryItems.SpaceshipParts, GetItemAmount(killer, InventoryItems.SpaceshipParts) + GetItemAmount(target, InventoryItems.SpaceshipParts));
-                    killer.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, GetItemAmount(killer, InventoryItems.SpaceshipWithoutFuel) + GetItemAmount(target, InventoryItems.SpaceshipWithoutFuel));
-                    killer.RpcSetItemAmount(InventoryItems.SpaceshipWithFuel, GetItemAmount(killer, InventoryItems.SpaceshipWithFuel) + GetItemAmount(target, InventoryItems.SpaceshipWithFuel));
-                    killer.RpcSetItemAmount(InventoryItems.BreathingMaskWithoutOxygen, GetItemAmount(killer, InventoryItems.BreathingMaskWithoutOxygen) + GetItemAmount(target, InventoryItems.BreathingMaskWithoutOxygen));
-                    killer.RpcSetItemAmount(InventoryItems.BreathingMaskWithOxygen, GetItemAmount(killer, InventoryItems.BreathingMaskWithOxygen) + GetItemAmount(target, InventoryItems.BreathingMaskWithOxygen));
-                    killer.RpcSetItemAmount(InventoryItems.GuardOutfit, GetItemAmount(killer, InventoryItems.GuardOutfit) + GetItemAmount(target, InventoryItems.GuardOutfit));
+                        SendRPC_SetItemAmount(killer, InventoryItems.Pickaxe, GetItemAmount(target, InventoryItems.Pickaxe));
+                    SendRPC_SetItemAmount(killer, InventoryItems.SpaceshipParts, GetItemAmount(killer, InventoryItems.SpaceshipParts) + GetItemAmount(target, InventoryItems.SpaceshipParts));
+                    SendRPC_SetItemAmount(killer, InventoryItems.SpaceshipWithoutFuel, GetItemAmount(killer, InventoryItems.SpaceshipWithoutFuel) + GetItemAmount(target, InventoryItems.SpaceshipWithoutFuel));
+                    SendRPC_SetItemAmount(killer, InventoryItems.SpaceshipWithFuel, GetItemAmount(killer, InventoryItems.SpaceshipWithFuel) + GetItemAmount(target, InventoryItems.SpaceshipWithFuel));
+                    SendRPC_SetItemAmount(killer, InventoryItems.BreathingMaskWithoutOxygen, GetItemAmount(killer, InventoryItems.BreathingMaskWithoutOxygen) + GetItemAmount(target, InventoryItems.BreathingMaskWithoutOxygen));
+                    SendRPC_SetItemAmount(killer, InventoryItems.BreathingMaskWithOxygen, GetItemAmount(killer, InventoryItems.BreathingMaskWithOxygen) + GetItemAmount(target, InventoryItems.BreathingMaskWithOxygen));
+                    SendRPC_SetItemAmount(killer, InventoryItems.GuardOutfit, GetItemAmount(killer, InventoryItems.GuardOutfit) + GetItemAmount(target, InventoryItems.GuardOutfit));
                     if (GetItemAmount(target, InventoryItems.Armor) > GetItemAmount(killer, InventoryItems.Armor))
-                        killer.RpcSetItemAmount(InventoryItems.Armor, GetItemAmount(target, InventoryItems.Armor));
-                    target.RpcSetItemAmount(InventoryItems.Resources, 0);
-                    target.RpcSetItemAmount(InventoryItems.Screwdriver, 0);
-                    target.RpcSetItemAmount(InventoryItems.Weapon, 0);
-                    target.RpcSetItemAmount(InventoryItems.Pickaxe, 0);
-                    target.RpcSetItemAmount(InventoryItems.SpaceshipParts, 0);
-                    target.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, 0);
-                    target.RpcSetItemAmount(InventoryItems.SpaceshipWithFuel, 0);
-                    target.RpcSetItemAmount(InventoryItems.GuardOutfit, 0);
-                    target.RpcSetItemAmount(InventoryItems.Armor, 0);
+                        SendRPC_SetItemAmount(killer, InventoryItems.Armor, GetItemAmount(target, InventoryItems.Armor));
+                    SendRPC_SetItemAmount(target, InventoryItems.Resources, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.Screwdriver, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.Weapon, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.Pickaxe, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.SpaceshipParts, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.SpaceshipWithoutFuel, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.SpaceshipWithFuel, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.GuardOutfit, 0);
+                    SendRPC_SetItemAmount(target, InventoryItems.Armor, 0);
                     target.RpcShapeshift(target, false);
-                    target.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Prisoner);
+                    SendRPC_SetPlayerType(target, JailbreakPlayerTypes.Prisoner);
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         Main.NameColors[(killer.PlayerId, pc.PlayerId)] = Palette.Orange;
                 }   
                 RespawnCooldown[target.PlayerId] = Options.JbRespawnCooldown.GetFloat();
-                target.RpcSetIsDead(true);
+                SendRPC_SetIsDead(target, true);
                 target.Data.MarkDirty();
                 target.SyncPlayerSettings();
                 killer.RpcSetVentInteraction();
@@ -469,82 +469,82 @@ namespace MoreGamemodes
             {
                 case Recipes.Screwdriver:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.ScrewdriverPrice.GetInt()) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.ScrewdriverPrice.GetInt());
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Screwdriver, GetItemAmount(shapeshifter, InventoryItems.Screwdriver) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.ScrewdriverPrice.GetInt());
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Screwdriver, GetItemAmount(shapeshifter, InventoryItems.Screwdriver) + 1);
                     shapeshifter.RpcSetVentInteraction();
                     break;
                 case Recipes.PrisonerWeapon:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.PrisonerWeaponPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1)) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.PrisonerWeaponPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1));
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Weapon, GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.PrisonerWeaponPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1));
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Weapon, GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1);
                     int recipeId = 1;
                     if (GetItemAmount(shapeshifter, InventoryItems.Weapon) >= 10)
                         recipeId = 2;
                     if (GetItemAmount(shapeshifter, InventoryItems.Pickaxe) >= 10 && recipeId == 2)
                         recipeId = 3;
                     if (recipeId != 1)
-                        shapeshifter.RpcSetCurrentRecipe(recipeId);
+                        SendRPC_SetCurrentRecipe(shapeshifter, recipeId);
                     break;
                 case Recipes.Pickaxe:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.PickaxePrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Pickaxe) + 1)) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.PickaxePrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Pickaxe) + 1));
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Pickaxe, GetItemAmount(shapeshifter, InventoryItems.Pickaxe) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.PickaxePrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Pickaxe) + 1));
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Pickaxe, GetItemAmount(shapeshifter, InventoryItems.Pickaxe) + 1);
                     if (GetItemAmount(shapeshifter, InventoryItems.Pickaxe) >= 10)
-                        shapeshifter.RpcSetCurrentRecipe(3);
+                        SendRPC_SetCurrentRecipe(shapeshifter, 3);
                     break;
                 case Recipes.SpaceshipPart:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.SpaceshipPartPrice.GetInt()) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.SpaceshipPartPrice.GetInt());
-                    shapeshifter.RpcSetItemAmount(InventoryItems.SpaceshipParts, GetItemAmount(shapeshifter, InventoryItems.SpaceshipParts) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.SpaceshipPartPrice.GetInt());
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.SpaceshipParts, GetItemAmount(shapeshifter, InventoryItems.SpaceshipParts) + 1);
                     break;
                 case Recipes.Spaceship:
                     if (GetItemAmount(shapeshifter, InventoryItems.SpaceshipParts) < Options.RequiredSpaceshipParts.GetInt()) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.SpaceshipParts, GetItemAmount(shapeshifter, InventoryItems.SpaceshipParts) - Options.RequiredSpaceshipParts.GetInt());
-                    shapeshifter.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, GetItemAmount(shapeshifter, InventoryItems.SpaceshipWithoutFuel) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.SpaceshipParts, GetItemAmount(shapeshifter, InventoryItems.SpaceshipParts) - Options.RequiredSpaceshipParts.GetInt());
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.SpaceshipWithoutFuel, GetItemAmount(shapeshifter, InventoryItems.SpaceshipWithoutFuel) + 1);
                     break;
                 case Recipes.BreathingMask:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.BreathingMaskPrice.GetInt()) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.BreathingMaskPrice.GetInt());
-                    shapeshifter.RpcSetItemAmount(InventoryItems.BreathingMaskWithoutOxygen, GetItemAmount(shapeshifter, InventoryItems.BreathingMaskWithoutOxygen) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.BreathingMaskPrice.GetInt());
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.BreathingMaskWithoutOxygen, GetItemAmount(shapeshifter, InventoryItems.BreathingMaskWithoutOxygen) + 1);
                     break;
                 case Recipes.GuardOutfit:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.GuardOutfitPrice.GetInt()) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.GuardOutfitPrice.GetInt());
-                    shapeshifter.RpcSetItemAmount(InventoryItems.GuardOutfit, GetItemAmount(shapeshifter, InventoryItems.GuardOutfit) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.GuardOutfitPrice.GetInt());
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.GuardOutfit, GetItemAmount(shapeshifter, InventoryItems.GuardOutfit) + 1);
                     break;
                 case Recipes.PrisonerArmor:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.PrisonerArmorPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Armor) + 1)) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.PrisonerArmorPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Armor) + 1));
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Armor, GetItemAmount(shapeshifter, InventoryItems.Armor) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.PrisonerArmorPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Armor) + 1));
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Armor, GetItemAmount(shapeshifter, InventoryItems.Armor) + 1);
                     if (GetItemAmount(shapeshifter, InventoryItems.Armor) >= 10)
-                        shapeshifter.RpcSetCurrentRecipe(0);
+                        SendRPC_SetCurrentRecipe(shapeshifter, 0);
                     break;
                 case Recipes.GuardWeapon:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.GuardWeaponPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1)) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.GuardWeaponPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1));
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Weapon, GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.GuardWeaponPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1));
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Weapon, GetItemAmount(shapeshifter, InventoryItems.Weapon) + 1);
                     if (GetItemAmount(shapeshifter, InventoryItems.Weapon) >= 10)
-                        shapeshifter.RpcSetCurrentRecipe(1001);
+                        SendRPC_SetCurrentRecipe(shapeshifter, 1001);
                     break;
                 case Recipes.EnergyDrink:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.EnergyDrinkPrice.GetInt()) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.EnergyDrinkPrice.GetInt());
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.EnergyDrinkPrice.GetInt());
                     EnergyDrinkDuration[shapeshifter.PlayerId] = Options.EnergyDrinkDuration.GetFloat();
                     shapeshifter.SyncPlayerSettings();
                     break;
                 case Recipes.GuardArmor:
                     if (GetItemAmount(shapeshifter, InventoryItems.Resources) < Options.GuardArmorPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Armor) + 1)) break;
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.GuardArmorPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Armor) + 1));
-                    shapeshifter.RpcSetItemAmount(InventoryItems.Armor, GetItemAmount(shapeshifter, InventoryItems.Armor) + 1);
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Resources, GetItemAmount(shapeshifter, InventoryItems.Resources) - Options.GuardArmorPrice.GetInt() * (GetItemAmount(shapeshifter, InventoryItems.Armor) + 1));
+                    SendRPC_SetItemAmount(shapeshifter, InventoryItems.Armor, GetItemAmount(shapeshifter, InventoryItems.Armor) + 1);
                     if (GetItemAmount(shapeshifter, InventoryItems.Armor) >= 10)
-                        shapeshifter.RpcSetCurrentRecipe(1000);
+                        SendRPC_SetCurrentRecipe(shapeshifter, 1000);
                     break;
             }
             shapeshifter.RpcResetAbilityCooldown();
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return false;
         }
@@ -569,7 +569,7 @@ namespace MoreGamemodes
                     if (RespawnCooldown[pc.PlayerId] <= 0f)
                     {
                         PlayerHealth[pc.PlayerId] = IsGuard(pc) ? Options.GuardHealth.GetFloat() : Options.PrisonerHealth.GetFloat();
-                        pc.RpcSetIsDead(false);
+                        SendRPC_SetIsDead(pc, false);
                         if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0)
                             pc.RpcTeleport(new Vector2(-9.0f, -4.0f));
                         else if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3)
@@ -591,13 +591,13 @@ namespace MoreGamemodes
                 }
                 if (!IsGuard(pc) && room != null && (room.RoomId == SystemTypes.LowerEngine || room.RoomId == SystemTypes.UpperEngine) && HasItem(pc, InventoryItems.SpaceshipWithoutFuel)  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
                 {
-                    pc.RpcSetItemAmount(InventoryItems.SpaceshipWithFuel, GetItemAmount(pc, InventoryItems.SpaceshipWithFuel) + GetItemAmount(pc, InventoryItems.SpaceshipWithoutFuel));
-                    pc.RpcSetItemAmount(InventoryItems.SpaceshipWithoutFuel, 0);
+                    SendRPC_SetItemAmount(pc, InventoryItems.SpaceshipWithFuel, GetItemAmount(pc, InventoryItems.SpaceshipWithFuel) + GetItemAmount(pc, InventoryItems.SpaceshipWithoutFuel));
+                    SendRPC_SetItemAmount(pc, InventoryItems.SpaceshipWithoutFuel, 0);
                 }
                 if (!IsGuard(pc) && room != null && room.RoomId == SystemTypes.LifeSupp && HasItem(pc, InventoryItems.BreathingMaskWithoutOxygen)  && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
                 {
-                    pc.RpcSetItemAmount(InventoryItems.BreathingMaskWithOxygen, GetItemAmount(pc, InventoryItems.BreathingMaskWithOxygen) + GetItemAmount(pc, InventoryItems.BreathingMaskWithoutOxygen));
-                    pc.RpcSetItemAmount(InventoryItems.BreathingMaskWithoutOxygen, 0);
+                    SendRPC_SetItemAmount(pc, InventoryItems.BreathingMaskWithOxygen, GetItemAmount(pc, InventoryItems.BreathingMaskWithOxygen) + GetItemAmount(pc, InventoryItems.BreathingMaskWithoutOxygen));
+                    SendRPC_SetItemAmount(pc, InventoryItems.BreathingMaskWithoutOxygen, 0);
                 }
                 if (IsGuard(pc) && SearchCooldown[pc.PlayerId] > 0f)
                 {
@@ -616,7 +616,7 @@ namespace MoreGamemodes
                 }
                 if (!IsGuard(pc) && IsDoingIllegalThing(pc) && guardNearby)
                 {
-                    pc.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Wanted);
+                    SendRPC_SetPlayerType(pc, JailbreakPlayerTypes.Wanted);
                     foreach (var ar in PlayerControl.AllPlayerControls)
                         Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
                 }
@@ -695,11 +695,11 @@ namespace MoreGamemodes
                         }
                     }
                     if (IsGuard(pc))
-                        pc.RpcSetItemAmount(InventoryItems.Resources, GetItemAmount(pc, InventoryItems.Resources) + 2);
+                        SendRPC_SetItemAmount(pc, InventoryItems.Resources, GetItemAmount(pc, InventoryItems.Resources) + 2);
                     if (!IsGuard(pc) && room != null && room.RoomId == SystemTypes.Electrical && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3) && !pc.inVent)
-                        pc.RpcSetItemAmount(InventoryItems.Resources, Math.Min(GetItemAmount(pc, InventoryItems.Resources) + 2, Options.MaximumPrisonerResources.GetInt()));
+                        SendRPC_SetItemAmount(pc, InventoryItems.Resources, Math.Min(GetItemAmount(pc, InventoryItems.Resources) + 2, Options.MaximumPrisonerResources.GetInt()));
                     if (!IsGuard(pc) && room && room.RoomId == SystemTypes.Storage && (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 0 || Main.RealOptions.GetByte(ByteOptionNames.MapId) == 3))
-                        pc.RpcSetItemAmount(InventoryItems.Resources, Math.Min(GetItemAmount(pc, InventoryItems.Resources) + 5, Options.MaximumPrisonerResources.GetInt()));
+                        SendRPC_SetItemAmount(pc, InventoryItems.Resources, Math.Min(GetItemAmount(pc, InventoryItems.Resources) + 5, Options.MaximumPrisonerResources.GetInt()));
                 }
                 OneSecondTimer -= 1f;
             }
@@ -845,6 +845,70 @@ namespace MoreGamemodes
             return name;
         }
 
+        public void SendRPC_SetPlayerType(PlayerControl player, JailbreakPlayerTypes playerType)
+        {
+            if (PlayerType[player.PlayerId] == playerType) return;
+            PlayerType[player.PlayerId] = playerType;
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((int)JailbreakRPC.SetPlayerType);
+            writer.Write((int)playerType);
+            writer.EndMessage();
+        }
+
+        public void SendRPC_SetItemAmount(PlayerControl player, InventoryItems item, int amount)
+        {
+            if (Inventory[(player.PlayerId, item)] == amount) return;
+            Inventory[(player.PlayerId, item)] = amount;
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((int)JailbreakRPC.SetItemAmount);
+            writer.Write((int)item);
+            writer.Write(amount);
+            writer.EndMessage();
+        }
+
+        public void SendRPC_SetCurrentRecipe(PlayerControl player, int recipeId)
+        {
+            if (CurrentRecipe[player.PlayerId] == recipeId) return;
+            CurrentRecipe[player.PlayerId] = recipeId;
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((int)JailbreakRPC.SetCurrentRecipe);
+            writer.Write(recipeId);
+            writer.EndMessage();
+        }
+
+        public void SendRPC_SetIsDead(PlayerControl player, bool isDead)
+        {
+            if (IsDead[player.PlayerId] == isDead) return;
+            IsDead[player.PlayerId] = isDead;
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((int)JailbreakRPC.SetIsDead);
+            writer.Write(isDead);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            JailbreakRPC rpcType = (JailbreakRPC)reader.ReadInt32();
+            switch(rpcType)
+            {
+                case JailbreakRPC.SetPlayerType:
+                    PlayerType[player.PlayerId] = (JailbreakPlayerTypes)reader.ReadInt32();
+                    break;
+                case JailbreakRPC.SetItemAmount:
+                    InventoryItems item = (InventoryItems)reader.ReadInt32();
+                    Inventory[(player.PlayerId, item)] = reader.ReadInt32();
+                    break;
+                case JailbreakRPC.SetCurrentRecipe:
+                    CurrentRecipe[player.PlayerId] = reader.ReadInt32();
+                    break;
+                case JailbreakRPC.SetIsDead:
+                    IsDead[player.PlayerId] = reader.ReadBoolean();
+                    break;
+            }
+        }
+
         public JailbreakPlayerTypes GetJailbreakPlayerType(PlayerControl player)
         {
             if (player == null) return JailbreakPlayerTypes.None;
@@ -915,7 +979,7 @@ namespace MoreGamemodes
 
         public void RpcEscape(PlayerControl player)
         {
-            player.RpcSetJailbreakPlayerType(JailbreakPlayerTypes.Escapist);
+            SendRPC_SetPlayerType(player, JailbreakPlayerTypes.Escapist);
             player.RpcShapeshift(player, false);
             player.RpcSetDeathReason(DeathReasons.Escaped);
             player.RpcSetRole(RoleTypes.GuardianAngel, true);
@@ -1019,5 +1083,13 @@ namespace MoreGamemodes
         GuardWeapon = 1000,
         EnergyDrink,
         GuardArmor,
+    }
+
+    enum JailbreakRPC
+    {
+        SetPlayerType,
+        SetItemAmount,
+        SetCurrentRecipe,
+        SetIsDead,
     }
 }

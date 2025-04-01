@@ -69,7 +69,7 @@ namespace MoreGamemodes
             }, 2f);
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return !Options.DisableMeetings.GetBool();
         }

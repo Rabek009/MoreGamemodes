@@ -7,6 +7,7 @@ using System;
 using Assets.CoreScripts;
 using System.Text;
 using AmongUs.Data;
+using InnerNet;
 
 using Object = UnityEngine.Object;
 
@@ -28,7 +29,8 @@ namespace MoreGamemodes
                 return false;
             }
             if (!AmongUsClient.Instance.AmHost) return true;
-            __instance.timeSinceLastMessage = 3f;
+            if (Main.ModdedProtocol.Value || Main.GameStarted)
+                __instance.timeSinceLastMessage = 3f;
             if (__instance.quickChatField.Visible)
             {
                 return true;
@@ -1055,7 +1057,7 @@ namespace MoreGamemodes
                     if (RandomItemsGamemode.instance.GetItem(PlayerControl.LocalPlayer) == Items.Stop)
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);    
-                        PlayerControl.LocalPlayer.RpcSetItem(Items.None);
+                        RandomItemsGamemode.instance.SendRPC(PlayerControl.LocalPlayer, Items.None);
                         Utils.SendSpam(true);
                     }
                     break;
@@ -1225,7 +1227,7 @@ namespace MoreGamemodes
                         msg += suicidePlayers + " commited suicide\n";  
                         msg += trappedPlayers + " players trapped\n";      
                         PlayerControl.LocalPlayer.RpcSendMessage(msg, "Newsletter");
-                        PlayerControl.LocalPlayer.RpcSetItem(Items.None);
+                        RandomItemsGamemode.instance.SendRPC(PlayerControl.LocalPlayer, Items.None);
                     }
                     break;
                 case "/tpout":
@@ -2021,7 +2023,7 @@ namespace MoreGamemodes
                     if (RandomItemsGamemode.instance.GetItem(player) == Items.Stop)
                     {
                         MeetingHud.Instance.RpcVotingComplete(new MeetingHud.VoterState[0], null, false);  
-                        player.RpcSetItem(Items.None);
+                        RandomItemsGamemode.instance.SendRPC(player, Items.None);
                         Utils.SendSpam(true);
                     }
                     break;
@@ -2158,7 +2160,7 @@ namespace MoreGamemodes
                         msg += suicidePlayers + " commited suicide\n";  
                         msg += trappedPlayers + " players trapped\n";      
                         player.RpcSendMessage(msg, "Newsletter");
-                        player.RpcSetItem(Items.None);
+                        RandomItemsGamemode.instance.SendRPC(player, Items.None);
                     }
                     break;
                 case "/tpout":
@@ -2168,7 +2170,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can't use /tpout during game.", "Warning");
                         break;
                     }
-                    if (!Options.CanUseTpoutCommand.GetBool())
+                    if (!Options.CanUseTpoutCommand.GetBool() || !Main.ModdedProtocol.Value)
                     {
                         player.RpcSendMessage("Host disabled usage of this command.", "Warning");
                         break;
@@ -2182,7 +2184,7 @@ namespace MoreGamemodes
                         player.RpcSendMessage("You can't use /tpin during game.", "Warning");
                         break;
                     }
-                    if (!Options.CanUseTpoutCommand.GetBool())
+                    if (!Options.CanUseTpoutCommand.GetBool() || !Main.ModdedProtocol.Value)
                     {
                         player.RpcSendMessage("Host disabled usage of this command.", "Warning");
                         break;
@@ -2498,6 +2500,75 @@ namespace MoreGamemodes
             Main.MessagesToSend.RemoveAt(0);
             int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo).GetClientId();
             var name = player.Data.PlayerName;
+            if (!Main.ModdedProtocol.Value && !Main.GameStarted)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    var clientId2 = pc.GetClientId();
+                    if (clientId == clientId2 || clientId == -1)
+                    {
+                        if (pc.AmOwner)
+                        {
+                            player.SetName(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title));
+                            SendingSystemMessage = true;
+                            DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
+                            SendingSystemMessage = false;
+                            player.SetName(name);
+                        }
+                        else
+                        {
+                            PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
+                            playerControl.PlayerId = player.PlayerId;
+                            playerControl.isNew = false;
+                            playerControl.notRealPlayer = true;
+                            playerControl.NetTransform.SnapTo(new Vector2(50f, 50f));
+                            AmongUsClient.Instance.NetIdCnt += 1U;
+                            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                            MessageWriter writer = sender.stream;
+                            sender.StartMessage(clientId);
+                            AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, writer);
+			                sender.EndMessage();
+                            sender.StartMessage(int.MaxValue);
+			                for (uint i = 1; i <= 3; ++i)
+			                {
+			                    writer.StartMessage(4);
+			                    writer.WritePacked(2U);
+			                    writer.WritePacked(-2);
+			                    writer.Write((byte)SpawnFlags.None);
+			                    writer.WritePacked(1);
+			                    writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+			                    writer.StartMessage(1);
+			                    writer.EndMessage();
+			                    writer.EndMessage();
+			                }
+			                writer.EndMessage();
+                            if (PlayerControl.AllPlayerControls.Contains(playerControl))
+                                PlayerControl.AllPlayerControls.Remove(playerControl);
+                            sender.StartMessage(clientId);
+                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(player.Data.NetId)
+                                .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
+                                .EndRpc();
+                            sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SendChat)
+                                .Write(msg)
+                                .EndRpc();
+                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(player.Data.NetId)
+                                .Write(name)
+                                .EndRpc();
+                            writer.StartMessage(5);
+			                writer.WritePacked(playerControl.NetId);
+			                writer.EndMessage();
+                            sender.EndMessage();
+                            sender.SendMessage();
+                            AmongUsClient.Instance.RemoveNetObject(playerControl);
+                            playerControl.DespawnOnDestroy = false;
+                            Object.Destroy(playerControl.gameObject);
+                        }
+                    }
+                }
+                return;
+            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 var clientId2 = pc.GetClientId();
@@ -2542,16 +2613,34 @@ namespace MoreGamemodes
         {
             int length = __instance.textArea.text.Length;
 		    __instance.charCountText.text = length + "/" + __instance.textArea.characterLimit;
-            if (length < (AmongUsClient.Instance.AmHost ? 750 : 225))
-		    {
-		        __instance.charCountText.color = Color.black;
-		        return;
-		    }
-		    if (length < (AmongUsClient.Instance.AmHost ? 1000 : 300))
-		    {
-		        __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
-		        return;
-		    }
+            if (Main.ModdedProtocol.Value || Main.GameStarted)
+            {
+                if (length < (AmongUsClient.Instance.AmHost ? 750 : 225))
+		        {
+		    	    __instance.charCountText.color = Color.black;
+		    	    return;
+		        }
+		        if (length < (AmongUsClient.Instance.AmHost ? 1000 : 300))
+		        {
+		    	    __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
+		    	    return;
+		        }
+		        __instance.charCountText.color = Color.red;
+            }
+		    else
+            {
+                if (length < 90)
+		        {
+		    	    __instance.charCountText.color = Color.black;
+		    	    return;
+		        }
+		        if (length < 118)
+		        {
+		    	    __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
+		    	    return;
+		        }
+		        __instance.charCountText.color = Color.red;
+            }
 		    __instance.charCountText.color = Color.red;
         }
     }
@@ -2566,6 +2655,13 @@ namespace MoreGamemodes
                 __result = false;
                 return false;
             }
+            if (!Main.GameStarted && Main.ModdedProtocol.Value)
+            {
+                chatText = chatText.Replace("[", "【");
+                chatText = chatText.Replace("]", "】");
+                chatText = chatText.Replace("<", " ");
+                chatText = chatText.Replace(">", " ");
+            }
             if (chatText[0] == '/' && !AmongUsClient.Instance.AmHost)
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
@@ -2574,10 +2670,15 @@ namespace MoreGamemodes
                 __result = true;
                 return false;
             }
-            if (!Main.GameStarted)
+            if (!Main.GameStarted && Main.ModdedProtocol.Value)
             {
                 int return_count = PlayerControl.LocalPlayer.Data.PlayerName.Count(x => x == '\n');
                 chatText = new StringBuilder(chatText).Insert(0, "<size=1.5>\n</size>", return_count).ToString();
+            }
+            else if (!Main.GameStarted)
+            {
+                int return_count = PlayerControl.LocalPlayer.Data.PlayerName.Count(x => x == '\n');
+                chatText = new StringBuilder(chatText).Insert(0, "\n", return_count).ToString();
             }
             if (AmongUsClient.Instance.AmClient && DestroyableSingleton<HudManager>.Instance)
                 DestroyableSingleton<HudManager>.Instance.Chat.AddChat(__instance, chatText);
@@ -2608,7 +2709,11 @@ namespace MoreGamemodes
     {
         public static void Postfix(ChatController __instance)
         {
-            __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 1000 : 300;
+            if (Main.ModdedProtocol.Value || Main.GameStarted)
+                __instance.freeChatField.textArea.characterLimit = AmongUsClient.Instance.AmHost ? 1000 : 300;
+            else
+                __instance.freeChatField.textArea.characterLimit = 118;
+
             if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.C))
                 ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
 

@@ -3,6 +3,7 @@ using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
 using System;
+using System.Linq;
 
 namespace MoreGamemodes
 {
@@ -12,7 +13,7 @@ namespace MoreGamemodes
         {
             NoItemTimer = 10f;
             if (exiled != null && exiled.Object != null)
-                exiled.Object.RpcSetItem(Items.None); 
+                SendRPC(exiled.Object, Items.None);
         }
 
         public override void OnSetFilterText(HauntMenuMinigame __instance)
@@ -142,7 +143,7 @@ namespace MoreGamemodes
                     case Items.TimeSlower:
                         ++TimeSlowersUsed;
                         Utils.SyncAllSettings();
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Knowledge:
                         if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
@@ -158,11 +159,11 @@ namespace MoreGamemodes
                             if (Options.CrewmatesSeeReveal.GetBool())
                                 Main.NameColors[(pc.PlayerId, target.PlayerId)] = Color.gray;
                         }
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Shield:
                         ShieldTimer[pc.PlayerId] = Options.ShieldDuration.GetFloat();
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Gun:
                         if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
@@ -180,7 +181,7 @@ namespace MoreGamemodes
                                     pc.RpcMurderPlayer(target, true);
                             }
                         }
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Illusion:
                         if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
@@ -188,7 +189,7 @@ namespace MoreGamemodes
                             target.RpcMurderPlayer(pc, true);
                         else
                             Main.NameColors[(target.PlayerId, pc.PlayerId)] = Color.green;
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Radar:
                         bool showReactorFlash = false;
@@ -199,7 +200,7 @@ namespace MoreGamemodes
                         }
                         if (showReactorFlash)
                             pc.RpcReactorFlash(0.5f, Palette.Orange);
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Swap:
                         if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f) break;
@@ -241,29 +242,30 @@ namespace MoreGamemodes
                             }
                             NoItemGive = false;
                         }, 0.1f, "Set tasks done");   
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.TimeSpeeder:
                         ++TimeSpeedersUsed;
                         Utils.SyncAllSettings();
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Flash:
                         FlashTimer = Options.FlashDuration.GetFloat();
                         Utils.SyncAllSettings();
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Hack:
                         HackTimer = Options.HackDuration.GetFloat();
-                        GameManager.Instance.RpcSetHackActive(true);
+                        IsHackActive = true;
+                        SendRPC(GameManager.Instance);
                         Utils.SetAllVentInteractions();
                         foreach (var ar in PlayerControl.AllPlayerControls)
                             Main.NameColors[(ar.PlayerId, ar.PlayerId)] = Color.yellow;
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Camouflage:
                         if (pc.IsMushroomMixupActive()) break;
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         CamouflageTimer = Options.CamouflageDuration.GetFloat();
                         Camouflage();
                         break;
@@ -274,7 +276,7 @@ namespace MoreGamemodes
                                 ar.RpcTeleport(pc.GetRealPosition());
                         }
                         NoBombTimer = 10f;
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Bomb:
                         if (NoBombTimer > 0f) return;
@@ -290,7 +292,7 @@ namespace MoreGamemodes
                         pc.RpcSetDeathReason(DeathReasons.Suicide);
                         pc.RpcMurderPlayer(pc, true);
                         Utils.RpcCreateExplosion(Options.BombRadius.GetFloat() * 20f / 3f, 1.5f, Options.RiExplosionCreatesHole.GetBool(), Options.RiHoleSpeedDecrease.GetInt(), pc.GetRealPosition());
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         if (Options.NoGameEnd.GetBool()) break;
                         var isSomeoneAlive = false;
                         foreach (var player in PlayerControl.AllPlayerControls)
@@ -317,44 +319,44 @@ namespace MoreGamemodes
                                 visibleList.Add(player.PlayerId);
                         }
                         Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.GetRealPosition(), visibleList, pc.PlayerId);
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.TeamChanger:
                         if (target == null || Vector2.Distance(pc.GetRealPosition(), target.transform.position) > 2f || target.Data.Role.IsImpostor) break;
                         var role = Options.TargetGetsYourRole.GetBool() ? pc.Data.Role.Role : RoleTypes.Impostor;
                         target.RpcSetRoleV2(role);
                         pc.RpcMurderPlayer(pc, true);
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Teleport:
                         pc.RpcRandomVentTeleport();
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Button:
                         if (Utils.IsSabotage() && !Options.CanUseDuringSabotage.GetBool()) break;
                         pc.ForceReportDeadBody(null);
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Finder:
                         target = pc.GetClosestPlayer();
                         if (target.onLadder || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.inMovingPlat)
                             break;
                         pc.RpcTeleport(target.transform.position);
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Rope:
                         target = pc.GetClosestPlayer();
                         target.RpcTeleport(pc.GetRealPosition());
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Compass:
                         CompassTimer[pc.PlayerId] = Options.CompassDuration.GetFloat();
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                     case Items.Booster:
                         BoosterTimer[pc.PlayerId] = Options.BoosterDuration.GetFloat();
                         pc.SyncPlayerSettings();
-                        pc.RpcSetItem(Items.None);
+                        SendRPC(pc, Items.None);
                         break;
                 }
             }
@@ -385,8 +387,8 @@ namespace MoreGamemodes
         public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
         {
             if (killer.Data.Role.IsImpostor && !NoItemGive)
-                killer.RpcSetItem(RandomItemImpostor());
-            target.RpcSetItem(Items.None);
+                SendRPC(killer, RandomItemImpostor());
+            SendRPC(target, Items.None);
             if (Options.EnableMedicine.GetBool())
                 new LateTask(() => target.SetChatVisible(false), 0.2f);
         }
@@ -398,10 +400,10 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
-            if (IsHackActive && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
-            if (GetItem(__instance) == Items.Medicine && target != null && target.Object != null && !target.Disconnected)
+            if (!force && IsHackActive && (!__instance.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
+            if (!force && GetItem(__instance) == Items.Medicine && target != null && target.Object != null && !target.Disconnected)
             {
                 var player = target.Object;
                 player.RpcRevive();
@@ -410,7 +412,7 @@ namespace MoreGamemodes
                     __instance.RpcSetDeathReason(DeathReasons.Suicide);
                     __instance.RpcExileV2();
                 }
-                __instance.RpcSetItem(Items.None);
+                SendRPC(__instance, Items.None);
                 return false;
             }
             if (CamouflageTimer > -1f)
@@ -449,7 +451,8 @@ namespace MoreGamemodes
             if (IsHackActive && HackTimer <= 0f)
             {
                 HackTimer = 0f;
-                GameManager.Instance.RpcSetHackActive(false);
+                IsHackActive = false;
+                SendRPC(GameManager.Instance);
                 Utils.SetAllVentInteractions();
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(pc.PlayerId, pc.PlayerId)] = Color.clear;
@@ -519,7 +522,7 @@ namespace MoreGamemodes
         public override void OnCompleteTask(PlayerControl pc)
         {
             if (!pc.Data.IsDead && !NoItemGive)
-                pc.RpcSetItem(RandomItemCrewmate());
+                SendRPC(pc, RandomItemCrewmate());
         }
 
         public override bool OnCheckVanish(PlayerControl phantom)
@@ -603,6 +606,56 @@ namespace MoreGamemodes
             return name;
         }
 
+        public void SendRPC(PlayerControl player, Items item)
+        {
+            if (AllPlayersItems[player.PlayerId] == item) return;
+            AllPlayersItems[player.PlayerId] = item;
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write((int)item);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            AllPlayersItems[player.PlayerId] = (Items)reader.ReadInt32();
+        }
+
+        public void SendRPC(GameManager manager)
+        {
+            HudManager.Instance.SetHudActive(!MeetingHud.Instance);
+            if (Minigame.Instance)
+			{
+				try
+				{
+					Minigame.Instance.Close();
+					Minigame.Instance.Close();
+				}
+				catch
+				{
+				}
+			}
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write(IsHackActive);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(GameManager manager, MessageReader reader)
+        {
+            IsHackActive = reader.ReadBoolean();
+            HudManager.Instance.SetHudActive(!MeetingHud.Instance);
+            if (Minigame.Instance)
+			{
+				try
+				{
+					Minigame.Instance.Close();
+					Minigame.Instance.Close();
+				}
+				catch
+				{
+				}
+			}
+        }
+
         public Items RandomItemCrewmate()
         {
             List<Items> items = new();
@@ -624,6 +677,7 @@ namespace MoreGamemodes
             if (Options.EnableCompass.GetBool()) items.Add(Items.Compass);
             if (Options.EnableBooster.GetBool()) items.Add(Items.Booster);
 
+            if (!items.Any()) return Items.None;
             return items[rand.Next(0, items.Count)];
         }
 
@@ -647,7 +701,8 @@ namespace MoreGamemodes
             if (Options.EnableNewsletter.GetBool()) items.Add(Items.Newsletter);
             if (Options.EnableCompass.GetBool()) items.Add(Items.Compass);
             if (Options.EnableBooster.GetBool()) items.Add(Items.Booster);
-
+            
+            if (!items.Any()) return Items.None;
             return items[rand.Next(0, items.Count)];
         }
 

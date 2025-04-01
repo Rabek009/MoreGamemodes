@@ -30,7 +30,7 @@ namespace MoreGamemodes
             if (Timer >= Duration && Frame == 4)
             {
                 if (CreateHole)
-                    Utils.RpcCreateExplosionHole(Size, HoleSpeedDecrease, Position);
+                    Utils.RpcCreateExplosionHole(Size / 1.5f, HoleSpeedDecrease, Position);
                 Despawn();
             }
         }

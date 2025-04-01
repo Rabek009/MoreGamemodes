@@ -1,7 +1,6 @@
 using AmongUs.GameOptions;
 using UnityEngine;
 using Hazel;
-using System;
 
 namespace MoreGamemodes
 {
@@ -62,7 +61,8 @@ namespace MoreGamemodes
 
         public override void OnMeeting()
         {
-            EndAbility();
+            if (RealPosition != null)
+                EndAbility();
         }
 
         public override void OnFixedUpdate()
@@ -84,7 +84,8 @@ namespace MoreGamemodes
         {
             ControlledDrone = Utils.RpcCreateDrone(Player, Player.GetRealPosition());
             DronePosition = Player.GetRealPosition();
-            Player.RpcSetDronerRealPosition(Player.GetRealPosition());
+            RealPosition = Player.GetRealPosition();
+            SendRPC();
             bool doSend = false;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
@@ -171,6 +172,25 @@ namespace MoreGamemodes
             ControlledDrone = null;
             DronePosition = Vector2.zero;
             RealPosition = null;
+            SendRPC();
+        }
+
+        public void SendRPC()
+        {
+            if (Player.AmOwner)
+                HudManager.Instance.SetHudActive(!MeetingHud.Instance);
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.Write(RealPosition != null);
+            if (RealPosition != null)
+                NetHelpers.WriteVector2((Vector2)RealPosition, writer);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            RealPosition = reader.ReadBoolean() ? NetHelpers.ReadVector2(reader) : null;
+            if (Player.AmOwner)
+                HudManager.Instance.SetHudActive(!MeetingHud.Instance);
         }
 
         public void EndAbility()
@@ -178,7 +198,16 @@ namespace MoreGamemodes
             AbilityDuration = -1f;
             if (Player.AmOwner)
                 Player.Visible = true;
-            Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 128));
+            if (MeetingHud.Instance)
+            {
+                Vector2 vector = Vector2.up;
+		        vector = vector.Rotate((Player.PlayerId - 1) * (360f / GameData.Instance.PlayerCount));
+		        vector *= ShipStatus.Instance.SpawnRadius;
+		        Vector2 position = ShipStatus.Instance.MeetingSpawnCenter + vector + new Vector2(0f, 0.3636f);
+                Player.NetTransform.SnapTo(position, (ushort)(Player.NetTransform.lastSequenceId + 128));
+            }
+            else
+                Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 128));
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             sender.StartMessage(-1);
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
@@ -195,10 +224,12 @@ namespace MoreGamemodes
                 .EndRpc();
             sender.EndMessage();
             sender.SendMessage();
-            ControlledDrone.Despawn();
+            if (!MeetingHud.Instance)
+                ControlledDrone.Despawn();
             ControlledDrone = null;
             DronePosition = Vector2.zero;
-            Player.RpcSetDronerRealPosition(null);
+            RealPosition = null;
+            SendRPC();
             Player.SyncPlayerSettings();
             Player.RpcSetVentInteraction();
             Player.RpcResetAbilityCooldown();

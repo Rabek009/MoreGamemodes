@@ -171,11 +171,11 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return true;
             if (AmongUsClient.Instance.IsGameOver || MeetingHud.Instance || (target == null && Utils.IsSabotage()) || __instance.Data.IsDead) return false;
             if (target != null && !target.IsDead && CustomGamemode.Instance.Gamemode != Gamemodes.Zombies) return false;
-            if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target)) return false;
+            if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target, false)) return false;
             foreach (var pc in PlayerControl.AllPlayerControls)
                 pc.SyncPlayerName(true, true);  
-            foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
-                netObject.OnMeeting();
+            for (int i = CustomNetObject.CustomObjects.Count - 1; i >= 0; --i)
+                    CustomNetObject.CustomObjects[i].OnMeeting();
             AntiCheat.OnMeeting();
             return true;
         }
@@ -222,8 +222,8 @@ namespace MoreGamemodes
             {
                 CustomGamemode.Instance.OnFixedUpdate();
                 ExplosionHole.FixedUpdate();
-                foreach (CustomNetObject netObject in CustomNetObject.CustomObjects)
-                    netObject.OnFixedUpdate();
+                for (int i = CustomNetObject.CustomObjects.Count - 1; i >= 0; --i)
+                    CustomNetObject.CustomObjects[i].OnFixedUpdate();
             }
             AntiCheat.OnUpdate();
             if (Main.GameStarted)
@@ -1208,6 +1208,39 @@ namespace MoreGamemodes
 		    MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.UseZipline, SendOption.Reliable);
 		    writer.Write(fromTop);
 		    writer.EndMessage();
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckMurder))]
+    class CmdCheckMurderPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
+        {
+            if (!AmongUsClient.Instance.AmHost || Main.ModdedProtocol.Value) return true;
+            __instance.CheckMurder(target);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckProtect))]
+    class CmdCheckProtectPatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
+        {
+            if (!AmongUsClient.Instance.AmHost || Main.ModdedProtocol.Value) return true;
+            __instance.CheckProtect(target);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckUseZipline))]
+    class CmdCheckUseZiplinePatch
+    {
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] ZiplineBehaviour ziplineBehaviour, [HarmonyArgument(2)] bool fromTop)
+        {
+            if (!AmongUsClient.Instance.AmHost || Main.ModdedProtocol.Value) return true;
+            __instance.CheckUseZipline(target, ziplineBehaviour, fromTop);
             return false;
         }
     }

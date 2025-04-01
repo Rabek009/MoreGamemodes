@@ -74,7 +74,8 @@ namespace MoreGamemodes
                 var dronerRole = player.GetRole() as Droner;
                 if (dronerRole != null && dronerRole.ControlledDrone != null)
                 {
-                    player.RpcSetDronerRealPosition(position);
+                    dronerRole.RealPosition = position;
+                    dronerRole.SendRPC();
                     if (AmongUsClient.Instance.AmClient && !player.AmOwner)
                     {
                         player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 128));
@@ -495,7 +496,7 @@ namespace MoreGamemodes
                 foreach (var message in Main.NameMessages[player.PlayerId])
                     name += "\n" + message.Item1;
             }
-            if (Main.RealOptions.GetByte(ByteOptionNames.MapId) == 5 && Utils.IsActive(SystemTypes.MushroomMixupSabotage) && player != seer && !seer.Data.Role.IsImpostor)
+            if (Main.RealOptions.GetByte(ByteOptionNames.MapId) >= 5 && Utils.IsActive(SystemTypes.MushroomMixupSabotage) && player != seer && !seer.Data.Role.IsImpostor)
                 name = Utils.ColorString(Color.clear, "Player");
             return name;
         }
@@ -589,35 +590,15 @@ namespace MoreGamemodes
 		    {
 			    return;
 		    }
+            if (!CustomGamemode.Instance.OnReportDeadBody(player, target, true)) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                pc.SyncPlayerName(true, true);  
+            for (int i = CustomNetObject.CustomObjects.Count - 1; i >= 0; --i)
+                CustomNetObject.CustomObjects[i].OnMeeting();
+            AntiCheat.OnMeeting();
             MeetingRoomManager.Instance.AssignSelf(player, target);
             DestroyableSingleton<HudManager>.Instance.OpenMeetingRoom(player);
 		    player.RpcStartMeeting(target);
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic)
-            {
-                new LateTask(() => {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                    {
-                        bool syncSettings = ClassicGamemode.instance.IsFrozen[pc.PlayerId] || ClassicGamemode.instance.IsBlinded[pc.PlayerId];
-                        ClassicGamemode.instance.FreezeTimer[pc.PlayerId] = 0f;
-                        ClassicGamemode.instance.BlindTimer[pc.PlayerId] = 0f;
-                        ClassicGamemode.instance.RoleblockTimer[pc.PlayerId] = 0f;
-                        ClassicGamemode.instance.IsFrozen[pc.PlayerId] = false;
-                        ClassicGamemode.instance.IsBlinded[pc.PlayerId] = false;
-                        if (ClassicGamemode.instance.IsRoleblocked[pc.PlayerId])
-                            pc.RpcSetRoleblock(false);
-                        pc.GetRole().OnMeeting();
-                        foreach (var addOn in pc.GetAddOns())
-                            addOn.OnMeeting();
-                        if (syncSettings)
-                            pc.SyncPlayerSettings();
-                        Utils.SetAllVentInteractions();
-                    }
-                }, 0.01f);
-                new LateTask(() => {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                        pc.SyncPlayerName(true, true, true);
-                }, 0.5f);
-            }
         }
 
         public static void RpcRevive(this PlayerControl player)

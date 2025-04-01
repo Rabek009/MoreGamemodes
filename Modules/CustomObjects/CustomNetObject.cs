@@ -3,6 +3,7 @@ using InnerNet;
 using Hazel;
 using System.Collections.Generic;
 using System.Linq;
+using AmongUs.GameOptions;
 
 namespace MoreGamemodes
 {
@@ -22,7 +23,7 @@ namespace MoreGamemodes
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
-            player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + sprite;
+            player.Data.Outfits[PlayerOutfitType.Default].PlayerName = $"<size={14 + PlayerControlOffset * 25.574f}>\n</size>" + sprite;
             player.Data.Outfits[PlayerOutfitType.Default].ColorId = 0;
             player.Data.Outfits[PlayerOutfitType.Default].HatId = "";
             player.Data.Outfits[PlayerOutfitType.Default].SkinId = "";
@@ -57,18 +58,75 @@ namespace MoreGamemodes
 
         public void RpcTeleport(Vector2 position, SendOption sendOption)
         {
-			playerControl.NetTransform.SnapTo(position, (ushort)(playerControl.NetTransform.lastSequenceId + 1));
-		    MessageWriter writer = AmongUsClient.Instance.StartRpc(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo, sendOption);
-		    NetHelpers.WriteVector2(position, writer);
-		    writer.Write(playerControl.NetTransform.lastSequenceId);
-		    writer.EndMessage();
+            if (lastOffset == 0f) return;
+			playerControl.NetTransform.SnapTo(position + Vector2.up * PlayerControlOffset, (ushort)(playerControl.NetTransform.lastSequenceId + 1));
+            if (PlayerControlOffset != lastOffset)
+            {
+                lastOffset = PlayerControlOffset;
+                var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.inVent && !x.walkingToVent).FirstOrDefault();
+                if (player == null) player = PlayerControl.LocalPlayer;
+                var name = player.Data.Outfits[PlayerOutfitType.Default].PlayerName;
+                var colorId = player.Data.Outfits[PlayerOutfitType.Default].ColorId;
+                var hatId = player.Data.Outfits[PlayerOutfitType.Default].HatId;
+                var skinId = player.Data.Outfits[PlayerOutfitType.Default].SkinId;
+                var petId = player.Data.Outfits[PlayerOutfitType.Default].PetId;
+                var visorId = player.Data.Outfits[PlayerOutfitType.Default].VisorId;
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                MessageWriter writer = sender.stream;
+                sender.StartMessage(-1);
+                player.Data.Outfits[PlayerOutfitType.Default].PlayerName = $"<size={14 + PlayerControlOffset * 25.574f}>\n</size>" + Sprite;
+                player.Data.Outfits[PlayerOutfitType.Default].ColorId = 0;
+                player.Data.Outfits[PlayerOutfitType.Default].HatId = "";
+                player.Data.Outfits[PlayerOutfitType.Default].SkinId = "";
+                player.Data.Outfits[PlayerOutfitType.Default].PetId = "";
+                player.Data.Outfits[PlayerOutfitType.Default].VisorId = "";
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(player.Data.NetId);
+                    player.Data.Serialize(writer, false);
+                }
+                writer.EndMessage();
+                playerControl.Shapeshift(player, false);
+                sender.StartRpc(playerControl.NetId, (byte)RpcCalls.Shapeshift)
+                    .WriteNetObject(player)
+                    .Write(false)
+                    .EndRpc();
+                player.Data.Outfits[PlayerOutfitType.Default].PlayerName = name;
+                player.Data.Outfits[PlayerOutfitType.Default].ColorId = colorId;
+                player.Data.Outfits[PlayerOutfitType.Default].HatId = hatId;
+                player.Data.Outfits[PlayerOutfitType.Default].SkinId = skinId;
+                player.Data.Outfits[PlayerOutfitType.Default].PetId = petId;
+                player.Data.Outfits[PlayerOutfitType.Default].VisorId = visorId;
+                writer.StartMessage(1);
+                {
+                    writer.WritePacked(player.Data.NetId);
+                    player.Data.Serialize(writer, false);
+                }
+                writer.EndMessage();
+                sender.StartRpc(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(position + Vector2.up * PlayerControlOffset)
+                    .Write(playerControl.NetTransform.lastSequenceId)
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
+                return;
+            }
+            else
+            {
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo, sendOption);
+		        NetHelpers.WriteVector2(position + Vector2.up * PlayerControlOffset, writer);
+		        writer.Write(playerControl.NetTransform.lastSequenceId);
+		        AmongUsClient.Instance.FinishRpcImmediately(writer);
+            }
             Position = position;
         }
 
         public void Despawn()
         {
-            playerControl.Despawn();
-            CustomObjects.Remove(this);
+            if (playerControl != null)
+                playerControl.Despawn();
+            if (CustomObjects.Contains(this))
+                CustomObjects.Remove(this);
         }
         
         public void Hide(PlayerControl player)
@@ -120,22 +178,25 @@ namespace MoreGamemodes
 			    msg.Write(AmongUsClient.Instance.GameId);
 			    AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
 			    msg.EndMessage();
-			    msg.StartMessage(6);
-			    msg.Write(AmongUsClient.Instance.GameId);
-			    msg.WritePacked(int.MaxValue);
-			    for (uint i = 1; i <= 3; ++i)
-			    {
-			    	msg.StartMessage(4);
-			    	msg.WritePacked(2U);
-			    	msg.WritePacked(-2);
-			    	msg.Write((byte)SpawnFlags.None);
-			    	msg.WritePacked(1);
-			    	msg.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-			    	msg.StartMessage(1);
-			    	msg.EndMessage();
-			    	msg.EndMessage();
-			    }
-			    msg.EndMessage();
+                if (Utils.IsVanillaServer())
+                {
+                    msg.StartMessage(6);
+			        msg.Write(AmongUsClient.Instance.GameId);
+			        msg.WritePacked(int.MaxValue);
+			        for (uint i = 1; i <= 3; ++i)
+			        {
+			        	msg.StartMessage(4);
+			        	msg.WritePacked(2U);
+			        	msg.WritePacked(-2);
+			        	msg.Write((byte)SpawnFlags.None);
+			        	msg.WritePacked(1);
+			        	msg.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+			        	msg.StartMessage(1);
+			        	msg.EndMessage();
+			        	msg.EndMessage();
+			        }
+			        msg.EndMessage();
+                }
 			    AmongUsClient.Instance.SendOrDisconnect(msg);
 			    msg.Recycle();
                 if (PlayerControl.AllPlayerControls.Contains(playerControl))
@@ -174,7 +235,6 @@ namespace MoreGamemodes
                 playerControl.CachedPlayerData = PlayerControl.LocalPlayer.Data;
             }, 5.1f);
             new LateTask(() => {
-                playerControl.NetTransform.RpcSnapTo(Position);
                 var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.inVent && !x.walkingToVent).FirstOrDefault();
                 if (player == null) player = PlayerControl.LocalPlayer;
                 var name = player.Data.Outfits[PlayerOutfitType.Default].PlayerName;
@@ -186,7 +246,7 @@ namespace MoreGamemodes
                 CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
-                player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + Sprite;
+                player.Data.Outfits[PlayerOutfitType.Default].PlayerName = $"<size={14 + PlayerControlOffset * 25.574f}>\n</size>" + Sprite;
                 player.Data.Outfits[PlayerOutfitType.Default].ColorId = 0;
                 player.Data.Outfits[PlayerOutfitType.Default].HatId = "";
                 player.Data.Outfits[PlayerOutfitType.Default].SkinId = "";
@@ -215,10 +275,26 @@ namespace MoreGamemodes
                     player.Data.Serialize(writer, false);
                 }
                 writer.EndMessage();
+                playerControl.NetTransform.SnapTo(Position + Vector2.up * PlayerControlOffset);
+                sender.StartRpc(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(Position + Vector2.up * PlayerControlOffset)
+                    .Write(playerControl.NetTransform.lastSequenceId)
+                    .EndRpc();
                 sender.EndMessage();
                 sender.SendMessage();
             }, 5.2f);
         }
+
+        private float PlayerControlOffset => (MapNames)Main.RealOptions.GetByte(ByteOptionNames.MapId) switch
+        {
+            MapNames.Skeld => 37.5f,
+            MapNames.MiraHQ => Position.y > 10f ? 20f : 40f,
+            MapNames.Polus => 40f,
+            MapNames.Dleks => 37.5f,
+            MapNames.Airship => Position.y > 0f ? 25f : 50f,
+            MapNames.Fungle => Position.y > 0f ? 25f : 50f,
+            _ => 0f,
+        };
 
         public void CreateNetObject(string sprite, Vector2 position)
         {
@@ -233,28 +309,30 @@ namespace MoreGamemodes
 			msg.Write(AmongUsClient.Instance.GameId);
 			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
 			msg.EndMessage();
-			msg.StartMessage(6);
-			msg.Write(AmongUsClient.Instance.GameId);
-			msg.WritePacked(int.MaxValue);
-			for (uint i = 1; i <= 3; ++i)
-			{
-				msg.StartMessage(4);
-				msg.WritePacked(2U);
-				msg.WritePacked(-2);
-				msg.Write((byte)SpawnFlags.None);
-				msg.WritePacked(1);
-				msg.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-				msg.StartMessage(1);
-				msg.EndMessage();
-				msg.EndMessage();
-			}
-			msg.EndMessage();
+            if (Utils.IsVanillaServer())
+            {
+			    msg.StartMessage(6);
+			    msg.Write(AmongUsClient.Instance.GameId);
+			    msg.WritePacked(int.MaxValue);
+			    for (uint i = 1; i <= 3; ++i)
+			    {
+			    	msg.StartMessage(4);
+			    	msg.WritePacked(2U);
+			    	msg.WritePacked(-2);
+			    	msg.Write((byte)SpawnFlags.None);
+			    	msg.WritePacked(1);
+			    	msg.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+			    	msg.StartMessage(1);
+			    	msg.EndMessage();
+			    	msg.EndMessage();
+			    }
+			    msg.EndMessage();
+            }
 			AmongUsClient.Instance.SendOrDisconnect(msg);
 			msg.Recycle();
             if (PlayerControl.AllPlayerControls.Contains(playerControl))
                 PlayerControl.AllPlayerControls.Remove(playerControl);
             new LateTask(() => {
-                playerControl.NetTransform.RpcSnapTo(position);
                 var player = PlayerControl.AllPlayerControls.ToArray().OrderBy(x => x.PlayerId).Where(x => !x.inVent && !x.walkingToVent).FirstOrDefault();
                 if (player == null) player = PlayerControl.LocalPlayer;
                 var name = player.Data.Outfits[PlayerOutfitType.Default].PlayerName;
@@ -266,7 +344,7 @@ namespace MoreGamemodes
                 CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 MessageWriter writer = sender.stream;
                 sender.StartMessage(-1);
-                player.Data.Outfits[PlayerOutfitType.Default].PlayerName = "<size=14>\n</size>" + sprite;
+                player.Data.Outfits[PlayerOutfitType.Default].PlayerName = $"<size={14 + PlayerControlOffset * 25.574f}>\n</size>" + sprite;
                 player.Data.Outfits[PlayerOutfitType.Default].ColorId = 0;
                 player.Data.Outfits[PlayerOutfitType.Default].HatId = "";
                 player.Data.Outfits[PlayerOutfitType.Default].SkinId = "";
@@ -295,6 +373,12 @@ namespace MoreGamemodes
                     player.Data.Serialize(writer, false);
                 }
                 writer.EndMessage();
+                playerControl.NetTransform.SnapTo(Position + Vector2.up * PlayerControlOffset);
+                lastOffset = PlayerControlOffset;
+                sender.StartRpc(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo)
+                    .WriteVector2(Position + Vector2.up * PlayerControlOffset)
+                    .Write(playerControl.NetTransform.lastSequenceId)
+                    .EndRpc();
                 sender.EndMessage();
                 sender.SendMessage();
             }, 0.2f);
@@ -304,6 +388,7 @@ namespace MoreGamemodes
             Sprite = sprite;
             ++MaxId;
             Id = MaxId;
+            lastOffset = 0f;
             CustomObjects.Add(this);
             new LateTask(() => {
                 bool doSend = false;
@@ -343,5 +428,6 @@ namespace MoreGamemodes
         public string Sprite;
         public int Id;
         public Vector2 Position;
+        private float lastOffset;
     }
 }

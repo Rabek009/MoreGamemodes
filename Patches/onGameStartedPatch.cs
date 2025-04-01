@@ -152,6 +152,13 @@ namespace MoreGamemodes
             {
                 Utils.SetAllVentInteractions();
             }
+
+            if (Options.Amogus.GetBool())
+            {
+                int amogusCount = Math.Max(1, GameData.Instance.PlayerCount / 4);
+                for (int i = 1; i <= amogusCount; ++i)
+                    Utils.RpcCreateAmogus();
+            }
         }
     }
 }

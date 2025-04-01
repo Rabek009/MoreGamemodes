@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using AmongUs.GameOptions;
+using Hazel;
 
 namespace MoreGamemodes
 {
@@ -67,6 +68,18 @@ namespace MoreGamemodes
             ChangeTarget();
         }
 
+        public void SendRPC()
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.Write(Target);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            Target = reader.ReadByte();
+        }
+
         public void ChangeTarget()
         {
             if (Target != byte.MaxValue)
@@ -92,7 +105,7 @@ namespace MoreGamemodes
                 Target = PotentialTargets[rand.Next(0, PotentialTargets.Count)].PlayerId;
                 Main.NameColors[(Target, Player.PlayerId)] = Color.black;
             }
-            Player.RpcSetHitmanTarget(Target);
+            SendRPC();
             Timer = 0f;
             Player.RpcResetAbilityCooldown();
         }

@@ -8,7 +8,7 @@ namespace MoreGamemodes
         {
             if (Health <= 0f)
             {
-                GameManager.Instance.RpcDestroyTurret(Room);
+                BaseWarsGamemode.instance.SendRPC(GameManager.Instance, Room);
                 BaseWarsGamemode.instance.AllTurrets.Remove(this);
                 Top.Despawn();
                 HealthDisplay.Despawn();

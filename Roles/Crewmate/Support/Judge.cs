@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Hazel;
 
 using Object = UnityEngine.Object;
 
@@ -24,7 +25,17 @@ namespace MoreGamemodes
                 VoterId = Player.PlayerId,
                 VotedForId = target.PlayerId
             }}, target.Data, false);
-            Player.RpcUseJudgeAbility();
+            SendRPC();
+        }
+
+        public void SendRPC()
+        {
+            AmongUsClient.Instance.SendRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            AbilityUsed = true;
         }
 
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/GuessManager.cs#L638

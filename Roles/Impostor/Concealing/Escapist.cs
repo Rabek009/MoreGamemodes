@@ -1,4 +1,5 @@
 using AmongUs.GameOptions;
+using Hazel;
 using UnityEngine;
 
 namespace MoreGamemodes
@@ -22,24 +23,27 @@ namespace MoreGamemodes
 
         public override void OnMeeting()
         {
-            Player.RpcMarkEscapistPosition(null);
+            MarkedPosition = null;
             MarkedPositionRoom = null;
+            SendRPC();
         }
 
         public override bool OnCheckVanish()
         {
             if (MarkedPosition == null)
             {
-                Player.RpcMarkEscapistPosition(Player.GetRealPosition());
+                MarkedPosition = Player.GetRealPosition();
                 var room = Player.GetPlainShipRoom();
                 if (room != null)
                     MarkedPositionRoom = room.RoomId;
+                SendRPC();
                 new LateTask(() => Player.RpcSetAbilityCooldown(TeleportCooldown.GetFloat()), 0.2f);
                 return false;
             }
             Player.RpcTeleport((Vector2)MarkedPosition);
-            Player.RpcMarkEscapistPosition(null);
+            MarkedPosition = null;
             MarkedPositionRoom = null;
+            SendRPC();
             return false;
         }
 
@@ -72,6 +76,21 @@ namespace MoreGamemodes
         {
             MarkedPosition = null;
             MarkedPositionRoom = null;
+            SendRPC();
+        }
+
+        public void SendRPC()
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.Write(MarkedPosition != null);
+            if (MarkedPosition != null)
+                NetHelpers.WriteVector2((Vector2)MarkedPosition, writer);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            MarkedPosition = reader.ReadBoolean() ? NetHelpers.ReadVector2(reader) : null;
         }
 
         public Escapist(PlayerControl player)

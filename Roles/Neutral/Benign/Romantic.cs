@@ -87,7 +87,7 @@ namespace MoreGamemodes
                 return false;
             }
             LoverId = target.PlayerId;
-            Player.RpcSetRomanticLover(LoverId);
+            SendRPC();
             Player.RpcSetAbilityCooldown(10f);
             Player.Notify(Utils.ColorString(Color, Main.StandardNames[target.PlayerId] + " is now your lover!"));
             target.Notify(Utils.ColorString(Color, Main.StandardNames[Player.PlayerId] + " is now your lover!"));
@@ -171,7 +171,7 @@ namespace MoreGamemodes
             if (lover == null || lover.GetRole().Role == CustomRoles.Romantic)
             {
                 LoverId = byte.MaxValue;
-                Player.RpcSetRomanticLover(LoverId);
+                SendRPC();
                 if (!Player.Data.IsDead)
                 {
                     Player.RpcSetKillTimer(RomanceCooldown.GetFloat());
@@ -271,6 +271,22 @@ namespace MoreGamemodes
                 new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
             }
             ProtectionTimer = -1f;
+        }
+
+        public void SendRPC()
+        {
+            if (Player.AmOwner)
+                HudManager.Instance.SetHudActive(!MeetingHud.Instance);
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.Write(LoverId);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            LoverId = reader.ReadByte();
+            if (Player.AmOwner)
+                HudManager.Instance.SetHudActive(!MeetingHud.Instance);
         }
 
         public bool OnCheckMurder(PlayerControl killer, PlayerControl target)

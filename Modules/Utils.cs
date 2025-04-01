@@ -71,12 +71,11 @@ namespace MoreGamemodes
             {
                 return false;
             }
-
-            int mapId = Main.RealOptions.GetByte(ByteOptionNames.MapId);
+            byte mapId = Main.RealOptions.GetByte(ByteOptionNames.MapId);
             switch (type)
             {
                 case SystemTypes.Electrical:
-                    if (mapId == 5) return false;
+                    if (mapId >= 5) return false;
                     var SwitchSystem = ShipStatus.Instance.Systems[type].TryCast<SwitchSystem>();
                     return SwitchSystem != null && SwitchSystem.IsActive;
                 case SystemTypes.Reactor:
@@ -181,23 +180,30 @@ namespace MoreGamemodes
 
         public static void SendGameData()
         {
+            bool doSend = false;
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage(5);
+            writer.Write(AmongUsClient.Instance.GameId);
             foreach (var playerinfo in GameData.Instance.AllPlayers)
             {
-                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
-                writer.StartMessage(5);
-                {
-                    writer.Write(AmongUsClient.Instance.GameId);
-                    writer.StartMessage(1);
-                    {
-                        writer.WritePacked(playerinfo.NetId);
-                        playerinfo.Serialize(writer, false);
-                    }
-                    writer.EndMessage();
-                }
+                writer.StartMessage(1);
+                writer.WritePacked(playerinfo.NetId);
+                playerinfo.Serialize(writer, false);
                 writer.EndMessage();
-                AmongUsClient.Instance.SendOrDisconnect(writer);
-                writer.Recycle();
+                doSend = true;
+                if (writer.Length > 800)
+                {
+                    writer.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(writer);
+                    writer.Clear(SendOption.Reliable);
+                    doSend = false;
+                    writer.StartMessage(5);
+                    writer.Write(AmongUsClient.Instance.GameId);
+                }
             }
+            writer.EndMessage();
+            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
 
         public static void CreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent)
@@ -233,20 +239,23 @@ namespace MoreGamemodes
 			sender.StartMessage(-1);
 			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, writer);
 			sender.EndMessage();
-			sender.StartMessage(int.MaxValue);
-			for (uint i = 1; i <= 3; ++i)
-			{
-				writer.StartMessage(4);
-				writer.WritePacked(2U);
-				writer.WritePacked(-2);
-				writer.Write((byte)SpawnFlags.None);
-				writer.WritePacked(1);
-				writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-				writer.StartMessage(1);
-				writer.EndMessage();
-				writer.EndMessage();
-			}
-			sender.EndMessage();
+            if (IsVanillaServer())
+            {
+			    sender.StartMessage(int.MaxValue);
+                for (uint i = 1; i <= 3; ++i)
+			    {
+				    writer.StartMessage(4);
+				    writer.WritePacked(2U);
+				    writer.WritePacked(-2);
+				    writer.Write((byte)SpawnFlags.None);
+				    writer.WritePacked(1);
+				    writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+				    writer.StartMessage(1);
+				    writer.EndMessage();
+				    writer.EndMessage();
+			    }
+			    sender.EndMessage();
+            }
             if (PlayerControl.AllPlayerControls.Contains(playerControl))
                 PlayerControl.AllPlayerControls.Remove(playerControl);
 			sender.StartMessage(-1);
@@ -433,6 +442,11 @@ namespace MoreGamemodes
         {
             if (ClassicGamemode.instance == null) return null;
             return new Drone(owner, position);
+        }
+
+        public static Amogus RpcCreateAmogus()
+        {
+            return new Amogus();
         }
 
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)
@@ -791,7 +805,7 @@ namespace MoreGamemodes
         }
 
         // https://github.com/Gurge44/EndlessHostRoles/blob/main/Modules/BanManager.cs#L81
-         public static string GetHashedPuid(this ClientData player)
+        public static string GetHashedPuid(this ClientData player)
         {
             if (player == null) return string.Empty;
             string puid = player.ProductUserId;
@@ -800,5 +814,14 @@ namespace MoreGamemodes
             string sha256Hash = BitConverter.ToString(sha256Bytes).Replace("-", "").ToLower();
             return string.Concat(sha256Hash.AsSpan(0, 5), sha256Hash.AsSpan(sha256Hash.Length - 4));
 		}
+
+        // From Reactor.gg
+        public static bool IsVanillaServer()
+        {
+            const string Domain = "among.us";
+            return ServerManager.Instance.CurrentRegion?.TryCast<StaticHttpRegionInfo>() is { } regionInfo &&
+                   regionInfo.PingServer.EndsWith(Domain, StringComparison.Ordinal) &&
+                   regionInfo.Servers.All(serverInfo => serverInfo.Ip.EndsWith(Domain, StringComparison.Ordinal));
+        }
     }
 }

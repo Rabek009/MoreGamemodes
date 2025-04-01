@@ -4,8 +4,6 @@ using System.Linq;
 using UnityEngine;
 using System;
 using InnerNet;
-using Hazel;
-using AmongUs.GameOptions;
 
 using Object = UnityEngine.Object;
 
@@ -45,10 +43,10 @@ namespace MoreGamemodes
                 MeetingHud.Instance.RpcClose();
             }
 
-            if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)
+            if (Input.GetKeyDown(KeyCode.C) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown && Main.ModdedProtocol.Value)
                 GameStartManager.Instance.ResetStartState();
 
-            if (Input.GetKeyDown(KeyCode.LeftShift) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown)
+            if (Input.GetKeyDown(KeyCode.LeftShift) && GameStartManager.InstanceExists && GameStartManager.Instance.startState == GameStartManager.StartingStates.Countdown && Main.ModdedProtocol.Value)
                 GameStartManager.Instance.countDownTimer = 0f;
 
             if (GetKeysDown(new[] { KeyCode.LeftControl, KeyCode.Delete }) && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)

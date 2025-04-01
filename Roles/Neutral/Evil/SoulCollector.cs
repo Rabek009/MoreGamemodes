@@ -12,13 +12,13 @@ namespace MoreGamemodes
             if (exiled.PlayerId == Player.PlayerId)
             {
                 TargetId = byte.MaxValue;
-                Player.RpcSetSoulCollectorTarget(TargetId);
+                SendRPC();
             }
             if (exiled.PlayerId == TargetId && GameManager.Instance.ShouldCheckForGameEnd)
             {
                 GainSoul();
                 TargetId = byte.MaxValue;
-                Player.RpcSetSoulCollectorTarget(TargetId);
+                SendRPC();
             }
         }
 
@@ -65,7 +65,7 @@ namespace MoreGamemodes
             if (TargetId != byte.MaxValue && !CanChangeTarget.GetBool()) return false;
             if (target.PlayerId == TargetId) return false;
             TargetId = target.PlayerId;
-            Player.RpcSetSoulCollectorTarget(TargetId);
+            SendRPC();
             Player.RpcSetKillTimer(PredictCooldown.GetFloat());
             return false;
         }
@@ -88,7 +88,7 @@ namespace MoreGamemodes
                 Player.SyncPlayerSettings();
             }
             TargetId = byte.MaxValue;
-            Player.RpcSetSoulCollectorTarget(TargetId);
+            SendRPC();
         }
 
         public override void OnGlobalMurderPlayer(PlayerControl killer, PlayerControl target)
@@ -99,7 +99,7 @@ namespace MoreGamemodes
             {
                 GainSoul();
                 TargetId = byte.MaxValue;
-                Player.RpcSetSoulCollectorTarget(TargetId);
+                SendRPC();
                 Player.RpcSetKillTimer(PredictCooldown.GetFloat());
             }
         }
@@ -127,7 +127,7 @@ namespace MoreGamemodes
             {
                 GainSoul();
                 TargetId = byte.MaxValue;
-                Player.RpcSetSoulCollectorTarget(TargetId);
+                SendRPC();
                 Player.RpcSetKillTimer(PredictCooldown.GetFloat());
             }
             if (TargetId == byte.MaxValue) return;
@@ -179,6 +179,22 @@ namespace MoreGamemodes
                 Player.SyncPlayerSettings();
                 new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
             }
+        }
+
+        public void SendRPC()
+        {
+            if (Player.AmOwner)
+                HudManager.Instance.SetHudActive(!MeetingHud.Instance);
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.Write(TargetId);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            TargetId = reader.ReadByte();
+            if (Player.AmOwner)
+                HudManager.Instance.SetHudActive(!MeetingHud.Instance);
         }
 
         public void GainSoul()

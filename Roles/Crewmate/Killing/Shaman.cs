@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Hazel;
 
 using Object = UnityEngine.Object;
 
@@ -14,7 +15,7 @@ namespace MoreGamemodes
             if (player == null || player.Data.IsDead || !(player.GetRole().IsImpostor() || player.GetRole().IsNeutralKilling() || player.GetRole().Role == CustomRoles.Sheriff))
             {
                 Target = byte.MaxValue;
-                Player.RpcSetShamanTarget(Target);
+                SendRPC();
             }
             else
                 player.Notify(Utils.ColorString(Color, "<size=1.8>You are cursed by shaman! Kill someone to remove curse or you will die when meeting is called!</size>"));
@@ -25,7 +26,7 @@ namespace MoreGamemodes
             if (Target != byte.MaxValue && killer.PlayerId == Target)
             {
                 Target = byte.MaxValue;
-                Player.RpcSetShamanTarget(Target);
+                SendRPC();
             }
         }
 
@@ -44,7 +45,7 @@ namespace MoreGamemodes
         {
             if (target == null || target.Data.IsDead || AbilityUses < 1f || Target != byte.MaxValue || !MeetingHud.Instance || !(MeetingHud.Instance.state is MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)) return;
             Target = target.PlayerId;
-            Player.RpcSetShamanTarget(Target);
+            SendRPC();
             Player.RpcSendMessage("You cursed " + Main.StandardNames[Target] + "!", "Shaman");
             Player.RpcSetAbilityUses(AbilityUses - 1f);
         }
@@ -61,7 +62,7 @@ namespace MoreGamemodes
                 ClassicGamemode.instance.PlayerKiller[player.PlayerId] = Player.PlayerId;
             }
             Target = byte.MaxValue;
-            Player.RpcSetShamanTarget(Target);
+            SendRPC();
         }
 
         public override void OnFixedUpdate()
@@ -74,6 +75,22 @@ namespace MoreGamemodes
                 if (pc == player || pc.Data.IsDead)
                     ClassicGamemode.instance.NameSymbols[(Target, pc.PlayerId)][CustomRoles.Shaman] = ("乂", Color);
             }
+        }
+
+        public void SendRPC()
+        {
+            if (Player.AmOwner && MeetingHud.Instance != null)
+                CreateMeetingButton(MeetingHud.Instance);
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            writer.Write(Target);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            Target = reader.ReadByte();
+            if (Player.AmOwner && MeetingHud.Instance != null)
+                CreateMeetingButton(MeetingHud.Instance);
         }
 
         public static void OnGlobalReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)

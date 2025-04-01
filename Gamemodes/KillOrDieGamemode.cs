@@ -113,7 +113,7 @@ namespace MoreGamemodes
                     AllPlayers.Add(pc);
             }
             var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-            player.RpcSetIsKiller(true);
+            SendRPC(player, true);
             player.SyncPlayerSettings();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -147,7 +147,7 @@ namespace MoreGamemodes
         public override void OnMurderPlayer(PlayerControl killer, PlayerControl target)
         {
             if (killer == target) return;
-            killer.RpcSetIsKiller(false);
+            SendRPC(killer, false);
             killer.RpcSetColor(1);
             foreach (var pc in PlayerControl.AllPlayerControls)
                 Main.NameColors[(killer.PlayerId, pc.PlayerId)] = Color.blue;
@@ -159,7 +159,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return false;
         }
@@ -205,7 +205,7 @@ namespace MoreGamemodes
                     } 
                 }
                 var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-                player.RpcSetIsKiller(true);
+                SendRPC(player, true);
                 player.RpcSetColor(0);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(player.PlayerId, pc.PlayerId)] = Color.red;
@@ -268,6 +268,24 @@ namespace MoreGamemodes
             if (IsKiller(player) && Options.ArrowToNearestSurvivor.GetBool() && player == seer && GetClosestSurvivor(player) != null && !player.Data.IsDead)
                 name += "\n" + Utils.ColorString(Color.blue, Utils.GetArrow(player.GetRealPosition(), GetClosestSurvivor(player).transform.position));
             return name;
+        }
+
+        public void SendRPC(PlayerControl player, bool isKiller)
+        {
+            if (IsPlayerKiller[player.PlayerId] == isKiller) return;
+            IsPlayerKiller[player.PlayerId] = isKiller;
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write(isKiller);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            IsPlayerKiller[player.PlayerId] = reader.ReadBoolean();
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
         }
 
         public bool IsKiller(PlayerControl player)

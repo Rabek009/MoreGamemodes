@@ -166,7 +166,7 @@ namespace MoreGamemodes
         {
             if (Main.Timer < Options.FtImpostorsBlindTime.GetFloat() && !Options.ImpostorsCanFreezeDuringBlind.GetBool()) return false;
             if (IsFrozen(target)) return false;
-            target.RpcSetFrozen(true);
+            SendRPC(target, true);
             target.RpcSetColor(10);
             foreach (var pc in PlayerControl.AllPlayerControls)
                 Main.NameColors[(target.PlayerId, pc.PlayerId)] = Color.cyan;
@@ -197,7 +197,7 @@ namespace MoreGamemodes
             }
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return false;
         }
@@ -239,7 +239,7 @@ namespace MoreGamemodes
                         if (UnfreezeTimer[pc.PlayerId] >= Options.UnfreezeDuration.GetFloat())
                         {
                             UnfreezeTimer[pc.PlayerId] = 0f;
-                            pc.RpcSetFrozen(false);
+                            SendRPC(pc, false);
                             pc.RpcSetColor(11);
                             foreach (var ar in PlayerControl.AllPlayerControls)
                                 Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.green;
@@ -330,6 +330,20 @@ namespace MoreGamemodes
                     name += "\n<#aaaaaa>■■■■■</color>";
             }
             return name;
+        }
+
+        public void SendRPC(PlayerControl player, bool frozen)
+        {
+            if (PlayerIsFrozen[player.PlayerId] == frozen) return;
+            PlayerIsFrozen[player.PlayerId] = frozen;
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write(frozen);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            PlayerIsFrozen[player.PlayerId] = reader.ReadBoolean();
         }
 
         public bool IsFrozen(PlayerControl player)

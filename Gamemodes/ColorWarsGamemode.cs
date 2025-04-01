@@ -124,7 +124,7 @@ namespace MoreGamemodes
             while (AllPlayers.Any() && leaders < Options.LeadersAmount.GetInt())
             {
                 var player = AllPlayers[rand.Next(0, AllPlayers.Count)];
-                player.RpcSetColorWarsTeam(leaders, true);
+                SendRPC(player, leaders, true, IsDead[player.PlayerId]);
                 player.RpcSetColor(leaders);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(player.PlayerId, pc.PlayerId)] = Palette.PlayerColors[leaders];
@@ -152,7 +152,7 @@ namespace MoreGamemodes
                 return false;
             if (GetTeam(target) == byte.MaxValue)
             {
-                target.RpcSetColorWarsTeam(GetTeam(killer), false);
+                SendRPC(target, GetTeam(killer), false, IsDead[target.PlayerId]);
                 target.RpcSetColor(GetTeam(killer));
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     Main.NameColors[(target.PlayerId, pc.PlayerId)] = Palette.PlayerColors[GetTeam(killer)];
@@ -171,7 +171,7 @@ namespace MoreGamemodes
                         {
                             if (IsDead[pc.PlayerId])
                             {
-                                pc.RpcSetIsDead(false);
+                                SendRPC(pc, GetTeam(pc), IsLeader(pc), false);
                                 pc.RpcTeleport(PositionBeforeDeath[pc.PlayerId]);
                             }
                             pc.RpcSetDeathReason(DeathReasons.Suicide);
@@ -188,7 +188,7 @@ namespace MoreGamemodes
             {
                 PositionBeforeDeath[target.PlayerId] = target.transform.position;
                 target.RpcTeleport(Utils.GetOutsideMapPosition());
-                target.RpcSetIsDead(true);
+                SendRPC(target, GetTeam(target), IsLeader(target), true);
                 RespawnCooldown[target.PlayerId] = Options.CwRespawnCooldown.GetFloat();
                 target.SyncPlayerSettings();
                 ++Main.PlayerKills[killer.PlayerId];
@@ -198,7 +198,7 @@ namespace MoreGamemodes
             return true;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return false;
         }
@@ -216,7 +216,7 @@ namespace MoreGamemodes
                     if (RespawnCooldown[pc.PlayerId] <= 0f)
                     {
                         RespawnCooldown[pc.PlayerId] = 0f;
-                        pc.RpcSetIsDead(false);
+                        SendRPC(pc, GetTeam(pc), IsLeader(pc), false);
                         pc.RpcTeleport(PositionBeforeDeath[pc.PlayerId]);
                         pc.SyncPlayerSettings();
                     }   
@@ -248,7 +248,7 @@ namespace MoreGamemodes
                 {
                     if (pc != player && GetTeam(pc) == GetTeam(player))
                     {
-                        pc.RpcSetColorWarsTeam(byte.MaxValue, false);
+                        SendRPC(pc, byte.MaxValue, false, IsDead[pc.PlayerId]);
                         pc.RpcSetColor(15);
                         foreach (var ar in PlayerControl.AllPlayerControls)
                             Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.gray;
@@ -306,6 +306,30 @@ namespace MoreGamemodes
             if (IsLeader(player) && (player == seer || GetTeam(player) == GetTeam(seer) || Options.LivesVisibleToEnemies.GetBool() || seer.Data.IsDead))
                 name += "\n" + livesText;
             return name;
+        }
+
+        public void SendRPC(PlayerControl player, byte team, bool isLeader, bool isDead)
+        {
+            if (Team[player.PlayerId] == team && PlayerIsLeader[player.PlayerId] == isLeader && IsDead[player.PlayerId] == isDead) return;
+            Team[player.PlayerId] = team;
+            PlayerIsLeader[player.PlayerId] = isLeader;
+            IsDead[player.PlayerId] = isDead;
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write(team);
+            writer.Write(isLeader);
+            writer.Write(isDead);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(PlayerControl player, MessageReader reader)
+        {
+            Team[player.PlayerId] = reader.ReadByte();
+            PlayerIsLeader[player.PlayerId] = reader.ReadBoolean();
+            IsDead[player.PlayerId] = reader.ReadBoolean();
+            if (player.AmOwner)
+                HudManager.Instance.TaskPanel.SetTaskText("");
         }
 
         public byte GetTeam(PlayerControl player)

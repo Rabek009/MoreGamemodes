@@ -78,14 +78,15 @@ namespace MoreGamemodes
         public override void OnIntroDestroy()
         {
             PaintTime = Options.PaintingTime.GetInt();
-            GameManager.Instance.RpcSetPaintActive(true);
+            IsPaintActive = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 pc.RpcTeleport(GetPaintBattleLocation(pc.PlayerId));
                 new LateTask(() => pc.RpcSetUnshiftButton(), 0.5f);
             }
             var rand = new System.Random();
-            GameManager.Instance.RpcSetTheme(Main.PaintBattleThemes[rand.Next(0, Main.PaintBattleThemes.Count)]);
+            Theme = Main.PaintBattleThemes[rand.Next(0, Main.PaintBattleThemes.Count)];
+            SendRPC(GameManager.Instance);
             Utils.SendChat("Start painting! The theme is " + Theme + "! Remember to evalute less paintings that are not in theme!", "Theme");
         }
 
@@ -101,7 +102,7 @@ namespace MoreGamemodes
             return false;
         }
 
-        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target)
+        public override bool OnReportDeadBody(PlayerControl __instance, NetworkedPlayerInfo target, bool force)
         {
             return false;
         }
@@ -119,7 +120,8 @@ namespace MoreGamemodes
                 if (PaintTime <= 0f)
                 {
                     PaintTime = 0f;
-                    GameManager.Instance.RpcSetPaintActive(false);
+                    IsPaintActive = false;
+                    SendRPC(GameManager.Instance);
                     foreach (var pc in PlayerControl.AllPlayerControls)
                         pc.RpcSetRoleV2(RoleTypes.Crewmate);
                 }
@@ -196,6 +198,22 @@ namespace MoreGamemodes
             if (player == seer && !IsPaintActive)
                 name = Utils.ColorString(Color.magenta, "<font=\"VCR SDF\"><size=8>Rate " + Main.StandardNames[VotingPlayerId] + "'s painting!</size><size=17>\n\n</size></font>") + name + "<font=\"VCR SDF\"><size=25>\n\n<size=0>.";
             return name;
+        }
+
+        public void SendRPC(GameManager manager)
+        {
+            HudManager.Instance.TaskPanel.SetTaskText("");
+            MessageWriter writer = AmongUsClient.Instance.StartRpc(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            writer.Write(Theme);
+            writer.Write(IsPaintActive);
+            writer.EndMessage();
+        }
+
+        public override void ReceiveRPC(GameManager manager, MessageReader reader)
+        {
+            Theme = reader.ReadString();
+            IsPaintActive = reader.ReadBoolean();
+            HudManager.Instance.TaskPanel.SetTaskText("");
         }
 
         public void EndPaintBattleGame()

@@ -7,6 +7,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(OptionsMenuBehaviour), nameof(OptionsMenuBehaviour.Start))]
     public static class OptionsMenuBehaviourStartPatch
     {
+        private static ClientOptionItem ModdedProtocol;
         private static ClientOptionItem UnlockFPS;
         private static ClientOptionItem ShowFPS;
         private static ClientOptionItem DarkTheme;
@@ -17,6 +18,15 @@ namespace MoreGamemodes
         {
             if (__instance.DisableMouseMovement == null) return;
 
+            if (ModdedProtocol == null || ModdedProtocol.ToggleButton == null)
+            {
+                ModdedProtocol = ClientOptionItem.Create("Modded Protocol", Main.ModdedProtocol, __instance, ModdedProtocolButtonToggle);
+                static void ModdedProtocolButtonToggle()
+                {
+                    Main.ModdedProtocol.Value = !Main.ModdedProtocol.Value;
+                    ModdedProtocol.UpdateToggle();
+                }
+            }
             if (UnlockFPS == null || UnlockFPS.ToggleButton == null)
             {
                 UnlockFPS = ClientOptionItem.Create("Unlock FPS", Main.UnlockFPS, __instance, UnlockFPSButtonToggle);

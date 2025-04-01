@@ -594,8 +594,8 @@ https://github.com/0xDrMoe/TownofHost-Enhanced
 4. Game options menu from TOHY
 https://github.com/Yumenopai/TownOfHost_Y
 
-5. Delayed spawn from EHR
-https://github.com/Gurge44/EndlessHostRoles
+5. Many role ideas from Town Of Us
+https://github.com/eDonnes124/Town-Of-Us-R
 
 6. Security guard role idea from The Other Roles
 https://github.com/TheOtherRolesAU/TheOtherRoles
