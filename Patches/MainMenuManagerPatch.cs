@@ -27,7 +27,6 @@ namespace MoreGamemodes
             logoTransform.localPosition = new(0f, 0.15f, 1f);
             logoTransform.localScale *= 1.2f;
             MGM_Logo.sprite = Utils.LoadSprite("MoreGamemodes.Resources.MoreGamemodes-Logo.png", 400f);
-            MGM_Logo.flipX = true;
         }
 
         [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.Normal)]
@@ -45,7 +44,7 @@ namespace MoreGamemodes
                     new(88, 101, 242, byte.MaxValue),
                     new(148, 161, byte.MaxValue, byte.MaxValue),
                     () => Application.OpenURL("https://discord.gg/jJe5kPpbFJ"),
-                    "Suscord");
+                    "Discord");
             }
 
             if (gitHubButton == null)
@@ -56,7 +55,7 @@ namespace MoreGamemodes
                     new(153, 153, 153, byte.MaxValue),
                     new(209, 209, 209, byte.MaxValue),
                     () => Application.OpenURL("https://github.com/Rabek009/MoreGamemodes"),
-                    "SusHub");
+                    "GitHub");
             }
 
             var howToPlayButton = __instance.howToPlayButton;

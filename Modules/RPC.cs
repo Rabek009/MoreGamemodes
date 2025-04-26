@@ -62,9 +62,17 @@ namespace MoreGamemodes
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
         {
-            if (!AmongUsClient.Instance.AmHost) return true;
             var rpcType = (RpcCalls)callId;
             MessageReader subReader = MessageReader.Get(reader);
+            switch (rpcType)
+            {
+                case RpcCalls.SendChat:
+                    if (AmongUsClient.Instance.AmHost) break;
+                    subReader.ReadString();
+                    ChatUpdatePatch.SendingSystemMessage = reader.BytesRemaining > 0 ? reader.ReadBoolean() : false;
+                    break;
+            }
+            if (!AmongUsClient.Instance.AmHost) return true;
             if (AntiCheat.PlayerControlReceiveRpc(__instance, callId, reader)) return false;
             switch (rpcType)
             {
@@ -82,6 +90,9 @@ namespace MoreGamemodes
         }
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
         {
+            if (callId == 13 && !AmongUsClient.Instance.AmHost)
+                ChatUpdatePatch.SendingSystemMessage = false;
+            if (callId < 70) return;
             var rpcType = (CustomRPC)callId;
             switch (rpcType)
             {
@@ -177,6 +188,7 @@ namespace MoreGamemodes
     {
         public static void Postfix(GameManager __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
         {
+            if (callId < 70) return;
             var rpcType = (CustomRPC)callId;
             switch (rpcType)
             {

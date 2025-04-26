@@ -49,21 +49,7 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost || !IsCached || !player.Disconnected) return;
             isDeadCache[player.PlayerId] = (true, true);
             player.IsDead = player.Disconnected = false;
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
-            writer.StartMessage(5);
-            {
-                writer.Write(AmongUsClient.Instance.GameId);
-                writer.StartMessage(1);
-                {
-                    writer.WritePacked(player.NetId);
-                    player.Serialize(writer, false);
-                }
-                writer.EndMessage();
-            }
-            writer.EndMessage();
-            AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
-            player.IsDead = player.Disconnected = false;
+            player.MarkDirty();
         }
 
         public static void Reset()

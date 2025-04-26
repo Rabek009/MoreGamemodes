@@ -64,9 +64,17 @@ namespace MoreGamemodes
                 for (int i = 0; i < __instance.allObjects.Count; i++)
                 {
                     InnerNetObject innerNetObject = __instance.allObjects[i];
-                    if (innerNetObject && innerNetObject is not NetworkedPlayerInfo && innerNetObject.IsDirty && (innerNetObject.AmOwner || (innerNetObject.OwnerId == -2 && __instance.AmHost)))
+                    if (innerNetObject && innerNetObject.IsDirty && (innerNetObject.AmOwner || (innerNetObject.OwnerId == -2 && __instance.AmHost)))
                     {
                         MessageWriter messageWriter = __instance.Streams[(int)innerNetObject.sendMode];
+                        if (messageWriter.Length > 800)
+                        {
+                            messageWriter.EndMessage();
+                            __instance.SendOrDisconnect(messageWriter);
+                            messageWriter.Clear(innerNetObject.sendMode);
+                            messageWriter.StartMessage(5);
+                            messageWriter.Write(__instance.GameId);
+                        }
                         messageWriter.StartMessage(1);
                         messageWriter.WritePacked(innerNetObject.NetId);
                         try
@@ -80,7 +88,7 @@ namespace MoreGamemodes
                         }
                         catch (Exception ex)
                         {
-                            Main.Instance.Log.LogError(ex.ToString());
+                            Debug.LogError(ex.ToString());
                             messageWriter.CancelMessage();
                         }
                     }
@@ -149,50 +157,6 @@ namespace MoreGamemodes
             if (!__instance.AmHost)
                 Debug.LogError("Tried to spawn while not host:" + (netObjParent?.ToString()));
         }
-
-        private static byte timer = 0;
-        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.FixedUpdate))]
-        [HarmonyPostfix]
-        public static void FixedUpdatePostfix(InnerNetClient __instance)
-        {
-            if (__instance.NetworkMode != NetworkModes.OnlineGame) return;
-            if (!__instance.AmHost || __instance.Streams == null || (!Main.ModdedProtocol.Value && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)) return;
-            if (timer == 0)
-            {
-                timer = 1;
-                return;
-            }
-            var player = GameData.Instance.AllPlayers.ToArray().FirstOrDefault(x => x.IsDirty);
-            if (player != null)
-            {
-                timer = 0;
-                MessageWriter messageWriter = MessageWriter.Get(SendOption.Reliable);
-                messageWriter.StartMessage(5);
-                messageWriter.Write(__instance.GameId);
-                messageWriter.StartMessage(1);
-                messageWriter.WritePacked(player.NetId);
-                try
-                {
-                    if (player.Serialize(messageWriter, false))
-                        messageWriter.EndMessage();
-                    else
-                    {
-                        messageWriter.Recycle();
-                        player.ClearDirtyBits();
-                        return;
-                    }
-                    messageWriter.EndMessage();
-                    __instance.SendOrDisconnect(messageWriter);
-                    messageWriter.Recycle();
-                }
-                catch (Exception ex)
-                {
-                    Main.Instance.Log.LogError(ex.ToString());
-                    messageWriter.CancelMessage();
-                    player.ClearDirtyBits();
-                }
-            }
-        }
     }
     [HarmonyPatch(typeof(GameData), nameof(GameData.DirtyAllData))]
     internal class DirtyAllDataPatch
@@ -246,5 +210,5 @@ namespace MoreGamemodes
             __result = true;
             return false;
         }
-    }       
+    }
 }

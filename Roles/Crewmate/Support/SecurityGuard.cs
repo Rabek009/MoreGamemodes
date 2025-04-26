@@ -1,6 +1,7 @@
 using UnityEngine;
 using Hazel;
 using AmongUs.GameOptions;
+using System.Collections.Generic;
 
 namespace MoreGamemodes
 {
@@ -48,15 +49,20 @@ namespace MoreGamemodes
                 Player.Notify(Utils.ColorString(Color.red, "(!) This vent is already blocked (!)"));
                 return;
             }
+            Player.RpcSetAbilityUses(AbilityUses - 1f);
+            Cooldown = BlockVentCooldown.GetFloat();
+            Player.RpcSetPetAbilityCooldown(true);
+            if (CurrentBlockedVentsUpdateMode == BlockedVentsUpdateModes.Meetings)
+            {
+                VentsToBlock.Add(vent.Id);
+                return;
+            }
             var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
             if (ventilationSystem != null)
                 ventilationSystem.BootImpostorsFromVent(vent.Id);
-            Player.RpcSetAbilityUses(AbilityUses - 1f);
             Utils.RpcCreateDisplay("<size=1.6><line-height=97%><cspace=0.16em><mark=#8f6647>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W", vent.transform.position);
             SendRPC(vent.Id);
             Utils.SetAllVentInteractions();
-            Cooldown = BlockVentCooldown.GetFloat();
-            Player.RpcSetPetAbilityCooldown(true);
         }
 
         public override void OnGlobalMurderPlayer(PlayerControl killer, PlayerControl target)
@@ -72,6 +78,17 @@ namespace MoreGamemodes
         public override void OnMeeting()
         {
             new LateTask(() => UsingCameras = false, 1f);
+            if (CurrentBlockedVentsUpdateMode != BlockedVentsUpdateModes.Meetings) return;
+            bool setVentInteractions = false;
+            foreach (var ventId in VentsToBlock)
+            {
+                new LateTask(() => Utils.RpcCreateDisplay("<size=1.6><line-height=97%><cspace=0.16em><mark=#8f6647>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W", Utils.GetVentById(ventId).transform.position), 5f);
+                SendRPC(ventId);
+                setVentInteractions = true;
+            }
+            if (setVentInteractions)
+                Utils.SetAllVentInteractions();
+            VentsToBlock.Clear();
         }
 
         public override void OnFixedUpdate()
@@ -118,6 +135,7 @@ namespace MoreGamemodes
 
         public void SendRPC(int ventId)
         {
+            if (ClassicGamemode.instance.BlockedVents.Contains(ventId)) return;
             ClassicGamemode.instance.BlockedVents.Add(ventId);
             var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
             if (ventilationSystem != null)
@@ -158,10 +176,12 @@ namespace MoreGamemodes
             AbilityUses = InitialAbilityUseLimit.GetInt();
             Cooldown = 10f;
             UsingCameras = false;
+            VentsToBlock = new List<int>();
         }
 
         public float Cooldown;
         public bool UsingCameras;
+        public List<int> VentsToBlock;
 
         public static OptionItem Chance;
         public static OptionItem Count;
@@ -169,6 +189,12 @@ namespace MoreGamemodes
         public static OptionItem InitialAbilityUseLimit;
         public static OptionItem AbilityUseGainWithEachTaskCompleted;
         public static OptionItem HideCameraUsage;
+        public static OptionItem BlockedVentsUpdateMode;
+        public static readonly string[] blockedVentsUpdateMode =
+        {
+            "Always", "Meetings"
+        };
+        public static BlockedVentsUpdateModes CurrentBlockedVentsUpdateMode => (BlockedVentsUpdateModes)BlockedVentsUpdateMode.GetValue();
         public static OptionItem CanBeGuessed;
         public static void SetupOptionItem()
         {
@@ -184,10 +210,18 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             HideCameraUsage = BooleanOptionItem.Create(400105, "Hide camera usage", false, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CanBeGuessed = BooleanOptionItem.Create(400108, "Can be guessed", true, TabGroup.CrewmateRoles, false)
+            BlockedVentsUpdateMode = StringOptionItem.Create(400106, "Blocked vents update mode", blockedVentsUpdateMode, 1, TabGroup.CrewmateRoles, false)
+                .SetParent(Chance);
+            CanBeGuessed = BooleanOptionItem.Create(400107, "Can be guessed", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.SecurityGuard] = Chance;
             Options.RolesCount[CustomRoles.SecurityGuard] = Count;
         }
+    }
+
+    public enum BlockedVentsUpdateModes
+    {
+        Always,
+        Meetings,
     }
 }

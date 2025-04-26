@@ -312,13 +312,13 @@ namespace MoreGamemodes
                         }
                         break;
                     case Items.Trap:
-                        List<byte> visibleList = new();
+                        List<byte> hiddenList = new();
                         foreach (var player in PlayerControl.AllPlayerControls)
                         {
-                            if ((!player.Data.Role.IsImpostor && Options.CrewmatesSeeTrap.GetBool()) || (player.Data.Role.IsImpostor && Options.ImpostorsSeeTrap.GetBool()) || player.Data.Role.IsDead || player == pc)
-                                visibleList.Add(player.PlayerId);
+                            if ((player.Data.Role.IsImpostor || !Options.CrewmatesSeeTrap.GetBool()) && (!player.Data.Role.IsImpostor || !Options.ImpostorsSeeTrap.GetBool()) && !player.Data.Role.IsDead && player != pc)
+                                hiddenList.Add(player.PlayerId);
                         }
-                        Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.GetRealPosition(), visibleList, pc.PlayerId);
+                        Utils.RpcCreateTrapArea(Options.TrapRadius.GetFloat(), Options.TrapWaitTime.GetFloat(), pc.GetRealPosition(), hiddenList, pc.PlayerId);
                         SendRPC(pc, Items.None);
                         break;
                     case Items.TeamChanger:

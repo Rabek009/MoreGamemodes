@@ -416,7 +416,7 @@ namespace MoreGamemodes
                 .SetColor(Color.blue);
             CheatingPenalty = StringOptionItem.Create(5, "Cheating Penalty", cheatingPenalties, 0, TabGroup.ModSettings, false)
                 .SetParent(AntiCheat);
-            Amogus = BooleanOptionItem.Create(6, "Amogus", true, TabGroup.ModSettings, false)
+            Amogus = BooleanOptionItem.Create(6, "Amogus", false, TabGroup.ModSettings, false)
                 .SetColor(Color.red);
             Commands = TextOptionItem.Create(10, "Commands", TabGroup.ModSettings)
                 .SetColor(Color.cyan);
@@ -1129,6 +1129,7 @@ namespace MoreGamemodes
             //Crewmate roles
             CrewmateInvestigative = TextOptionItem.Create(100000, "Crewmate investigative", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
+            //Detective.SetupOptionItem();
             Investigator.SetupOptionItem();
             Mortician.SetupOptionItem();
             Snitch.SetupOptionItem();

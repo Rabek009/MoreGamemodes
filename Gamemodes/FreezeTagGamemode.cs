@@ -367,11 +367,10 @@ namespace MoreGamemodes
         {
             AntiCheat.RemovedBodies.Add(player.PlayerId);
             player.RpcSendNoisemakerAlert();
-            bool doSend = false;
-            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner || Main.IsModded[pc.PlayerId] || pc == player || (pc.Data.Role.IsImpostor && !GameManager.Instance.LogicOptions.GetNoisemakerImpostorAlert())) continue;
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(player.NetId, (byte)RpcCalls.MurderPlayer)
                     .WriteNetObject(player)
@@ -382,9 +381,8 @@ namespace MoreGamemodes
                     .Write(true)
                     .EndRpc();
                 sender.EndMessage();
-                doSend = true;
+                sender.SendMessage();
             }
-            sender.SendMessage(doSend);
         }
 
         public FreezeTagGamemode()

@@ -86,11 +86,10 @@ namespace MoreGamemodes
             DronePosition = Player.GetRealPosition();
             RealPosition = Player.GetRealPosition();
             SendRPC();
-            bool doSend = false;
-            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player || pc.AmOwner) continue;
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
                 sender.StartMessage(pc.GetClientId());
                 sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                     .WriteVector2(Player.transform.position)
@@ -101,9 +100,8 @@ namespace MoreGamemodes
                     .Write((ushort)(Player.NetTransform.lastSequenceId + 16383))
                     .EndRpc();
                 sender.EndMessage();
-                doSend = true;
+                sender.SendMessage();
             }
-            sender.SendMessage(doSend);
             if (Player.AmOwner)
                 Player.Visible = false;
             Player.SyncPlayerSettings();
@@ -208,8 +206,7 @@ namespace MoreGamemodes
             }
             else
                 Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 128));
-            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
-            sender.StartMessage(-1);
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable, true);
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(Player.transform.position)
                 .Write((ushort)(Player.NetTransform.lastSequenceId + 32767))
@@ -222,8 +219,6 @@ namespace MoreGamemodes
                 .WriteVector2(Player.transform.position)
                 .Write(Player.NetTransform.lastSequenceId)
                 .EndRpc();
-            sender.EndMessage();
-            sender.SendMessage();
             if (!MeetingHud.Instance)
                 ControlledDrone.Despawn();
             ControlledDrone = null;

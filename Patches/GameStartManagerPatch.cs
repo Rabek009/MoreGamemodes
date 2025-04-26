@@ -75,6 +75,15 @@ namespace MoreGamemodes
 			msg.WritePacked(int.MaxValue);
 			for (int i = 0; i < AmongUsClient.Instance.allObjects.Count; i++)
 			{
+                if (msg.Length > 800)
+                {
+                    msg.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(msg);
+                    msg.Clear(SendOption.Reliable);
+                    msg.StartMessage(6);
+                    msg.Write(AmongUsClient.Instance.GameId);
+                    msg.WritePacked(int.MaxValue);
+                }
 				InnerNetObject innerNetObject = AmongUsClient.Instance.allObjects[i];
 				msg.StartMessage(4);
 				msg.WritePacked(GameStartManager.Instance.LobbyPrefab.SpawnId);

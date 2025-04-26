@@ -197,12 +197,12 @@ namespace MoreGamemodes
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 SpawnPlayer(pc);
-                new LateTask(() => pc.RpcSetUnshiftButton(), 0.5f);
                 pc.RpcResetAbilityCooldown();
                 PlayerHealth[pc.PlayerId] = Options.StartingHealth.GetFloat();
                 if (Options.CanTeleportToBase.GetBool())
                     TeleportCooldown[pc.PlayerId] = Options.TeleportCooldown.GetFloat();
             }
+            new LateTask(() => Utils.RpcSetUnshiftButton(), 0.5f);
         }
 
         public override void OnPet(PlayerControl pc)

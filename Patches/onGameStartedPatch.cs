@@ -82,7 +82,7 @@ namespace MoreGamemodes
         public static bool Prefix()
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            PlayerControl.LocalPlayer.SyncPlayerSettings();
+            Utils.SyncAllSettings();
             new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
 					PlayerNameColor.Set(pc);

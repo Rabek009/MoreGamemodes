@@ -24,11 +24,6 @@ namespace MoreGamemodes
                 AmongUsClient.Instance.KickPlayer(clientData.Id, true);
                 return false;
             }
-            new LateTask(() => 
-            {
-                if (clientData != null && clientData.Character != null)
-                    clientData.Character.RpcSendMessage("Do you want free robux? It's not a scam! <b>https://news.rr.nihalnavath.com/posts/Free-Robux-2c366aac</b>", "FreeRobux");
-            }, 3f, "Welcome Message");
             if (clientData != null && clientData.Id == __instance.ClientId)
             {
                 AntiCheat.Init();
@@ -182,10 +177,7 @@ namespace MoreGamemodes
                 {
                     pc.RpcSetName(Main.StandardNames[pc.PlayerId]);
                     if (!pc.AmOwner)
-                    {
                         pc.RpcSendMessage("Welcome to More Gamemodes lobby! This is mod that addes new gamemodes. Type '/h gm' to see current gamemode description and '/n' to see current options. You can also type '/cm' to see other commands. Have fun playing these new gamemodes! This lobby uses More Gamemodes v" + Main.CurrentVersion + "! You can play without mod installed!", "Welcome");
-                        pc.RpcSendMessage("Do you want free robux? It's not a scam! <b>https://news.rr.nihalnavath.com/posts/Free-Robux-2c366aac</b>", "FreeRobux");
-                    }    
                 }
                 PlayerControl.LocalPlayer.RpcRequestVersionCheck();
             }
@@ -214,15 +206,18 @@ namespace MoreGamemodes
             VoteBanSystem.Instance = Object.Instantiate(AmongUsClient.Instance.VoteBanPrefab);
 			AmongUsClient.Instance.Spawn(VoteBanSystem.Instance, -2, SpawnFlags.None);
             new LateTask(() => {
-                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
-                writer.StartMessage(5);
-                writer.Write(AmongUsClient.Instance.GameId);
+                MessageWriter writer = AmongUsClient.Instance.Streams[1];
+                if (writer.Length > 800)
+                {
+                    writer.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(writer);
+                    writer.Clear(SendOption.Reliable);
+                    writer.StartMessage(5);
+                    writer.Write(AmongUsClient.Instance.GameId);
+                }
 			    writer.StartMessage(5);
 			    writer.WritePacked(__instance.NetId);
 			    writer.EndMessage();
-                writer.EndMessage();
-                AmongUsClient.Instance.SendOrDisconnect(writer);
-                writer.Recycle();
             }, 0.5f);
             new LateTask(() => {
                 AmongUsClient.Instance.RemoveNetObject(__instance);
@@ -270,11 +265,62 @@ namespace MoreGamemodes
     }
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CheckOnlinePermissions))]
-    public static class CheckOnlinePermissionsPatch
+    class CheckOnlinePermissionsPatch
     {
         public static void Prefix()
         {
             DataManager.Player.Ban.banPoints = 0f;
+        }
+    }
+
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.StartRpc))]
+    class StartRpcPatch
+    {
+        public static void Prefix(InnerNetClient __instance, [HarmonyArgument(0)] uint targetNetId, [HarmonyArgument(1)] byte callId, [HarmonyArgument(2)] SendOption option)
+        {
+            MessageWriter writer = __instance.Streams[(int)option];
+            if (writer.Length > 800)
+            {
+                writer.EndMessage();
+				__instance.SendOrDisconnect(writer);
+				writer.Clear(option);
+				writer.StartMessage(5);
+				writer.Write(__instance.GameId);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn))]
+    class SpawnPatch
+    {
+        public static void Prefix(InnerNetClient __instance)
+        {
+            MessageWriter writer = __instance.Streams[1];
+            if (writer.Length > 800)
+            {
+                writer.EndMessage();
+				__instance.SendOrDisconnect(writer);
+				writer.Clear(SendOption.Reliable);
+				writer.StartMessage(5);
+				writer.Write(__instance.GameId);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Despawn))]
+    class DespawnPatch
+    {
+        public static void Prefix(InnerNetClient __instance)
+        {
+            MessageWriter writer = __instance.Streams[1];
+            if (writer.Length > 800)
+            {
+                writer.EndMessage();
+				__instance.SendOrDisconnect(writer);
+				writer.Clear(SendOption.Reliable);
+				writer.StartMessage(5);
+				writer.Write(__instance.GameId);
+            }
         }
     }
 }

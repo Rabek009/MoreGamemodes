@@ -744,10 +744,7 @@ namespace MoreGamemodes
                         Utils.SetAllVentInteractions();
                     }
                 }, 0.01f);
-                new LateTask(() => {
-                    foreach (var pc in PlayerControl.AllPlayerControls)
-                        pc.SyncPlayerName(true, true, true);
-                }, 0.5f);
+                new LateTask(() => Utils.SyncAllPlayersName(true, true, true), 0.5f);
             }
             return report;
         }

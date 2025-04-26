@@ -25,12 +25,12 @@ namespace MoreGamemodes
 
             string tagText = Tag switch
             {
-                "#Dev" => "Suseloper",
-                "#YT" => "Sustuber",
-                "#VIP" => "SusVIP",
-                "#Tester" => "Suster",
-                "#Contributor" => "Sustributor",
-                "#Host" => "Sust",
+                "#Dev" => "Developer",
+                "#YT" => "Youtuber",
+                "#VIP" => "VIP",
+                "#Tester" => "Tester",
+                "#Contributor" => "Contributor",
+                "#Host" => "Host",
                 _ => Tag
             };
 

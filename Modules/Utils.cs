@@ -67,7 +67,7 @@ namespace MoreGamemodes
 
         public static bool IsActive(SystemTypes type)
         {
-            if (!ShipStatus.Instance.Systems.ContainsKey(type))
+            if (!ShipStatus.Instance || !ShipStatus.Instance.Systems.ContainsKey(type))
             {
                 return false;
             }
@@ -152,7 +152,7 @@ namespace MoreGamemodes
         public static void SendChat(string message, string title)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (message.Length > 1000)
+            if (message.Length > 800)
             {
                 foreach (var text in message.SplitMessage())
                     SendChat(text, title);
@@ -169,41 +169,21 @@ namespace MoreGamemodes
             DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, "<size=32767>.");
             MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)RpcCalls.SendChat, SendOption.None);
             writer.Write("<size=32767>.");
+            writer.Write(true);
             writer.EndMessage();
             if (reliable)
             {
                 MessageWriter writer2 = AmongUsClient.Instance.StartRpc(player.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable);
                 writer2.Write("<size=32767>.");
+                writer.Write(true);
                 writer2.EndMessage();
             }
         }
 
         public static void SendGameData()
         {
-            bool doSend = false;
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
-            writer.StartMessage(5);
-            writer.Write(AmongUsClient.Instance.GameId);
             foreach (var playerinfo in GameData.Instance.AllPlayers)
-            {
-                writer.StartMessage(1);
-                writer.WritePacked(playerinfo.NetId);
-                playerinfo.Serialize(writer, false);
-                writer.EndMessage();
-                doSend = true;
-                if (writer.Length > 800)
-                {
-                    writer.EndMessage();
-                    AmongUsClient.Instance.SendOrDisconnect(writer);
-                    writer.Clear(SendOption.Reliable);
-                    doSend = false;
-                    writer.StartMessage(5);
-                    writer.Write(AmongUsClient.Instance.GameId);
-                }
-            }
-            writer.EndMessage();
-            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
+                playerinfo.MarkDirty();
         }
 
         public static void CreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent)
@@ -234,30 +214,39 @@ namespace MoreGamemodes
             playerControl.notRealPlayer = true;
             playerControl.NetTransform.SnapTo(position);
             AmongUsClient.Instance.NetIdCnt += 1U;
-            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
-            MessageWriter writer = sender.stream;
-			sender.StartMessage(-1);
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage(5);
+            writer.Write(AmongUsClient.Instance.GameId);
 			AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, writer);
-			sender.EndMessage();
+			writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
             if (IsVanillaServer())
             {
-			    sender.StartMessage(int.MaxValue);
+                MessageWriter writer2 = MessageWriter.Get(SendOption.Reliable);
+                writer2.StartMessage(6);
+                writer2.Write(AmongUsClient.Instance.GameId);
+                writer2.WritePacked(int.MaxValue);
                 for (uint i = 1; i <= 3; ++i)
-			    {
-				    writer.StartMessage(4);
-				    writer.WritePacked(2U);
-				    writer.WritePacked(-2);
-				    writer.Write((byte)SpawnFlags.None);
-				    writer.WritePacked(1);
-				    writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-				    writer.StartMessage(1);
-				    writer.EndMessage();
-				    writer.EndMessage();
-			    }
-			    sender.EndMessage();
+                {
+                    writer.StartMessage(4);
+                    writer.WritePacked(2U);
+                    writer.WritePacked(-2);
+                    writer.Write((byte)SpawnFlags.None);
+                    writer.WritePacked(1);
+                    writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+                    writer.StartMessage(1);
+                    writer.EndMessage();
+                    writer.EndMessage();
+                }
+                writer2.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer2);
+                writer2.Recycle();
             }
             if (PlayerControl.AllPlayerControls.Contains(playerControl))
                 PlayerControl.AllPlayerControls.Remove(playerControl);
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable, true);
+            MessageWriter writer3 = sender.stream;
 			sender.StartMessage(-1);
             var baseColorId = playerControl.Data.DefaultOutfit.ColorId;
             sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SetColor)
@@ -272,17 +261,16 @@ namespace MoreGamemodes
                 .Write(playerControl.Data.NetId)
                 .Write(baseColorId)
                 .EndRpc();
-            writer.StartMessage(1);
-            writer.WritePacked(playerControl.Data.NetId);
-            playerControl.Data.Serialize(writer, false);
-            writer.EndMessage();
-            writer.StartMessage(5);
-            writer.WritePacked(playerControl.NetId);
-            writer.EndMessage();
+            writer3.StartMessage(1);
+            writer3.WritePacked(playerControl.Data.NetId);
+            playerControl.Data.Serialize(writer3, false);
+            writer3.EndMessage();
+            writer3.StartMessage(5);
+            writer3.WritePacked(playerControl.NetId);
+            writer3.EndMessage();
             AmongUsClient.Instance.RemoveNetObject(playerControl);
             Object.Destroy(playerControl.gameObject);
             sender.EndMessage();
-            sender.SendMessage();
         }
 
         public static string GetArrow(Vector3 from, Vector3 to)
@@ -410,10 +398,10 @@ namespace MoreGamemodes
             return new Explosion(size, duration, createHole, holeSpeedDecrease, position);
         }
 
-        public static TrapArea RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
+        public static TrapArea RpcCreateTrapArea(float radius, float waitDuration, Vector2 position, List<byte> hiddenList, byte ownerId)
         {
             if (RandomItemsGamemode.instance == null) return null;
-            return new TrapArea(radius, waitDuration, position, visibleList, ownerId);
+            return new TrapArea(radius, waitDuration, position, hiddenList, ownerId);
         }
 
         public static Turret RpcCreateTurret(BaseWarsTeams team, SystemTypes room, Vector2 position)
@@ -447,6 +435,42 @@ namespace MoreGamemodes
         public static Amogus RpcCreateAmogus()
         {
             return new Amogus();
+        }
+
+        public static void SyncAllPlayersName(bool isMeeting, bool force, bool classicMeeting = false)
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                bool doSend = false;
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                sender.StartMessage(pc.GetClientId());
+                foreach (var ar in PlayerControl.AllPlayerControls)
+                {
+                    var name = ar.BuildPlayerName(pc, isMeeting, classicMeeting);
+                    if (!force && Main.LastNotifyNames[(ar.PlayerId, pc.PlayerId)] == name) continue;
+                    Main.LastNotifyNames[(ar.PlayerId, pc.PlayerId)] = name;
+                    if (pc.AmOwner)
+                    {
+                        ar.cosmetics.nameText.SetText(name);
+                        continue;
+                    }
+                    sender.StartRpc(ar.NetId, (byte)RpcCalls.SetName)
+                        .Write(ar.Data.NetId)
+                        .Write(name)
+                        .EndRpc();
+                    doSend = true;
+                    if (sender.stream.Length > 800)
+                    {
+                        sender.EndMessage();
+                        sender.SendMessage();
+                        sender = CustomRpcSender.Create(SendOption.Reliable);
+                        sender.StartMessage(pc.GetClientId());
+                        doSend = false;
+                    }
+                }
+                sender.EndMessage();
+                sender.SendMessage(doSend);
+            }
         }
 
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)
@@ -517,6 +541,33 @@ namespace MoreGamemodes
             new LateTask(() => {
                 player.Data.MarkDirty();
             }, 0.5f);
+        }
+
+        public static void RpcSetUnshiftButton()
+        {
+            PlayerControl.LocalPlayer.RawSetOutfit(PlayerControl.LocalPlayer.Data.Outfits[PlayerOutfitType.Default], PlayerOutfitType.Shapeshifted);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.AmOwner) continue;
+                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                MessageWriter writer = sender.stream;
+                var outfit = pc.Data.Outfits[PlayerOutfitType.Default];
+                sender.StartMessage(pc.GetClientId());
+                writer.StartMessage(1);
+                writer.WritePacked(pc.NetId);
+                writer.Write((byte)(pc.PlayerId == 0 ? 1 : 0));
+                writer.EndMessage();
+                sender.StartRpc(pc.NetId, RpcCalls.Shapeshift)
+                    .WriteNetObject(pc)
+                    .Write(false)
+                    .EndRpc();
+                writer.StartMessage(1);
+                writer.WritePacked(pc.NetId);
+                pc.Serialize(writer, false);
+                writer.EndMessage();
+                sender.EndMessage();
+                sender.SendMessage();
+            }
         }
 
         public static void DestroyTranslator(this GameObject obj)
@@ -610,13 +661,13 @@ namespace MoreGamemodes
             foreach (var line in lines)
             {
 
-                if (shortenedtext.Length + line.Length < 1000)
+                if (shortenedtext.Length + line.Length < 800)
                 {
                     shortenedtext += line + "\n";
                     continue;
                 }
 
-                if (shortenedtext.Length >= 1000) result.AddRange(shortenedtext.Chunk(1000).Select(x => new string(x)));
+                if (shortenedtext.Length >= 800) result.AddRange(shortenedtext.Chunk(800).Select(x => new string(x)));
                 else result.Add(shortenedtext);
                 shortenedtext = line + "\n";
             }

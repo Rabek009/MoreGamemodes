@@ -35,9 +35,9 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             MessageWriter writer = MessageWriter.Get(0);
-			writer.Write(amount);
-			MessageReader reader = MessageReader.Get(writer.ToByteArray(false));
-            return CustomGamemode.Instance.OnUpdateSystem(__instance, systemType, player, reader);     
+            writer.Write(amount);
+            MessageReader reader = MessageReader.Get(writer.ToByteArray(false));
+            return CustomGamemode.Instance.OnUpdateSystem(__instance, systemType, player, reader);
         }
     }
 
@@ -76,12 +76,12 @@ namespace MoreGamemodes
                         var player = Utils.GetPlayerById(playerId);
                         if (player == null) return false;
                         seqBuffer.BumpSid();
-		                Vector2 vector = Utils.GetVentById(ventId).transform.position;
-		                vector -= player.Collider.offset;
-		                player.NetTransform.SnapTo(vector);
+                        Vector2 vector = Utils.GetVentById(ventId).transform.position;
+                        vector -= player.Collider.offset;
+                        player.NetTransform.SnapTo(vector);
                         MessageWriter writer = AmongUsClient.Instance.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable);
-		                writer.WritePacked(ventId);
-		                writer.EndMessage();
+                        writer.WritePacked(ventId);
+                        writer.EndMessage();
                         CoEnterVentPatch.PlayersToKick.Remove(playerId);
                         return false;
                     }
@@ -137,47 +137,43 @@ namespace MoreGamemodes
         }
         public static void SerializeHudOverrideSystemV2(HudOverrideSystemType __instance)
         {
-            bool doSend = false;
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsRoleblocked[pc.PlayerId]) continue;
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(6);
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.WritePacked(pc.GetClientId());
                 writer.StartMessage(1);
                 writer.WritePacked(ShipStatus.Instance.NetId);
                 writer.StartMessage((byte)SystemTypes.Comms);
-				__instance.Serialize(writer, false);
-			    writer.EndMessage();
+                __instance.Serialize(writer, false);
                 writer.EndMessage();
                 writer.EndMessage();
-                doSend = true;
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
             }
-            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
         }
         public static void SerializeHqHudSystemV2(HqHudSystemType __instance)
         {
-            bool doSend = false;
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (ClassicGamemode.instance != null && ClassicGamemode.instance.IsFrozen[pc.PlayerId]) continue;
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                 writer.StartMessage(6);
                 writer.Write(AmongUsClient.Instance.GameId);
                 writer.WritePacked(pc.GetClientId());
                 writer.StartMessage(1);
                 writer.WritePacked(ShipStatus.Instance.NetId);
                 writer.StartMessage((byte)SystemTypes.Comms);
-				__instance.Serialize(writer, false);
-			    writer.EndMessage();
+                __instance.Serialize(writer, false);
                 writer.EndMessage();
                 writer.EndMessage();
-                doSend = true;
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
             }
-            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
         }
     }
 
@@ -194,8 +190,6 @@ namespace MoreGamemodes
                 if (playerInfo != null && !playerInfo.Disconnected)
                     AllPlayers.Add(playerInfo);
             }
-            bool doSend = false;
-            MessageWriter writer = MessageWriter.Get(SendOption.None);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (BlockVentInteraction(pc))
@@ -207,6 +201,7 @@ namespace MoreGamemodes
                             ++vents;
                     }
                     if (AllPlayers.Count >= vents) continue;
+                    MessageWriter writer = MessageWriter.Get(SendOption.None);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -214,32 +209,31 @@ namespace MoreGamemodes
                     writer.WritePacked(ShipStatus.Instance.NetId);
                     writer.StartMessage((byte)SystemTypes.Ventilation);
                     int blockedVents = 0;
-				    writer.WritePacked(AllPlayers.Count);
+                    writer.WritePacked(AllPlayers.Count);
                     foreach (var vent in pc.GetVentsFromClosest())
                     {
                         if (!CustomGamemode.Instance.OnEnterVent(pc, vent.Id))
                         {
                             writer.Write(AllPlayers[blockedVents].PlayerId);
-			                writer.Write((byte)vent.Id);
+                            writer.Write((byte)vent.Id);
                             ++blockedVents;
                         }
                         if (blockedVents >= AllPlayers.Count)
                             break;
                     }
                     writer.WritePacked(__instance.PlayersInsideVents.Count);
-		            foreach (Il2CppSystem.Collections.Generic.KeyValuePair<byte, byte> keyValuePair2 in __instance.PlayersInsideVents)
-		            {
-			            writer.Write(keyValuePair2.Key);
-			            writer.Write(keyValuePair2.Value);
-		            }
-				    writer.EndMessage();
+                    foreach (Il2CppSystem.Collections.Generic.KeyValuePair<byte, byte> keyValuePair2 in __instance.PlayersInsideVents)
+                    {
+                        writer.Write(keyValuePair2.Key);
+                        writer.Write(keyValuePair2.Value);
+                    }
                     writer.EndMessage();
                     writer.EndMessage();
-                    doSend = true;
+                    writer.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(writer);
+                    writer.Recycle();
                 }
             }
-            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
         }
         public static bool BlockVentInteraction(PlayerControl pc)
         {
@@ -255,14 +249,13 @@ namespace MoreGamemodes
         }
         public static void SerializeV2(VentilationSystem __instance, PlayerControl player = null)
         {
-            bool doSend = false;
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc.AmOwner) continue;
                 if (player != null && pc != player) continue;
                 if (BlockVentInteraction(pc))
                 {
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
@@ -283,46 +276,47 @@ namespace MoreGamemodes
                     }
                     int maxVents = Math.Min(vents, AllPlayers.Count);
                     int blockedVents = 0;
-				    writer.WritePacked(maxVents);
+                    writer.WritePacked(maxVents);
                     foreach (var vent in pc.GetVentsFromClosest())
                     {
                         if (!CustomGamemode.Instance.OnEnterVent(pc, vent.Id))
                         {
                             writer.Write(AllPlayers[blockedVents].PlayerId);
-			                writer.Write((byte)vent.Id);
+                            writer.Write((byte)vent.Id);
                             ++blockedVents;
                         }
                         if (blockedVents >= maxVents)
                             break;
                     }
                     writer.WritePacked(__instance.PlayersInsideVents.Count);
-		            foreach (Il2CppSystem.Collections.Generic.KeyValuePair<byte, byte> keyValuePair2 in __instance.PlayersInsideVents)
-		            {
-			            writer.Write(keyValuePair2.Key);
-			            writer.Write(keyValuePair2.Value);
-		            }
-				    writer.EndMessage();
+                    foreach (Il2CppSystem.Collections.Generic.KeyValuePair<byte, byte> keyValuePair2 in __instance.PlayersInsideVents)
+                    {
+                        writer.Write(keyValuePair2.Key);
+                        writer.Write(keyValuePair2.Value);
+                    }
                     writer.EndMessage();
                     writer.EndMessage();
-                    
+                    writer.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(writer);
+                    writer.Recycle();
                 }
                 else
                 {
+                    MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage(6);
                     writer.Write(AmongUsClient.Instance.GameId);
                     writer.WritePacked(pc.GetClientId());
                     writer.StartMessage(1);
                     writer.WritePacked(ShipStatus.Instance.NetId);
                     writer.StartMessage((byte)SystemTypes.Ventilation);
-				    __instance.Serialize(writer, false);
-			        writer.EndMessage();
+                    __instance.Serialize(writer, false);
                     writer.EndMessage();
                     writer.EndMessage();
+                    writer.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(writer);
+                    writer.Recycle();
                 }
-                doSend = true;
             }
-            if (doSend) AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
         }
     }
 
@@ -350,6 +344,59 @@ namespace MoreGamemodes
             {
                 if (((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling()) && !pc.GetRole().CanUseKillButton()) || ((pc.GetRole().IsCrewmate() || pc.GetRole().IsNeutralBenign() || pc.GetRole().IsNeutralEvil()) && pc.GetRole().CanUseKillButton()) || (pc.GetRole().Role == CustomRoles.Jester && Jester.HasImpostorVision.GetBool()))
                     pc.SyncPlayerSettings();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(MushroomMixupSabotageSystem), nameof(MushroomMixupSabotageSystem.MushroomMixUp))]
+    class MushroomMixUpPatch
+    {
+        public static void Postfix()
+        {
+            if (!AmongUsClient.Instance.AmHost || MeetingHud.Instance) return;
+            new LateTask(() =>
+            {
+                if (MeetingHud.Instance) return;
+                Utils.SyncAllPlayersName(false, true);
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc.Data.IsDead) continue;
+                    if (pc.AmOwner)
+                        pc.SetPet("pet_test");
+                    else
+                    {
+                        CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                        MessageWriter writer = sender.stream;
+                        sender.StartMessage(pc.GetClientId());
+                        sender.StartRpc(pc.NetId, (byte)RpcCalls.SetPetStr)
+                            .Write("pet_test")
+                            .Write(pc.GetNextRpcSequenceId(RpcCalls.SetPetStr))
+                            .EndRpc();
+                        writer.StartMessage(1);
+                        writer.WritePacked(pc.Data.NetId);
+                        pc.Data.Serialize(writer, false);
+                        writer.EndMessage();
+                        sender.EndMessage();
+                        sender.SendMessage();
+                    }
+                }
+            }, 0.2f, "Set MixUp Name");
+        }
+    }
+    
+    [HarmonyPatch(typeof(MushroomMixupSabotageSystem), nameof(MushroomMixupSabotageSystem.Deteriorate))]
+    class MushroomMixupSabotageSystemDeterioratePatch
+    {
+        public static void Prefix(MushroomMixupSabotageSystem __instance, [HarmonyArgument(0)] float deltaTime)
+        {
+            if (!AmongUsClient.Instance.AmHost || MeetingHud.Instance) return;
+            if (__instance.IsActive && __instance.currentSecondsUntilHeal - deltaTime <= 0)
+            {
+                new LateTask(() =>
+                {
+                    if (!MeetingHud.Instance)
+                        Utils.SyncAllPlayersName(false, true);
+                }, 0.2f, "Fix MixUp Name");
             }
         }
     }

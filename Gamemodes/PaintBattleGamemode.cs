@@ -80,14 +80,12 @@ namespace MoreGamemodes
             PaintTime = Options.PaintingTime.GetInt();
             IsPaintActive = true;
             foreach (var pc in PlayerControl.AllPlayerControls)
-            {
                 pc.RpcTeleport(GetPaintBattleLocation(pc.PlayerId));
-                new LateTask(() => pc.RpcSetUnshiftButton(), 0.5f);
-            }
             var rand = new System.Random();
             Theme = Main.PaintBattleThemes[rand.Next(0, Main.PaintBattleThemes.Count)];
             SendRPC(GameManager.Instance);
             Utils.SendChat("Start painting! The theme is " + Theme + "! Remember to evalute less paintings that are not in theme!", "Theme");
+            new LateTask(() => Utils.RpcSetUnshiftButton(), 0.5f);
         }
 
         public override bool OnCheckMurder(PlayerControl killer, PlayerControl target)

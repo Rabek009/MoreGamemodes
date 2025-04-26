@@ -64,8 +64,8 @@ namespace MoreGamemodes
         public static Dictionary<byte, float> TimeSinceLastPet;
         public static Dictionary<byte, bool> IsInvisible;
 
-        public const string CurrentVersion = "2.1.0 sus69";
-        public bool isDev = CurrentVersion.Contains("dev") || CurrentVersion.Contains("sus");
+        public const string CurrentVersion = "2.1.0 dev7";
+        public bool isDev = CurrentVersion.Contains("dev");
         public bool isBeta = CurrentVersion.Contains("beta");
 
         public override void Load()

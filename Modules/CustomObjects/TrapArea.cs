@@ -49,19 +49,19 @@ namespace MoreGamemodes
             Despawn();
         }
 
-        public TrapArea(float radius, float waitDuration, Vector2 position, List<byte> visibleList, byte ownerId)
+        public TrapArea(float radius, float waitDuration, Vector2 position, List<byte> hiddenList, byte ownerId)
         {
             Radius = radius;
             Size = radius * 32f;
             Timer = -0.1f;
             WaitDuration = waitDuration;
             State = 0;
-            VisibleList = visibleList;
+            HiddenList = hiddenList;
             OwnerId = ownerId;
             CreateNetObject($"<size={Size}><font=\"VCR SDF\"><#c7c7c769>●", position);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (!VisibleList.Contains(pc.PlayerId))
+                if (HiddenList.Contains(pc.PlayerId))
                     Hide(pc);
             }
         }
@@ -71,7 +71,7 @@ namespace MoreGamemodes
         public float Timer;
         public float WaitDuration;
         public int State;
-        public List<byte> VisibleList;
+        public List<byte> HiddenList;
         public byte OwnerId;
     }
 }

@@ -17,20 +17,25 @@ namespace MoreGamemodes
         private int currentRpcTarget;
 
         private CustomRpcSender() { }
-        public CustomRpcSender(SendOption sendOption)
+        public CustomRpcSender(SendOption sendOption, bool isStreamed)
         {
-            stream = MessageWriter.Get(sendOption);
+            stream = isStreamed ? AmongUsClient.Instance.Streams[(int)sendOption] : MessageWriter.Get(sendOption);
             this.sendOption = sendOption;
             currentRpcTarget = -2;
             currentState = State.Ready;
         }
-        public static CustomRpcSender Create(SendOption sendOption = SendOption.None)
+        public static CustomRpcSender Create(SendOption sendOption, bool isStreamed = false)
         {
-            return new CustomRpcSender(sendOption);
+            return new CustomRpcSender(sendOption, isStreamed);
         }
 
         public CustomRpcSender StartMessage(int targetClientId = -1)
         {
+            if (stream.Length > 800)
+            {
+                AmongUsClient.Instance.SendOrDisconnect(stream);
+                stream.Clear(sendOption);
+            }
             if (targetClientId < 0)
             {
                 stream.StartMessage(5);
@@ -49,6 +54,13 @@ namespace MoreGamemodes
         public CustomRpcSender EndMessage()
         {
             stream.EndMessage();
+            currentRpcTarget = -2;
+            currentState = State.Ready;
+            return this;
+        }
+        public CustomRpcSender CancelMessage()
+        {
+            stream.CancelMessage();
             currentRpcTarget = -2;
             currentState = State.Ready;
             return this;

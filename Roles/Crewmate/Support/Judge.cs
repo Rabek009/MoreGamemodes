@@ -30,6 +30,7 @@ namespace MoreGamemodes
 
         public void SendRPC()
         {
+            AbilityUsed = true;
             AmongUsClient.Instance.SendRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
         }
 

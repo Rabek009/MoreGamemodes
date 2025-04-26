@@ -17,6 +17,7 @@ namespace MoreGamemodes
             {"investigator", CustomRoles.Investigator},
             {"mortician", CustomRoles.Mortician},
             {"snitch", CustomRoles.Snitch},
+            //{"detective", CustomRoles.Detective},
             {"sheriff", CustomRoles.Sheriff},
             {"niceguesser", CustomRoles.NiceGuesser},
             {"shaman", CustomRoles.Shaman},
@@ -59,6 +60,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, "Investigator"},
             {CustomRoles.Mortician, "Mortician"},
             {CustomRoles.Snitch, "Snitch"},
+            //{CustomRoles.Detective, "Detective"},
             {CustomRoles.Sheriff, "Sheriff"},
             {CustomRoles.NiceGuesser, "Nice Guesser"},
             {CustomRoles.Shaman, "Shaman"},
@@ -101,6 +103,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, "See if someone is good or evil"},
             {CustomRoles.Mortician, "Get info about bodies"},
             {CustomRoles.Snitch, "Complete tasks to find killers"},
+            //{CustomRoles.Detective, "Find killers by their footprints"},
             {CustomRoles.Sheriff, "Shoot impostors"},
             {CustomRoles.NiceGuesser, "Guess evil roles during meeting"},
             {CustomRoles.Shaman, "Curse killers and make them die"},
@@ -143,6 +146,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, "Investigator (Crewmate): You can use pet button to switch between task and investigate mode. In task mode you can do tasks. In investigate mode you have kill button. Use kill button to investigate player. If players is good, his name will become green. But if player is evil then his name will turn red. But some roles that are good can show as evil, also sometimes evil roles show as good. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed, you don't have task and investigate mode. You can do tasks and investigate at the same time."},
             {CustomRoles.Mortician, "Mortician (Crewmate): When you report dead body, you know target's role, killer's role and how old is body. During meeting you see death reasons. Depending on options you have arrow pointing to nearest dead body."},
             {CustomRoles.Snitch, "Snitch (Crewmate): After completing all tasks you see who is impostor and depending on options neutral killer. Depending on options you can also see arrows to them. But if you're close to complete tasks, killers will know you and see arrow to you. Depending on options you might have more tasks than other crewmates. Finish tasks fast and don't get killed!"},
+            //{CustomRoles.Detective, "Detective (Crewmate): You can see footprints of other players all the time. These footprints disappear after few seconds. Footprints have the same color as player. If player is shapeshifted or his identity is hidden in any way, footprints will be in their fake color. Depending on options all footprints might be gray."},
             {CustomRoles.Sheriff, "Sheriff (Crewmate): You can use pet button to switch between task and kill mode. In task mode you can do tasks. In kill mode you have kill button. You can kill impostors and depending on options neutrals. If you try to kill someone you can't, you die from misfire. Depending on options your target dies on misfire too.\n\nIf you have mod installed, you don't have task and kill mode. You can do tasks and kill at the same time."},
             {CustomRoles.NiceGuesser, "Nice Guesser (Crewmate): You can guess evil roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 6 is trapster, you should type <i>/guess 6 trapster</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead."},
             {CustomRoles.Shaman, "Shaman (Crewmate): During meeting you can curse someone. If that player is killer he has to kill someone next round, or he will die and is informed about it. If that player can't kill, nothing will happen. You can curse max 1 person per meeting. You can't call meeting, but you can still report dead body. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed you can use curse button to curse someone."},
@@ -185,6 +189,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, Utils.HexToColor("#118385")},
             {CustomRoles.Mortician, Utils.HexToColor("#4d5254")},
             {CustomRoles.Snitch, Utils.HexToColor("#7c9923")},
+            //{CustomRoles.Detective, Utils.HexToColor("#1c30e8")},
             {CustomRoles.Sheriff, Utils.HexToColor("#e8e11e")},
             {CustomRoles.NiceGuesser, Utils.HexToColor("#f5f17a")},
             {CustomRoles.Shaman, Utils.HexToColor("#dce7e8")},
@@ -227,6 +232,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, CustomRoleTypes.CrewmateInvestigative},
             {CustomRoles.Mortician, CustomRoleTypes.CrewmateInvestigative},
             {CustomRoles.Snitch, CustomRoleTypes.CrewmateInvestigative},
+            //{CustomRoles.Detective, CustomRoleTypes.CrewmateInvestigative},
             {CustomRoles.Sheriff, CustomRoleTypes.CrewmateKilling},
             {CustomRoles.NiceGuesser, CustomRoleTypes.CrewmateKilling},
             {CustomRoles.Shaman, CustomRoleTypes.CrewmateKilling},
@@ -289,6 +295,9 @@ namespace MoreGamemodes
                 case CustomRoles.Snitch:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Snitch(player);
                     break;
+                // case CustomRoles.Detective:
+                //     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Detective(player);
+                //     break;
                 case CustomRoles.Sheriff:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Sheriff(player);
                     break;
@@ -515,6 +524,7 @@ public enum CustomRoles
     Investigator,
     Mortician,
     Snitch,
+    //Detective,
     Sheriff,
     NiceGuesser,
     Shaman,

@@ -589,7 +589,6 @@ namespace MoreGamemodes
                 default: ImpostorWin = false; break;
             }
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
-            MessageWriter writer = sender.stream;
             sender.StartMessage(-1);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -618,12 +617,16 @@ namespace MoreGamemodes
                 }
             }
             sender.EndMessage();
-            writer.StartMessage(8);
-			writer.Write(AmongUsClient.Instance.GameId);
-            writer.Write((byte)reason);
-		    writer.Write(false);
-            writer.EndMessage();
             sender.SendMessage();
+            GameManager.Instance.ShouldCheckForGameEnd = false;
+            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage(8);
+            writer.Write(AmongUsClient.Instance.GameId);
+            writer.Write((byte)reason);
+            writer.Write(false);
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
         }
     }
 
