@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using AmongUs.InnerNet.GameDataMessages;
+using HarmonyLib;
 using Hazel;
 
 namespace MoreGamemodes
@@ -43,8 +44,10 @@ namespace MoreGamemodes
             {
                 if (callId == 49)
                 {
-                    AmongUsClient.Instance.SendRpc(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.None);
-                    AmongUsClient.Instance.SendRpc(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.Reliable);
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.None, -1);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
+                    MessageWriter writer2 = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.CancelPet, SendOption.Reliable, -1);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer2);
                 }
                 CustomGamemode.Instance.OnPet(pc);
                 Main.TimeSinceLastPet[pc.PlayerId] = 0f;

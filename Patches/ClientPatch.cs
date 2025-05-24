@@ -3,6 +3,7 @@ using Hazel;
 using InnerNet;
 using AmongUs.GameOptions;
 using AmongUs.Data;
+using AmongUs.InnerNet.GameDataMessages;
 
 using Object = UnityEngine.Object;
 
@@ -206,18 +207,15 @@ namespace MoreGamemodes
             VoteBanSystem.Instance = Object.Instantiate(AmongUsClient.Instance.VoteBanPrefab);
 			AmongUsClient.Instance.Spawn(VoteBanSystem.Instance, -2, SpawnFlags.None);
             new LateTask(() => {
-                MessageWriter writer = AmongUsClient.Instance.Streams[1];
-                if (writer.Length > 800)
-                {
-                    writer.EndMessage();
-                    AmongUsClient.Instance.SendOrDisconnect(writer);
-                    writer.Clear(SendOption.Reliable);
-                    writer.StartMessage(5);
-                    writer.Write(AmongUsClient.Instance.GameId);
-                }
+                MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+                writer.StartMessage(5);
+                writer.Write(AmongUsClient.Instance.GameId);
 			    writer.StartMessage(5);
 			    writer.WritePacked(__instance.NetId);
 			    writer.EndMessage();
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
             }, 0.5f);
             new LateTask(() => {
                 AmongUsClient.Instance.RemoveNetObject(__instance);
@@ -250,17 +248,14 @@ namespace MoreGamemodes
                 settings.SetInt(Int32OptionNames.NumImpostors, 1);
             if (settings.NumImpostors > 3)
                 settings.SetInt(Int32OptionNames.NumImpostors, 3);
-            if (settings.GameMode == GameModes.Normal || settings.GameMode == GameModes.NormalFools)
-            {
-                if (settings.GetInt(Int32OptionNames.KillDistance) < 0)
-                    settings.SetInt(Int32OptionNames.KillDistance, 0);
-                if (settings.GetInt(Int32OptionNames.KillDistance) > 2)
-                    settings.SetInt(Int32OptionNames.KillDistance, 2);
-                if (settings.GetFloat(FloatOptionNames.PlayerSpeedMod) <= 0f)
-                    settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 0.0001f);
-                if (settings.GetFloat(FloatOptionNames.PlayerSpeedMod) > 3f)
-                    settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 3f);
-            }
+            if (settings.GetInt(Int32OptionNames.KillDistance) < 0)
+                settings.SetInt(Int32OptionNames.KillDistance, 0);
+            if (settings.GetInt(Int32OptionNames.KillDistance) > 2)
+                settings.SetInt(Int32OptionNames.KillDistance, 2);
+            if (settings.GetFloat(FloatOptionNames.PlayerSpeedMod) <= 0f)
+                settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 0.0001f);
+            if (settings.GetFloat(FloatOptionNames.PlayerSpeedMod) > 3f)
+                settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 3f);
         }
     }
 
@@ -270,57 +265,6 @@ namespace MoreGamemodes
         public static void Prefix()
         {
             DataManager.Player.Ban.banPoints = 0f;
-        }
-    }
-
-    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.StartRpc))]
-    class StartRpcPatch
-    {
-        public static void Prefix(InnerNetClient __instance, [HarmonyArgument(0)] uint targetNetId, [HarmonyArgument(1)] byte callId, [HarmonyArgument(2)] SendOption option)
-        {
-            MessageWriter writer = __instance.Streams[(int)option];
-            if (writer.Length > 800)
-            {
-                writer.EndMessage();
-				__instance.SendOrDisconnect(writer);
-				writer.Clear(option);
-				writer.StartMessage(5);
-				writer.Write(__instance.GameId);
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Spawn))]
-    class SpawnPatch
-    {
-        public static void Prefix(InnerNetClient __instance)
-        {
-            MessageWriter writer = __instance.Streams[1];
-            if (writer.Length > 800)
-            {
-                writer.EndMessage();
-				__instance.SendOrDisconnect(writer);
-				writer.Clear(SendOption.Reliable);
-				writer.StartMessage(5);
-				writer.Write(__instance.GameId);
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.Despawn))]
-    class DespawnPatch
-    {
-        public static void Prefix(InnerNetClient __instance)
-        {
-            MessageWriter writer = __instance.Streams[1];
-            if (writer.Length > 800)
-            {
-                writer.EndMessage();
-				__instance.SendOrDisconnect(writer);
-				writer.Clear(SendOption.Reliable);
-				writer.StartMessage(5);
-				writer.Write(__instance.GameId);
-            }
         }
     }
 }

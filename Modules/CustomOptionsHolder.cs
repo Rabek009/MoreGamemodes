@@ -1129,7 +1129,6 @@ namespace MoreGamemodes
             //Crewmate roles
             CrewmateInvestigative = TextOptionItem.Create(100000, "Crewmate investigative", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
-            //Detective.SetupOptionItem();
             Investigator.SetupOptionItem();
             Mortician.SetupOptionItem();
             Snitch.SetupOptionItem();
@@ -1146,6 +1145,7 @@ namespace MoreGamemodes
             CrewmateSupport = TextOptionItem.Create(400000, "Crewmate support", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
             Judge.SetupOptionItem();
+            //Mayor.SetupOptionItem();
             Mutant.SetupOptionItem();
             SecurityGuard.SetupOptionItem();
 

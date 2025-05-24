@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using System;
+using AmongUs.InnerNet.GameDataMessages;
 
 using Object = UnityEngine.Object;
 
@@ -95,10 +96,10 @@ namespace MoreGamemodes
             {
                 player.NetTransform.SnapTo(position, (ushort)(player.NetTransform.lastSequenceId + 128));
             }
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable, -1);
             NetHelpers.WriteVector2(position, writer);
             writer.Write((ushort)(player.NetTransform.lastSequenceId + 2));
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public static void RpcRandomVentTeleport(this PlayerControl player)
@@ -347,7 +348,8 @@ namespace MoreGamemodes
         public static void RpcExileV2(this PlayerControl player)
         {
             player.Exiled();
-            AmongUsClient.Instance.SendRpc(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public static void RpcUnmoddedReactorFlash(this PlayerControl pc, float duration)
@@ -536,10 +538,10 @@ namespace MoreGamemodes
             if (player == null) return;
             Main.StandardRoles[player.PlayerId] = role;
             player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);
             writer.Write(true);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)))
@@ -554,10 +556,10 @@ namespace MoreGamemodes
         {
             if (player == null) return;
             player.StartCoroutine(player.CoSetRole(role, true));
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetRole, SendOption.Reliable, -1);
             writer.Write((ushort)role);
             writer.Write(true);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public static PlainShipRoom GetPlainShipRoom(this PlayerControl pc)

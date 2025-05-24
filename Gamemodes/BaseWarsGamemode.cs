@@ -420,12 +420,12 @@ namespace MoreGamemodes
                 CanTeleport[player.PlayerId] = canTeleport;
             if (player.AmOwner)
                 HudManager.Instance.TaskPanel.SetTaskText("");
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((int)team);
             writer.Write(isDead);
             if (Options.CanTeleportToBase.GetBool())
                 writer.Write(canTeleport);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(PlayerControl player, MessageReader reader)
@@ -442,9 +442,9 @@ namespace MoreGamemodes
         {
             if (!AllTurretsPosition.Contains(room)) return;
             AllTurretsPosition.Remove(room);
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((byte)room);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(GameManager manager, MessageReader reader)

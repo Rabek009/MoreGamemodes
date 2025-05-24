@@ -318,6 +318,11 @@ namespace MoreGamemodes
 
         }
 
+        public virtual int AdditionalVotes()
+        {
+            return 0;
+        }
+
         public virtual void ReceiveRPC(MessageReader reader)
         {
 

@@ -73,8 +73,8 @@ namespace MoreGamemodes
 			msg.StartMessage(6);
 			msg.Write(AmongUsClient.Instance.GameId);
 			msg.WritePacked(int.MaxValue);
-			for (int i = 0; i < AmongUsClient.Instance.allObjects.Count; i++)
-			{
+			for (int i = 0; i < AmongUsClient.Instance.allObjects.allObjects.Count; i++)
+            {
                 if (msg.Length > 800)
                 {
                     msg.EndMessage();
@@ -84,17 +84,17 @@ namespace MoreGamemodes
                     msg.Write(AmongUsClient.Instance.GameId);
                     msg.WritePacked(int.MaxValue);
                 }
-				InnerNetObject innerNetObject = AmongUsClient.Instance.allObjects[i];
-				msg.StartMessage(4);
-				msg.WritePacked(GameStartManager.Instance.LobbyPrefab.SpawnId);
-				msg.WritePacked(innerNetObject.OwnerId);
-				msg.Write((byte)innerNetObject.SpawnFlags);
-				msg.WritePacked(1);
-				msg.WritePacked(innerNetObject.NetId);
-				msg.StartMessage(1);
-				msg.EndMessage();
-				msg.EndMessage();
-			}
+                InnerNetObject innerNetObject = AmongUsClient.Instance.allObjects.AllObjects[i];
+                msg.StartMessage(4);
+                msg.WritePacked(GameStartManager.Instance.LobbyPrefab.SpawnId);
+                msg.WritePacked(innerNetObject.OwnerId);
+                msg.Write((byte)innerNetObject.SpawnFlags);
+                msg.WritePacked(1);
+                msg.WritePacked(innerNetObject.NetId);
+                msg.StartMessage(1);
+                msg.EndMessage();
+                msg.EndMessage();
+            }
 			msg.EndMessage();
 			AmongUsClient.Instance.SendOrDisconnect(msg);
 			msg.Recycle();
@@ -124,19 +124,6 @@ namespace MoreGamemodes
         public static void Postfix(GameStartManager __instance, [HarmonyArgument(0)] MapNames map)
         {
 			__instance.MapImage.flipX = map == MapNames.Dleks;
-        }
-    }
-
-    [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.RpcExtendLobbyTimer))]
-    class RpcExtendLobbyTimerPatch
-    {
-        public static bool Prefix(LobbyBehaviour __instance)
-        {
-            if (!AmongUsClient.Instance.AmHost || DestroyableSingleton<TutorialManager>.InstanceExists) return true;
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.ExtendLobbyTimer, SendOption.Reliable);
-		    writer.WritePacked(__instance.currentExtensionId);
-		    writer.EndMessage();
-            return false;
         }
     }
 

@@ -851,41 +851,41 @@ namespace MoreGamemodes
             PlayerType[player.PlayerId] = playerType;
             if (player.AmOwner)
                 HudManager.Instance.TaskPanel.SetTaskText("");
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((int)JailbreakRPC.SetPlayerType);
             writer.Write((int)playerType);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public void SendRPC_SetItemAmount(PlayerControl player, InventoryItems item, int amount)
         {
             if (Inventory[(player.PlayerId, item)] == amount) return;
             Inventory[(player.PlayerId, item)] = amount;
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((int)JailbreakRPC.SetItemAmount);
             writer.Write((int)item);
             writer.Write(amount);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public void SendRPC_SetCurrentRecipe(PlayerControl player, int recipeId)
         {
             if (CurrentRecipe[player.PlayerId] == recipeId) return;
             CurrentRecipe[player.PlayerId] = recipeId;
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((int)JailbreakRPC.SetCurrentRecipe);
             writer.Write(recipeId);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public void SendRPC_SetIsDead(PlayerControl player, bool isDead)
         {
             if (IsDead[player.PlayerId] == isDead) return;
             IsDead[player.PlayerId] = isDead;
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((int)JailbreakRPC.SetIsDead);
             writer.Write(isDead);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(PlayerControl player, MessageReader reader)
@@ -984,7 +984,8 @@ namespace MoreGamemodes
             player.RpcSetDeathReason(DeathReasons.Escaped);
             player.RpcSetRole(RoleTypes.GuardianAngel, true);
             player.Die(DeathReason.Exile, false);
-            AmongUsClient.Instance.SendRpc(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
             player.SyncPlayerSettings();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {

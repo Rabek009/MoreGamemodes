@@ -21,6 +21,37 @@ namespace MoreGamemodes
         public static List<byte> RemovedBodies;
         public static Dictionary<byte, (byte, float)> TimeSinceLastStartCleaning;
         public static Dictionary<byte, (byte, float)> TimeSinceLastBootImpostors;
+        public static Dictionary<(byte, RpcCalls), int> RpcsInCurrentSecond;
+        public static float TimeSinceRateLimitReset;
+        public static Dictionary<RpcCalls, int> RpcRateLimit = new()
+        {
+            {RpcCalls.PlayAnimation, 3},
+            {RpcCalls.CompleteTask, 2},
+            {RpcCalls.CheckColor, 10},
+            {RpcCalls.SendChat, 2},
+            {RpcCalls.SetScanner, 10},
+            {RpcCalls.SetStartCounter, 15},
+            {RpcCalls.EnterVent, 3},
+            {RpcCalls.ExitVent, 3},
+            {RpcCalls.SnapTo, 8},
+            {RpcCalls.ClimbLadder, 1},
+            {RpcCalls.UsePlatform, 20},
+            {RpcCalls.SendQuickChat, 1},
+            {RpcCalls.SetHatStr, 10},
+            {RpcCalls.SetSkinStr, 10},
+            {RpcCalls.SetPetStr, 10},
+            {RpcCalls.SetVisorStr, 10},
+            {RpcCalls.SetNamePlateStr, 10},
+            {RpcCalls.CheckMurder, 25},
+            {RpcCalls.CheckProtect, 25},
+            {RpcCalls.Pet, 40},
+            {RpcCalls.CancelPet, 40},
+            {RpcCalls.CheckZipline, 1},
+            {RpcCalls.CheckSpore, 5},
+            {RpcCalls.CheckShapeshift, 10},
+            {RpcCalls.CheckVanish, 10},
+            {RpcCalls.CheckAppear, 10},
+        };
 
         public static void Init()
         {
@@ -32,6 +63,8 @@ namespace MoreGamemodes
             RemovedBodies = new List<byte>();
             TimeSinceLastStartCleaning = new Dictionary<byte, (byte, float)>();
             TimeSinceLastBootImpostors = new Dictionary<byte, (byte, float)>();
+            RpcsInCurrentSecond = new Dictionary<(byte, RpcCalls), int>();
+            TimeSinceRateLimitReset = 0f;
         }
 
         public static bool PlayerControlReceiveRpc(PlayerControl pc, byte callId, MessageReader reader)
@@ -42,6 +75,84 @@ namespace MoreGamemodes
             MessageReader sr = MessageReader.Get(reader);
             var rpc = (RpcCalls)callId;
             bool gameStarted = AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started || AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Ended;
+            switch (callId)
+            {
+                case 101:
+                    try
+                    {
+                        var firstString = sr.ReadString();
+                        var secondString = sr.ReadString();
+                        sr.ReadInt32();
+                        var flag = string.IsNullOrEmpty(firstString) && string.IsNullOrEmpty(secondString);
+                        if (!flag)
+                        {
+                            HandleCheat(pc, "AUM Chat");
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                    }
+                    break;
+                case unchecked((byte)42069):
+                    try
+                    {
+                        var aumid = sr.ReadByte();
+                        if (aumid == pc.PlayerId)
+                        {
+                            HandleCheat(pc, "AUM");
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                    }
+                    break;
+                case 119:
+                    try
+                    {
+                        var firstString = sr.ReadString();
+                        var secondString = sr.ReadString();
+                        sr.ReadInt32();
+                        var flag = string.IsNullOrEmpty(firstString) && string.IsNullOrEmpty(secondString);
+                        if (!flag)
+                        {
+                            HandleCheat(pc, "KN Chat");
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                    }
+                    break;
+                case 250:
+                    if (sr.BytesRemaining == 0)
+                    {
+                        HandleCheat(pc, "KN");
+                        return true;
+                    }
+                    break;
+                case unchecked((byte)420):
+                    if (sr.BytesRemaining == 0)
+                    {
+                        HandleCheat(pc, "Sicko");
+                        return true;
+                    }
+                    break;
+            }
+            if (callId <= 65)
+            {
+                if (!RpcsInCurrentSecond.ContainsKey((pc.PlayerId, rpc)))
+                    RpcsInCurrentSecond[(pc.PlayerId, rpc)] = 0;
+                ++RpcsInCurrentSecond[(pc.PlayerId, rpc)];
+                if (RpcRateLimit.ContainsKey(rpc) && RpcsInCurrentSecond[(pc.PlayerId, rpc)] > RpcRateLimit[rpc])
+                {
+                    HandleCheat(pc, "Sending too many packets");
+                    return true;
+                }
+            }
+            else
+                return false;
             switch (rpc)
             {
                 case RpcCalls.PlayAnimation:
@@ -173,7 +284,7 @@ namespace MoreGamemodes
                     break;
                 case RpcCalls.MurderPlayer:
                     PlayerControl target = sr.ReadNetObject<PlayerControl>();
-			        MurderResultFlags resultFlags = (MurderResultFlags)sr.ReadInt32();
+                    MurderResultFlags resultFlags = (MurderResultFlags)sr.ReadInt32();
                     if (!resultFlags.HasFlag(MurderResultFlags.FailedError) && !resultFlags.HasFlag(MurderResultFlags.FailedProtected) && target != null)
                     {
                         new LateTask(() => target.RpcRevive(), 0.1f);
@@ -185,7 +296,7 @@ namespace MoreGamemodes
                     if (text.Length > 300)
                     {
                         HandleCheat(pc, "Too long chat message");
-                        return true; 
+                        return true;
                     }
                     break;
                 case RpcCalls.SetScanner:
@@ -213,6 +324,20 @@ namespace MoreGamemodes
                     if (!pc.HasTask(TaskTypes.SubmitScan) && !ChangedTasks.Contains(pc.PlayerId))
                     {
                         HandleCheat(pc, "Hack sent scan");
+                        return true;
+                    }
+                    break;
+                case RpcCalls.SetStartCounter:
+                    if (Main.GameStarted)
+                    {
+                        HandleCheat(pc, "SetStartCounter Rpc mid game");
+                        return true;
+                    }
+                    sr.ReadPackedInt32();
+                    sbyte startCounter = sr.ReadSByte();
+                    if (startCounter != -1)
+                    {
+                        HandleCheat(pc, "Invalid SetStartCounter Rpc");
                         return true;
                     }
                     break;
@@ -451,47 +576,6 @@ namespace MoreGamemodes
                     }
                     break;
             }
-            switch (callId)
-            {
-                case 101:
-                    try
-                    {
-                        var firstString = sr.ReadString();
-                        var secondString = sr.ReadString();
-                        sr.ReadInt32();
-                        var flag = string.IsNullOrEmpty(firstString) && string.IsNullOrEmpty(secondString);
-                        if (!flag)
-                        {
-                            HandleCheat(pc, "AUM Chat");
-                            return true;
-                        }
-                    }
-                    catch
-                    {
-                    }
-                    break;
-                case unchecked((byte)42069):
-                    try
-                    {
-                        var aumid = sr.ReadByte();
-                        if (aumid == pc.PlayerId)
-                        {
-                            HandleCheat(pc, "AUM");
-                            return true;
-                        }
-                    }
-                    catch
-                    {
-                    }
-                    break;
-                case unchecked((byte)420):
-                    if (sr.BytesRemaining == 0)
-                    {
-                        HandleCheat(pc, "Sicko");
-                        return true;
-                    }
-                    break;
-            }
             return false;
         }
 
@@ -554,6 +638,17 @@ namespace MoreGamemodes
                     }
                     break;
             }
+            if (callId <= 65)
+            {
+                if (!RpcsInCurrentSecond.ContainsKey((physics.myPlayer.PlayerId, rpc)))
+                    RpcsInCurrentSecond[(physics.myPlayer.PlayerId, rpc)] = 0;
+                ++RpcsInCurrentSecond[(physics.myPlayer.PlayerId, rpc)];
+                if (RpcRateLimit.ContainsKey(rpc) && RpcsInCurrentSecond[(physics.myPlayer.PlayerId, rpc)] > RpcRateLimit[rpc])
+                {
+                    HandleCheat(physics.myPlayer, "Sending too many packets");
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -579,6 +674,17 @@ namespace MoreGamemodes
                         return true;
                     }
                     break;
+            }
+            if (callId <= 65)
+            {
+                if (!RpcsInCurrentSecond.ContainsKey((netTransform.myPlayer.PlayerId, rpc)))
+                    RpcsInCurrentSecond[(netTransform.myPlayer.PlayerId, rpc)] = 0;
+                ++RpcsInCurrentSecond[(netTransform.myPlayer.PlayerId, rpc)];
+                if (RpcRateLimit.ContainsKey(rpc) && RpcsInCurrentSecond[(netTransform.myPlayer.PlayerId, rpc)] > RpcRateLimit[rpc])
+                {
+                    HandleCheat(netTransform.myPlayer, "Sending too many packets");
+                    return true;
+                }
             }
             return false;
         }
@@ -773,6 +879,12 @@ namespace MoreGamemodes
                 if (TimeSinceLastBootImpostors.ContainsKey(pc.PlayerId))
                     TimeSinceLastBootImpostors[pc.PlayerId] = (TimeSinceLastBootImpostors[pc.PlayerId].Item1, TimeSinceLastBootImpostors[pc.PlayerId].Item2 + Time.fixedDeltaTime);
             }
+            TimeSinceRateLimitReset += Time.fixedDeltaTime;
+            if (TimeSinceRateLimitReset >= 1f)
+            {
+                RpcsInCurrentSecond.Clear();
+                TimeSinceRateLimitReset -= 1f;
+            }
         }
 
         public static void OnMeeting()
@@ -788,15 +900,20 @@ namespace MoreGamemodes
         public static void HandleCheat(PlayerControl pc, string reason)
         {
             if (!Options.AntiCheat.GetBool()) return;
-            Main.Instance.Log.LogInfo("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
+            if (reason != "Sending too many packets")
+                Main.Instance.Log.LogInfo("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
             switch (Options.CurrentCheatingPenalty)
             {
                 case CheatingPenalties.WarnHost:
-                    HudManager.Instance.Notifier.AddDisconnectMessage("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
+                    if (HudManager.Instance.Notifier.activeMessages.Count < HudManager.Instance.Notifier.maxMessages)
+                        HudManager.Instance.Notifier.AddDisconnectMessage("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
                     break;
                 case CheatingPenalties.WarnEveryone:
-                    HudManager.Instance.Notifier.AddDisconnectMessage("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
-                    Utils.SendChat(pc.Data.PlayerName + " is hacking!\nReason: " + reason, "AntiCheat");
+                    if (HudManager.Instance.Notifier.activeMessages.Count < HudManager.Instance.Notifier.maxMessages)
+                    {
+                        Utils.SendChat(pc.Data.PlayerName + " is hacking!\nReason: " + reason, "AntiCheat");
+                        HudManager.Instance.Notifier.AddDisconnectMessage("AntiCheat: " + pc.Data.PlayerName + " is hacking!\nReason: " + reason);
+                    }
                     break;
                 case CheatingPenalties.Kick:
                     if (!BannedPlayers.Contains(pc.NetId))

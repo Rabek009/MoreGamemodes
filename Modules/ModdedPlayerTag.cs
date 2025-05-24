@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Hazel;
+using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {
@@ -93,13 +94,13 @@ namespace MoreGamemodes
                 if (pc == null || !Main.StandardNames.ContainsKey(pc.PlayerId) || pc.Data == null || !IsPlayerTagged(pc.Data.FriendCode)) continue;
                 string name = Main.StandardNames[pc.PlayerId];
                 if (AmongUsClient.Instance.AmClient)
-		        {
-			        pc.SetName(name);
-		        }
-		        MessageWriter writer = AmongUsClient.Instance.StartRpc(pc.NetId, (byte)RpcCalls.SetName, SendOption.Reliable);
-		        writer.Write(pc.Data.NetId);
+                {
+                    pc.SetName(name);
+                }
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(pc.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
+                writer.Write(pc.Data.NetId);
                 writer.Write(name);
-		        writer.EndMessage();
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
             }
         }
 

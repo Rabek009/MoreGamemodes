@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using System;
+using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {
@@ -79,9 +80,9 @@ namespace MoreGamemodes
                         Vector2 vector = Utils.GetVentById(ventId).transform.position;
                         vector -= player.Collider.offset;
                         player.NetTransform.SnapTo(vector);
-                        MessageWriter writer = AmongUsClient.Instance.StartRpc(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable);
+                        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.MyPhysics.NetId, (byte)RpcCalls.BootFromVent, SendOption.Reliable, -1);
                         writer.WritePacked(ventId);
-                        writer.EndMessage();
+                        AmongUsClient.Instance.FinishRpcImmediately(writer);
                         CoEnterVentPatch.PlayersToKick.Remove(playerId);
                         return false;
                     }

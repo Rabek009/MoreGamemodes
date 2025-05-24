@@ -201,10 +201,10 @@ namespace MoreGamemodes
         public void SendRPC(GameManager manager)
         {
             HudManager.Instance.TaskPanel.SetTaskText("");
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write(Theme);
             writer.Write(IsPaintActive);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(GameManager manager, MessageReader reader)

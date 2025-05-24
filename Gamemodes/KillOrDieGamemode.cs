@@ -276,9 +276,9 @@ namespace MoreGamemodes
             IsPlayerKiller[player.PlayerId] = isKiller;
             if (player.AmOwner)
                 HudManager.Instance.TaskPanel.SetTaskText("");
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write(isKiller);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(PlayerControl player, MessageReader reader)

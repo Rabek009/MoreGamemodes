@@ -610,9 +610,9 @@ namespace MoreGamemodes
         {
             if (AllPlayersItems[player.PlayerId] == item) return;
             AllPlayersItems[player.PlayerId] = item;
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((int)item);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(PlayerControl player, MessageReader reader)
@@ -634,9 +634,9 @@ namespace MoreGamemodes
 				{
 				}
 			}
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write(IsHackActive);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(GameManager manager, MessageReader reader)

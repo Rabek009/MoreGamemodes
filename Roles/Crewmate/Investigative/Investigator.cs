@@ -209,7 +209,7 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             NeutralBenignShowRed = BooleanOptionItem.Create(100105, "Neutral benign show red", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            CrewmateKillingShowRed = BooleanOptionItem.Create(100106, "Crewmate killing show red", false, TabGroup.CrewmateRoles, false)
+            CrewmateKillingShowRed = BooleanOptionItem.Create(100106, "Crewmate killing show red", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             IncorrectResultChance = IntegerOptionItem.Create(100107, "Incorrect result chance", new(0, 40, 5), 0, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)

@@ -84,10 +84,15 @@ namespace MoreGamemodes
             "skewgram#9364",
             "metersmall#7725",
             "dashsheer#3493",
+            // "curltwisty#5938", (got second chance)
+            "cat#2761",
+            "tenpalace#1924"
         };
         public static readonly List<string> BannedHashedPuids = new(){
             "b0437b1e6",
             "8da2722fd",
+            "f70d4ddb1",
+            "6a259fcd9",
         };
     }
 }

@@ -4,6 +4,7 @@ using AmongUs.GameOptions;
 using System;
 using System.Linq;
 using Hazel;
+using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {
@@ -187,11 +188,11 @@ namespace MoreGamemodes
                     if (neutralKillers > 0)
                         name += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                     name += " remain.<size=0>";
-			        exiled.PlayerName = name;
-                    MessageWriter writer = AmongUsClient.Instance.StartRpc(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.Reliable);
-		            writer.Write(exiled.Object.Data.NetId);
+                    exiled.PlayerName = name;
+                    MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(exiled.Object.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
+                    writer.Write(exiled.NetId);
                     writer.Write(name);
-		            writer.EndMessage();
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
             }, 5f, "Custom exile message");
         }

@@ -27,6 +27,7 @@ namespace MoreGamemodes
             {"securityguard", CustomRoles.SecurityGuard},
             {"mutant", CustomRoles.Mutant},
             {"judge", CustomRoles.Judge},
+            {"mayor", CustomRoles.Mayor},
             {"impostor", CustomRoles.Impostor},
             {"shapeshifter", CustomRoles.Shapeshifter},
             {"phantom", CustomRoles.Phantom},
@@ -70,6 +71,7 @@ namespace MoreGamemodes
             {CustomRoles.SecurityGuard, "Security Guard"},
             {CustomRoles.Mutant, "Mutant"},
             {CustomRoles.Judge, "Judge"},
+            {CustomRoles.Mayor, "Mayor"},
             {CustomRoles.Impostor, "Impostor"},
             {CustomRoles.Shapeshifter, "Shapeshifter"},
             {CustomRoles.Phantom, "Phantom"},
@@ -113,6 +115,7 @@ namespace MoreGamemodes
             {CustomRoles.SecurityGuard, "Block vents and gain extra info from security"},
             {CustomRoles.Mutant, "Fix sabotages from anywhere"},
             {CustomRoles.Judge, "Exile who you want"},
+            {CustomRoles.Mayor, "Your vote is more important"},
             {CustomRoles.Impostor, "Kill and sabotage"},
             {CustomRoles.Shapeshifter, "Disguise yourself"},
             {CustomRoles.Phantom, "Turn invisible"},
@@ -156,6 +159,7 @@ namespace MoreGamemodes
             {CustomRoles.SecurityGuard, "Security Guard (Crewmate): You can use pet button near vent to block it permanently. Blocked vent can't be used by anyone. When you're looking at cameras/doorlog/binoculars you get alerted when someone die. Depending on options cameras don't blink when you're using it."},
             {CustomRoles.Mutant, "Mutant (Crewmate): You can use pet button during sabotage to instantly fix it from anywhere. You can't fix mushroom mixup sabotage."},
             {CustomRoles.Judge, "Judge (Crewmate): During meeting you can eject anyone you want one time. To do this open kick menu (open chat and click red button), select player who you want to exile and click \"kick\". After that meeting will instantly end and that player will be ejected. Depending on options you might die after using ability.\n\nIf you have mod installed you can use judge button to exile player."},
+            {CustomRoles.Mayor, "Mayor (Crewmate): Your vote counts as multiple votes. Use it to eject impostors easier."},
             {CustomRoles.Impostor, "Impostor (Impostor): Regular impostor without any ability.<size=0>"},
             {CustomRoles.Shapeshifter, "Shapeshifter (Impostor): You can shapeshift into other players. You can stay in shapeshifted form for limited time. When shapeshifting there is animation and depending on options you leave shapeshift evidence."},
             {CustomRoles.Phantom, "Phantom (Impostor): You can turn invisible for limited amount of time. When disappearing or appearing there is animation. While invisible, you can't kill, vent, repair sabotages, use platform and zipline. Other impostors can see you, when you're invisible. While invisible you're 10% faster."},
@@ -199,6 +203,7 @@ namespace MoreGamemodes
             {CustomRoles.SecurityGuard, Utils.HexToColor("#96944e")},
             {CustomRoles.Mutant, Utils.HexToColor("#4b0c4d")},
             {CustomRoles.Judge, Utils.HexToColor("#294361")},
+            {CustomRoles.Mayor, Utils.HexToColor("#332880")},
             {CustomRoles.Impostor, Palette.ImpostorRed},
             {CustomRoles.Shapeshifter, Palette.ImpostorRed},
             {CustomRoles.Phantom, Palette.ImpostorRed},
@@ -242,6 +247,7 @@ namespace MoreGamemodes
             {CustomRoles.SecurityGuard, CustomRoleTypes.CrewmateSupport},
             {CustomRoles.Mutant, CustomRoleTypes.CrewmateSupport},
             {CustomRoles.Judge, CustomRoleTypes.CrewmateSupport},
+            {CustomRoles.Mayor, CustomRoleTypes.CrewmateSupport},
             {CustomRoles.Impostor, CustomRoleTypes.ImpostorVanilla},
             {CustomRoles.Shapeshifter, CustomRoleTypes.ImpostorVanilla},
             {CustomRoles.Phantom, CustomRoleTypes.ImpostorVanilla},
@@ -324,6 +330,9 @@ namespace MoreGamemodes
                     break;
                 case CustomRoles.Judge:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Judge(player);
+                    break;
+                case CustomRoles.Mayor:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Mayor(player);
                     break;
                 case CustomRoles.Impostor:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Impostor(player);
@@ -534,6 +543,7 @@ public enum CustomRoles
     SecurityGuard,
     Mutant,
     Judge,
+    Mayor,
     // Impostor
     Impostor,
     Shapeshifter,

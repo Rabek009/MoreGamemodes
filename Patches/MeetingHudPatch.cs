@@ -2,6 +2,8 @@
 using AmongUs.GameOptions;
 using UnityEngine;
 using Hazel;
+using Il2CppSystem.Collections.Generic;
+using System.Linq;
 
 namespace MoreGamemodes
 {
@@ -126,6 +128,81 @@ namespace MoreGamemodes
 					}
 				}
 			}
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.CheckForEndVoting))]
+    class CheckForEndVotingPatch
+    {
+        public static bool Prefix(MeetingHud __instance)
+        {
+            if (!AmongUsClient.Instance.AmHost || CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return true;
+            if (__instance.playerStates.All((PlayerVoteArea ps) => ps.AmDead || ps.DidVote))
+		    {
+			    Dictionary<byte, int> self = __instance.CalculateVotes();
+			    bool tie;
+			    KeyValuePair<byte, int> max = self.MaxPair(out tie);
+			    NetworkedPlayerInfo exiled = GameData.Instance.AllPlayers.ToArray().FirstOrDefault((NetworkedPlayerInfo v) => !tie && v.PlayerId == max.Key);
+			    System.Collections.Generic.List<MeetingHud.VoterState> votes = new();
+			    for (int i = 0; i < __instance.playerStates.Length; i++)
+			    {
+			    	PlayerVoteArea playerVoteArea = __instance.playerStates[i];
+                    NetworkedPlayerInfo playerInfo = GameData.Instance.GetPlayerById(playerVoteArea.TargetPlayerId);
+                    int voteCount = 1;
+                    if (playerInfo != null && playerInfo.GetRole() != null)
+                    {
+                        voteCount += playerInfo.GetRole().AdditionalVotes();
+                        foreach (var addOn in playerInfo.GetAddOns())
+                            voteCount += addOn.AdditionalVotes();
+                    }
+                    for (int j = 1; j <= voteCount; ++j)
+                    {
+                        votes.Add(new MeetingHud.VoterState
+			    	    {
+			    		    VoterId = playerVoteArea.TargetPlayerId,
+			    		    VotedForId = playerVoteArea.VotedFor
+			    	    });
+                    }
+			    }
+			    __instance.RpcVotingComplete(votes.ToArray(), exiled, tie);
+		    }
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.CalculateVotes))]
+    class CalculateVotesPatch
+    {
+        public static bool Prefix(MeetingHud __instance, ref Dictionary<byte, int> __result)
+        {
+            if (!AmongUsClient.Instance.AmHost || CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return true;
+            Dictionary<byte, int> dictionary = new();
+		    for (int i = 0; i < __instance.playerStates.Length; i++)
+		    {
+			    PlayerVoteArea playerVoteArea = __instance.playerStates[i];
+			    if (playerVoteArea.VotedFor != 252 && playerVoteArea.VotedFor != 255 && playerVoteArea.VotedFor != 254)
+			    {
+                    NetworkedPlayerInfo playerInfo = GameData.Instance.GetPlayerById(playerVoteArea.TargetPlayerId);
+                    int voteCount = 1;
+                    if (playerInfo != null && playerInfo.GetRole() != null)
+                    {
+                        voteCount += playerInfo.GetRole().AdditionalVotes();
+                        foreach (var addOn in playerInfo.GetAddOns())
+                            voteCount += addOn.AdditionalVotes();
+                    }
+				    int num;
+				    if (dictionary.TryGetValue(playerVoteArea.VotedFor, out num))
+                    {
+                        dictionary[playerVoteArea.VotedFor] = num + voteCount;
+                    }
+                    else
+                    {
+                        dictionary[playerVoteArea.VotedFor] = voteCount;
+                    }
+			    }
+		    }
+		    __result = dictionary;
             return false;
         }
     }

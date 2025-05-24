@@ -129,7 +129,7 @@ namespace MoreGamemodes
                     IgniteTimer[pc.PlayerId] -= Time.fixedDeltaTime;
                     foreach (var ar in PlayerControl.AllPlayerControls)
                     {
-                        if (DouseState[ar.PlayerId] == DouseStates.Doused && Vector2.Distance(pc.transform.position, ar.transform.position) <= IgniteRadius.GetFloat() * 1.5f)
+                        if (DouseState[ar.PlayerId] == DouseStates.Doused && Vector2.Distance(pc.transform.position, ar.transform.position) <= IgniteRadius.GetFloat())
                         {
                             SendRPC(ar, DouseStates.Ignited);
                             IgniteTimer[ar.PlayerId] = IgniteDuration.GetFloat();
@@ -206,10 +206,10 @@ namespace MoreGamemodes
         public void SendRPC(PlayerControl target, DouseStates douseState)
         {
             DouseState[target.PlayerId] = douseState;
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
             writer.WriteNetObject(target);
             writer.Write((int)douseState);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(MessageReader reader)

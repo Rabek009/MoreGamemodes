@@ -81,9 +81,9 @@ namespace MoreGamemodes
         {
             if (Player.AmOwner && MeetingHud.Instance != null)
                 CreateMeetingButton(MeetingHud.Instance);
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
             writer.Write(Target);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(MessageReader reader)

@@ -2,7 +2,8 @@
 using Il2CppSystem.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
-using Object= UnityEngine.Object;
+
+using Object = UnityEngine.Object;
 
 // https://github.com/Yumenopai/TownOfHost_Y/blob/main/Patches/GameOptionsPatch.cs
 namespace MoreGamemodes
@@ -370,11 +371,12 @@ namespace MoreGamemodes
             }
             return true;
         }
-        [HarmonyPatch(nameof(ToggleOption.UpdateValue)), HarmonyPrefix]
-        private static bool UpdateValuePrefix(ToggleOption __instance)
+        [HarmonyPatch(nameof(ToggleOption.Toggle)), HarmonyPrefix]
+        private static bool TogglePrefix(ToggleOption __instance)
         {
             if (ModGameOptionsMenu.OptionList.TryGetValue(__instance, out var index))
             {
+                __instance.CheckMark.enabled = !__instance.CheckMark.enabled;
                 var item = OptionItem.AllOptions[index];
                 item.SetValue(__instance.GetBool() ? 1 : 0);
                 return false;

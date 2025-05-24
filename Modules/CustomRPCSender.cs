@@ -17,21 +17,21 @@ namespace MoreGamemodes
         private int currentRpcTarget;
 
         private CustomRpcSender() { }
-        public CustomRpcSender(SendOption sendOption, bool isStreamed)
+        public CustomRpcSender(SendOption sendOption)
         {
-            stream = isStreamed ? AmongUsClient.Instance.Streams[(int)sendOption] : MessageWriter.Get(sendOption);
+            stream = MessageWriter.Get(sendOption);
             this.sendOption = sendOption;
             currentRpcTarget = -2;
             currentState = State.Ready;
         }
-        public static CustomRpcSender Create(SendOption sendOption, bool isStreamed = false)
+        public static CustomRpcSender Create(SendOption sendOption)
         {
-            return new CustomRpcSender(sendOption, isStreamed);
+            return new CustomRpcSender(sendOption);
         }
 
         public CustomRpcSender StartMessage(int targetClientId = -1)
         {
-            if (stream.Length > 800)
+            if (stream.Length > 500)
             {
                 AmongUsClient.Instance.SendOrDisconnect(stream);
                 stream.Clear(sendOption);

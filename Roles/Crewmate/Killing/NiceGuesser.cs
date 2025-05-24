@@ -288,7 +288,6 @@ namespace MoreGamemodes
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
                 writer.Write(message);
-                writer.Write(false);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
             }
             minigame.Close();

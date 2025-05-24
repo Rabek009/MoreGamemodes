@@ -38,16 +38,6 @@ namespace MoreGamemodes
                 AbilityDuration = -1f;
                 Player.RpcResetAbilityCooldown();
             }
-            if (!LastIsSabotage && Utils.IsSabotage())
-            {
-                Player.RpcSetAbilityCooldown(255f);
-                LastIsSabotage = true;
-            }
-            if (LastIsSabotage && !Utils.IsSabotage())
-            {
-                Player.RpcSetAbilityCooldown(CooldownAfterSabotage.GetFloat());
-                LastIsSabotage = false;
-            }
         }
 
         public override bool OnCheckVanish()
@@ -68,12 +58,6 @@ namespace MoreGamemodes
             Utils.SetAllVentInteractions();
             AbilityDuration = FreezeDuration.GetFloat();
             new LateTask(() => Player.RpcSetAbilityCooldown(FreezeDuration.GetFloat()), 0.2f);
-            var sabotageSystem = ShipStatus.Instance.Systems[SystemTypes.Sabotage].TryCast<SabotageSystemType>();
-            if (sabotageSystem != null && sabotageSystem.Timer < CooldownAfterSabotage.GetFloat() + FreezeDuration.GetFloat())
-            {
-                sabotageSystem.Timer = CooldownAfterSabotage.GetFloat() + FreezeDuration.GetFloat();
-                sabotageSystem.IsDirty = true;
-            }
             return false;
         }
 
@@ -109,9 +93,6 @@ namespace MoreGamemodes
         public override void OnRevive()
         {
             AbilityDuration = -1f;
-            if (Utils.IsSabotage())
-                Player.RpcSetAbilityCooldown(255f);
-            LastIsSabotage = Utils.IsSabotage();
         }
 
         public TimeFreezer(PlayerControl player)
@@ -122,11 +103,9 @@ namespace MoreGamemodes
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
             AbilityDuration = -1f;
-            LastIsSabotage = Utils.IsSabotage();
         }
 
         public float AbilityDuration;
-        public bool LastIsSabotage;
 
         public static OptionItem Chance;
         public static OptionItem Count;
@@ -134,7 +113,6 @@ namespace MoreGamemodes
         public static OptionItem FreezeDuration;
         public static OptionItem CanUseVents;
         public static OptionItem CanKillDuringFreeze;
-        public static OptionItem CooldownAfterSabotage;
         public static void SetupOptionItem()
         {
             Chance = RoleOptionItem.Create(500100, CustomRoles.TimeFreezer, TabGroup.ImpostorRoles, false);
@@ -150,9 +128,6 @@ namespace MoreGamemodes
                 .SetParent(Chance);
             CanKillDuringFreeze = BooleanOptionItem.Create(500105, "Can kill during freeze", true, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            CooldownAfterSabotage = FloatOptionItem.Create(500106, "Cooldown after sabotage", new(1f, 45f, 1f), 10f, TabGroup.ImpostorRoles, false)
-                .SetParent(Chance)
-                .SetValueFormat(OptionFormat.Seconds);
             Options.RolesChance[CustomRoles.TimeFreezer] = Chance;
             Options.RolesCount[CustomRoles.TimeFreezer] = Count;
         }

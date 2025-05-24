@@ -7,11 +7,12 @@ using InnerNet;
 using System.Linq;
 using System;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckProtect))]
-    class CheckProtectPatch 
+    class CheckProtectPatch
     {
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
@@ -20,16 +21,16 @@ namespace MoreGamemodes
             if (!CheckForInvalidProtection(guardian, target))
                 return false;
             if (CustomGamemode.Instance.OnCheckProtect(guardian, target))
-                guardian.RpcProtectPlayer(target, guardian.Data.DefaultOutfit.ColorId); 
+                guardian.RpcProtectPlayer(target, guardian.Data.DefaultOutfit.ColorId);
             return false;
         }
         public static bool CheckForInvalidProtection(PlayerControl guardian, PlayerControl target)
         {
-		    if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
+            if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
             if (!Main.GameStarted) return false;
-		    if (!target || guardian.Data.Disconnected) return false;
-		    NetworkedPlayerInfo data = target.Data;
-		    if (data == null || data.IsDead) return false;
+            if (!target || guardian.Data.Disconnected) return false;
+            NetworkedPlayerInfo data = target.Data;
+            if (data == null || data.IsDead) return false;
             if (MeetingHud.Instance || ExileController.Instance) return false;
             if (Main.ProtectCooldowns[guardian.PlayerId] > 0f) return false;
             return true;
@@ -48,9 +49,9 @@ namespace MoreGamemodes
     }
 
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))]
-    class CheckMurderPatch 
+    class CheckMurderPatch
     {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target) 
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             PlayerControl killer = __instance;
@@ -58,8 +59,8 @@ namespace MoreGamemodes
             {
                 killer.RpcMurderPlayer(target, false);
                 return false;
-            } 
-            
+            }
+
             if (CustomGamemode.Instance.OnCheckMurder(killer, target))
                 killer.RpcMurderPlayer(target, true);
             else
@@ -71,10 +72,10 @@ namespace MoreGamemodes
         {
             if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
             if (!Main.GameStarted) return false;
-		    if (!target || killer.Data.IsDead || killer.Data.Disconnected) return false;
-		    NetworkedPlayerInfo data = target.Data;
-		    if (data == null || data.IsDead || target.inVent || target.MyPhysics.Animations.IsPlayingEnterVentAnimation() || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.inMovingPlat || target.shouldAppearInvisible || target.invisibilityAlpha < 1f) return false;
-		    if (MeetingHud.Instance || ExileController.Instance) return false;
+            if (!target || killer.Data.IsDead || killer.Data.Disconnected) return false;
+            NetworkedPlayerInfo data = target.Data;
+            if (data == null || data.IsDead || target.inVent || target.MyPhysics.Animations.IsPlayingEnterVentAnimation() || target.MyPhysics.Animations.IsPlayingAnyLadderAnimation() || target.inMovingPlat || target.shouldAppearInvisible || target.invisibilityAlpha < 1f) return false;
+            if (MeetingHud.Instance || ExileController.Instance) return false;
             if (Main.KillCooldowns[killer.PlayerId] > 0f) return false;
             return true;
         }
@@ -87,7 +88,7 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             PlayerControl killer = __instance;
-            
+
             if (resultFlags == MurderResultFlags.Succeeded)
                 Main.KillCooldowns[killer.PlayerId] = Main.OptionKillCooldowns[killer.PlayerId];
             else if (resultFlags == MurderResultFlags.FailedProtected)
@@ -105,9 +106,9 @@ namespace MoreGamemodes
     }
 
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckShapeshift))]
-    class CheckShapeshiftPatch 
+    class CheckShapeshiftPatch
     {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] bool shouldAnimate) 
+        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] bool shouldAnimate)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             PlayerControl shapeshifter = __instance;
@@ -115,22 +116,22 @@ namespace MoreGamemodes
             {
                 shapeshifter.RpcRejectShapeshift();
                 return false;
-            } 
+            }
             if (!shouldAnimate)
                 shapeshifter.RpcShapeshift(target, shouldAnimate);
             else if (CustomGamemode.Instance.OnCheckShapeshift(shapeshifter, target))
                 shapeshifter.RpcShapeshift(target, shouldAnimate);
             else
                 shapeshifter.RpcRejectShapeshift();
-            
+
             return false;
         }
         public static bool CheckForInvalidShapeshifting(PlayerControl shapeshifter, PlayerControl target, bool shouldAnimate)
         {
             if (AmongUsClient.Instance.IsGameOver || !AmongUsClient.Instance.AmHost) return false;
             if (!Main.GameStarted) return false;
-		    if (!target || target.Data == null || shapeshifter.Data.IsDead || shapeshifter.Data.Disconnected) return false;
-		    if (target.IsMushroomMixupActive() && shouldAnimate) return false;
+            if (!target || target.Data == null || shapeshifter.Data.IsDead || shapeshifter.Data.Disconnected) return false;
+            if (target.IsMushroomMixupActive() && shouldAnimate) return false;
             if ((MeetingHud.Instance || ExileController.Instance) && shouldAnimate) return false;
             return true;
         }
@@ -157,7 +158,7 @@ namespace MoreGamemodes
             new LateTask(() =>
             {
                 if (!MeetingHud.Instance)
-                shapeshifter.SyncPlayerName(false, true);
+                    shapeshifter.SyncPlayerName(false, true);
             }, 1.2f, "Set Shapeshift Appearance");
             CustomGamemode.Instance.OnShapeshift(shapeshifter, target);
         }
@@ -172,9 +173,9 @@ namespace MoreGamemodes
             if (AmongUsClient.Instance.IsGameOver || MeetingHud.Instance || (target == null && Utils.IsSabotage()) || __instance.Data.IsDead) return false;
             if (target != null && !target.IsDead && CustomGamemode.Instance.Gamemode != Gamemodes.Zombies) return false;
             if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target, false)) return false;
-            Utils.SyncAllPlayersName(true, true);  
+            Utils.SyncAllPlayersName(true, true);
             for (int i = CustomNetObject.CustomObjects.Count - 1; i >= 0; --i)
-                    CustomNetObject.CustomObjects[i].OnMeeting();
+                CustomNetObject.CustomObjects[i].OnMeeting();
             AntiCheat.OnMeeting();
             return true;
         }
@@ -192,10 +193,10 @@ namespace MoreGamemodes
                 {
                     __instance.Data.Role.CanUseKillButton = true;
                     Il2CppSystem.Collections.Generic.List<PlayerControl> playersInAbilityRangeSorted = __instance.Data.Role.GetPlayersInAbilityRangeSorted(RoleBehaviour.GetTempPlayerList());
-		            if (playersInAbilityRangeSorted.Count <= 0)
-			            DestroyableSingleton<HudManager>.Instance.KillButton.SetTarget(null);
+                    if (playersInAbilityRangeSorted.Count <= 0)
+                        DestroyableSingleton<HudManager>.Instance.KillButton.SetTarget(null);
                     else
-		                DestroyableSingleton<HudManager>.Instance.KillButton.SetTarget(playersInAbilityRangeSorted[0]);
+                        DestroyableSingleton<HudManager>.Instance.KillButton.SetTarget(playersInAbilityRangeSorted[0]);
                 }
             }
             if (!AmongUsClient.Instance.AmHost) return;
@@ -242,7 +243,7 @@ namespace MoreGamemodes
                         }
                     }
                 }
-            }       
+            }
         }
     }
 
@@ -355,7 +356,8 @@ namespace MoreGamemodes
                 .EndRpc();
             sender.EndMessage();
             sender.SendMessage();
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 __instance.Data.MarkDirty();
             }, 0.5f);
             return false;
@@ -372,10 +374,10 @@ namespace MoreGamemodes
             if (murderResultFlags == MurderResultFlags.Succeeded && target.protectedByGuardianId > -1)
                 murderResultFlags = MurderResultFlags.FailedProtected;
             if (AmongUsClient.Instance.AmClient)
-		    {
-		    	__instance.MurderPlayer(target, murderResultFlags);
-		    }
-            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable, true);
+            {
+                __instance.MurderPlayer(target, murderResultFlags);
+            }
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             if (Main.IsInvisible[target.PlayerId] && murderResultFlags == MurderResultFlags.Succeeded)
             {
                 sender.StartRpc(target.NetTransform.NetId, (byte)RpcCalls.SnapTo)
@@ -463,37 +465,37 @@ namespace MoreGamemodes
                 return false;
             }
             if (!__instance.Data)
-		    {
-			    Debug.LogWarning("CheckName was called while NetworkedPlayerInfo was null");
-			    return false;
-		    }
-		    Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo> allPlayers = GameData.Instance.AllPlayers;
-		    bool flag = allPlayers.ToArray().Any((NetworkedPlayerInfo i) => i.PlayerId != __instance.PlayerId && Main.StandardNames.ContainsKey(i.PlayerId) && Main.StandardNames[i.PlayerId].Equals(playerName, StringComparison.OrdinalIgnoreCase));
-		    if (flag)
-		    {
-			    for (int k = 1; k < 100; k++)
-			    {
-				    string text = playerName + " " + k.ToString();
-				    flag = false;
-				    for (int j = 0; j < allPlayers.Count; j++)
-				    {
-					    if (allPlayers[j].PlayerId != __instance.PlayerId && allPlayers[j].PlayerName.Equals(text, StringComparison.OrdinalIgnoreCase))
-					    {
-						    flag = true;
-						    break;
-					    }
-				    }
-				    if (!flag)
-				    {
-					    playerName = text;
-					    break;
-				    }
-			    }
-		    }
-		    __instance.Data.PlayerName = playerName;
+            {
+                Debug.LogWarning("CheckName was called while NetworkedPlayerInfo was null");
+                return false;
+            }
+            Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo> allPlayers = GameData.Instance.AllPlayers;
+            bool flag = allPlayers.ToArray().Any((NetworkedPlayerInfo i) => i.PlayerId != __instance.PlayerId && Main.StandardNames.ContainsKey(i.PlayerId) && Main.StandardNames[i.PlayerId].Equals(playerName, StringComparison.OrdinalIgnoreCase));
+            if (flag)
+            {
+                for (int k = 1; k < 100; k++)
+                {
+                    string text = playerName + " " + k.ToString();
+                    flag = false;
+                    for (int j = 0; j < allPlayers.Count; j++)
+                    {
+                        if (allPlayers[j].PlayerId != __instance.PlayerId && allPlayers[j].PlayerName.Equals(text, StringComparison.OrdinalIgnoreCase))
+                        {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (!flag)
+                    {
+                        playerName = text;
+                        break;
+                    }
+                }
+            }
+            __instance.Data.PlayerName = playerName;
             __instance.GetClient().UpdatePlayerName(playerName);
             __instance.Data.MarkDirty();
-		    __instance.RpcSetName(__instance.Data.PlayerName);
+            __instance.RpcSetName(__instance.Data.PlayerName);
             return false;
         }
     }
@@ -522,7 +524,7 @@ namespace MoreGamemodes
                         Main.Instance.Log.LogInfo("Host Tag is not null proceeding...");
                         formattedNameWithNewLine += "\n" + hostTag.GetFormattedTag();
                     }
-                    
+
                     name = formattedNameWithNewLine;
                     Main.Instance.Log.LogMessage("Tag Now should be appeared with color");
                 }
@@ -532,19 +534,19 @@ namespace MoreGamemodes
                     string coloredName = $"<color=#{hostTag.PreferredColor}>{name}</color>";
                     string coloredTag = hostTag.GetFormattedTag();
                     string formattedNameWithNewLine = $"{coloredName}\n{coloredTag}";
-                    
+
                     name = formattedNameWithNewLine;
                     Main.Instance.Log.LogMessage("Host Tag Now should be appeared with color");
                 }
             }
             if (AmongUsClient.Instance.AmClient)
-		    {
-			    __instance.SetName(name);
-		    }
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SetName, SendOption.Reliable);
-		    writer.Write(__instance.Data.NetId);
+            {
+                __instance.SetName(name);
+            }
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
+            writer.Write(__instance.Data.NetId);
             writer.Write(name);
-		    writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
             return false;
         }
     }
@@ -586,12 +588,13 @@ namespace MoreGamemodes
                     phantom.SetRoleInvisibility(true, true, true);
                     var role = Main.DesyncRoles.ContainsKey((phantom.PlayerId, PlayerControl.LocalPlayer.PlayerId)) ? Main.DesyncRoles[(phantom.PlayerId, PlayerControl.LocalPlayer.PlayerId)] : Main.StandardRoles[phantom.PlayerId];
                     RoleManager.Instance.SetRole(phantom, role);
-                    new LateTask(() => {
+                    new LateTask(() =>
+                    {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected) return;
                         phantom.invisibilityAlpha = 0f;
                         phantom.cosmetics.SetPhantomRoleAlpha(phantom.invisibilityAlpha);
                         phantom.shouldAppearInvisible = true;
-			            phantom.Visible = false;
+                        phantom.Visible = false;
                         phantom.SyncPlayerSettings();
                         phantom.RpcSetVentInteraction();
                     }, 1.2f);
@@ -599,7 +602,8 @@ namespace MoreGamemodes
                 else
                 {
                     phantom.SetRoleInvisibility(true, true, true);
-                    new LateTask(() => {
+                    new LateTask(() =>
+                    {
                         if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected) return;
                         phantom.SyncPlayerSettings();
                         phantom.RpcSetVentInteraction();
@@ -648,8 +652,9 @@ namespace MoreGamemodes
                     phantom.SetRoleInvisibility(true, true, true);
                     var role = Main.DesyncRoles.ContainsKey((phantom.PlayerId, PlayerControl.LocalPlayer.PlayerId)) ? Main.DesyncRoles[(phantom.PlayerId, PlayerControl.LocalPlayer.PlayerId)] : Main.StandardRoles[phantom.PlayerId];
                     RoleManager.Instance.SetRole(phantom, role);
-                    new LateTask(() => {
-                    if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected) return;
+                    new LateTask(() =>
+                    {
+                        if (MeetingHud.Instance || phantom == null || phantom.Data == null || phantom.Data.IsDead || phantom.Data.Disconnected) return;
                         phantom.invisibilityAlpha = 1f;
                         phantom.cosmetics.SetPhantomRoleAlpha(phantom.invisibilityAlpha);
                         phantom.shouldAppearInvisible = false;
@@ -671,7 +676,8 @@ namespace MoreGamemodes
             else
             {
                 phantom.SetRoleInvisibility(false, shouldAnimate, true);
-                new LateTask(() => {
+                new LateTask(() =>
+                {
                     phantom.SyncPlayerSettings();
                     phantom.RpcSetVentInteraction();
                 }, 1.8f);
@@ -697,11 +703,7 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerControl __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
-            {
-                AmongUsClient.Instance.SendRpc(__instance.NetId, (byte)RpcCalls.StartVanish, SendOption.Reliable);
-                return false;
-            }
+            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return true;
             PlayerControl phantom = __instance;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -727,10 +729,11 @@ namespace MoreGamemodes
                 else
                 {
                     MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(phantom.NetId, (byte)RpcCalls.StartVanish, SendOption.Reliable, pc.GetClientId());
-		            AmongUsClient.Instance.FinishRpcImmediately(writer);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
             }
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 if (!MeetingHud.Instance && phantom != null && phantom.Data != null && !phantom.Data.IsDead && !phantom.Data.Disconnected)
                     phantom.RpcMakeInvisible(true);
             }, 1.2f);
@@ -745,13 +748,7 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             CustomGamemode.Instance.OnAppear(__instance);
-            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic)
-            {
-                MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.StartAppear, SendOption.Reliable);
-		        writer.Write(shouldAnimate);
-		        writer.EndMessage();
-                return false;
-            }
+            if (CustomGamemode.Instance.Gamemode != Gamemodes.Classic) return true;
             PlayerControl phantom = __instance;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -797,10 +794,11 @@ namespace MoreGamemodes
                 {
                     MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(phantom.NetId, (byte)RpcCalls.StartAppear, SendOption.Reliable, pc.GetClientId());
                     writer.Write(shouldAnimate);
-		            AmongUsClient.Instance.FinishRpcImmediately(writer);
+                    AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }
             }
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner || !shouldAnimate || pc == phantom || pc.GetRole().IsImpostor()) continue;
@@ -822,7 +820,8 @@ namespace MoreGamemodes
                     sender.SendMessage();
                 }
             }, 1f);
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.AmOwner || !shouldAnimate || pc == phantom || pc.GetRole().IsImpostor()) continue;
@@ -846,7 +845,8 @@ namespace MoreGamemodes
             }, 1.2f);
             if (shouldAnimate)
             {
-                new LateTask(() => {
+                new LateTask(() =>
+                {
                     if (!MeetingHud.Instance && phantom != null && phantom.Data != null && !phantom.Data.IsDead && !phantom.Data.Disconnected)
                         phantom.RpcMakeVisible(true);
                 }, 1f);
@@ -868,7 +868,7 @@ namespace MoreGamemodes
             if (!CustomGamemode.Instance.OnClimbLadder(player, source, true))
             {
                 __instance.lastClimbLadderSid = climbLadderSid;
-		        __instance.ResetMoveState(true);
+                __instance.ResetMoveState(true);
                 player.RpcCancelLadder();
                 return false;
             }
@@ -996,7 +996,7 @@ namespace MoreGamemodes
             {
                 ClassicGamemode.instance.DefaultTasks[__instance.PlayerId] = new Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo.TaskInfo>();
                 for (int i = 0; i < taskTypeId.Length; i++)
-			        ClassicGamemode.instance.DefaultTasks[__instance.PlayerId].Add(new NetworkedPlayerInfo.TaskInfo(taskTypeId[i], (uint)i));
+                    ClassicGamemode.instance.DefaultTasks[__instance.PlayerId].Add(new NetworkedPlayerInfo.TaskInfo(taskTypeId[i], (uint)i));
                 ClassicGamemode.instance.CompletedTasks[__instance.PlayerId] = new List<uint>();
             }
         }
@@ -1013,7 +1013,7 @@ namespace MoreGamemodes
             if (dronerRole == null || dronerRole.ControlledDrone == null) return true;
             if (__instance.isPaused || __instance.AmOwner) return false;
             ushort num = reader.ReadUInt16();
-		    int num2 = reader.ReadPackedInt32();
+            int num2 = reader.ReadPackedInt32();
             if (!NetHelpers.SidGreaterThan((ushort)(num + num2 - 1), __instance.lastSequenceId)) return false;
             for (int i = 0; i < num2 - 1; ++i)
                 NetHelpers.ReadVector2(reader);
@@ -1030,123 +1030,6 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             return CustomGamemode.Instance.OnCheckSporeTrigger(__instance, mushroom);
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcProtectPlayer))]
-    class RpcProtectPlayerPatch
-    {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] int colorId)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            if (AmongUsClient.Instance.AmClient)
-		    {
-			    __instance.ProtectPlayer(target, colorId);
-		    }
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.ProtectPlayer, SendOption.Reliable);
-		    writer.WriteNetObject(target);
-		    writer.Write(colorId);
-		    writer.EndMessage();
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcRejectShapeshift))]
-    class RpcRejectShapeshiftPatch
-    {
-        public static bool Prefix(PlayerControl __instance)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            AmongUsClient.Instance.SendRpc(__instance.NetId, (byte)RpcCalls.RejectShapeshift, SendOption.Reliable);
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcShapeshift))]
-    class RpcShapeshiftPatch
-    {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] bool shouldAnimate)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            if (AmongUsClient.Instance.AmClient)
-		    {
-			    __instance.Shapeshift(target, shouldAnimate);
-		    }
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.Shapeshift, SendOption.Reliable);
-		    writer.WriteNetObject(target);
-		    writer.Write(shouldAnimate);
-		    writer.EndMessage();
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(CustomNetworkTransform), nameof(CustomNetworkTransform.RpcSnapTo))]
-    class RpcSnapToPatch
-    {
-        public static bool Prefix(CustomNetworkTransform __instance, [HarmonyArgument(0)] Vector2 position)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            if (AmongUsClient.Instance.AmClient)
-		    {
-			    __instance.SnapTo(position, (ushort)(__instance.lastSequenceId + 1));
-		    }
-		    ushort num = (ushort)(__instance.lastSequenceId + 2);
-		    MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.SnapTo, SendOption.Reliable);
-		    NetHelpers.WriteVector2(position, writer);
-		    writer.Write(num);
-		    writer.EndMessage();
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcStartMeeting))]
-    class RpcStartMeetingPatch
-    {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] NetworkedPlayerInfo info)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            if (AmongUsClient.Instance.AmClient)
-		    {
-			    __instance.StartMeeting(info);
-		    }
-		    MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.StartMeeting, SendOption.Reliable);
-		    writer.Write((info != null) ? info.PlayerId : byte.MaxValue);
-		    writer.EndMessage();
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcTriggerSpores))]
-    class RpcTriggerSporesPatch
-    {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] Mushroom mushroom)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            if (AmongUsClient.Instance.AmClient)
-		    {
-			    mushroom.TriggerSpores();
-		    }
-		    MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.TriggerSpores, SendOption.Reliable);
-		    writer.Write(mushroom.Id);
-		    writer.EndMessage();
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcUseZipline))]
-    class RpcUseZiplinePatch
-    {
-        public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl target, [HarmonyArgument(1)] ZiplineBehaviour ziplineBehaviour, [HarmonyArgument(2)] bool fromTop)
-        {
-            if (!AmongUsClient.Instance.AmHost) return true;
-            if (AmongUsClient.Instance.AmClient)
-		    {
-			    ziplineBehaviour.Use(target, fromTop);
-		    }
-		    MessageWriter writer = AmongUsClient.Instance.StartRpc(__instance.NetId, (byte)RpcCalls.UseZipline, SendOption.Reliable);
-		    writer.Write(fromTop);
-		    writer.EndMessage();
-            return false;
         }
     }
 
@@ -1182,4 +1065,27 @@ namespace MoreGamemodes
             return false;
         }
     }
+
+    // [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Deserialize))]
+    // class PlayerControlDeserializePatch
+    // {
+    //     public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] bool initialState)
+    //     {
+    //         if (!AmongUsClient.Instance.AmHost || initialState || __instance.AmOwner) return true;
+    //         AntiCheat.HandleCheat(__instance, "PlayerControl serialization");
+    //         reader.ReadByte();
+    //         return false;
+    //     }
+    // }
+
+    // [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.Deserialize))]
+    // class PlayerPhysicsDeserializePatch
+    // {
+    //     public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] bool initialState)
+    //     {
+    //         if (!AmongUsClient.Instance.AmHost || initialState || __instance.AmOwner) return true;
+    //         AntiCheat.HandleCheat(__instance.myPlayer, "PlayerPhysics serialization");
+    //         return false;
+    //     }
+    // }
 }

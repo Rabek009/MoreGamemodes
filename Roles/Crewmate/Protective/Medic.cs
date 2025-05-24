@@ -115,7 +115,8 @@ namespace MoreGamemodes
             if (Player.Data.IsDead)
             {
                 ShieldedPlayer = byte.MaxValue;
-                Player.RpcSetAbilityUses(-1f);
+                if (AbilityUses > -1f)
+                    Player.RpcSetAbilityUses(-1f);
                 return;
             }
             if (Cooldown > 0f)
@@ -135,7 +136,7 @@ namespace MoreGamemodes
             if (ShieldedPlayer == byte.MaxValue) return;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc == Player || pc.Data.IsDead)
+                if (pc == Player || (pc == player && ShieldedCanSeeShield.GetBool()) || pc.Data.IsDead)
                     ClassicGamemode.instance.NameSymbols[(ShieldedPlayer, pc.PlayerId)][CustomRoles.Medic] = ("✚", Color);
             }
         }
@@ -246,6 +247,7 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static OptionItem ShieldCooldown;
         public static OptionItem ResetKillCooldown;
+        public static OptionItem ShieldedCanSeeShield;
         public static void SetupOptionItem()
         {
             Chance = RoleOptionItem.Create(300200, CustomRoles.Medic, TabGroup.CrewmateRoles, false);
@@ -255,6 +257,8 @@ namespace MoreGamemodes
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
             ResetKillCooldown = BooleanOptionItem.Create(300203, "Reset kill cooldown", false, TabGroup.CrewmateRoles, false)
+                .SetParent(Chance);
+            ShieldedCanSeeShield = BooleanOptionItem.Create(300204, "Shielded can see shield", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Medic] = Chance;
             Options.RolesCount[CustomRoles.Medic] = Count;

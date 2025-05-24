@@ -177,11 +177,11 @@ namespace MoreGamemodes
         {
             if (Player.AmOwner)
                 HudManager.Instance.SetHudActive(!MeetingHud.Instance);
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
             writer.Write(RealPosition != null);
             if (RealPosition != null)
                 NetHelpers.WriteVector2((Vector2)RealPosition, writer);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(MessageReader reader)
@@ -206,7 +206,7 @@ namespace MoreGamemodes
             }
             else
                 Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 128));
-            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable, true);
+            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(Player.transform.position)
                 .Write((ushort)(Player.NetTransform.lastSequenceId + 32767))
@@ -219,8 +219,6 @@ namespace MoreGamemodes
                 .WriteVector2(Player.transform.position)
                 .Write(Player.NetTransform.lastSequenceId)
                 .EndRpc();
-            if (!MeetingHud.Instance)
-                ControlledDrone.Despawn();
             ControlledDrone = null;
             DronePosition = Vector2.zero;
             RealPosition = null;
@@ -276,7 +274,7 @@ namespace MoreGamemodes
             DroneVision = FloatOptionItem.Create(500305, "Drone vision", new(0.25f, 5f, 0.25f), 1.5f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Multiplier);
-            DroneKillDistance = StringOptionItem.Create(500306, "Drone kill distance", droneKillDistances, 1, TabGroup.ImpostorRoles, false)
+            DroneKillDistance = StringOptionItem.Create(500306, "Drone kill distance", droneKillDistances, 0, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Droner] = Chance;
             Options.RolesCount[CustomRoles.Droner] = Count;

@@ -82,6 +82,7 @@ namespace MoreGamemodes
             bool setVentInteractions = false;
             foreach (var ventId in VentsToBlock)
             {
+                if (ClassicGamemode.instance.BlockedVents.Contains(ventId)) continue;
                 new LateTask(() => Utils.RpcCreateDisplay("<size=1.6><line-height=97%><cspace=0.16em><mark=#8f6647>W</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W\nW</mark><mark=#808080>W</mark><mark=#8f6647>WW</mark><mark=#808080>W</mark><mark=#8f6647>W\nW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>WW</mark><mark=#c0c0c0>W</mark><mark=#8f6647>W", Utils.GetVentById(ventId).transform.position), 5f);
                 SendRPC(ventId);
                 setVentInteractions = true;
@@ -140,9 +141,9 @@ namespace MoreGamemodes
             var ventilationSystem = ShipStatus.Instance.Systems[SystemTypes.Ventilation].TryCast<VentilationSystem>();
             if (ventilationSystem != null)
                 ventilationSystem.UpdateVentArrows();
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
             writer.Write(ventId);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(MessageReader reader)

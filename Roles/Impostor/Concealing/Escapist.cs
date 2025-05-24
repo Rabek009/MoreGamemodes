@@ -81,11 +81,11 @@ namespace MoreGamemodes
 
         public void SendRPC()
         {
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
             writer.Write(MarkedPosition != null);
             if (MarkedPosition != null)
                 NetHelpers.WriteVector2((Vector2)MarkedPosition, writer);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(MessageReader reader)

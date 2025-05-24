@@ -20,10 +20,6 @@ namespace MoreGamemodes
                 if (dronerRole != null)
                     RpcTeleport(dronerRole.DronePosition, sendOption);
             }
-            else
-            {
-                Despawn();
-            }
         }
 
         public override void OnMeeting()

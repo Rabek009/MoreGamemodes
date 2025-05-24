@@ -1,4 +1,4 @@
-using Il2CppSystem.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;

@@ -357,10 +357,10 @@ namespace MoreGamemodes
             KillsRemain[player.PlayerId] = killsRemain;
             if (player.AmOwner && ZombieType[player.PlayerId] != ZombieTypes.None)
                 HudManager.Instance.TaskPanel.SetTaskText("");
-            MessageWriter writer = AmongUsClient.Instance.StartRpc(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable);
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
             writer.Write((int)zombieType);
             writer.Write(killsRemain);
-            writer.EndMessage();
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public override void ReceiveRPC(PlayerControl player, MessageReader reader)

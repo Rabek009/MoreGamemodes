@@ -8,6 +8,7 @@ using Assets.CoreScripts;
 using System.Text;
 using AmongUs.Data;
 using InnerNet;
+using AmongUs.InnerNet.GameDataMessages;
 
 using Object = UnityEngine.Object;
 
@@ -2500,6 +2501,72 @@ namespace MoreGamemodes
             Main.MessagesToSend.RemoveAt(0);
             int clientId = sendTo == byte.MaxValue ? -1 : Utils.GetPlayerById(sendTo).GetClientId();
             var name = player.Data.PlayerName;
+            if (!Main.ModdedProtocol.Value && !Main.GameStarted)
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    var clientId2 = pc.GetClientId();
+                    if (clientId == clientId2 || clientId == -1)
+                    {
+                        if (pc.AmOwner)
+                        {
+                            player.SetName(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title));
+                            SendingSystemMessage = true;
+                            DestroyableSingleton<HudManager>.Instance.Chat.AddChat(player, msg);
+                            SendingSystemMessage = false;
+                            player.SetName(name);
+                        }
+                        else
+                        {
+                            PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
+                            playerControl.PlayerId = player.PlayerId;
+                            playerControl.isNew = false;
+                            playerControl.notRealPlayer = true;
+                            playerControl.NetTransform.SnapTo(new Vector2(50f, 50f));
+                            AmongUsClient.Instance.NetIdCnt += 1U;
+                            CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                            MessageWriter writer = sender.stream;
+                            sender.StartMessage(clientId);
+                            SpawnGameDataMessage item = AmongUsClient.Instance.CreateSpawnMessage(playerControl, -2, SpawnFlags.None);
+                            item.SerializeValues(writer);
+			                for (uint i = 1; i <= 3; ++i)
+			                {
+			                    writer.StartMessage(4);
+			                    writer.WritePacked(2U);
+			                    writer.WritePacked(-2);
+			                    writer.Write((byte)SpawnFlags.None);
+			                    writer.WritePacked(1);
+			                    writer.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
+			                    writer.StartMessage(1);
+			                    writer.EndMessage();
+			                    writer.EndMessage();
+			                }
+                            if (PlayerControl.AllPlayerControls.Contains(playerControl))
+                                PlayerControl.AllPlayerControls.Remove(playerControl);
+                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(player.Data.NetId)
+                                .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
+                                .EndRpc();
+                            sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SendChat)
+                                .Write(msg)
+                                .EndRpc();
+                            sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
+                                .Write(player.Data.NetId)
+                                .Write(name)
+                                .EndRpc();
+                            writer.StartMessage(5);
+			                writer.WritePacked(playerControl.NetId);
+			                writer.EndMessage();
+                            sender.EndMessage();
+                            sender.SendMessage();
+                            AmongUsClient.Instance.RemoveNetObject(playerControl);
+                            playerControl.DespawnOnDestroy = false;
+                            Object.Destroy(playerControl.gameObject);
+                        }
+                    }
+                }
+                return;
+            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 var clientId2 = pc.GetClientId();
@@ -2515,66 +2582,22 @@ namespace MoreGamemodes
                     }
                     else
                     {
-                        PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
-                        playerControl.PlayerId = player.PlayerId;
-                        playerControl.isNew = false;
-                        playerControl.notRealPlayer = true;
-                        playerControl.NetTransform.SnapTo(new Vector2(50f, 50f));
-                        AmongUsClient.Instance.NetIdCnt += 1U;
-                        MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
-                        writer.StartMessage(6);
-                        writer.Write(AmongUsClient.Instance.GameId);
-                        writer.WritePacked(clientId);
-                        AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, writer);
-			            writer.EndMessage();
-                        AmongUsClient.Instance.SendOrDisconnect(writer);
-                        writer.Recycle();
-                        if (Utils.IsVanillaServer())
-                        {
-                            MessageWriter writer2 = MessageWriter.Get(SendOption.Reliable);
-                            writer2.StartMessage(6);
-                            writer2.Write(AmongUsClient.Instance.GameId);
-                            writer2.WritePacked(int.MaxValue);
-                            for (uint i = 1; i <= 3; ++i)
-                            {
-                                writer2.StartMessage(4);
-                                writer2.WritePacked(2U);
-                                writer2.WritePacked(-2);
-                                writer2.Write((byte)SpawnFlags.None);
-                                writer2.WritePacked(1);
-                                writer2.WritePacked(AmongUsClient.Instance.NetIdCnt - i);
-                                writer2.StartMessage(1);
-                                writer2.EndMessage();
-                                writer2.EndMessage();
-                            }
-                            writer2.EndMessage();
-                            AmongUsClient.Instance.SendOrDisconnect(writer2);
-                            writer2.Recycle();
-                        }
-                        if (PlayerControl.AllPlayerControls.Contains(playerControl))
-                            PlayerControl.AllPlayerControls.Remove(playerControl);
                         CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
-                        MessageWriter writer3 = sender.stream;
-                        sender.StartMessage(clientId);
+                        MessageWriter writer = sender.stream;
+                        sender.StartMessage(clientId2);
                         sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
                             .Write(player.Data.NetId)
                             .Write(Utils.ColorString(Color.blue, "MGM.SystemMessage." + title))
                             .EndRpc();
-                        sender.StartRpc(playerControl.NetId, (byte)RpcCalls.SendChat)
+                        sender.StartRpc(player.NetId, (byte)RpcCalls.SendChat)
                             .Write(msg)
-                            .Write(true)
                             .EndRpc();
                         sender.StartRpc(player.NetId, (byte)RpcCalls.SetName)
                             .Write(player.Data.NetId)
-                            .Write(name)
+                            .Write(Main.GameStarted ? Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] : name)
                             .EndRpc();
-                        writer3.StartMessage(5);
-			            writer3.WritePacked(playerControl.NetId);
-			            writer3.EndMessage();
                         sender.EndMessage();
                         sender.SendMessage();
-                        AmongUsClient.Instance.RemoveNetObject(playerControl);
-                        Object.Destroy(playerControl.gameObject);
                     }
                 }
             }
@@ -2641,7 +2664,6 @@ namespace MoreGamemodes
             {
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, AmongUsClient.Instance.HostId);
                 writer.Write(chatText);
-                writer.Write(false);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
                 __result = true;
                 return false;
@@ -2662,7 +2684,6 @@ namespace MoreGamemodes
                 DestroyableSingleton<UnityTelemetry>.Instance.SendWho();
             MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(__instance.NetId, (byte)RpcCalls.SendChat, SendOption.Reliable, -1);
             messageWriter.Write(chatText);
-            messageWriter.Write(false);
             AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
             __result = true;
             return false;

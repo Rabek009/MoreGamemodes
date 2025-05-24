@@ -37,7 +37,7 @@ namespace MoreGamemodes
                 postfix += "\n";
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc.GetRole().IsImpostor() || (pc.GetRole().IsNeutralKilling() && CanFindNeutralKillers.GetBool()))
+                    if ((pc.GetRole().IsImpostor() || (pc.GetRole().IsNeutralKilling() && CanFindNeutralKillers.GetBool())) && !pc.Data.IsDead)
                         postfix += Utils.ColorString(pc.GetRole().Color, Utils.GetArrow(Player.GetRealPosition(), pc.transform.position));
                 }
             }
