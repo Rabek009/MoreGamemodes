@@ -3,6 +3,7 @@ using TMPro;
 using HarmonyLib;
 using UnityEngine;
 using System.Collections.Generic;
+
 using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
@@ -56,16 +57,22 @@ namespace MoreGamemodes
             }
         }
 
-        [HarmonyPatch(nameof(LobbyViewSettingsPane.SetTab))]
+        [HarmonyPatch(nameof(LobbyViewSettingsPane.ChangeTab))]
         [HarmonyPrefix]
-        public static bool SetTabPatch(LobbyViewSettingsPane __instance)
+        public static bool ChangeTabPrefix(LobbyViewSettingsPane __instance, [HarmonyArgument(0)] StringNames category)
         {
-            if (__instance.currentTab == StringNames.OverviewCategory || __instance.currentTab == StringNames.RolesCategory)
+            if (category == StringNames.OverviewCategory || category == StringNames.RolesCategory)
             {
                 foreach (var button in ViewSettingsButtons.Values)
                     button.GetComponent<PassiveButton>().SelectButton(false);
                 return true;
             }
+            __instance.currentTab = category;
+		    for (int i = 0; i < __instance.settingsInfo.Count; i++)
+		    {
+			    Object.Destroy(__instance.settingsInfo[i].gameObject);
+		    }
+		    __instance.settingsInfo.Clear();
             __instance.taskTabButton.SelectButton(false);
 		    __instance.rolesTabButton.SelectButton(false);
             foreach (var tab in ViewSettingsButtons.Keys)
@@ -76,6 +83,7 @@ namespace MoreGamemodes
                     ViewSettingsButtons[tab].GetComponent<PassiveButton>().SelectButton(false);
             }
             DrawOptions(__instance, (TabGroup)__instance.currentTab);
+            __instance.scrollBar.ScrollToTop();
             return false;
         }
 

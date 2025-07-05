@@ -1131,6 +1131,7 @@ namespace MoreGamemodes
                 .SetColor(Palette.CrewmateBlue);
             Investigator.SetupOptionItem();
             Mortician.SetupOptionItem();
+            Sniffer.SetupOptionItem();
             Snitch.SetupOptionItem();
             CrewmateKilling = TextOptionItem.Create(200000, "Crewmate killing", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
@@ -1145,7 +1146,7 @@ namespace MoreGamemodes
             CrewmateSupport = TextOptionItem.Create(400000, "Crewmate support", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
             Judge.SetupOptionItem();
-            //Mayor.SetupOptionItem();
+            Mayor.SetupOptionItem();
             Mutant.SetupOptionItem();
             SecurityGuard.SetupOptionItem();
 
@@ -1167,6 +1168,7 @@ namespace MoreGamemodes
                 .SetColor(Palette.ImpostorRed);
             Parasite.SetupOptionItem();
             Trapster.SetupOptionItem();
+            Undertaker.SetupOptionItem();
 
             //Neutral roles
             Neutrals = TextOptionItem.Create(800000, "Neutrals", TabGroup.NeutralRoles)

@@ -5,7 +5,6 @@ using UnityEngine;
 using System;
 using System.Linq;
 using AmongUs.GameOptions;
-using AmongUs.InnerNet.GameDataMessages;
 
 using Object = UnityEngine.Object;
 
@@ -168,9 +167,11 @@ namespace MoreGamemodes
                     break;
                 case CustomRPC.MakeInvisible:
                     __instance.MakeInvisible();
+                    Main.IsInvisible[__instance.PlayerId] = true;
                     break;
                 case CustomRPC.MakeVisible:
                     __instance.MakeVisible();
+                    Main.IsInvisible[__instance.PlayerId] = false;
                     break;
             }
         }

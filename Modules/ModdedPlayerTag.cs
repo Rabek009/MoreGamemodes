@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Hazel;
-using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {

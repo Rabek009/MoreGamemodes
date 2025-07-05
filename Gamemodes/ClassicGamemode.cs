@@ -4,7 +4,6 @@ using AmongUs.GameOptions;
 using System;
 using System.Linq;
 using Hazel;
-using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {
@@ -36,7 +35,7 @@ namespace MoreGamemodes
                 var text = impostors + Utils.ColorString(Palette.ImpostorRed, impostors == 1 ? " impostor" : " impostors");
                 if (neutralKillers > 0)
                     text += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
-                text += " remain.";
+                text += " remain";
                 text = Utils.ColorString(Color.white, text);
 			    foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.Notify(text);
@@ -575,7 +574,7 @@ namespace MoreGamemodes
                     pc.Data.Tasks.Clear();
                     pc.Data.MarkDirty();
                 }
-                pc.RpcResetAbilityCooldown();
+                pc.RpcSetAbilityCooldown(10f);
                 if (!pc.AmOwner && !Main.IsModded[pc.PlayerId])
                 {
                     string text = Utils.ColorString(pc.GetRole().Color, pc.GetRole().RoleDescription);
@@ -639,6 +638,7 @@ namespace MoreGamemodes
                 return false;
             if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
             if (!Romantic.OnGlobalCheckMurder(killer, target)) return false;
+            if (!Undertaker.OnGlobalCheckMurder(killer, target)) return false;
             if (!killer.GetRole().OnCheckMurderLate(target))
                 return false;
             return true;
@@ -812,6 +812,8 @@ namespace MoreGamemodes
                 return false;
             if (Main.IsInvisible[player.PlayerId])
                 return false;
+            if (player.AmOwner && player.GetRole().Role == CustomRoles.Phantom && player.invisibilityAlpha < 1f)
+                return false;
             if (!player.GetRole().OnEnterVent(id))
                 return false;
             bool cancel = false;
@@ -941,6 +943,7 @@ namespace MoreGamemodes
 
         public override IGameOptions BuildGameOptions(PlayerControl player, IGameOptions opt)
         {
+            opt.RoleOptions.SetRoleRate(RoleTypes.GuardianAngel, 0, 0);
             if (player.GetRole() == null) return opt;
             if ((player.GetRole().IsImpostor() || player.GetRole().IsNeutralKilling()) && !player.GetRole().CanUseKillButton())
             {

@@ -273,7 +273,7 @@ namespace MoreGamemodes
         public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
         {
             if (HasBomb(player) && Options.ArrowToNearestNonBombed.GetBool() && player == seer && GetClosestNonBombed(player) != null && !player.Data.IsDead)
-                name += "\n" + Utils.ColorString(Color.green, Utils.GetArrow(player.GetRealPosition(), GetClosestNonBombed(player).transform.position));
+                name += "\n" + Utils.ColorString(Color.green, Utils.GetArrow(player.transform.position, GetClosestNonBombed(player).transform.position));
             return name;
         }
 
@@ -304,7 +304,7 @@ namespace MoreGamemodes
 
         public PlayerControl GetClosestNonBombed(PlayerControl player)
         {
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)

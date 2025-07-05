@@ -11,9 +11,9 @@ using System.Reflection;
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using AmongUs.InnerNet.GameDataMessages;
 
 using Object = UnityEngine.Object;
-using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {
@@ -234,10 +234,11 @@ namespace MoreGamemodes
             AmongUsClient.Instance.NetIdCnt += 1U;
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
             MessageWriter writer = sender.stream;
-            writer.StartMessage(5);
-            writer.Write(AmongUsClient.Instance.GameId);
+            sender.StartMessage(-1);
+            writer.StartMessage(4);
             SpawnGameDataMessage item = AmongUsClient.Instance.CreateSpawnMessage(playerControl, -2, SpawnFlags.None);
             item.SerializeValues(writer);
+            writer.EndMessage();
             if (IsVanillaServer())
             {
                 for (uint i = 1; i <= 3; ++i)

@@ -3,7 +3,6 @@ using Hazel;
 using InnerNet;
 using AmongUs.GameOptions;
 using AmongUs.Data;
-using AmongUs.InnerNet.GameDataMessages;
 
 using Object = UnityEngine.Object;
 
@@ -240,6 +239,7 @@ namespace MoreGamemodes
     {
         public static void Prefix(InnerNetClient __instance, [HarmonyArgument(0)] ref IGameOptions settings)
         {
+            if (!Utils.IsVanillaServer()) return;
             if (settings.MaxPlayers < 4)
                 settings.SetInt(Int32OptionNames.MaxPlayers, 4);
             if (settings.MaxPlayers > 15)
@@ -256,6 +256,20 @@ namespace MoreGamemodes
                 settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 0.0001f);
             if (settings.GetFloat(FloatOptionNames.PlayerSpeedMod) > 3f)
                 settings.SetFloat(FloatOptionNames.PlayerSpeedMod, 3f);
+        }
+    }
+
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendAllStreamedObjects))]
+    class SendAllStreamedObjectsPatch
+    {
+        public static void Prefix(InnerNetClient __instance)
+        {
+            if (!__instance.AmHost || !AntiBlackout.IsCached) return;
+            foreach (var playerInfo in GameData.Instance.AllPlayers)
+            {
+                if (playerInfo.IsDirty)
+                    playerInfo.ClearDirtyBits();
+            }
         }
     }
 

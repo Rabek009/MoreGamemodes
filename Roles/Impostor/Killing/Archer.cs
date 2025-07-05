@@ -16,7 +16,7 @@ namespace MoreGamemodes
         {
             if (Main.KillCooldowns[Player.PlayerId] > 0f || AbilityUses < 1f) return;
             PlayerControl target = Player.GetClosestPlayer(true);
-            if (target == null || (target.GetRole().IsImpostor() && !CanKillImpostors.GetBool()) || Vector2.Distance(Player.GetRealPosition(), target.transform.position) > ArrowDistance.GetFloat() * 9f) return;
+            if (target == null || (target.GetRole().IsImpostor() && !CanKillImpostors.GetBool()) || Vector2.Distance(Player.transform.position, target.transform.position) > ArrowDistance.GetFloat() * 9f) return;
             ClassicGamemode.instance.PlayerKiller[target.PlayerId] = Player.PlayerId;
             ++Main.PlayerKills[Player.PlayerId];
             target.RpcSetDeathReason(DeathReasons.Shot);

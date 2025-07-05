@@ -192,7 +192,7 @@ namespace MoreGamemodes
     public class RpcSyncSettingsPatch
     {
         public static void Postfix()
-    {
+        {
             OptionItem.SyncAllOptions();
         }
     }

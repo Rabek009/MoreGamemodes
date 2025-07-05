@@ -43,8 +43,8 @@ namespace MoreGamemodes
         public static void Postfix()
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            AntiBlackout.SetIsDead();
-            AntiBlackout.RestoreIsDead(doSend: false);
+            AntiBlackout.SetIsDead(true);
+            AntiBlackout.RestoreIsDead(false);
             if (RandomItemsGamemode.instance != null)
                 RandomItemsGamemode.instance.CamouflageTimer = -1f;
             if (Options.EnableRandomSpawn.GetBool() && Options.TeleportAfterMeeting.GetBool())
@@ -61,8 +61,6 @@ namespace MoreGamemodes
         public static void Postfix(MeetingHud __instance, [HarmonyArgument(0)] MeetingHud.VoterState[] states, [HarmonyArgument(1)] NetworkedPlayerInfo exiled, [HarmonyArgument(2)] bool tie)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            foreach (var netObject in CustomNetObject.CustomObjects)
-                netObject.RpcTeleport(netObject.Position, SendOption.Reliable);
             CustomGamemode.Instance.OnVotingComplete(__instance, states, exiled, tie);
         }
     }
@@ -143,7 +141,7 @@ namespace MoreGamemodes
 			    Dictionary<byte, int> self = __instance.CalculateVotes();
 			    bool tie;
 			    KeyValuePair<byte, int> max = self.MaxPair(out tie);
-			    NetworkedPlayerInfo exiled = GameData.Instance.AllPlayers.ToArray().FirstOrDefault((NetworkedPlayerInfo v) => !tie && v.PlayerId == max.Key);
+			    NetworkedPlayerInfo exiled = GameData.Instance.AllPlayers.ToArray().FirstOrDefault((NetworkedPlayerInfo p) => !tie && p.PlayerId == max.Key);
 			    System.Collections.Generic.List<MeetingHud.VoterState> votes = new();
 			    for (int i = 0; i < __instance.playerStates.Length; i++)
 			    {
@@ -152,9 +150,9 @@ namespace MoreGamemodes
                     int voteCount = 1;
                     if (playerInfo != null && playerInfo.GetRole() != null)
                     {
-                        voteCount += playerInfo.GetRole().AdditionalVotes();
+                        voteCount += playerInfo.GetRole().AdditionalVisualVotes();
                         foreach (var addOn in playerInfo.GetAddOns())
-                            voteCount += addOn.AdditionalVotes();
+                            voteCount += addOn.AdditionalVisualVotes();
                     }
                     for (int j = 1; j <= voteCount; ++j)
                     {

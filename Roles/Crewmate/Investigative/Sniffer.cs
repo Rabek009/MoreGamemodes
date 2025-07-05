@@ -1,15 +1,27 @@
+using AmongUs.GameOptions;
 using UnityEngine;
 using Hazel;
-using AmongUs.GameOptions;
-using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Object = UnityEngine.Object;
 
 namespace MoreGamemodes
 {
-    public class Sheriff : CustomRole
+    public class Sniffer : CustomRole
     {
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
-            Cooldown = KillCooldown.GetFloat();
+            Cooldown = SniffCooldown.GetFloat();
+        }
+
+        public override void OnHudUpate(HudManager __instance)
+        {
+            base.OnHudUpate(__instance);
+            if (Player.Data.IsDead) return;
+            __instance.KillButton.OverrideText("Sniff");
+            if (Target != byte.MaxValue)
+                __instance.KillButton.SetDisabled();
         }
 
         public override void OnIntroDestroy()
@@ -31,7 +43,7 @@ namespace MoreGamemodes
                 Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
                 Main.NameColors[(Player.PlayerId, Player.PlayerId)] = Color.white;
-                new LateTask(() => Player.RpcSetKillTimer(Math.Max(Cooldown, 0.001f)), 0.5f);
+                new LateTask(() => Player.RpcSetKillTimer(Cooldown > 0.001f ? Cooldown : 0.001f), 0.5f);
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {
@@ -54,18 +66,13 @@ namespace MoreGamemodes
         public override bool OnCheckMurder(PlayerControl target)
         {
             if (!Main.IsModded[Player.PlayerId] && Cooldown > 0f) return false;
-            if (!CanKill(target))
-            {
-                Player.RpcSetDeathReason(DeathReasons.Misfire);
-                Player.RpcMurderPlayer(Player, true);
-                return MisfireKillsTarget.GetBool();
-            }
-            return true;
-        }
-
-        public override void OnMurderPlayer(PlayerControl target)
-        {
-            Cooldown = KillCooldown.GetFloat();
+            if (Target != byte.MaxValue) return false;
+            Target = target.PlayerId;
+            SendRPC();
+            NearbyPlayers.Clear();
+            Player.RpcSetKillTimer(SniffCooldown.GetFloat());
+            Cooldown = SniffCooldown.GetFloat();
+            return false;
         }
 
         public override void OnMurderPlayerAsTarget(PlayerControl killer)
@@ -89,6 +96,30 @@ namespace MoreGamemodes
 
         public override void OnMeeting()
         {
+            if (Target != byte.MaxValue)
+            {
+                string text = Main.StandardNames[Target] + " was nearby ";
+                if (NearbyPlayers.Count == 0)
+                    text += "<b>NO ONE</b>";
+                else
+                {
+                    while (NearbyPlayers.Count > 0)
+                    {
+                        var rand = new System.Random();
+                        int index = rand.Next(0, NearbyPlayers.Count);
+                        text += Main.StandardNames[NearbyPlayers[index]];
+                        if (NearbyPlayers.Count == 2)
+                            text += " and ";
+                        else if (NearbyPlayers.Count > 2)
+                            text += ", ";
+                        NearbyPlayers.RemoveAt(index);
+                    }
+                }
+                text += " this round.";
+                Player.RpcSendMessage(text, "Sniffer");
+            }
+            Target = byte.MaxValue;
+            SendRPC();
             if (BaseRole == BaseRoles.DesyncImpostor)
             {
                 BaseRole = BaseRoles.Crewmate;
@@ -114,6 +145,24 @@ namespace MoreGamemodes
                 Cooldown -= Time.fixedDeltaTime;
             if (Cooldown < 0f)
                 Cooldown = 0f;
+            if (Target == byte.MaxValue) return;
+            var player = Utils.GetPlayerById(Target);
+            if (!player.Data.IsDead && (Main.IsInvisible[player.PlayerId] || player.inVent)) return;
+            var playerBody = Object.FindObjectsOfType<DeadBody>().FirstOrDefault((DeadBody b) => b.ParentId == Target);
+            Vector2? playerPos = !player.Data.IsDead ? player.transform.position : (playerBody != null ? playerBody.transform.position : null);
+            if (playerPos == null) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc == Player || pc == player || pc.Data.IsDead || Main.IsInvisible[pc.PlayerId] || pc.inVent) continue;
+                if (Vector2.Distance(playerPos.Value, pc.transform.position) <= SniffRadius.GetFloat() * 1.5f && !NearbyPlayers.Contains(Main.AllShapeshifts[pc.PlayerId]))
+                    NearbyPlayers.Add(Main.AllShapeshifts[pc.PlayerId]);
+            }
+            foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
+            {
+                if (deadBody.ParentId == Player.PlayerId || deadBody.ParentId == player.PlayerId) continue;
+                if (Vector2.Distance(playerPos.Value, deadBody.transform.position) <= SniffRadius.GetFloat() * 1.5f && !NearbyPlayers.Contains(deadBody.ParentId))
+                    NearbyPlayers.Add(deadBody.ParentId);
+            }
         }
 
         public override bool OnEnterVent(int id)
@@ -129,23 +178,25 @@ namespace MoreGamemodes
 
         public override IGameOptions ApplyGameOptions(IGameOptions opt)
         {
-            opt.SetFloat(FloatOptionNames.KillCooldown, KillCooldown.GetFloat());
+            opt.SetFloat(FloatOptionNames.KillCooldown, SniffCooldown.GetFloat());
             return opt;
         }
 
         public override string GetNamePostfix()
         {
-            if (Main.IsModded[Player.PlayerId]) return "";
+            if (Main.IsModded[Player.PlayerId]) return "\nTarget: " + (Target == byte.MaxValue ? "<b>None</b>" : Main.StandardNames[Target]);
             if (BaseRole == BaseRoles.Crewmate)
             {
                 return Utils.ColorString(Color, "\n<size=1.8>Mode: Task\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")\n</size>") +
-                    Utils.ColorString(Color.red, "<size=1.8>Kill cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
+                    Utils.ColorString(Color.red, "<size=1.8>Sniff cooldown: " + (int)(Cooldown + 0.99f) + "s\n</size>") +
+                    Utils.ColorString(Color, "Target: " + (Target == byte.MaxValue ? "<b>None</b>" : Main.StandardNames[Target]));
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {
-                return Utils.ColorString(Color, "\n<size=1.8>Mode: Kill\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
-                    Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>");
+                return Utils.ColorString(Color, "\n<size=1.8>Mode: Sniff\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
+                    Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")\n</size>") +
+                    Utils.ColorString(Color, "Target: " + (Target == byte.MaxValue ? "<b>None</b>" : Main.StandardNames[Target]));
             }
             return "";
         }
@@ -155,58 +206,50 @@ namespace MoreGamemodes
             Cooldown = 10f;
         }
 
-        public override bool ShouldContinueGame()
+        public void SendRPC()
         {
-            return true;
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
+            writer.Write(Target);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
-        public bool CanKill(PlayerControl target)
+        public override void ReceiveRPC(MessageReader reader)
         {
-            if (target.GetRole().Role == CustomRoles.Jester) return CanKillJester.GetBool();
-            return target.GetRole().IsImpostor() || (target.GetRole().IsNeutralKilling() && CanKillNeutralKilling.GetBool()) ||
-                (target.GetRole().IsNeutralEvil() && CanKillNeutralEvil.GetBool()) || (target.GetRole().IsNeutralBenign() && CanKillNeutralBenign.GetBool());
+            Target = reader.ReadByte();
         }
 
-        public Sheriff(PlayerControl player)
+        public Sniffer(PlayerControl player)
         {
-            Role = CustomRoles.Sheriff;
+            Role = CustomRoles.Sniffer;
             BaseRole = BaseRoles.Crewmate;
             Player = player;
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
-            Cooldown = 10f;
+            Target = byte.MaxValue;
+            NearbyPlayers = new List<byte>();
         }
 
         public float Cooldown;
+        public byte Target;
+        public List<byte> NearbyPlayers;
 
         public static OptionItem Chance;
         public static OptionItem Count;
-        public static OptionItem KillCooldown;
-        public static OptionItem MisfireKillsTarget;
-        public static OptionItem CanKillNeutralKilling;
-        public static OptionItem CanKillNeutralEvil;
-        public static OptionItem CanKillNeutralBenign;
-        public static OptionItem CanKillJester;
+        public static OptionItem SniffCooldown;
+        public static OptionItem SniffRadius;
         public static void SetupOptionItem()
         {
-            Chance = RoleOptionItem.Create(200100, CustomRoles.Sheriff, TabGroup.CrewmateRoles, false);
-            Count = IntegerOptionItem.Create(200101, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
+            Chance = RoleOptionItem.Create(100400, CustomRoles.Sniffer, TabGroup.CrewmateRoles, false);
+            Count = IntegerOptionItem.Create(100401, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            KillCooldown = FloatOptionItem.Create(200102, "Kill cooldown", new(10f, 60f, 2.5f), 25f, TabGroup.CrewmateRoles, false)
+            SniffCooldown = FloatOptionItem.Create(100402, "Sniff cooldown", new(5f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            MisfireKillsTarget = BooleanOptionItem.Create(200103, "Misfire kills target", false, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            CanKillNeutralKilling = BooleanOptionItem.Create(200104, "Can kill neutral killing", true, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            CanKillNeutralEvil = BooleanOptionItem.Create(200105, "Can kill neutral evil", true, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            CanKillNeutralBenign = BooleanOptionItem.Create(200106, "Can kill neutral benign", false, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            CanKillJester = BooleanOptionItem.Create(200107, "Can kill jester", false, TabGroup.CrewmateRoles, false)
-                .SetParent(Chance);
-            Options.RolesChance[CustomRoles.Sheriff] = Chance;
-            Options.RolesCount[CustomRoles.Sheriff] = Count;
+            SniffRadius = FloatOptionItem.Create(100403, "Sniff radius", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.CrewmateRoles, false)
+                .SetParent(Chance)
+                .SetValueFormat(OptionFormat.Multiplier);
+            Options.RolesChance[CustomRoles.Sniffer] = Chance;
+            Options.RolesCount[CustomRoles.Sniffer] = Count;
         }
     }
 }

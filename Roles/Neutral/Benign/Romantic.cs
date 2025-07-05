@@ -247,13 +247,13 @@ namespace MoreGamemodes
             return SeeLoverRole.GetBool() && seer.PlayerId == LoverId;
         }
 
-        public override bool IsCounted()
+        public override int GetPlayerCount()
         {
-            if (LoverId == byte.MaxValue) return true;
+            if (LoverId == byte.MaxValue) return 1;
             var lover = Utils.GetPlayerById(LoverId);
             if (lover != null && !lover.Data.IsDead && (lover.GetRole().IsImpostor() || lover.GetRole().IsNeutralKilling()))
-                return false;
-            return true;
+                return 0;
+            return 1;
         }
 
         public override void OnRevive()
@@ -313,21 +313,6 @@ namespace MoreGamemodes
             if (!result)
                 killer.RpcGuardAndKill(target);
             return result;
-        }
-
-        public static bool IsShielded(PlayerControl player)
-        {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.GetRole().Role == CustomRoles.Medic && !pc.Data.IsDead)
-                {
-                    Medic medicRole = pc.GetRole() as Medic;
-                    if (medicRole == null) continue;
-                    if (medicRole.ShieldedPlayer == player.PlayerId)
-                        return true;
-                }
-            }
-            return false;
         }
 
         public Romantic(PlayerControl player)

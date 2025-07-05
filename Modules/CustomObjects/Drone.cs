@@ -1,5 +1,4 @@
 using UnityEngine;
-using Hazel;
 
 namespace MoreGamemodes
 {
@@ -7,18 +6,12 @@ namespace MoreGamemodes
     {
         public override void OnFixedUpdate()
         {
-            SendOption sendOption = SendOption.None;
-            TimeSinceReliableTeleport += Time.fixedDeltaTime;
-            if (TimeSinceReliableTeleport >= 0.1f)
-            {
-                sendOption = SendOption.Reliable;
-                TimeSinceReliableTeleport -= 0.1f;
-            }
+            base.OnFixedUpdate();
             if (Owner != null)
             {
                 var dronerRole = Owner.GetRole() as Droner;
                 if (dronerRole != null)
-                    RpcTeleport(dronerRole.DronePosition, sendOption);
+                    RpcTeleport(dronerRole.DronePosition);
             }
         }
 

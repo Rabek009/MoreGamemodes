@@ -15,7 +15,7 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (SeeArrowToNearestBody.GetBool() && !Player.Data.IsDead && Player.GetClosestDeadBody() != null)
-                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.GetRealPosition(), Player.GetClosestDeadBody().transform.position));
+                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.transform.position, Player.GetClosestDeadBody().transform.position));
             return "";
         }
 

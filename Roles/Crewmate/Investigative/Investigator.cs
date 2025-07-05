@@ -151,7 +151,7 @@ namespace MoreGamemodes
             if (BaseRole == BaseRoles.Crewmate)
             {
                 return Utils.ColorString(Color, "\n<size=1.8>Mode: Task\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
-                    Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>\n") +
+                    Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")\n</size>") +
                     Utils.ColorString(Color.red, "<size=1.8>Investigate cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)

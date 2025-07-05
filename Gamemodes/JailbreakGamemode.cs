@@ -358,8 +358,8 @@ namespace MoreGamemodes
             bool guardNearby = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (IsGuard(pc) && !IsDead[pc.PlayerId] && Vector2.Distance(pc.GetRealPosition(), killer.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
-                && !PhysicsHelpers.AnythingBetween(pc.GetRealPosition(), killer.transform.position, Constants.ShadowMask, false))
+                if (IsGuard(pc) && !IsDead[pc.PlayerId] && Vector2.Distance(pc.transform.position, killer.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
+                && !PhysicsHelpers.AnythingBetween(pc.transform.position, killer.transform.position, Constants.ShadowMask, false))
                     guardNearby = true;
             }
             if (guardNearby)
@@ -610,8 +610,8 @@ namespace MoreGamemodes
                 bool guardNearby = false;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
-                    if (IsGuard(ar) && !IsDead[ar.PlayerId] && Vector2.Distance(ar.GetRealPosition(), pc.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
-                    && !PhysicsHelpers.AnythingBetween(ar.GetRealPosition(), pc.transform.position, Constants.ShadowMask, false))
+                    if (IsGuard(ar) && !IsDead[ar.PlayerId] && Vector2.Distance(ar.transform.position, pc.transform.position) <= Main.RealOptions.GetFloat(FloatOptionNames.ImpostorLightMod) * 3 
+                    && !PhysicsHelpers.AnythingBetween(ar.transform.position, pc.transform.position, Constants.ShadowMask, false))
                         guardNearby = true;
                 }
                 if (!IsGuard(pc) && IsDoingIllegalThing(pc) && guardNearby)

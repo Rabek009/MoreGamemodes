@@ -19,6 +19,7 @@ namespace MoreGamemodes
                 __instance.ImpostorVentButton.ToggleVisible(false);
             }
         }
+        
         public override void OnVotingComplete(MeetingHud __instance, MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie)
         {
             if (exiled != null && exiled.Object != null && exiled.Object == Player && BaseRole == BaseRoles.DesyncImpostor)
@@ -114,10 +115,10 @@ namespace MoreGamemodes
             bool isKillerAlive = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if ((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling()) && !pc.Data.IsDead && pc != Player)
+                if ((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling() || pc.GetRole().ShouldContinueGame()) && !pc.Data.IsDead && pc != Player)
                     isKillerAlive = true;
-                if (pc.GetRole().IsCounted() && !pc.Data.IsDead)
-                    ++playerCount;
+                if (!pc.Data.IsDead)
+                    playerCount += pc.GetRole().GetPlayerCount();
             }
             if (!isKillerAlive && playerCount <= 2 && isPlayerAlive)
             {

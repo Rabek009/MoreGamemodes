@@ -8,6 +8,7 @@ namespace MoreGamemodes
     {
         public override void OnFixedUpdate()
         {
+            base.OnFixedUpdate();
             Timer += Time.deltaTime;
             if (Timer >= WaitDuration * 0.75f && State == 0)
             {
@@ -26,13 +27,13 @@ namespace MoreGamemodes
             {
                 if (!p.Data.IsDead && !p.inVent && !MeetingHud.Instance)
                 {
-                    dis = Vector2.Distance(Position, p.GetRealPosition());
+                    dis = Vector2.Distance(Position, p.transform.position);
                     pcdistance.Add(p, dis);
                 }
             }
             var min = pcdistance.OrderBy(c => c.Value).FirstOrDefault();
             PlayerControl target = min.Key;
-            if (Vector2.Distance(Position, target.GetRealPosition()) <= Radius)
+            if (Vector2.Distance(Position, target.transform.position) <= Radius)
             {
                 if (RandomItemsGamemode.instance != null && RandomItemsGamemode.instance.ShieldTimer[target.PlayerId] <= 0f)
                 {

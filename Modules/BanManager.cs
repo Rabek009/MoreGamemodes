@@ -86,7 +86,8 @@ namespace MoreGamemodes
             "dashsheer#3493",
             // "curltwisty#5938", (got second chance)
             "cat#2761",
-            "tenpalace#1924"
+            "tenpalace#1924",
+            "giltgram#4461",
         };
         public static readonly List<string> BannedHashedPuids = new(){
             "b0437b1e6",

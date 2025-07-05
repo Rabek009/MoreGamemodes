@@ -52,7 +52,7 @@ namespace MoreGamemodes
 
         public void OnReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
         {
-            if (Target == byte.MaxValue) return;
+            if (Player.Data.IsDead || Target == byte.MaxValue) return;
             var player = Utils.GetPlayerById(Target);
             if (player != null && !player.Data.IsDead && (player.GetRole().IsImpostor() || player.GetRole().IsNeutralKilling() || player.GetRole().Role == CustomRoles.Sheriff))
             {
@@ -75,6 +75,11 @@ namespace MoreGamemodes
                 if (pc == player || pc.Data.IsDead)
                     ClassicGamemode.instance.NameSymbols[(Target, pc.PlayerId)][CustomRoles.Shaman] = ("乂", Color);
             }
+        }
+
+        public override bool ShouldContinueGame()
+        {
+            return true;
         }
 
         public void SendRPC()

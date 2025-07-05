@@ -61,9 +61,8 @@ namespace MoreGamemodes
 
         public override bool OnCheckMurder(PlayerControl target)
         {
-            if (IsShielded(target)) return false;
             if (!Main.IsModded[Player.PlayerId] && Cooldown > 0f) return false;
-            if (AbilityUses < 1f) return false;
+            if (ShieldedPlayer != byte.MaxValue || AbilityUses < 1f) return false;
             ShieldedPlayer = target.PlayerId;
             Player.RpcSetAbilityUses(0f);
             Player.RpcSetKillTimer(ShieldCooldown.GetFloat());
@@ -164,7 +163,7 @@ namespace MoreGamemodes
             if (BaseRole == BaseRoles.Crewmate)
             {
                 return Utils.ColorString(Color, "\n<size=1.8>Mode: Task\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
-                    Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>\n") +
+                    Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")\n</size>") +
                     Utils.ColorString(Color.red, "<size=1.8>Shield cooldown: " + (int)(Cooldown + 0.99f) + "s</size>");
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
@@ -212,21 +211,6 @@ namespace MoreGamemodes
             else if (!result)
                 killer.RpcSetKillTimer(1f);
             return result;
-        }
-
-        public static bool IsShielded(PlayerControl player)
-        {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.GetRole().Role == CustomRoles.Medic && !pc.Data.IsDead)
-                {
-                    Medic medicRole = pc.GetRole() as Medic;
-                    if (medicRole == null) continue;
-                    if (medicRole.ShieldedPlayer == player.PlayerId)
-                        return true;
-                }
-            }
-            return false;
         }
 
         public Medic(PlayerControl player)

@@ -40,6 +40,12 @@ namespace MoreGamemodes
             AbilityUsed = true;
         }
 
+        public override int GetPlayerCount()
+        {
+            if (AbilityUsed || DieAfterUsingAbility.GetBool()) return 1;
+            return 2;
+        }
+
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/GuessManager.cs#L638
         public static void CreateMeetingButton(MeetingHud __instance)
         {
@@ -82,7 +88,7 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(400300, CustomRoles.Judge, TabGroup.CrewmateRoles, false);
             Count = IntegerOptionItem.Create(400301, "Max", new(1, 15, 1), 1, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            DieAfterUsingAbility = BooleanOptionItem.Create(400302, "Die after using ability", false, TabGroup.CrewmateRoles, false)
+            DieAfterUsingAbility = BooleanOptionItem.Create(400302, "Die after using ability", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Judge] = Chance;
             Options.RolesCount[CustomRoles.Judge] = Count;

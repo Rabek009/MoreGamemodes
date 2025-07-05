@@ -7,6 +7,7 @@ namespace MoreGamemodes
     {
         public override void OnFixedUpdate()
         {
+            base.OnFixedUpdate();
             if (Health <= 0f)
             {
                 List<byte> winners = new();

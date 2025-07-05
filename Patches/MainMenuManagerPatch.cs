@@ -10,7 +10,6 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(MainMenuManager))]
     public class MainMenuManagerPatch
     {
-        public static Transform rightpanel;
         private static PassiveButton template;
         private static PassiveButton discordButton;
         private static PassiveButton gitHubButton;
@@ -32,10 +31,10 @@ namespace MoreGamemodes
         [HarmonyPatch(nameof(MainMenuManager.Start)), HarmonyPostfix, HarmonyPriority(Priority.Normal)]
         public static void StartPostfix(MainMenuManager __instance)
         {
-            Application.targetFrameRate = Main.UnlockFPS.Value ? 165 : 60;
-            if (rightpanel == null) rightpanel = __instance.gameModeButtons.transform.parent;
             if (template == null) template = __instance.quitButton;
-            if (rightpanel == null || template == null) return;
+            Application.targetFrameRate = Main.UnlockFPS.Value ? 165 : 60;
+            
+            if (template == null) return;
             if (discordButton == null)
             {
                 discordButton = CreateButton(
@@ -69,11 +68,7 @@ namespace MoreGamemodes
 
         private static PassiveButton CreateButton(string name, Vector3 localPosition, Color32 normalColor, Color32 hoverColor, Action action, string label, Vector2? scale = null)
         {
-            var obj = new GameObject("");
-            obj.transform.parent = rightpanel;
-            obj.transform.localPosition = new(0f, 0.15f, 1f);
-            obj.transform.localScale *= 1.2f;
-            var button = Object.Instantiate(template, obj.transform);
+            var button = Object.Instantiate(template, MGM_Logo.transform);
             button.name = name;
             Object.Destroy(button.GetComponent<AspectPosition>());
             button.transform.localPosition = localPosition;
@@ -82,11 +77,7 @@ namespace MoreGamemodes
             button.OnClick.AddListener(action);
 
             var buttonText = button.transform.Find("FontPlacer/Text_TMP").GetComponent<TMP_Text>();
-            var translator = buttonText.GetComponent<TextTranslatorTMP>();
-            if (translator != null)
-            {
-                Object.Destroy(translator);
-            }
+            buttonText.DestroyTranslator();
             buttonText.fontSize = buttonText.fontSizeMax = buttonText.fontSizeMin = 3.5f;
             buttonText.enableWordWrapping = false;
             buttonText.text = label;
@@ -104,9 +95,7 @@ namespace MoreGamemodes
 
             var buttonCollider = button.GetComponent<BoxCollider2D>();
             if (scale.HasValue)
-            {
                 normalSprite.size = hoverSprite.size = buttonCollider.size = scale.Value;
-            }
             buttonCollider.offset = new(0f, 0f);
 
             return button;
@@ -120,34 +109,14 @@ namespace MoreGamemodes
         [HarmonyPostfix]
         public static void OpenMenuPostfix()
         {
-            if (discordButton != null)
-            {
-                discordButton.gameObject.SetActive(false);
-            }
-            if (gitHubButton != null)
-            {
-                gitHubButton.gameObject.SetActive(false);
-            }
             if (MGM_Logo != null)
-            {
                 MGM_Logo.gameObject.SetActive(false);
-            }
         }
         [HarmonyPatch(nameof(MainMenuManager.ResetScreen)), HarmonyPostfix]
         public static void ResetScreenPostfix()
         {
-            if (discordButton != null)
-            {
-                discordButton.gameObject.SetActive(true);
-            }
-            if (gitHubButton != null)
-            {
-                gitHubButton.gameObject.SetActive(true);
-            }
             if (MGM_Logo != null)
-            {
                 MGM_Logo.gameObject.SetActive(true);
-            }
         }
     }
 }

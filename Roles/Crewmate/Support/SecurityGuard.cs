@@ -39,7 +39,7 @@ namespace MoreGamemodes
         {
             if (Cooldown > 0f || AbilityUses < 1f) return;
             Vent vent = Player.GetClosestVent();
-            if (Vector2.Distance(Player.GetRealPosition(), vent.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, vent.transform.position, Constants.ShipOnlyMask, false))
+            if (Vector2.Distance(Player.transform.position, vent.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, vent.transform.position, Constants.ShipOnlyMask, false))
             {
                 Player.Notify(Utils.ColorString(Color.red, "(!) No vent nearby (!)"));
                 return;
@@ -161,9 +161,9 @@ namespace MoreGamemodes
             if (Utils.IsActive(SystemTypes.Comms) && mapId != 5) return false;
             if (mapId is 0 or 2 or 3 or 4 && UsingCameras)  
                 return true;
-            if (mapId == 1 && Vector2.Distance(Player.GetRealPosition(), new Vector2(16.22f, 5.82f)) <= 1.5f)
+            if (mapId == 1 && Vector2.Distance(Player.transform.position, new Vector2(16.22f, 5.82f)) <= 1.5f)
                 return true;
-            if (mapId >= 5 && Vector2.Distance(Player.GetRealPosition(), new Vector2(6.20f, 0.10f)) <= 1.8f)
+            if (mapId >= 5 && Vector2.Distance(Player.transform.position, new Vector2(6.20f, 0.10f)) <= 1.8f)
                 return true;
             return false;
         }

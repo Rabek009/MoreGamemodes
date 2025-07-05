@@ -33,7 +33,7 @@ namespace MoreGamemodes
         {
             if (Cooldown > 0f) return;
             PlayerControl target = Player.GetClosestPlayer(true);
-            if ((target == null || Vector2.Distance(Player.GetRealPosition(), target.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, target.transform.position, Constants.ShipOnlyMask, false)) && !Player.AmOwner && !Main.IsModded[Player.PlayerId])
+            if ((target == null || Vector2.Distance(Player.transform.position, target.transform.position) > 1.8f || PhysicsHelpers.AnythingBetween(Player.Collider, Player.Collider.bounds.center, target.transform.position, Constants.ShipOnlyMask, false)) && !Player.AmOwner && !Main.IsModded[Player.PlayerId])
             {
                 Player.Notify(Utils.ColorString(Color.red, "(!) No player nearby (!)"));
                 return;

@@ -166,6 +166,11 @@ namespace MoreGamemodes
             return 0;
         }
 
+        public virtual int AdditionalVisualVotes()
+        {
+            return 0;
+        }
+
         public AddOns Type;
         public PlayerControl Player;
         public Color Color;

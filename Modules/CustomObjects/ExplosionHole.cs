@@ -14,7 +14,7 @@ namespace MoreGamemodes
                 var explosionHole = netObject as ExplosionHole;
                 if (explosionHole != null)
                 {
-                    if (Vector2.Distance(player.GetRealPosition(), explosionHole.Position) <= explosionHole.Size / 3f && explosionHole.SpeedDecrease > speedDecrease)
+                    if (Vector2.Distance(player.transform.position, explosionHole.Position) <= explosionHole.Size / 3f && explosionHole.SpeedDecrease > speedDecrease)
                         speedDecrease = explosionHole.SpeedDecrease;
                 }
             }

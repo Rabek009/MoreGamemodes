@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Data;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using System;
-using AmongUs.InnerNet.GameDataMessages;
 
 using Object = UnityEngine.Object;
 
@@ -141,7 +140,7 @@ namespace MoreGamemodes
             player.RpcSetVentInteraction();
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
             if (player == seer)
-                Main.KillCooldowns[player.PlayerId] = 10f;
+                Main.KillCooldowns[player.PlayerId] = 0f;
         }
 
         public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
@@ -266,7 +265,7 @@ namespace MoreGamemodes
 
         public static PlayerControl GetClosestPlayer(this PlayerControl player, bool forTarget = false)
         {
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
@@ -396,7 +395,7 @@ namespace MoreGamemodes
 
         public static Vent GetClosestVent(this PlayerControl player)
         {
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             if (ClassicGamemode.instance != null && player.GetRole().Role == CustomRoles.Droner)
             {
                 Droner dronerRole = player.GetRole() as Droner;
@@ -418,7 +417,7 @@ namespace MoreGamemodes
 
         public static DeadBody GetClosestDeadBody(this PlayerControl player)
         {
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             Dictionary<DeadBody, float> bodydistance = new();
             float dis;
             foreach (DeadBody body in Object.FindObjectsOfType<DeadBody>())
@@ -498,7 +497,7 @@ namespace MoreGamemodes
             string toSend = appearance + ": " + message;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (Vector2.Distance(player.GetRealPosition(), pc.transform.position) <= Options.MessagesRadius.GetFloat() * 2.5f && pc != player)
+                if (Vector2.Distance(player.transform.position, pc.transform.position) <= Options.MessagesRadius.GetFloat() * 2.5f && pc != player)
                 {
                     if (player.Data.IsDead && !pc.Data.IsDead) continue;
                     pc.Notify(Utils.ColorString(Color.white, toSend));
@@ -793,7 +792,7 @@ namespace MoreGamemodes
 
         public static List<Vent> GetVentsFromClosest(this PlayerControl player)
         {
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             if (ClassicGamemode.instance != null && player.GetRole().Role == CustomRoles.Droner)
             {
                 Droner dronerRole = player.GetRole() as Droner;
@@ -816,7 +815,7 @@ namespace MoreGamemodes
 
         public static PlayerControl GetClosestImpostor(this PlayerControl player)
         {
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)
@@ -981,16 +980,6 @@ namespace MoreGamemodes
             writer.Recycle();
         }
 
-        public static Vector2 GetRealPosition(this PlayerControl player)
-        {
-            if (player.AmOwner) return player.transform.position;
-            if (player.NetTransform.incomingPosQueue.Count > 0 && player.NetTransform.isActiveAndEnabled && !player.NetTransform.isPaused)
-		    {
-			    return player.NetTransform.incomingPosQueue.ToArray().Last();
-		    }
-            return player.transform.position;
-        }
-
         public static void RpcCancelLadder(this PlayerControl player)
         {
             if (player.Data.IsDead || MeetingHud.Instance) return;
@@ -1044,7 +1033,7 @@ namespace MoreGamemodes
                     .Write(player.shouldAppearInvisible || player.invisibilityAlpha < 1f || isDroner ? (ushort)(player.NetTransform.lastSequenceId + 16383) : player.NetTransform.lastSequenceId)
                     .EndRpc();
                 sender2.EndMessage();
-                sender.SendMessage();
+                sender2.SendMessage();
             }
             new LateTask(() => {
                 if (!MeetingHud.Instance)

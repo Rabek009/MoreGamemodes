@@ -315,7 +315,7 @@ namespace MoreGamemodes
             {
                 var impostor = player.GetClosestImpostor();
                 if (impostor == null) return name;
-                var distance = Vector2.Distance(player.GetRealPosition(), impostor.transform.position);
+                var distance = Vector2.Distance(player.transform.position, impostor.transform.position);
                 if (distance <= 2f)
                     name += "\n<#ff1313>■■■■■</color>";
                 else if (distance <= 4.5f)
@@ -357,7 +357,7 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc != player && !IsFrozen(pc) && !pc.Data.Role.IsImpostor && !pc.inVent && Vector2.Distance(pc.GetRealPosition(), player.transform.position) <= Options.UnfreezeRadius.GetFloat() / 2f)
+                if (pc != player && !IsFrozen(pc) && !pc.Data.Role.IsImpostor && !pc.inVent && Vector2.Distance(pc.transform.position, player.transform.position) <= Options.UnfreezeRadius.GetFloat() / 2f)
                     return true;
             }
             return false;

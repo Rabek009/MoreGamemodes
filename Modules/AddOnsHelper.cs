@@ -125,6 +125,7 @@ namespace MoreGamemodes
 
         public static int GetAddOnCount(AddOns addOn)
         {
+            if (addOn == AddOns.Watcher && (Main.RealOptions != null ? !Main.RealOptions.GetBool(BoolOptionNames.AnonymousVotes) : !GameOptionsManager.Instance.CurrentGameOptions.GetBool(BoolOptionNames.AnonymousVotes))) return 0;
             return Options.AddOnsCount.ContainsKey(addOn) ? Options.AddOnsCount[addOn].GetInt() : 0;
         }
     }

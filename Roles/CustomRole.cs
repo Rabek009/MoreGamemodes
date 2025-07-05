@@ -242,6 +242,7 @@ namespace MoreGamemodes
         {
             return IsNeutralKilling() ||
             Role is CustomRoles.Investigator or
+            CustomRoles.Sniffer or 
             CustomRoles.Sheriff or
             CustomRoles.Medic;
         }
@@ -303,9 +304,9 @@ namespace MoreGamemodes
             return true;
         }
 
-        public virtual bool IsCounted()
+        public virtual int GetPlayerCount()
         {
-            return true;
+            return 1;
         }
 
         public virtual bool PreventGameEnd()
@@ -321,6 +322,16 @@ namespace MoreGamemodes
         public virtual int AdditionalVotes()
         {
             return 0;
+        }
+
+        public virtual int AdditionalVisualVotes()
+        {
+            return 0;
+        }
+
+        public virtual bool ShouldContinueGame()
+        {
+            return false;
         }
 
         public virtual void ReceiveRPC(MessageReader reader)

@@ -72,13 +72,22 @@ namespace MoreGamemodes
         }
     }
 
-    [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.ShowRole))]
-    class RoleIntroPatch
+    [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.CoBegin))]
+    class IntroCutsceneCoBeginPatch
+    {
+        public static void Postfix(IntroCutscene __instance, ref Il2CppSystem.Collections.IEnumerator __result)
+        {
+            var patcher = new CoroutinPatcher(__result);
+            patcher.AddPrefix(typeof(IntroCutscene._ShowRole_d__41), () => ShowRolePatch.Postfix(__instance));
+            __result = patcher.EnumerateWithPatch();
+        }
+    }
+    class ShowRolePatch
     {
         public static void Postfix(IntroCutscene __instance)
         {
             if (Main.GameStarted) return;
-            new LateTask(() => CustomGamemode.Instance.OnShowRole(__instance), 0.0001f, "Show Role");
+            new LateTask(() => CustomGamemode.Instance.OnShowRole(__instance), 0f, "Show Role");
         }
     }
 }

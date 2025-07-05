@@ -300,9 +300,9 @@ namespace MoreGamemodes
             if (IsLeader(player))
                 name = Utils.ColorString(Color.yellow, "★") + name;
             if (Options.ArrowToLeader.GetBool() && player == seer && !IsLeader(player) && GetLeader(player) != null && !player.Data.IsDead)
-                name += Utils.ColorString(Palette.PlayerColors[GetTeam(player)], Utils.GetArrow(player.GetRealPosition(), GetLeader(player).transform.position));
+                name += Utils.ColorString(Palette.PlayerColors[GetTeam(player)], Utils.GetArrow(player.transform.position, GetLeader(player).transform.position));
             if (Options.ArrowToNearestEnemyLeader.GetBool() && player == seer && GetTeam(player) != byte.MaxValue && GetClosestEnemyLeader(player) != null && !player.Data.IsDead)
-                name += Utils.ColorString(Palette.PlayerColors[GetTeam(GetClosestEnemyLeader(player))], Utils.GetArrow(player.GetRealPosition(), GetClosestEnemyLeader(player).transform.position));
+                name += Utils.ColorString(Palette.PlayerColors[GetTeam(GetClosestEnemyLeader(player))], Utils.GetArrow(player.transform.position, GetClosestEnemyLeader(player).transform.position));
             if (IsLeader(player) && (player == seer || GetTeam(player) == GetTeam(seer) || Options.LivesVisibleToEnemies.GetBool() || seer.Data.IsDead))
                 name += "\n" + livesText;
             return name;
@@ -368,7 +368,7 @@ namespace MoreGamemodes
         public PlayerControl GetClosestEnemyLeader(PlayerControl player)
         {
             if (GetTeam(player) == byte.MaxValue) return null;
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)

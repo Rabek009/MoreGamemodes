@@ -7,7 +7,7 @@ namespace MoreGamemodes
         public static NetworkedPlayerInfo AntiBlackout_LastExiled;
 
         [HarmonyPatch(typeof(ExileController), nameof(ExileController.WrapUp))]
-        class BaseExileControllerPatch
+        class WrapUpPatch
         {
             public static void Postfix(ExileController __instance)
             {
@@ -15,8 +15,19 @@ namespace MoreGamemodes
             }
         }
 
-        [HarmonyPatch(typeof(AirshipExileController), nameof(AirshipExileController.WrapUpAndSpawn))]
-        class AirshipExileControllerPatch
+        [HarmonyPatch(typeof(AirshipExileController), nameof(AirshipExileController.Animate))]
+        class AirshipExileControllerAnimatePatch
+        {
+            public static void Postfix(AirshipExileController __instance, ref Il2CppSystem.Collections.IEnumerator __result)
+            {
+                var patcher = new CoroutinPatcher(__result);
+                patcher.AddPrefix(typeof(AirshipExileController._WrapUpAndSpawn_d__11), () =>
+                    WrapUpAndSpawnPatch.Postfix(__instance)
+                );
+                __result = patcher.EnumerateWithPatch();
+            }
+        }
+        class WrapUpAndSpawnPatch
         {
             public static void Postfix(AirshipExileController __instance)
             {
@@ -29,8 +40,6 @@ namespace MoreGamemodes
             if (!AmongUsClient.Instance.AmHost) return;
             if (exiled != null && exiled.Object != null && exiled.Object.GetDeathReason() == DeathReasons.Alive)
                 exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
-            if (exiled != null)
-                exiled.IsDead = true;
             if (AntiBlackout.ShowDoubleAnimation && exiled != null)
             {
                 GameManager.Instance.ShouldCheckForGameEnd = false;
@@ -66,10 +75,6 @@ namespace MoreGamemodes
                 }
             }, 0.9f);
             CustomGamemode.Instance.OnExile(exiled);
-            
-            if (exiled == null || exiled.Object == null) return;
-            if (exiled.Object.GetDeathReason() == DeathReasons.Alive)
-                exiled.Object.RpcSetDeathReason(DeathReasons.Exiled);
         }
     }
 

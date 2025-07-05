@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace MoreGamemodes
 {
     public class Amnesiac : CustomRole
@@ -25,8 +27,13 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (SeeArrowToNearestBody.GetBool() && !Player.Data.IsDead && Player.GetClosestDeadBody() != null)
-                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.GetRealPosition(), Player.GetClosestDeadBody().transform.position));
+                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.transform.position, Player.GetClosestDeadBody().transform.position));
             return "";
+        }
+
+        public override bool ShouldContinueGame()
+        {
+            return Object.FindObjectOfType<DeadBody>() != null;
         }
 
         public Amnesiac(PlayerControl player)

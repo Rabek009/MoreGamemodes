@@ -175,10 +175,10 @@ namespace MoreGamemodes
             {
                 if (pc.GetRole().IsImpostor() && !pc.Data.IsDead)
                     ++impostors;
-                if (pc.GetRole().IsNeutralKilling() && !pc.Data.IsDead)
+                if ((pc.GetRole().IsNeutralKilling() || pc.GetRole().ShouldContinueGame()) && !pc.Data.IsDead)
                     isKillerAlive = true;
-                if (pc.GetRole().IsCounted() && !pc.Data.IsDead)
-                    ++playerCount;
+                if (!pc.Data.IsDead)
+                    playerCount += pc.GetRole().GetPlayerCount();
             }
             if (!isKillerAlive && impostors * 2 >= playerCount)
             {

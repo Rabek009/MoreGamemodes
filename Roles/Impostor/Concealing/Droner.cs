@@ -82,9 +82,9 @@ namespace MoreGamemodes
 
         public override bool OnCheckVanish()
         {
-            ControlledDrone = Utils.RpcCreateDrone(Player, Player.GetRealPosition());
-            DronePosition = Player.GetRealPosition();
-            RealPosition = Player.GetRealPosition();
+            ControlledDrone = Utils.RpcCreateDrone(Player, Player.transform.position);
+            DronePosition = Player.transform.position;
+            RealPosition = Player.transform.position;
             SendRPC();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
@@ -180,7 +180,7 @@ namespace MoreGamemodes
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
             writer.Write(RealPosition != null);
             if (RealPosition != null)
-                NetHelpers.WriteVector2((Vector2)RealPosition, writer);
+                NetHelpers.WriteVector2(RealPosition.Value, writer);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
@@ -205,8 +205,9 @@ namespace MoreGamemodes
                 Player.NetTransform.SnapTo(position, (ushort)(Player.NetTransform.lastSequenceId + 128));
             }
             else
-                Player.NetTransform.SnapTo((Vector2)RealPosition, (ushort)(Player.NetTransform.lastSequenceId + 128));
+                Player.NetTransform.SnapTo(RealPosition.Value, (ushort)(Player.NetTransform.lastSequenceId + 128));
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+            sender.StartMessage(-1);
             sender.StartRpc(Player.NetTransform.NetId, (byte)RpcCalls.SnapTo)
                 .WriteVector2(Player.transform.position)
                 .Write((ushort)(Player.NetTransform.lastSequenceId + 32767))
@@ -219,6 +220,9 @@ namespace MoreGamemodes
                 .WriteVector2(Player.transform.position)
                 .Write(Player.NetTransform.lastSequenceId)
                 .EndRpc();
+            sender.EndMessage();
+            sender.SendMessage();
+            ControlledDrone.Owner = null;
             ControlledDrone = null;
             DronePosition = Vector2.zero;
             RealPosition = null;

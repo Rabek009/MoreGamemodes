@@ -13,7 +13,6 @@ namespace MoreGamemodes
 {
     static class AntiCheat
     {
-        public static Dictionary<byte, float> TimeSinceLastTask;
         public static List<byte> LobbyDeadBodies;
         public static Dictionary<byte, float> TimeSinceRoleChange;
         public static List<byte> ChangedTasks;
@@ -48,14 +47,13 @@ namespace MoreGamemodes
             {RpcCalls.CancelPet, 40},
             {RpcCalls.CheckZipline, 1},
             {RpcCalls.CheckSpore, 5},
-            {RpcCalls.CheckShapeshift, 10},
-            {RpcCalls.CheckVanish, 10},
-            {RpcCalls.CheckAppear, 10},
+            {RpcCalls.CheckShapeshift, 25},
+            {RpcCalls.CheckVanish, 25},
+            {RpcCalls.CheckAppear, 25},
         };
 
         public static void Init()
         {
-            TimeSinceLastTask = new Dictionary<byte, float>();
             LobbyDeadBodies = new List<byte>();
             TimeSinceRoleChange = new Dictionary<byte, float>();
             ChangedTasks = new List<byte>();
@@ -189,22 +187,16 @@ namespace MoreGamemodes
                         HandleCheat(pc, "CompleteTask Rpc in lobby");
                         return true;
                     }
-                    if (TimeSinceLastTask.ContainsKey(pc.PlayerId) && TimeSinceLastTask[pc.PlayerId] < 0.1f)
-                    {
-                        HandleCheat(pc, "Auto complete tasks");
-                        return true;
-                    }
                     if ((MeetingHud.Instance && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating) || ExileController.Instance)
                     {
                         HandleCheat(pc, "Doing task during meeting");
                         return true;
                     }
-                    if (pc.GetSelfRole().IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId))
+                    if (pc.GetSelfRole().IsImpostor() && !TimeSinceRoleChange.ContainsKey(pc.PlayerId) && !pc.Data.IsDead)
                     {
                         HandleCheat(pc, "Doing task as impostor");
                         return true;
                     }
-                    TimeSinceLastTask[pc.PlayerId] = 0f;
                     break;
                 case RpcCalls.Exiled:
                 case RpcCalls.SetName:
@@ -870,8 +862,6 @@ namespace MoreGamemodes
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (TimeSinceLastTask.ContainsKey(pc.PlayerId))
-                    TimeSinceLastTask[pc.PlayerId] += Time.fixedDeltaTime;
                 if (TimeSinceRoleChange.ContainsKey(pc.PlayerId))
                     TimeSinceRoleChange[pc.PlayerId] += Time.fixedDeltaTime;
                 if (TimeSinceLastStartCleaning.ContainsKey(pc.PlayerId))

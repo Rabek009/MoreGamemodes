@@ -1,5 +1,4 @@
-﻿using AmongUs.InnerNet.GameDataMessages;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Hazel;
 
 namespace MoreGamemodes

@@ -185,7 +185,7 @@ namespace MoreGamemodes
                     CustomRoles roleType = CustomRolesHelper.CommandRoleNames[role];
                     if (CustomRolesHelper.IsVanilla(roleType)) continue;
                     if ((roleType == CustomRoles.Immortal && !Immortal.CanBeGuessed.GetBool()) || (roleType == CustomRoles.SecurityGuard && !SecurityGuard.CanBeGuessed.GetBool()) || 
-                        (roleType == CustomRoles.Mortician && !Mortician.CanBeGuessed.GetBool())) continue;
+                        (roleType == CustomRoles.Mortician && !Mortician.CanBeGuessed.GetBool()) || (roleType == CustomRoles.Mayor && !Mayor.CanBeGuessed.GetBool())) continue;
                     if (Options.RolesChance[roleType].Id < id * 100000 || Options.RolesChance[roleType].Id >= id * 100000 + 100000) continue;
                     int num = i % 3;
 			        int num2 = i / 3;

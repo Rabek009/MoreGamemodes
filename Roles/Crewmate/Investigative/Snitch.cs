@@ -15,7 +15,7 @@ namespace MoreGamemodes
                     {
                         if (!ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)].ContainsKey(CustomRoles.Snitch))
                             ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = ("★", Color);
-                        ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = (ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch].Item1 + Utils.GetArrow(pc.GetRealPosition(), Player.transform.position), Color);
+                        ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch] = (ClassicGamemode.instance.NameSymbols[(pc.PlayerId, pc.PlayerId)][CustomRoles.Snitch].Item1 + Utils.GetArrow(pc.transform.position, Player.transform.position), Color);
                     }
                 }
             }
@@ -38,7 +38,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if ((pc.GetRole().IsImpostor() || (pc.GetRole().IsNeutralKilling() && CanFindNeutralKillers.GetBool())) && !pc.Data.IsDead)
-                        postfix += Utils.ColorString(pc.GetRole().Color, Utils.GetArrow(Player.GetRealPosition(), pc.transform.position));
+                        postfix += Utils.ColorString(pc.GetRole().Color, Utils.GetArrow(Player.transform.position, pc.transform.position));
                 }
             }
             return postfix;

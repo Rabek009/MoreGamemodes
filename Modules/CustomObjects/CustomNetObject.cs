@@ -57,10 +57,9 @@ namespace MoreGamemodes
             sender.SendMessage();
         }
 
-        public void RpcTeleport(Vector2 position, SendOption sendOption)
+        public void RpcTeleport(Vector2 position)
         {
             if (lastOffset == 0f) return;
-			playerControl.NetTransform.SnapTo(position + Vector2.up * PlayerControlOffset, (ushort)(playerControl.NetTransform.lastSequenceId + 1));
             if (PlayerControlOffset != lastOffset)
             {
                 lastOffset = PlayerControlOffset;
@@ -112,13 +111,6 @@ namespace MoreGamemodes
                 sender.SendMessage();
                 return;
             }
-            else
-            {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo, sendOption, -1);
-		        NetHelpers.WriteVector2(position + Vector2.up * PlayerControlOffset, writer);
-		        writer.Write(playerControl.NetTransform.lastSequenceId);
-                AmongUsClient.Instance.FinishRpcImmediately(writer);
-            }
             Position = position;
         }
 
@@ -163,7 +155,11 @@ namespace MoreGamemodes
 
         public virtual void OnFixedUpdate()
         {
-            
+            playerControl.NetTransform.SnapTo(Position + Vector2.up * PlayerControlOffset, (ushort)(playerControl.NetTransform.lastSequenceId + 1));
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(playerControl.NetTransform.NetId, (byte)RpcCalls.SnapTo, SendOption.None, -1);
+		    NetHelpers.WriteVector2(Position + Vector2.up * PlayerControlOffset, writer);
+		    writer.Write(playerControl.NetTransform.lastSequenceId);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 
         public virtual void OnMeeting()
@@ -190,8 +186,10 @@ namespace MoreGamemodes
                 MessageWriter msg = MessageWriter.Get(SendOption.Reliable);
                 msg.StartMessage(5);
                 msg.Write(AmongUsClient.Instance.GameId);
+                msg.StartMessage(4);
                 SpawnGameDataMessage item = AmongUsClient.Instance.CreateSpawnMessage(playerControl, -2, SpawnFlags.None);
                 item.SerializeValues(msg);
+                msg.EndMessage();
                 if (Utils.IsVanillaServer())
                 {
                     for (uint i = 1; i <= 3; ++i)
@@ -316,8 +314,10 @@ namespace MoreGamemodes
             MessageWriter msg = MessageWriter.Get(SendOption.Reliable);
 			msg.StartMessage(5);
 			msg.Write(AmongUsClient.Instance.GameId);
+            msg.StartMessage(4);
 			SpawnGameDataMessage item = AmongUsClient.Instance.CreateSpawnMessage(playerControl, -2, SpawnFlags.None);
             item.SerializeValues(msg);
+            msg.EndMessage();
             if (Utils.IsVanillaServer())
             {
                 for (uint i = 1; i <= 3; ++i)

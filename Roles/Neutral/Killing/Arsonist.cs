@@ -172,10 +172,10 @@ namespace MoreGamemodes
             bool isKillerAlive = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if ((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling()) && !pc.Data.IsDead && pc != Player)
+                if ((pc.GetRole().IsImpostor() || pc.GetRole().IsNeutralKilling() || pc.GetRole().ShouldContinueGame()) && !pc.Data.IsDead && pc != Player)
                     isKillerAlive = true;
-                if (pc.GetRole().IsCounted() && !pc.Data.IsDead)
-                    ++playerCount;
+                if (!pc.Data.IsDead)
+                    playerCount += pc.GetRole().GetPlayerCount();
             }
             if (!isKillerAlive && playerCount <= 2 && isPlayerAlive)
             {

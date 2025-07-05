@@ -6,6 +6,7 @@ namespace MoreGamemodes
     {
         public override void OnFixedUpdate()
         {
+            base.OnFixedUpdate();
             Timer += Time.deltaTime;
             if (Timer >= Duration / 5f && Frame == 0)
             {

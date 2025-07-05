@@ -95,8 +95,8 @@ namespace MoreGamemodes
 
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
-            if (IsPaintActive && Vector2.Distance(shapeshifter.GetRealPosition(), GetPaintBattleLocation(shapeshifter.PlayerId)) < 5f)
-                Utils.RpcCreateDeadBody(shapeshifter.GetRealPosition(), (byte)shapeshifter.CurrentOutfit.ColorId, shapeshifter);
+            if (IsPaintActive && Vector2.Distance(shapeshifter.transform.position, GetPaintBattleLocation(shapeshifter.PlayerId)) < 5f)
+                Utils.RpcCreateDeadBody(shapeshifter.transform.position, (byte)shapeshifter.CurrentOutfit.ColorId, shapeshifter);
             return false;
         }
 
@@ -112,7 +112,7 @@ namespace MoreGamemodes
                 PaintTime -= Time.fixedDeltaTime;
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Vector2.Distance(pc.GetRealPosition(), GetPaintBattleLocation(pc.PlayerId)) > 5f)
+                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(pc.PlayerId)) > 5f)
                         pc.RpcTeleport(GetPaintBattleLocation(pc.PlayerId));
                 }
                 if (PaintTime <= 0f)
@@ -135,7 +135,7 @@ namespace MoreGamemodes
                 }
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (Vector2.Distance(pc.GetRealPosition(), GetPaintBattleLocation(VotingPlayerId)) > 5f)
+                    if (Vector2.Distance(pc.transform.position, GetPaintBattleLocation(VotingPlayerId)) > 5f)
                         pc.RpcTeleport(GetPaintBattleLocation(VotingPlayerId));
                 }
                 PaintBattleVotingTime -= Time.fixedDeltaTime;

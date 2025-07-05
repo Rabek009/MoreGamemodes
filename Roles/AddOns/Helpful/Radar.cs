@@ -6,7 +6,7 @@ namespace MoreGamemodes
         {
             var target = Player.GetClosestPlayer();
             if (target != null)
-                return Utils.ColorString(AddOnsHelper.AddOnColors[AddOns.Radar], "\n" + Utils.GetArrow(Player.GetRealPosition(), target.transform.position));
+                return Utils.ColorString(AddOnsHelper.AddOnColors[AddOns.Radar], "\n" + Utils.GetArrow(Player.transform.position, target.transform.position));
             return "";
         }
 

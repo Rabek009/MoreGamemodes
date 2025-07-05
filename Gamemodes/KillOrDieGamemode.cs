@@ -266,7 +266,7 @@ namespace MoreGamemodes
         public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
         {
             if (IsKiller(player) && Options.ArrowToNearestSurvivor.GetBool() && player == seer && GetClosestSurvivor(player) != null && !player.Data.IsDead)
-                name += "\n" + Utils.ColorString(Color.blue, Utils.GetArrow(player.GetRealPosition(), GetClosestSurvivor(player).transform.position));
+                name += "\n" + Utils.ColorString(Color.blue, Utils.GetArrow(player.transform.position, GetClosestSurvivor(player).transform.position));
             return name;
         }
 
@@ -297,7 +297,7 @@ namespace MoreGamemodes
 
         public PlayerControl GetClosestSurvivor(PlayerControl player)
         {
-            Vector2 playerpos = player.GetRealPosition();
+            Vector2 playerpos = player.transform.position;
             Dictionary<PlayerControl, float> pcdistance = new();
             float dis;
             foreach (PlayerControl p in PlayerControl.AllPlayerControls)

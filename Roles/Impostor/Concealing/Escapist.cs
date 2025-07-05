@@ -32,7 +32,7 @@ namespace MoreGamemodes
         {
             if (MarkedPosition == null)
             {
-                MarkedPosition = Player.GetRealPosition();
+                MarkedPosition = Player.transform.position;
                 var room = Player.GetPlainShipRoom();
                 if (room != null)
                     MarkedPositionRoom = room.RoomId;
@@ -40,7 +40,7 @@ namespace MoreGamemodes
                 new LateTask(() => Player.RpcSetAbilityCooldown(TeleportCooldown.GetFloat()), 0.2f);
                 return false;
             }
-            Player.RpcTeleport((Vector2)MarkedPosition);
+            Player.RpcTeleport(MarkedPosition.Value);
             MarkedPosition = null;
             MarkedPositionRoom = null;
             SendRPC();
@@ -61,7 +61,7 @@ namespace MoreGamemodes
         public override string GetNamePostfix()
         {
             if (MarkedPosition == null)
-                return Utils.ColorString(Color, "\n<size=1.8>Marked position: None</size>");
+                return Utils.ColorString(Color, "\n<size=1.8>Marked position: <b>None</b></size>");
             if (MarkedPositionRoom == null)
                 return Utils.ColorString(Color, "\n<size=1.8>Marked position: " + (Main.RealOptions.GetByte(ByteOptionNames.MapId) is 2 or 5 ? "Outside" : "Hallway") + "</size>");
             return Utils.ColorString(Color, "\n<size=1.8>Marked position: " + TranslationController.Instance.GetString((SystemTypes)MarkedPositionRoom) + "</size>");
@@ -84,7 +84,7 @@ namespace MoreGamemodes
             MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
             writer.Write(MarkedPosition != null);
             if (MarkedPosition != null)
-                NetHelpers.WriteVector2((Vector2)MarkedPosition, writer);
+                NetHelpers.WriteVector2(MarkedPosition.Value, writer);
             AmongUsClient.Instance.FinishRpcImmediately(writer);
         }
 

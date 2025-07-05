@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using AmongUs.GameOptions;
 using UnityEngine;
@@ -17,7 +16,7 @@ namespace MoreGamemodes
             {"investigator", CustomRoles.Investigator},
             {"mortician", CustomRoles.Mortician},
             {"snitch", CustomRoles.Snitch},
-            //{"detective", CustomRoles.Detective},
+            {"sniffer", CustomRoles.Sniffer},
             {"sheriff", CustomRoles.Sheriff},
             {"niceguesser", CustomRoles.NiceGuesser},
             {"shaman", CustomRoles.Shaman},
@@ -39,6 +38,7 @@ namespace MoreGamemodes
             {"archer", CustomRoles.Archer},
             {"trapster", CustomRoles.Trapster},
             {"parasite", CustomRoles.Parasite},
+            {"undertaker", CustomRoles.Undertaker},
             {"opportunist", CustomRoles.Opportunist},
             {"amnesiac", CustomRoles.Amnesiac},
             {"romantic", CustomRoles.Romantic},
@@ -61,8 +61,8 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, "Investigator"},
             {CustomRoles.Mortician, "Mortician"},
             {CustomRoles.Snitch, "Snitch"},
-            //{CustomRoles.Detective, "Detective"},
-            {CustomRoles.Sheriff, "Sheriff"},
+            {CustomRoles.Sniffer, "Sniffer"},
+            { CustomRoles.Sheriff, "Sheriff"},
             {CustomRoles.NiceGuesser, "Nice Guesser"},
             {CustomRoles.Shaman, "Shaman"},
             {CustomRoles.Immortal, "Immortal"},
@@ -83,6 +83,7 @@ namespace MoreGamemodes
             {CustomRoles.Archer, "Archer"},
             {CustomRoles.Trapster, "Trapster"},
             {CustomRoles.Parasite, "Parasite"},
+            {CustomRoles.Undertaker, "Undertaker"},
             {CustomRoles.Opportunist, "Opportunist"},
             {CustomRoles.Amnesiac, "Amnesiac"},
             {CustomRoles.Romantic, "Romantic"},
@@ -105,7 +106,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, "See if someone is good or evil"},
             {CustomRoles.Mortician, "Get info about bodies"},
             {CustomRoles.Snitch, "Complete tasks to find killers"},
-            //{CustomRoles.Detective, "Find killers by their footprints"},
+            {CustomRoles.Sniffer, "Sniff who was near who"},
             {CustomRoles.Sheriff, "Shoot impostors"},
             {CustomRoles.NiceGuesser, "Guess evil roles during meeting"},
             {CustomRoles.Shaman, "Curse killers and make them die"},
@@ -127,6 +128,7 @@ namespace MoreGamemodes
             {CustomRoles.Archer, "Shoot players from far away"},
             {CustomRoles.Trapster, "Trap players on dead bodies"},
             {CustomRoles.Parasite, "Sacrifice to make someone impostor"},
+            {CustomRoles.Undertaker, "Help teammates hide dead bodies"},
             {CustomRoles.Opportunist, "Survive to win"},
             {CustomRoles.Amnesiac, "Remember role from dead body"},
             {CustomRoles.Jester, "Get voted out"},
@@ -149,7 +151,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, "Investigator (Crewmate): You can use pet button to switch between task and investigate mode. In task mode you can do tasks. In investigate mode you have kill button. Use kill button to investigate player. If players is good, his name will become green. But if player is evil then his name will turn red. But some roles that are good can show as evil, also sometimes evil roles show as good. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed, you don't have task and investigate mode. You can do tasks and investigate at the same time."},
             {CustomRoles.Mortician, "Mortician (Crewmate): When you report dead body, you know target's role, killer's role and how old is body. During meeting you see death reasons. Depending on options you have arrow pointing to nearest dead body."},
             {CustomRoles.Snitch, "Snitch (Crewmate): After completing all tasks you see who is impostor and depending on options neutral killer. Depending on options you can also see arrows to them. But if you're close to complete tasks, killers will know you and see arrow to you. Depending on options you might have more tasks than other crewmates. Finish tasks fast and don't get killed!"},
-            //{CustomRoles.Detective, "Detective (Crewmate): You can see footprints of other players all the time. These footprints disappear after few seconds. Footprints have the same color as player. If player is shapeshifted or his identity is hidden in any way, footprints will be in their fake color. Depending on options all footprints might be gray."},
+            {CustomRoles.Sniffer, "Sniffer (Crewmate): You can use pet button to switch between task and sniff mode. In task mode you can do tasks. In sniff mode you have kill button. Use kill button to sniff a player once per round. During meeting you can see who was near that player after you sniffed him. These players are given in random order. Invisible players don't count and shapeshifter can cause fake result.\n\nIf you have mod installed, you don't have task and sniff mode. You can do tasks and sniff at the same time."},
             {CustomRoles.Sheriff, "Sheriff (Crewmate): You can use pet button to switch between task and kill mode. In task mode you can do tasks. In kill mode you have kill button. You can kill impostors and depending on options neutrals. If you try to kill someone you can't, you die from misfire. Depending on options your target dies on misfire too.\n\nIf you have mod installed, you don't have task and kill mode. You can do tasks and kill at the same time."},
             {CustomRoles.NiceGuesser, "Nice Guesser (Crewmate): You can guess evil roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 6 is trapster, you should type <i>/guess 6 trapster</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead."},
             {CustomRoles.Shaman, "Shaman (Crewmate): During meeting you can curse someone. If that player is killer he has to kill someone next round, or he will die and is informed about it. If that player can't kill, nothing will happen. You can curse max 1 person per meeting. You can't call meeting, but you can still report dead body. You have limited ability uses, but you can do tasks to increase it.\n\nIf you have mod installed you can use curse button to curse someone."},
@@ -171,6 +173,7 @@ namespace MoreGamemodes
             {CustomRoles.Archer, "Archer (Impostor): You can use pet button to kill nearest player without teleporting to them, but it uses arrow. Kill range is limited, but you can kill through walls. You can kill normally without using it. You have limited arrows, but you can get more by killing. You can only shoot, when your cooldown is 0."},
             {CustomRoles.Trapster, "Trapster (Impostor): After killing someone, you place trap on dead body. Next player, who tries to report that body (or interact with it in any way) will be trapped on it unable to move and use abilities. Dead body can trap only 1 person at the time. If someone gets trapped on your body, your kill cooldown will decrease and you will get alerted."},
             {CustomRoles.Parasite, "Parasite (Impostor): You can use pet button to turn nearby player into impostor, but you die after doing it. Depending on options that person becomes regular impostor, parasite or random impostor role. You can kill like regular impostor, but after kill your ability cooldown reset. You can use ability when you're suspicious to turn someone less suspicious into impostor."},
+            {CustomRoles.Undertaker, "Undertaker (Impostor): You can use shift button to select a target (it must be another impostor). That impostor is target until either he kills someone, dies or after some time passes. If selected impostor kills someone, dead body is teleported to you. When you're last impostor you can't use your ability, but depending on options you might get kill cooldown reduction."},
             {CustomRoles.Opportunist, "Opportunist (Neutral): Survive to the end to win with winning team. If you die, you lose."},
             {CustomRoles.Amnesiac, "Amnesiac (Neutral): Use report button on dead body to steal role of dead player. Depending on options you have arrow pointing to nearest dead body. You don't have win condition, you have to steal role from dead body and then win."},
             {CustomRoles.Jester, "Jester (Neutral): Get voted out to win alone. Act suspicious to make people think you're impostor."},
@@ -193,7 +196,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, Utils.HexToColor("#118385")},
             {CustomRoles.Mortician, Utils.HexToColor("#4d5254")},
             {CustomRoles.Snitch, Utils.HexToColor("#7c9923")},
-            //{CustomRoles.Detective, Utils.HexToColor("#1c30e8")},
+            {CustomRoles.Sniffer, Utils.HexToColor("#269669")},
             {CustomRoles.Sheriff, Utils.HexToColor("#e8e11e")},
             {CustomRoles.NiceGuesser, Utils.HexToColor("#f5f17a")},
             {CustomRoles.Shaman, Utils.HexToColor("#dce7e8")},
@@ -215,6 +218,7 @@ namespace MoreGamemodes
             {CustomRoles.Archer, Palette.ImpostorRed},
             {CustomRoles.Trapster, Palette.ImpostorRed},
             {CustomRoles.Parasite, Palette.ImpostorRed},
+            {CustomRoles.Undertaker, Palette.ImpostorRed},
             {CustomRoles.Opportunist, Utils.HexToColor("#1dde16")},
             {CustomRoles.Amnesiac, Utils.HexToColor("#0fbcbf")},
             {CustomRoles.Romantic, Utils.HexToColor("#bf0d96")},
@@ -237,7 +241,7 @@ namespace MoreGamemodes
             {CustomRoles.Investigator, CustomRoleTypes.CrewmateInvestigative},
             {CustomRoles.Mortician, CustomRoleTypes.CrewmateInvestigative},
             {CustomRoles.Snitch, CustomRoleTypes.CrewmateInvestigative},
-            //{CustomRoles.Detective, CustomRoleTypes.CrewmateInvestigative},
+            {CustomRoles.Sniffer, CustomRoleTypes.CrewmateInvestigative},
             {CustomRoles.Sheriff, CustomRoleTypes.CrewmateKilling},
             {CustomRoles.NiceGuesser, CustomRoleTypes.CrewmateKilling},
             {CustomRoles.Shaman, CustomRoleTypes.CrewmateKilling},
@@ -259,6 +263,7 @@ namespace MoreGamemodes
             {CustomRoles.Archer, CustomRoleTypes.ImpostorKilling},
             {CustomRoles.Trapster, CustomRoleTypes.ImpostorSupport},
             {CustomRoles.Parasite, CustomRoleTypes.ImpostorSupport},
+            {CustomRoles.Undertaker, CustomRoleTypes.ImpostorSupport},
             {CustomRoles.Opportunist, CustomRoleTypes.NeutralBenign},
             {CustomRoles.Amnesiac, CustomRoleTypes.NeutralBenign},
             {CustomRoles.Romantic, CustomRoleTypes.NeutralBenign},
@@ -301,9 +306,9 @@ namespace MoreGamemodes
                 case CustomRoles.Snitch:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Snitch(player);
                     break;
-                // case CustomRoles.Detective:
-                //     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Detective(player);
-                //     break;
+                case CustomRoles.Sniffer:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Sniffer(player);
+                    break;
                 case CustomRoles.Sheriff:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Sheriff(player);
                     break;
@@ -366,6 +371,9 @@ namespace MoreGamemodes
                     break;
                 case CustomRoles.Parasite:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Parasite(player);
+                    break;
+                case CustomRoles.Undertaker:
+                    ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Undertaker(player);
                     break;
                 case CustomRoles.Opportunist:
                     ClassicGamemode.instance.AllPlayersRole[player.PlayerId] = new Opportunist(player);
@@ -471,6 +479,7 @@ namespace MoreGamemodes
         public static int GetRoleChance(CustomRoles role)
         {
             if (role is CustomRoles.Crewmate or CustomRoles.Impostor) return 0;
+            if (role == CustomRoles.Undertaker && (Main.RealOptions != null ? Main.RealOptions.GetInt(Int32OptionNames.NumImpostors) : GameOptionsManager.Instance.CurrentGameOptions.GetInt(Int32OptionNames.NumImpostors)) < 2) return 0;
             if (IsVanilla(role))
             {
                 switch (role)
@@ -497,6 +506,7 @@ namespace MoreGamemodes
         public static int GetRoleCount(CustomRoles role)
         {
             if (role is CustomRoles.Crewmate or CustomRoles.Impostor) return 0;
+            if (role == CustomRoles.Undertaker && (Main.RealOptions != null ? Main.RealOptions.GetInt(Int32OptionNames.NumImpostors) : GameOptionsManager.Instance.CurrentGameOptions.GetInt(Int32OptionNames.NumImpostors)) < 2) return 0;
             if (IsVanilla(role))
             {
                 switch (role)
@@ -533,7 +543,7 @@ public enum CustomRoles
     Investigator,
     Mortician,
     Snitch,
-    //Detective,
+    Sniffer,
     Sheriff,
     NiceGuesser,
     Shaman,
@@ -556,6 +566,7 @@ public enum CustomRoles
     Archer,
     Trapster,
     Parasite,
+    Undertaker,
     //Neutral
     Opportunist,
     Amnesiac,

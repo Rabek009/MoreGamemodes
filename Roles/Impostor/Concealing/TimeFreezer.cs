@@ -1,6 +1,7 @@
 using AmongUs.GameOptions;
 using Hazel;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace MoreGamemodes
 {
@@ -23,6 +24,14 @@ namespace MoreGamemodes
         public override bool OnCheckMurder(PlayerControl target)
         {
             if (AbilityDuration > 0f && !CanKillDuringFreeze.GetBool()) return false;
+            if (AbilityDuration > 0f && KilledPlayers.Contains(target.PlayerId)) return false;
+            if (AbilityDuration > 0f)
+            {
+                KilledPlayers.Add(target.PlayerId);
+                Player.RpcTeleport(target.transform.position);
+                Player.RpcSetKillTimer(Main.OptionKillCooldowns[Player.PlayerId]);
+                return false;
+            }
             return true;
         }
 
@@ -35,6 +44,17 @@ namespace MoreGamemodes
             }
             if (AbilityDuration <= 0f && AbilityDuration > -1f)
             {
+                foreach (var playerId in KilledPlayers)
+                {
+                    var player = Utils.GetPlayerById(playerId);
+                    if (player != null && !player.Data.IsDead)
+                    {
+                        ClassicGamemode.instance.PlayerKiller[player.PlayerId] = Player.PlayerId;
+                        ++Main.PlayerKills[Player.PlayerId];
+                        player.RpcMurderPlayer(player, true);
+                    }
+                }
+                KilledPlayers = new List<byte>();
                 AbilityDuration = -1f;
                 Player.RpcResetAbilityCooldown();
             }
@@ -47,6 +67,7 @@ namespace MoreGamemodes
                 new LateTask(() => Player.RpcSetAbilityCooldown(0.001f), 0.2f);
                 return false;
             }
+            KilledPlayers = new List<byte>();
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (pc == Player) continue;
@@ -93,6 +114,7 @@ namespace MoreGamemodes
         public override void OnRevive()
         {
             AbilityDuration = -1f;
+            KilledPlayers = new List<byte>();
         }
 
         public TimeFreezer(PlayerControl player)
@@ -103,9 +125,11 @@ namespace MoreGamemodes
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
             AbilityDuration = -1f;
+            KilledPlayers = new List<byte>();
         }
 
         public float AbilityDuration;
+        public List<byte> KilledPlayers;
 
         public static OptionItem Chance;
         public static OptionItem Count;
@@ -118,10 +142,10 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(500100, CustomRoles.TimeFreezer, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(500101, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            FreezeCooldown = FloatOptionItem.Create(500102, "Freeze cooldown", new(10f, 60f, 5f), 30f, TabGroup.ImpostorRoles, false)
+            FreezeCooldown = FloatOptionItem.Create(500102, "Freeze cooldown", new(10f, 60f, 5f), 25f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            FreezeDuration = FloatOptionItem.Create(500103, "Freeze duration", new(1f, 20f, 1f), 5f, TabGroup.ImpostorRoles, false)
+            FreezeDuration = FloatOptionItem.Create(500103, "Freeze duration", new(1f, 20f, 1f), 4f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
             CanUseVents = BooleanOptionItem.Create(500104, "Can use vents", false, TabGroup.ImpostorRoles, false)

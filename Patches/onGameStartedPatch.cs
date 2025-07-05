@@ -11,6 +11,9 @@ namespace MoreGamemodes
     {
         public static void Postfix(AmongUsClient __instance)
         {
+            Main.IsInvisible = new Dictionary<byte, bool>();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                Main.IsInvisible[pc.PlayerId] = false;
             if (!__instance.AmHost)
             {
                 if (CustomGamemode.Instance == null)
@@ -36,7 +39,6 @@ namespace MoreGamemodes
             Main.ProtectCooldowns = new Dictionary<byte, float>();
             Main.OptionProtectCooldowns = new Dictionary<byte, float>();
             Main.TimeSinceLastPet = new Dictionary<byte, float>();
-            Main.IsInvisible = new Dictionary<byte, bool>();
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
@@ -63,7 +65,6 @@ namespace MoreGamemodes
                 Main.ProtectCooldowns[pc.PlayerId] = 0f;
                 Main.OptionProtectCooldowns[pc.PlayerId] = 0f;
                 Main.TimeSinceLastPet[pc.PlayerId] = 0f;
-                Main.IsInvisible[pc.PlayerId] = false;
                 ExplosionHole.LastSpeedDecrease[pc.PlayerId] = 0;
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
@@ -129,8 +130,7 @@ namespace MoreGamemodes
                     {
                         pc.RpcSetPet("pet_clank");
                         Main.StandardPets[pc.PlayerId] = "pet_clank";
-                        new LateTask(() => pc.RpcShapeshift(pc, false), 0.2f);
-                    }  
+                    }
                 }
             }
             if (CustomGamemode.Instance.DisableTasks)
@@ -138,7 +138,7 @@ namespace MoreGamemodes
                 foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.Data.RpcSetTasks(new byte[0]);
             }
-            
+
             bool shouldPerformVentInteractions = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {

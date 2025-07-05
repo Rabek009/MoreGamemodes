@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using AmongUs.GameOptions;
 using Hazel;
-using InnerNet;
 using System.Linq;
 using System;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using AmongUs.InnerNet.GameDataMessages;
 
 namespace MoreGamemodes
 {
@@ -378,6 +376,7 @@ namespace MoreGamemodes
                 __instance.MurderPlayer(target, murderResultFlags);
             }
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+            sender.StartMessage(-1);
             if (Main.IsInvisible[target.PlayerId] && murderResultFlags == MurderResultFlags.Succeeded)
             {
                 sender.StartRpc(target.NetTransform.NetId, (byte)RpcCalls.SnapTo)
@@ -410,6 +409,8 @@ namespace MoreGamemodes
                 .WriteNetObject(target)
                 .Write((int)murderResultFlags)
                 .EndRpc();
+            sender.EndMessage();
+            sender.SendMessage();
             return false;
         }
     }
@@ -580,7 +581,7 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             PlayerControl phantom = __instance;
-            if (CustomGamemode.Instance.OnCheckVanish(phantom))
+            if (Main.GameStarted && CustomGamemode.Instance.OnCheckVanish(phantom))
             {
                 if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic && PlayerControl.LocalPlayer != phantom && !PlayerControl.LocalPlayer.GetRole().IsImpostor())
                 {
