@@ -73,7 +73,7 @@ namespace MoreGamemodes
 			msg.StartMessage(6);
 			msg.Write(AmongUsClient.Instance.GameId);
 			msg.WritePacked(int.MaxValue);
-			for (int i = 0; i < AmongUsClient.Instance.allObjects.allObjects.Count; i++)
+            for (int i = 0; i < AmongUsClient.Instance.allObjects.allObjects.Count; i++)
             {
                 if (msg.Length > 800)
                 {
@@ -94,6 +94,8 @@ namespace MoreGamemodes
                 msg.StartMessage(1);
                 msg.EndMessage();
                 msg.EndMessage();
+                if (innerNetObject.OwnerId < -2)
+                    innerNetObject.OwnerId = -2;
             }
 			msg.EndMessage();
 			AmongUsClient.Instance.SendOrDisconnect(msg);

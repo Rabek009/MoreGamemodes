@@ -16,12 +16,12 @@ namespace MoreGamemodes
         {
             if (Input.GetKeyDown(KeyCode.LeftControl) && !Main.GameStarted)
                 PlayerControl.LocalPlayer.GetComponent<CircleCollider2D>().enabled = !PlayerControl.LocalPlayer.gameObject.GetComponent<CircleCollider2D>().enabled;
-            
+
             if (Input.GetKeyDown(KeyCode.Q) && Main.GameStarted && CustomGamemode.Instance.Gamemode == Gamemodes.Classic && !PlayerControl.LocalPlayer.GetRole().CanUseKillButton() && PlayerControl.LocalPlayer.GetRole().ForceKillButton() && HudManager.Instance.KillButton.isActiveAndEnabled)
                 HudManager.Instance.KillButton.DoClick();
 
             if (!AmongUsClient.Instance.AmHost) return;
-            
+
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.L, KeyCode.LeftShift }) && AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started)
             {
                 List<byte> winners = new();
@@ -68,6 +68,25 @@ namespace MoreGamemodes
             if (GetKeysDown(new[] { KeyCode.Return, KeyCode.V, KeyCode.LeftShift }) && MeetingHud.Instance)
             {
                 MeetingHud.Instance.ForceSkipAll();
+            }
+
+            if (GetKeysDown(new[] { KeyCode.Return, KeyCode.R, KeyCode.LeftShift }) && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
+            {
+                foreach (var option in Options.RolesChance.Values)
+                    option.CurrentValue = 20;
+                foreach (var option in Options.AddOnsChance.Values)
+                    option.CurrentValue = 20;
+                GameManager.Instance.RpcSyncCustomOptions();
+                var menu = Object.FindObjectOfType<GameOptionsMenu>();
+                if (menu)
+                    GameOptionsMenuPatch.ReOpenSettingMenu();
+                var viewSettingsPane = Object.FindObjectOfType<LobbyViewSettingsPane>();
+                if (viewSettingsPane != null)
+                {
+                    if (viewSettingsPane.currentTab != StringNames.OverviewCategory && viewSettingsPane.currentTab != StringNames.RolesCategory)
+                        viewSettingsPane.RefreshTab();
+                    LobbyViewPatch.ReCreateButtons(viewSettingsPane);
+                }
             }
         }
 

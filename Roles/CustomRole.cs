@@ -242,7 +242,8 @@ namespace MoreGamemodes
         {
             return IsNeutralKilling() ||
             Role is CustomRoles.Investigator or
-            CustomRoles.Sniffer or 
+            CustomRoles.Sniffer or
+            CustomRoles.Oracle or
             CustomRoles.Sheriff or
             CustomRoles.Medic;
         }

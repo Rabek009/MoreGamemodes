@@ -11,8 +11,6 @@ namespace MoreGamemodes
     {
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
-            if (exiled != null && exiled.Object != null)
-                exiled.Object.SyncPlayerName(false, true);
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 pc.GetRole().OnExile(exiled);
@@ -37,7 +35,7 @@ namespace MoreGamemodes
                     text += " and " + neutralKillers + Utils.ColorString(Color.gray, neutralKillers == 1 ? " neutral killer" : " neutral killers");
                 text += " remain";
                 text = Utils.ColorString(Color.white, text);
-			    foreach (var pc in PlayerControl.AllPlayerControls)
+                foreach (var pc in PlayerControl.AllPlayerControls)
                     pc.Notify(text);
             }
             if (exiled != null && exiled.Object != null && Main.RealOptions.GetBool(BoolOptionNames.ConfirmImpostor))
@@ -116,7 +114,7 @@ namespace MoreGamemodes
         public override void OnToggleHighlight(PlayerControl __instance)
         {
             var player = PlayerControl.LocalPlayer;
-			__instance.cosmetics.currentBodySprite.BodySprite.material.SetColor("_OutlineColor", player.GetRole().Color);
+            __instance.cosmetics.currentBodySprite.BodySprite.material.SetColor("_OutlineColor", player.GetRole().Color);
         }
 
         public override void OnSetOutline(Vent __instance, bool mainTarget)
@@ -162,7 +160,8 @@ namespace MoreGamemodes
                 foreach (var addOn in pc.GetAddOns())
                     addOn.OnVotingComplete(__instance, states, exiled, tie);
             }
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 if (exiled != null && exiled.Object != null && Main.RealOptions.GetBool(BoolOptionNames.ConfirmImpostor))
                 {
                     int impostors = 0;
@@ -385,7 +384,7 @@ namespace MoreGamemodes
                 ChosenRoles.Add(role);
             foreach (var role in ChosenImpostorRoles)
                 ChosenRoles.Add(role);
-            
+
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 var role = ChosenRoles[rand.Next(0, ChosenRoles.Count)];
@@ -558,7 +557,7 @@ namespace MoreGamemodes
                 pc.GetRole().OnIntroDestroy();
                 foreach (var addOn in pc.GetAddOns())
                     addOn.OnIntroDestroy();
-            }  
+            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 if (!pc.GetRole().IsCrewmate())
@@ -638,6 +637,14 @@ namespace MoreGamemodes
                 return false;
             if (!Medic.OnGlobalCheckMurder(killer, target)) return false;
             if (!Romantic.OnGlobalCheckMurder(killer, target)) return false;
+            if (IsCamouflageActive)
+            {
+                target.SetColor(Main.StandardColors[target.PlayerId]);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.SetColor, SendOption.Reliable, -1);
+                writer.Write(target.Data.NetId);
+                writer.Write(Main.StandardColors[target.PlayerId]);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+            }
             if (!Undertaker.OnGlobalCheckMurder(killer, target)) return false;
             if (!killer.GetRole().OnCheckMurderLate(target))
                 return false;
@@ -669,6 +676,9 @@ namespace MoreGamemodes
         public override bool OnCheckShapeshift(PlayerControl shapeshifter, PlayerControl target)
         {
             if (Main.Timer < 5f) return false;
+            if (RoleblockTimer[shapeshifter.PlayerId] > 0f)
+                return false;
+            if (IsCamouflageActive) return false;
             if (!shapeshifter.GetRole().CanUseShiftButton())
                 return false;
             if (!shapeshifter.GetRole().OnCheckShapeshift(target))
@@ -711,6 +721,7 @@ namespace MoreGamemodes
             }
             if (report)
             {
+                Camouflager.OnGlobalReportDeadBody(__instance, target);
                 Shaman.OnGlobalReportDeadBody(__instance, target);
                 Arsonist.OnGlobalReportDeadBody(__instance, target);
                 if (CustomRolesHelper.GetRoleChance(CustomRoles.Altruist) > 0)
@@ -725,7 +736,8 @@ namespace MoreGamemodes
                 }
                 bool isDead = __instance.Data.IsDead;
                 __instance.Data.IsDead = false;
-                new LateTask(() => {
+                new LateTask(() =>
+                {
                     __instance.Data.IsDead = isDead;
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
@@ -745,7 +757,7 @@ namespace MoreGamemodes
                         Utils.SetAllVentInteractions();
                     }
                 }, 0.01f);
-                new LateTask(() => Utils.SyncAllPlayersName(true, true, true), 0.5f);
+                new LateTask(() => Utils.SyncAllPlayersName(true, SendOption.Reliable, true), 0.5f);
             }
             return report;
         }
@@ -756,7 +768,7 @@ namespace MoreGamemodes
             {
                 foreach (var ar in PlayerControl.AllPlayerControls)
                     NameSymbols[(pc.PlayerId, ar.PlayerId)] = new Dictionary<CustomRoles, (string, Color)>();
-            } 
+            }
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 bool syncSettings = false;
@@ -792,12 +804,12 @@ namespace MoreGamemodes
                 }
                 if (syncSettings)
                     pc.SyncPlayerSettings();
-                
+
                 if (pc.Data.IsDead)
                     TimeSinceDeath[pc.PlayerId] += Time.fixedDeltaTime;
                 else
                     TimeSinceDeath[pc.PlayerId] = 0f;
-                
+
                 pc.GetRole().OnFixedUpdate();
                 foreach (var addOn in pc.GetAddOns())
                     addOn.OnFixedUpdate();
@@ -859,6 +871,7 @@ namespace MoreGamemodes
         {
             if (RoleblockTimer[player.PlayerId] > 0f)
                 return false;
+            if (IsCamouflageActive && systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1) return false;
             if (!player.GetRole().OnUpdateSystem(__instance, systemType, reader))
                 return false;
             bool cancel = false;
@@ -995,6 +1008,8 @@ namespace MoreGamemodes
                 foreach (var addOn in player.GetAddOns())
                     postfix += addOn.GetNamePostfix();
             }
+            if (IsCamouflageActive && player != seer)
+                name = Utils.ColorString(Color.clear, "Player");
             return prefix + name + postfix;
         }
 
@@ -1160,8 +1175,8 @@ namespace MoreGamemodes
             else if (player.Data.Tasks.Count == 0 && DefaultTasks.ContainsKey(player.PlayerId))
             {
                 player.Data.Tasks.Clear();
-		        for (int i = 0; i < DefaultTasks[player.PlayerId].Count; i++)
-			        player.Data.Tasks.Add(new NetworkedPlayerInfo.TaskInfo(DefaultTasks[player.PlayerId][i].TypeId, DefaultTasks[player.PlayerId][i].Id));
+                for (int i = 0; i < DefaultTasks[player.PlayerId].Count; i++)
+                    player.Data.Tasks.Add(new NetworkedPlayerInfo.TaskInfo(DefaultTasks[player.PlayerId][i].TypeId, DefaultTasks[player.PlayerId][i].Id));
                 player.Data.MarkDirty();
             }
             new LateTask(() => player.RpcSetKillTimer(9.8f), 0.2f);
@@ -1193,6 +1208,7 @@ namespace MoreGamemodes
             CompletedTasks = new Dictionary<byte, List<uint>>();
             PlayersDiedThisRound = new List<byte>();
             NameSymbols = new Dictionary<(byte, byte), Dictionary<CustomRoles, (string, Color)>>();
+            IsCamouflageActive = false;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 AllPlayersAddOns[pc.PlayerId] = new List<AddOn>();
@@ -1229,5 +1245,6 @@ namespace MoreGamemodes
         public Dictionary<byte, List<uint>> CompletedTasks;
         public List<byte> PlayersDiedThisRound;
         public Dictionary<(byte, byte), Dictionary<CustomRoles, (string, Color)>> NameSymbols;
+        public bool IsCamouflageActive;
     }
 }

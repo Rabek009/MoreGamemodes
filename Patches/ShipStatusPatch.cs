@@ -357,7 +357,6 @@ namespace MoreGamemodes
             new LateTask(() =>
             {
                 if (MeetingHud.Instance) return;
-                Utils.SyncAllPlayersName(false, true);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.Data.IsDead) continue;
@@ -381,23 +380,6 @@ namespace MoreGamemodes
                     }
                 }
             }, 0.2f, "Set MixUp Name");
-        }
-    }
-    
-    [HarmonyPatch(typeof(MushroomMixupSabotageSystem), nameof(MushroomMixupSabotageSystem.Deteriorate))]
-    class MushroomMixupSabotageSystemDeterioratePatch
-    {
-        public static void Prefix(MushroomMixupSabotageSystem __instance, [HarmonyArgument(0)] float deltaTime)
-        {
-            if (!AmongUsClient.Instance.AmHost || MeetingHud.Instance) return;
-            if (__instance.IsActive && __instance.currentSecondsUntilHeal - deltaTime <= 0)
-            {
-                new LateTask(() =>
-                {
-                    if (!MeetingHud.Instance)
-                        Utils.SyncAllPlayersName(false, true);
-                }, 0.2f, "Fix MixUp Name");
-            }
         }
     }
 }

@@ -2,22 +2,23 @@
 
 ## About the mod
 
-More Gamemodes is the Among Us mod that addes new gamemodes. Only host need to have mod to work.<br>
+More Gamemodes is the Among Us mod that addes new gamemodes and roles. Only host need to have mod for it to work.<br>
 Among Us version: 16.1.0<br>
 Join to discord server: https://discord.gg/jJe5kPpbFJ
 
 ## Hotkeys
 
 ### Host only
-| HotKey              | Function                          | Usable Scene |
-| ------------------- | --------------------------------- | ------------ |
-| `Shift`+`L`+`Enter` | End the game immediatly           | In Game      |
-| `Shift`+`M`+`Enter` | Skip meeting to end               | In Meeting   |
-| `Shift`+`Z`+`Enter` | Make yourself dead                | In Game      |
-| `C`                 | Cancel game start                 | In Countdown |
-| `Shift`             | Start the game immediately        | In Countdown |
-| `Ctrl` + `Delete`   | Reset options to default          | In Lobby     |
-| `Shift`+`V`+`Enter` | End meeting (with counting votes) | In Meeting   |
+| HotKey              | Function                            | Usable Scene |
+| ------------------- | ----------------------------------- | ------------ |
+| `Shift`+`L`+`Enter` | End the game immediatly             | In Game      |
+| `Shift`+`M`+`Enter` | Skip meeting to end                 | In Meeting   |
+| `Shift`+`Z`+`Enter` | Make yourself dead                  | In Game      |
+| `C`                 | Cancel game start                   | In Countdown |
+| `Shift`             | Start the game immediately          | In Countdown |
+| `Ctrl` + `Delete`   | Reset options to default            | In Lobby     |
+| `Shift`+`V`+`Enter` | End meeting (with counting votes)   | In Meeting   |
+| `Shift`+`R`+`Enter` | Enable all custom roles and add-ons | In Lobby     |
 
 ### Mod client only
 | HotKey | Function              | Usable Scene |
@@ -66,6 +67,10 @@ Join to discord server: https://discord.gg/jJe5kPpbFJ
 | ----------------------- |
 | Gamemode                |
 | No game end             |
+| Anti-cheat              |
+| Cheating penalty        |
+| Amogus                  |
+| Tasks needed to win     |
 | Can use /color command  |
 | Enable fortegreen       |
 | Can use /name command   |
@@ -555,23 +560,30 @@ Players can't use zipline on the fungle.
 
 ## Other functions
 
+### Anti-cheat
+Stop hackers from ruining your experience! Anti-cheat can detect most hacks and inform you about it.
+WARNING - some hackers can cause fake anti-cheat alerts. If it says that some player is hacking, it's not always true.
+
+### Ban list
+If you ban a player, he can't join any More Gamemodes lobby you host in the future! You can always add/remove players from ban list in MGM_DATA folder (you have to remove player from both ban lists to get him unbanned). You can always disable ban list in client options if you don't want it for some reason.
+
 ### Playing with fewer than 4 players
 You can start game when you only want even if there's less than 4 players in lobby.
 
 ### Unlimited impostors
 There is no impostors limit. You can start 4 players game with 3 impostors. Or even do 1 crewmate vs 14 impostors.
 
-### You can play in public lobbies
-When you join to non modded lobby mod is disabled and you can play normally. You can even play in lobbies with other host only mod.
-
 ### Walking throught walls in public lobby
 `Ctrl` works in non modded lobbies, so you can just walk throught walls. This function works only in lobby.
 
 ### No chat character limit
-You can use any character in chat. Also using text formatting is allowed. Only limits are that you can't use chat formatting in chat and can't change size of text as non host. Tutorial on how to use text formatting: https://docs.unity3d.com/Packages/com.unity.textmeshpro@3.2/manual/RichTextSupportedTags.html
+You can use any character in chat. Also using text formatting is allowed. Tutorial on how to use text formatting: https://docs.unity3d.com/Packages/com.unity.textmeshpro@3.2/manual/RichTextSupportedTags.html
+
+### Tasks needed to win
+You can decide how many tasks have to be done for task win (it affects all gamemodes with tasks except speedrun). It's 100% by default, but if you decrease that value, not all tasks have to be completed. It can stop afk and lazy players from delaying task win.
 
 ### Dleks eht compatibility
-You can play dleks eht (reversed skeld) map! Venting is bugged, but everything else works fine.
+You can play dleks eht (reversed skeld) map!
 
 ## Others
 
@@ -579,7 +591,7 @@ You can play dleks eht (reversed skeld) map! Venting is bugged, but everything e
 When you set players to 16 or higher, still max 15 players can join. But on custom servers you can host lobbies with more players.
 
 ### Bugged cooldown
-If you set cooldown to 0 or lower, you disable this function. 0 second cooldown don't working. Set this value to 0,001 seconds, if you want no kill cooldown.
+If you set kill cooldown to 0 or lower, you disable kills. 0 cooldown doesn't work. Set kill cooldown to 0,001 seconds, if you want no kill cooldown.
 
 ## Credits
 1. Using much code from Town of Host

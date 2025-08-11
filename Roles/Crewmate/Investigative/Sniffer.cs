@@ -189,14 +189,14 @@ namespace MoreGamemodes
             {
                 return Utils.ColorString(Color, "\n<size=1.8>Mode: Task\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")\n</size>") +
-                    Utils.ColorString(Color.red, "<size=1.8>Sniff cooldown: " + (int)(Cooldown + 0.99f) + "s\n</size>") +
-                    Utils.ColorString(Color, "Target: " + (Target == byte.MaxValue ? "<b>None</b>" : Main.StandardNames[Target]));
+                    Utils.ColorString(Color.red, "<size=1.8>Sniff cooldown: " + (int)(Cooldown + 0.99f) + "s\n") +
+                    Utils.ColorString(Color, "Target: " + (Target == byte.MaxValue ? "<b>None</b>" : Main.StandardNames[Target]) + "</size>");
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {
                 return Utils.ColorString(Color, "\n<size=1.8>Mode: Sniff\n</size><size=65%>") + Utils.ColorString(Color.magenta, "(") +
                     Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")\n</size>") +
-                    Utils.ColorString(Color, "Target: " + (Target == byte.MaxValue ? "<b>None</b>" : Main.StandardNames[Target]));
+                    Utils.ColorString(Color, "Target: " + (Target == byte.MaxValue ? "<b>None</b>" : Main.StandardNames[Target]) + "</size>");
             }
             return "";
         }

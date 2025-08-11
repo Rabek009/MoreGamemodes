@@ -48,7 +48,7 @@ namespace MoreGamemodes
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.BombTag)
             {
                 if (CheckAndEndGameForEveryoneDied()) return false;
-                if (CheckAndEndGameForBattleRoyale()) return false;   
+                if (CheckAndEndGameForBattleRoyale()) return false;
             }
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.RandomItems)
             {
@@ -89,7 +89,7 @@ namespace MoreGamemodes
                     if (CheckAndEndGameForCrewmateWin()) return false;
                     return false;
                 }
-                return true;    
+                return true;
             }
             else if (CustomGamemode.Instance.Gamemode == Gamemodes.BaseWars)
             {
@@ -113,7 +113,7 @@ namespace MoreGamemodes
         private static bool CheckAndEndGameForTaskWin()
         {
             if (GameData.Instance.TotalTasks <= 0) return false;
-            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
+            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -130,7 +130,7 @@ namespace MoreGamemodes
         private static bool CheckAndEndGameForTaskWinClassic()
         {
             if (GameData.Instance.TotalTasks <= 0) return false;
-            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks)
+            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -221,7 +221,7 @@ namespace MoreGamemodes
 
             ICriticalSabotage critical;
             if (sys != null &&
-                (critical = sys.TryCast<ICriticalSabotage>()) != null && 
+                (critical = sys.TryCast<ICriticalSabotage>()) != null &&
                 critical.Countdown < 0f)
             {
                 List<byte> winners = new();
@@ -399,18 +399,17 @@ namespace MoreGamemodes
 
         private static bool CheckAndEndGameForZombiesTaskWin()
         {
-            foreach (var pc in PlayerControl.AllPlayerControls)
+            if (GameData.Instance.TotalTasks <= 0) return false;
+            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
             {
-                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc) && !pc.AllTasksCompleted())
-                    return false;
+                List<byte> winners = new();
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc))
+                        winners.Add(pc.PlayerId);
+                }
+                StartEndGame(GameOverReason.CrewmatesByTask, winners, CustomWinners.Crewmates);
             }
-            List<byte> winners = new();
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (!Main.StandardRoles[pc.PlayerId].IsImpostor() && !ZombiesGamemode.instance.IsZombie(pc))
-                    winners.Add(pc.PlayerId);
-            }
-            StartEndGame(GameOverReason.CrewmatesByTask, winners, CustomWinners.Crewmates);
             return true;
         }
 
@@ -648,6 +647,22 @@ namespace MoreGamemodes
     {
         public static bool Prefix(ref bool __result)
         {
+            __result = false;
+            return false;
+        }
+    }
+    
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.CheckEndGameViaTasks))]
+    class CheckEndGameViaTasksPatch
+    {
+        public static bool Prefix(GameManager __instance, ref bool __result)
+        {
+            GameData.Instance.RecomputeTaskCounts();
+            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
+            {
+                __instance.RpcEndGame(GameOverReason.CrewmatesByTask, false);
+                __result = true;
+            }
             __result = false;
             return false;
         }

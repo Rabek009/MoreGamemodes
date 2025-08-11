@@ -18,7 +18,7 @@ namespace MoreGamemodes
                 SendRPC();
             }
             else
-                player.Notify(Utils.ColorString(Color, "<size=1.8>You are cursed by shaman! Kill someone to remove curse or you will die when meeting is called!</size>"));
+                player.Notify(Utils.ColorString(Color, "You are cursed by shaman! Kill someone to remove curse or you will die when meeting is called!"));
         }
 
         public override void OnGlobalMurderPlayer(PlayerControl killer, PlayerControl target)

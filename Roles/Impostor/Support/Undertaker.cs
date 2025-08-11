@@ -29,16 +29,16 @@ namespace MoreGamemodes
             Target = target.PlayerId;
             AbilityDuration = TargetTimeLimit.GetFloat();
             Player.RpcSetAbilityCooldown(TargetTimeLimit.GetFloat());
-            target.Notify(Utils.ColorString(Color, "<size=1.8>Undertaker chose you! Your victim's body will be teleported to undertaker!</size>"));
+            target.Notify(Utils.ColorString(Color, "Undertaker chose you! Your victim's body will be teleported to undertaker!"));
             return false;
         }
 
         public override void OnFixedUpdate()
         {
             if (Player.Data.IsDead || Target == byte.MaxValue) return;
-            if (IsLastImpostor() != lastImpostor)
+            if (IsLastImpostor() != LastImpostor)
             {
-                lastImpostor = IsLastImpostor();
+                LastImpostor = IsLastImpostor();
                 Player.SyncPlayerSettings();
             }
             var target = Utils.GetPlayerById(Target);
@@ -141,12 +141,12 @@ namespace MoreGamemodes
             AbilityUses = -1f;
             Target = byte.MaxValue;
             AbilityDuration = 0f;
-            lastImpostor = false;
+            LastImpostor = false;
         }
 
         public byte Target;
         public float AbilityDuration;
-        public bool lastImpostor;
+        public bool LastImpostor;
 
         public static OptionItem Chance;
         public static OptionItem Count;

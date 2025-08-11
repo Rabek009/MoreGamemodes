@@ -8,6 +8,7 @@ namespace MoreGamemodes
     {
         public override void OnExile(NetworkedPlayerInfo exiled)
         {
+            if (Player.Data.IsDead && !CanWinAfterDeath.GetBool()) return;
             if (exiled != null && exiled.PlayerId == Target && GameManager.Instance.ShouldCheckForGameEnd && !Options.NoGameEnd.GetBool())
             {
                 List<byte> winners = new();
@@ -87,6 +88,7 @@ namespace MoreGamemodes
         };
         public static RolesAfterTargetDeath CurrentRoleAfterTargetDeath => (RolesAfterTargetDeath)RoleAfterTargetDeath.GetValue();
         public static OptionItem CanVoteForTarget;
+        public static OptionItem CanWinAfterDeath;
         public static void SetupOptionItem()
         {
             Chance = RoleOptionItem.Create(900200, CustomRoles.Executioner, TabGroup.NeutralRoles, false);
@@ -95,6 +97,8 @@ namespace MoreGamemodes
             RoleAfterTargetDeath = StringOptionItem.Create(900202, "Role after target death", rolesAfterTargetDeath, 0, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             CanVoteForTarget = BooleanOptionItem.Create(900203, "Can vote for target", true, TabGroup.NeutralRoles, false)
+                .SetParent(Chance);
+            CanWinAfterDeath = BooleanOptionItem.Create(900204, "Can win after death", false, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Executioner] = Chance;
             Options.RolesCount[CustomRoles.Executioner] = Count;

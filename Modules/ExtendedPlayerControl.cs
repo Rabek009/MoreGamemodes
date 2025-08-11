@@ -143,46 +143,6 @@ namespace MoreGamemodes
                 Main.KillCooldowns[player.PlayerId] = 0f;
         }
 
-        public static void RpcSetNamePrivate(this PlayerControl player, string name, PlayerControl seer = null, bool isRaw = false)
-        {
-            if (player == null || name == null || !AmongUsClient.Instance.AmHost) return;
-            if (seer == null) seer = player;
-            if (AntiCheat.BannedPlayers.Contains(player.NetId)) return;
-            if (Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] == name && !isRaw) return;
-            
-            if (seer.AmOwner)
-            {
-                player.cosmetics.nameText.SetText(name);
-                Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
-                return;
-            }
-            var clientId = seer.GetClientId();
-            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, clientId);
-            writer.Write(player.Data.NetId);
-            writer.Write(name);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
-            Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
-        }
-
-        public static void SyncPlayerName(this PlayerControl player, bool isMeeting, bool force, bool classicMeeting = false)
-        {
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                var name = player.BuildPlayerName(pc, isMeeting, classicMeeting);
-                if (!force && Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] == name) continue;
-                Main.LastNotifyNames[(player.PlayerId, pc.PlayerId)] = name;
-                if (pc.AmOwner)
-                {
-                    player.cosmetics.nameText.SetText(name);
-                    continue;
-                }
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, pc.GetClientId());
-                writer.Write(player.Data.NetId);
-                writer.Write(name);
-                AmongUsClient.Instance.FinishRpcImmediately(writer);
-            }
-        }
-
         public static bool TryCast<T>(this Il2CppObjectBase obj, out T casted)
         where T : Il2CppObjectBase
         {
@@ -530,6 +490,10 @@ namespace MoreGamemodes
             player.RpcSetSkin(skinId);
             player.RpcSetVisor(visorId);
             player.RpcSetPet(player.Data.IsDead ? "" : petId);
+            if (Main.AllShapeshifts[player.PlayerId] != player.PlayerId)
+            {
+                new LateTask(() => player.RpcShapeshift(player, false), 0f);
+            }
         }
 
         public static void RpcSetRoleV2(this PlayerControl player, RoleTypes role)
@@ -582,7 +546,7 @@ namespace MoreGamemodes
 			    return;
 		    }
             if (!CustomGamemode.Instance.OnReportDeadBody(player, target, true)) return;
-            Utils.SyncAllPlayersName(true, true);  
+            Utils.SyncAllPlayersName(true, SendOption.Reliable);  
             for (int i = CustomNetObject.CustomObjects.Count - 1; i >= 0; --i)
                 CustomNetObject.CustomObjects[i].OnMeeting();
             AntiCheat.OnMeeting();
@@ -759,7 +723,10 @@ namespace MoreGamemodes
                     break;
                 }
             }
-            player.RpcSetPet(Main.StandardPets[player.PlayerId]);
+            if ((ClassicGamemode.instance != null && ClassicGamemode.instance.IsCamouflageActive) || (RandomItemsGamemode.instance != null && RandomItemsGamemode.instance.CamouflageTimer > -1f))
+                player.RpcSetOutfit(15, "", "", "pet_test", "");
+            else
+                player.RpcSetPet(Main.StandardPets[player.PlayerId]);
             player.RpcSetDeathReason(DeathReasons.Alive);
             PlayerControl.LocalPlayer.RpcRemoveDeadBody(player.Data);
         }
@@ -834,7 +801,7 @@ namespace MoreGamemodes
 
         public static void Notify(this PlayerControl player, string message)
         {
-            Main.NameMessages[player.PlayerId].Add((message, 0f));
+            Main.NameMessages[player.PlayerId].Add(("<size=1.8>" + message + "</size>", 0f));
         }
 
         public static void RpcMakeInvisible(this PlayerControl player, bool isPhantom = false)

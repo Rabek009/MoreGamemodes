@@ -202,7 +202,7 @@ namespace MoreGamemodes
                     if (viewSettingsPane != null)
                     {
                         if (viewSettingsPane.currentTab != StringNames.OverviewCategory && viewSettingsPane.currentTab != StringNames.RolesCategory)
-                            viewSettingsPane.RefreshTab();
+                            viewSettingsPane.ChangeTab(viewSettingsPane.currentTab);
                         LobbyViewPatch.ReCreateButtons(viewSettingsPane);
                     }
                     break;

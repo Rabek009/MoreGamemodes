@@ -153,11 +153,6 @@ namespace MoreGamemodes
                     Main.AllShapeshifts[shapeshifter.PlayerId] = shapeshifter.PlayerId;
                     break;
             }
-            new LateTask(() =>
-            {
-                if (!MeetingHud.Instance)
-                    shapeshifter.SyncPlayerName(false, true);
-            }, 1.2f, "Set Shapeshift Appearance");
             CustomGamemode.Instance.OnShapeshift(shapeshifter, target);
         }
     }
@@ -171,7 +166,7 @@ namespace MoreGamemodes
             if (AmongUsClient.Instance.IsGameOver || MeetingHud.Instance || (target == null && Utils.IsSabotage()) || __instance.Data.IsDead) return false;
             if (target != null && !target.IsDead && CustomGamemode.Instance.Gamemode != Gamemodes.Zombies) return false;
             if (!CustomGamemode.Instance.OnReportDeadBody(__instance, target, false)) return false;
-            Utils.SyncAllPlayersName(true, true);
+            Utils.SyncAllPlayersName(true, SendOption.Reliable);
             for (int i = CustomNetObject.CustomObjects.Count - 1; i >= 0; --i)
                 CustomNetObject.CustomObjects[i].OnMeeting();
             AntiCheat.OnMeeting();
@@ -201,7 +196,7 @@ namespace MoreGamemodes
             if (!__instance.AmOwner) return;
             if (Main.GameStarted && !MeetingHud.Instance && !ExileController.Instance)
             {
-                Utils.SyncAllPlayersName(false, false);
+                Utils.SyncAllPlayersName(false, SendOption.None);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (((pc.moveable || pc.petting) && !pc.inVent && !pc.shapeshifting) || pc.ForceKillTimerContinue)
@@ -319,7 +314,7 @@ namespace MoreGamemodes
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
             if (CustomGamemode.Instance.Gamemode == Gamemodes.Classic) return;
-            if (!Main.StandardRoles.ContainsKey(__instance.PlayerId) && !RoleManager.IsGhostRole(roleType))
+            if (!Main.StandardRoles.ContainsKey(__instance.PlayerId) && !(roleType is RoleTypes.CrewmateGhost or RoleTypes.ImpostorGhost or RoleTypes.GuardianAngel))
                 Main.StandardRoles[__instance.PlayerId] = roleType;
         }
     }
@@ -331,11 +326,11 @@ namespace MoreGamemodes
         public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] RoleTypes roleType)
         {
             if (!AmongUsClient.Instance.AmHost) return true;
-            if (RoleAssigned[__instance.PlayerId] && !RoleManager.IsGhostRole(roleType))
+            if (RoleAssigned[__instance.PlayerId] && !(roleType is RoleTypes.CrewmateGhost or RoleTypes.ImpostorGhost or RoleTypes.GuardianAngel))
                 return false;
-            if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && RoleManager.IsGhostRole(roleType))
+            if (CustomGamemode.Instance.Gamemode == Gamemodes.Zombies && roleType is RoleTypes.CrewmateGhost or RoleTypes.ImpostorGhost or RoleTypes.GuardianAngel)
                 return false;
-            if (RoleManager.IsGhostRole(roleType)) return true;
+            if (roleType is RoleTypes.CrewmateGhost or RoleTypes.ImpostorGhost or RoleTypes.GuardianAngel) return true;
             RoleAssigned[__instance.PlayerId] = true;
             __instance.StartCoroutine(__instance.CoSetRole(roleType, true));
             CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);

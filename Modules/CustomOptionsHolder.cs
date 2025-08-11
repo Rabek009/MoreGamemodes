@@ -76,6 +76,7 @@ namespace MoreGamemodes
         public static OptionItem CanUseTpoutCommand;
         public static OptionItem CanUseKcountCommand;
         public static OptionItem Amogus;
+        public static OptionItem TasksNeededToWin;
 
         //Hide and seek
         public static OptionItem Seekers;
@@ -412,12 +413,15 @@ namespace MoreGamemodes
                 .SetColor(Color.green);
             NoGameEnd = BooleanOptionItem.Create(3, "No game end", false, TabGroup.ModSettings, false)
                 .SetColor(Color.red);
-            AntiCheat = BooleanOptionItem.Create(4, "Anti Cheat", true, TabGroup.ModSettings, false)
+            AntiCheat = BooleanOptionItem.Create(4, "Anti-cheat", true, TabGroup.ModSettings, false)
                 .SetColor(Color.blue);
-            CheatingPenalty = StringOptionItem.Create(5, "Cheating Penalty", cheatingPenalties, 0, TabGroup.ModSettings, false)
+            CheatingPenalty = StringOptionItem.Create(5, "Cheating penalty", cheatingPenalties, 0, TabGroup.ModSettings, false)
                 .SetParent(AntiCheat);
             Amogus = BooleanOptionItem.Create(6, "Amogus", false, TabGroup.ModSettings, false)
                 .SetColor(Color.red);
+            TasksNeededToWin = IntegerOptionItem.Create(7, "Tasks needed to win", new IntegerValueRule(50, 100, 5), 100, TabGroup.ModSettings, false)
+                .SetColor(Color.yellow)
+                .SetValueFormat(OptionFormat.Percent);
             Commands = TextOptionItem.Create(10, "Commands", TabGroup.ModSettings)
                 .SetColor(Color.cyan);
             CanUseColorCommand = BooleanOptionItem.Create(11, "Can use /color command", false, TabGroup.ModSettings, false);
@@ -1131,6 +1135,7 @@ namespace MoreGamemodes
                 .SetColor(Palette.CrewmateBlue);
             Investigator.SetupOptionItem();
             Mortician.SetupOptionItem();
+            Oracle.SetupOptionItem();
             Sniffer.SetupOptionItem();
             Snitch.SetupOptionItem();
             CrewmateKilling = TextOptionItem.Create(200000, "Crewmate killing", TabGroup.CrewmateRoles)
@@ -1145,6 +1150,7 @@ namespace MoreGamemodes
             Medic.SetupOptionItem();
             CrewmateSupport = TextOptionItem.Create(400000, "Crewmate support", TabGroup.CrewmateRoles)
                 .SetColor(Palette.CrewmateBlue);
+            Bloody.SetupOptionItem();
             Judge.SetupOptionItem();
             Mayor.SetupOptionItem();
             Mutant.SetupOptionItem();
@@ -1156,6 +1162,7 @@ namespace MoreGamemodes
             SeeTeammateRoles = BooleanOptionItem.Create(500001, "See teammate roles", true, TabGroup.ImpostorRoles, false);
             ImpostorConcealing = TextOptionItem.Create(500010, "Impostor concealing", TabGroup.ImpostorRoles)
                 .SetColor(Palette.ImpostorRed);
+            Camouflager.SetupOptionItem();
             Droner.SetupOptionItem();
             Escapist.SetupOptionItem();
             TimeFreezer.SetupOptionItem();

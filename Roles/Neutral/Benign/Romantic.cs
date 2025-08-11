@@ -95,8 +95,8 @@ namespace MoreGamemodes
             {
                 Player.SetChatVisible(true);
                 target.SetChatVisible(true);
-                Player.Notify(Utils.ColorString(Color, "<size=1.8>Type /lc MESSAGE during round to chat with lover privately</size>"));
-                target.Notify(Utils.ColorString(Color, "<size=1.8>Type /lc MESSAGE during round to chat with lover privately</size>"));
+                Player.Notify(Utils.ColorString(Color, "Type /lc MESSAGE during round to chat with lover privately"));
+                target.Notify(Utils.ColorString(Color, "Type /lc MESSAGE during round to chat with lover privately"));
             }
             return false;
         }

@@ -123,7 +123,7 @@ namespace MoreGamemodes
             TeleportCooldown = FloatOptionItem.Create(500203, "Teleport cooldown", new(5f, 45f, 5f), 15f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            CanUseVents = BooleanOptionItem.Create(500204, "Can use vents", true, TabGroup.ImpostorRoles, false)
+            CanUseVents = BooleanOptionItem.Create(500204, "Can use vents", false, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Escapist] = Chance;
             Options.RolesCount[CustomRoles.Escapist] = Count;

@@ -112,7 +112,7 @@ namespace MoreGamemodes
 
         public override void OnSelectRolesPostfix()
         {
-            if (Options.SnSImpostorsAreVisible.GetBool()) return;
+            if (!Options.SnSImpostorsAreVisible.GetBool()) return;
             new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {

@@ -80,7 +80,7 @@ namespace MoreGamemodes
                     var SwitchSystem = ShipStatus.Instance.Systems[type].TryCast<SwitchSystem>();
                     return SwitchSystem != null && SwitchSystem.IsActive;
                 case SystemTypes.Reactor:
-                    if (mapId == 2) return false; 
+                    if (mapId == 2) return false;
                     else
                     {
                         var ReactorSystemType = ShipStatus.Instance.Systems[type].TryCast<ReactorSystemType>();
@@ -113,10 +113,10 @@ namespace MoreGamemodes
                     if (mapId != 5) return false;
                     var MushroomMixupSabotageSystem = ShipStatus.Instance.Systems[type].TryCast<MushroomMixupSabotageSystem>();
                     return MushroomMixupSabotageSystem != null && MushroomMixupSabotageSystem.IsActive;
-            default:
-                return false;
+                default:
+                    return false;
+            }
         }
-    }
         public static bool IsSabotage()
         {
             return IsActive(SystemTypes.LifeSupp) || IsActive(SystemTypes.Reactor) || IsActive(SystemTypes.Laboratory) || IsActive(SystemTypes.Electrical) || IsActive(SystemTypes.Comms) || IsActive(SystemTypes.MushroomMixupSabotage) || IsActive(SystemTypes.HeliSabotage);
@@ -134,8 +134,8 @@ namespace MoreGamemodes
                 {
                     writer.WritePacked(GameManager.Instance.NetId);
                     writer.StartMessage(GameManager.Instance.TryCast<NormalGameManager>() ? (byte)4 : (byte)5);
-				    writer.WriteBytesAndSize(byteArray);
-				    writer.EndMessage();
+                    writer.WriteBytesAndSize(byteArray);
+                    writer.EndMessage();
                 }
                 writer.EndMessage();
             }
@@ -204,28 +204,30 @@ namespace MoreGamemodes
             writer.Recycle();
         }
 
-        public static void CreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent)
+        public static void CreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent, bool reportable)
         {
             var baseColorId = deadBodyParent.Data.DefaultOutfit.ColorId;
             deadBodyParent.Data.DefaultOutfit.ColorId = colorId;
             DeadBody deadBody = Object.Instantiate(GameManager.Instance.DeadBodyPrefab);
-		    deadBody.enabled = false;
-		    deadBody.ParentId = deadBodyParent.PlayerId;
+            deadBody.enabled = false;
+            deadBody.ParentId = deadBodyParent.PlayerId;
             foreach (SpriteRenderer b in deadBody.bodyRenderers)
             {
                 deadBodyParent.SetPlayerMaterialColors(b);
             }
-		    deadBodyParent.SetPlayerMaterialColors(deadBody.bloodSplatter);
-		    Vector3 vector = position + deadBodyParent.KillAnimations[0].BodyOffset;
-		    vector.z = vector.y / 1000f;
-		    deadBody.transform.position = vector;
+            deadBodyParent.SetPlayerMaterialColors(deadBody.bloodSplatter);
+            Vector3 vector = position + deadBodyParent.KillAnimations[0].BodyOffset;
+            vector.z = vector.y / 1000f;
+            deadBody.transform.position = vector;
+            if (reportable)
+                deadBody.enabled = true;
             deadBodyParent.Data.DefaultOutfit.ColorId = baseColorId;
         }
 
         public static void RpcCreateDeadBody(Vector3 position, byte colorId, PlayerControl deadBodyParent)
         {
             if (deadBodyParent == null || !Main.GameStarted) return;
-            CreateDeadBody(position, colorId, deadBodyParent);
+            CreateDeadBody(position, colorId, deadBodyParent, false);
             PlayerControl playerControl = Object.Instantiate(AmongUsClient.Instance.PlayerPrefab, Vector2.zero, Quaternion.identity);
             playerControl.PlayerId = deadBodyParent.PlayerId;
             playerControl.isNew = false;
@@ -446,17 +448,16 @@ namespace MoreGamemodes
             return new Amogus();
         }
 
-        public static void SyncAllPlayersName(bool isMeeting, bool force, bool classicMeeting = false)
+        public static void SyncAllPlayersName(bool isMeeting, SendOption sendOption, bool classicMeeting = false)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
                 bool doSend = false;
-                CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
+                CustomRpcSender sender = CustomRpcSender.Create(sendOption);
                 sender.StartMessage(pc.GetClientId());
                 foreach (var ar in PlayerControl.AllPlayerControls)
                 {
                     var name = ar.BuildPlayerName(pc, isMeeting, classicMeeting);
-                    if (!force && Main.LastNotifyNames[(ar.PlayerId, pc.PlayerId)] == name) continue;
                     Main.LastNotifyNames[(ar.PlayerId, pc.PlayerId)] = name;
                     if (pc.AmOwner)
                     {
@@ -472,7 +473,7 @@ namespace MoreGamemodes
                     {
                         sender.EndMessage();
                         sender.SendMessage();
-                        sender = CustomRpcSender.Create(SendOption.Reliable);
+                        sender = CustomRpcSender.Create(sendOption);
                         sender.StartMessage(pc.GetClientId());
                         doSend = false;
                     }
@@ -515,7 +516,8 @@ namespace MoreGamemodes
                 sender.EndMessage();
                 sender.SendMessage();
             }
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 player.Data.MarkDirty();
             }, 0.5f);
         }
@@ -547,7 +549,8 @@ namespace MoreGamemodes
                 sender.EndMessage();
                 sender.SendMessage();
             }
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 player.Data.MarkDirty();
             }, 0.5f);
         }
@@ -560,11 +563,12 @@ namespace MoreGamemodes
                 if (Main.AllShapeshifts[pc.PlayerId] != pc.PlayerId) continue;
                 if (pc.AmOwner) continue;
                 MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(pc.NetId, (byte)RpcCalls.Shapeshift, SendOption.Reliable, pc.GetClientId());
-		        writer.WriteNetObject(PlayerControl.LocalPlayer);
-		        writer.Write(false);
-		        AmongUsClient.Instance.FinishRpcImmediately(writer);
-                new LateTask(() => {
-                    pc.RpcSetNamePrivate(pc.BuildPlayerName(pc, false), pc, true);
+                writer.WriteNetObject(PlayerControl.LocalPlayer);
+                writer.Write(false);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+                new LateTask(() =>
+                {
+                    //pc.RpcSetNamePrivate(pc.BuildPlayerName(pc, false), pc, true);
                     var outfit = pc.Data.Outfits[PlayerOutfitType.Default];
                     var sender = CustomRpcSender.Create(SendOption.Reliable);
                     sender.StartMessage(pc.GetClientId());
@@ -718,18 +722,18 @@ namespace MoreGamemodes
             }
             return true;
         }
-        
+
         public static bool IsValidHexCode(string hex)
         {
-             if (string.IsNullOrWhiteSpace(hex) || (hex.Length != 6 && hex.Length != 3)) return false;
-             foreach (char c in hex)
-             {
-                if (!Uri.IsHexDigit(c)) 
+            if (string.IsNullOrWhiteSpace(hex) || (hex.Length != 6 && hex.Length != 3)) return false;
+            foreach (char c in hex)
+            {
+                if (!Uri.IsHexDigit(c))
                     return false;
-             }
-             return true;
+            }
+            return true;
         }
-        
+
         public static string GetOptionNameSCM(this OptionItem optionItem)
         {
             if (optionItem.Name == "Enable")
@@ -888,7 +892,7 @@ namespace MoreGamemodes
             byte[] sha256Bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(puid));
             string sha256Hash = BitConverter.ToString(sha256Bytes).Replace("-", "").ToLower();
             return string.Concat(sha256Hash.AsSpan(0, 5), sha256Hash.AsSpan(sha256Hash.Length - 4));
-		}
+        }
 
         // From Reactor.gg
         public static bool IsVanillaServer()
@@ -897,6 +901,23 @@ namespace MoreGamemodes
             return ServerManager.Instance.CurrentRegion?.TryCast<StaticHttpRegionInfo>() is { } regionInfo &&
                    regionInfo.PingServer.EndsWith(Domain, StringComparison.Ordinal) &&
                    regionInfo.Servers.All(serverInfo => serverInfo.Ip.EndsWith(Domain, StringComparison.Ordinal));
+        }
+        
+        public static void Camouflage()
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (!pc.Data.IsDead)
+                    pc.RpcSetOutfit(15, "", "", "pet_test", "");
+            }
+        }
+        
+        public static void RevertCamouflage()
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                pc.RpcSetOutfit(Main.StandardColors[pc.PlayerId], Main.StandardHats[pc.PlayerId], Main.StandardSkins[pc.PlayerId], pc.Data.IsDead ? "" : Main.StandardPets[pc.PlayerId], Main.StandardVisors[pc.PlayerId]);
         }
     }
 }

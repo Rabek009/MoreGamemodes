@@ -223,6 +223,7 @@ namespace MoreGamemodes
             sender.EndMessage();
             sender.SendMessage();
             ControlledDrone.Owner = null;
+            ControlledDrone.SetInactive();
             ControlledDrone = null;
             DronePosition = Vector2.zero;
             RealPosition = null;

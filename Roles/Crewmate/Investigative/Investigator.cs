@@ -216,7 +216,7 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Percent);
             InitialAbilityUseLimit = FloatOptionItem.Create(100108, "Initial ability use limit", new(0f, 15f, 1f), 1f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
-            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(100109, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.5f, TabGroup.CrewmateRoles, false)
+            AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(100109, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.4f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Investigator] = Chance;
             Options.RolesCount[CustomRoles.Investigator] = Count;

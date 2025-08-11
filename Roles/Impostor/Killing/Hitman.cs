@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AmongUs.GameOptions;
 using Hazel;
+using System;
 
 namespace MoreGamemodes
 {
@@ -27,7 +28,7 @@ namespace MoreGamemodes
         {
             if (target.PlayerId == Target)
             {
-                new LateTask(() => Player.RpcSetKillTimer(0.5f), 0.5f);
+                Player.RpcSetKillTimer(Math.Max(KillCooldownAfterKill.GetFloat(), 0.001f));
                 ChangeTarget();
             }
         }
@@ -128,6 +129,7 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static OptionItem TargetChangeTime;
         public static OptionItem ShowArrowToTarget;
+        public static OptionItem KillCooldownAfterKill;
         public static void SetupOptionItem()
         {
             Chance = RoleOptionItem.Create(600200, CustomRoles.Hitman, TabGroup.ImpostorRoles, false);
@@ -138,6 +140,9 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             ShowArrowToTarget = BooleanOptionItem.Create(600203, "Show arrow to target", true, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
+            KillCooldownAfterKill = FloatOptionItem.Create(600204, "Kill cooldown after kill", new(0f, 30f, 0.5f), 5f, TabGroup.ImpostorRoles, false)
+                .SetParent(Chance)
+                .SetValueFormat(OptionFormat.Seconds);
             Options.RolesChance[CustomRoles.Hitman] = Chance;
             Options.RolesCount[CustomRoles.Hitman] = Count;
         }

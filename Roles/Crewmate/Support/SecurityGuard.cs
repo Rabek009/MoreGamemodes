@@ -205,7 +205,7 @@ namespace MoreGamemodes
             BlockVentCooldown = FloatOptionItem.Create(400102, "Block vent cooldown", new(5f, 60f, 2.5f), 15f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            InitialAbilityUseLimit = FloatOptionItem.Create(400103, "Initial ability use limit", new(0f, 14f, 1f), 1f, TabGroup.CrewmateRoles, false)
+            InitialAbilityUseLimit = FloatOptionItem.Create(400103, "Initial ability use limit", new(0f, 14f, 1f), 0f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             AbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(400104, "Ability use gain with each task completed", new(0f, 2f, 0.1f), 0.5f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);

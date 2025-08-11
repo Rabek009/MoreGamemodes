@@ -267,7 +267,7 @@ namespace MoreGamemodes
                         if (pc.IsMushroomMixupActive()) break;
                         SendRPC(pc, Items.None);
                         CamouflageTimer = Options.CamouflageDuration.GetFloat();
-                        Camouflage();
+                        Utils.Camouflage();
                         break;
                     case Items.MultiTeleport:
                         foreach (var ar in PlayerControl.AllPlayerControls)
@@ -380,7 +380,13 @@ namespace MoreGamemodes
                 return false;
             }
             if (CamouflageTimer > -1f)
-                target.RpcSetColor(Main.StandardColors[target.PlayerId]);
+            {
+                target.SetColor(Main.StandardColors[target.PlayerId]);
+                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(target.NetId, (byte)RpcCalls.SetColor, SendOption.Reliable, -1);
+                writer.Write(target.Data.NetId);
+                writer.Write(Main.StandardColors[target.PlayerId]);
+                AmongUsClient.Instance.FinishRpcImmediately(writer);
+            }
             return true;
         }
 
@@ -418,7 +424,7 @@ namespace MoreGamemodes
             if (CamouflageTimer > -1f)
             {
                 CamouflageTimer = -1f;
-                RevertCamouflage();
+                Utils.RevertCamouflage();
             }
             if (Options.EnableMedicine.GetBool())
             {
@@ -464,7 +470,7 @@ namespace MoreGamemodes
             if (CamouflageTimer <= 0f && CamouflageTimer > -1f)
             {
                 CamouflageTimer = -1f;
-                RevertCamouflage();
+                Utils.RevertCamouflage();
             }
             if (NoBombTimer > 0f)
             {
@@ -540,8 +546,7 @@ namespace MoreGamemodes
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (IsHackActive && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
-            if (systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1)
-                CamouflageTimer = -1f;
+            if (CamouflageTimer > -1f && systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1) return false;
             return true;
         }
 
@@ -875,24 +880,6 @@ namespace MoreGamemodes
                 default:
                     return "INVALID DESCRIPTION LONG";
             }
-        }
-
-        public void Camouflage()
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.Data.Role.Role == RoleTypes.Shapeshifter)
-                    pc.RpcShapeshift(pc, false);
-                pc.RpcSetOutfit(15, "", "", "pet_test", "");
-            }
-        }
-        
-        public void RevertCamouflage()
-        {
-            if (!AmongUsClient.Instance.AmHost) return;
-            foreach (var pc in PlayerControl.AllPlayerControls)
-                pc.RpcSetOutfit(Main.StandardColors[pc.PlayerId], Main.StandardHats[pc.PlayerId], Main.StandardSkins[pc.PlayerId], Main.StandardPets[pc.PlayerId], Main.StandardVisors[pc.PlayerId]);
         }
 
         public Items GetItem(PlayerControl player)
