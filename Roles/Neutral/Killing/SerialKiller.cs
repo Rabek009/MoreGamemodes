@@ -118,7 +118,7 @@ namespace MoreGamemodes
                 }
                 Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
-                new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
+                Player.RpcSetKillTimer(10f);
             }
         }
 

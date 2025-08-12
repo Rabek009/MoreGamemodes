@@ -3,6 +3,7 @@ using Hazel;
 using AmongUs.GameOptions;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace MoreGamemodes
 {
@@ -44,7 +45,7 @@ namespace MoreGamemodes
                 Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
                 Main.NameColors[(Player.PlayerId, Player.PlayerId)] = Color.white;
-                new LateTask(() => Player.RpcSetKillTimer(Cooldown > 0.001f ? Cooldown : 0.001f), 0.5f);
+                Player.RpcSetKillTimer(Math.Max(Cooldown, 0.001f));
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {

@@ -113,16 +113,14 @@ namespace MoreGamemodes
         public override void OnSelectRolesPostfix()
         {
             if (!Options.SnSImpostorsAreVisible.GetBool()) return;
-            new LateTask(() => {
-                foreach (var pc in PlayerControl.AllPlayerControls)
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor)
                 {
-                    if (pc.Data.Role.IsImpostor)
-                    {
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                            Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
-                    }
+                    foreach (var ar in PlayerControl.AllPlayerControls)
+                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
                 }
-            }, 1.2f);
+            }
         }
 
         public override void OnIntroDestroy()

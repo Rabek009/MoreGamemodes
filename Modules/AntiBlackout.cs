@@ -13,6 +13,11 @@ namespace MoreGamemodes
 
         public static void SetIsDead(bool doSend = true)
         {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.IsDead)
+                    pc.SetChatVisible(false);
+            }
             isDeadCache.Clear();
             foreach (var info in GameData.Instance.AllPlayers)
             {
@@ -23,11 +28,6 @@ namespace MoreGamemodes
             }
             IsCached = true;
             if (doSend) Utils.SendGameData();
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc.Data.IsDead)
-                    pc.SetChatVisible(false);
-            }
         }
         public static void RestoreIsDead(bool doSend = true)
         {
@@ -47,7 +47,8 @@ namespace MoreGamemodes
         public static void OnDisconnect(NetworkedPlayerInfo player)
         {
             if (!AmongUsClient.Instance.AmHost || !IsCached || !player.Disconnected) return;
-            isDeadCache[player.PlayerId] = (true, true);
+            if (isDeadCache.ContainsKey(player.PlayerId))
+                isDeadCache[player.PlayerId] = (true, true);
             player.IsDead = player.Disconnected = false;
             MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage(5);
@@ -59,6 +60,7 @@ namespace MoreGamemodes
             writer.EndMessage();
             AmongUsClient.Instance.SendOrDisconnect(writer);
             writer.Recycle();
+            player.IsDead = player.Disconnected = true;
         }
 
         public static void Reset()

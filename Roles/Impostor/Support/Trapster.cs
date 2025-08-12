@@ -79,10 +79,8 @@ namespace MoreGamemodes
                 }
                 reporter.SyncPlayerSettings();
                 reporter.RpcSetVentInteraction();
-                new LateTask(() => {
-                    if (!Player.Data.IsDead)
-                        Player.RpcSetKillTimer(Math.Max(Main.KillCooldowns[Player.PlayerId] - KillCooldownDecreaseOnTrap.GetFloat(), 0.001f));
-                }, 0.5f);
+                if (!Player.Data.IsDead)
+                    Player.RpcSetKillTimer(Math.Max(Main.KillCooldowns[Player.PlayerId] - KillCooldownDecreaseOnTrap.GetFloat(), 0.001f));
                 Player.RpcReactorFlash(0.3f, Color);
                 Player.Notify(Utils.ColorString(Color.red, Main.StandardNames[reporter.PlayerId] + " got trapped on " + Main.StandardNames[target.PlayerId] + "'s body\nKill cooldown decreased!"));
                 return false;

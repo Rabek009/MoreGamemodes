@@ -93,17 +93,15 @@ namespace MoreGamemodes
                     client.Character.RpcSetDeathReason(DeathReasons.Disconnected);
             }
             CustomGamemode.Instance.OnDisconnect(client.Character);
-            new LateTask(() => {
-                foreach (var pc in PlayerControl.AllPlayerControls)
-                {
-                    if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
-                    {
-                        Utils.SetAllVentInteractions();
-                        break;
-                    }
-                }
-            }, 0.2f);
             AntiBlackout.OnDisconnect(client.Character.Data);
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (VentilationSystemDeterioratePatch.BlockVentInteraction(pc))
+                {
+                    Utils.SetAllVentInteractions();
+                    break;
+                }
+            }
         }
     }
 

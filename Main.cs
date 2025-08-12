@@ -64,7 +64,7 @@ namespace MoreGamemodes
         public static Dictionary<byte, float> TimeSinceLastPet;
         public static Dictionary<byte, bool> IsInvisible;
 
-        public const string CurrentVersion = "2.1.0 dev9";
+        public const string CurrentVersion = "2.1.0 dev10";
         public bool isDev = CurrentVersion.Contains("dev");
         public bool isBeta = CurrentVersion.Contains("beta");
 
@@ -146,6 +146,7 @@ namespace MoreGamemodes
             ChatUpdatePatch.SendingSystemMessage = false;
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
+            FixedUpdatePatch.NameUpdatePlayerIndex = 0;
             PlayerTagManager.Initialize();
             AntiBlackout.Reset();
             BanManager.Init();
@@ -223,6 +224,7 @@ namespace MoreGamemodes
                     ChatUpdatePatch.SendingSystemMessage = false;
                     CoEnterVentPatch.PlayersToKick = new List<byte>();
                     ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
+                    FixedUpdatePatch.NameUpdatePlayerIndex = 0;
                     AntiBlackout.Reset();
                 }
                 else if (__instance.PlayerId != 254 && __instance.PlayerId != 255)

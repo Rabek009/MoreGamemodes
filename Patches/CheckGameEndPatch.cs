@@ -113,7 +113,7 @@ namespace MoreGamemodes
         private static bool CheckAndEndGameForTaskWin()
         {
             if (GameData.Instance.TotalTasks <= 0) return false;
-            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
+            if (GameData.Instance.TotalTasks * (Options.TasksNeededToWin.GetInt() / 100f) <= GameData.Instance.CompletedTasks)
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -130,7 +130,7 @@ namespace MoreGamemodes
         private static bool CheckAndEndGameForTaskWinClassic()
         {
             if (GameData.Instance.TotalTasks <= 0) return false;
-            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
+            if (GameData.Instance.TotalTasks * (Options.TasksNeededToWin.GetInt() / 100f) <= GameData.Instance.CompletedTasks)
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -400,7 +400,7 @@ namespace MoreGamemodes
         private static bool CheckAndEndGameForZombiesTaskWin()
         {
             if (GameData.Instance.TotalTasks <= 0) return false;
-            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
+            if (GameData.Instance.TotalTasks * (Options.TasksNeededToWin.GetInt() / 100f) <= GameData.Instance.CompletedTasks)
             {
                 List<byte> winners = new();
                 foreach (var pc in PlayerControl.AllPlayerControls)
@@ -658,7 +658,7 @@ namespace MoreGamemodes
         public static bool Prefix(GameManager __instance, ref bool __result)
         {
             GameData.Instance.RecomputeTaskCounts();
-            if (GameData.Instance.TotalTasks <= GameData.Instance.CompletedTasks * (Options.TasksNeededToWin.GetInt() / 100f))
+            if (GameData.Instance.TotalTasks * (Options.TasksNeededToWin.GetInt() / 100f) <= GameData.Instance.CompletedTasks)
             {
                 __instance.RpcEndGame(GameOverReason.CrewmatesByTask, false);
                 __result = true;

@@ -1442,10 +1442,13 @@ namespace MoreGamemodes
                             PlayerControl.LocalPlayer.RpcSendMessage(neutralRoles, "Neutrals");
                         foreach (var addOn in Enum.GetValues<AddOns>())
                         {
+                            string chance = AddOnsHelper.GetAddOnChance(addOn) <= 100 ? AddOnsHelper.GetAddOnChance(addOn).ToString() + "%" : "Always";
+                            string count = AddOnsHelper.GetAddOnCount(addOn).ToString();
                             if (AddOnsHelper.GetAddOnChance(addOn) > 0)
-                                addOns += Options.AddOnsChance[addOn].GetName() + ": " + AddOnsHelper.GetAddOnChance(addOn) + "% x" + AddOnsHelper.GetAddOnCount(addOn) + "\n";
+                                addOns += Options.AddOnsChance[addOn].GetName() + ": " + chance + " x" + count + "\n";
                         }
-                        PlayerControl.LocalPlayer.RpcSendMessage(addOns, "AddOns");
+                        if (addOns != "")
+                            PlayerControl.LocalPlayer.RpcSendMessage(addOns, "AddOns");
                     }
                     break;
                 case "/kcount":
@@ -2383,10 +2386,13 @@ namespace MoreGamemodes
                             player.RpcSendMessage(neutralRoles, "Neutrals");
                         foreach (var addOn in Enum.GetValues<AddOns>())
                         {
+                            string chance = AddOnsHelper.GetAddOnChance(addOn) <= 100 ? AddOnsHelper.GetAddOnChance(addOn).ToString() + "%" : "Always";
+                            string count = AddOnsHelper.GetAddOnCount(addOn).ToString();
                             if (AddOnsHelper.GetAddOnChance(addOn) > 0)
-                                addOns += Options.AddOnsChance[addOn].GetName() + ": " + AddOnsHelper.GetAddOnChance(addOn) + "% x" + AddOnsHelper.GetAddOnCount(addOn) + "\n";
+                                addOns += Options.AddOnsChance[addOn].GetName() + ": " + chance + " x" + count + "\n";
                         }
-                        player.RpcSendMessage(addOns, "AddOns");
+                        if (addOns != "")
+                            player.RpcSendMessage(addOns, "AddOns");
                     }
                     break;
                 case "/kcount":

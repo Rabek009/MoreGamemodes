@@ -277,10 +277,8 @@ namespace MoreGamemodes
                 case RpcCalls.MurderPlayer:
                     PlayerControl target = sr.ReadNetObject<PlayerControl>();
                     MurderResultFlags resultFlags = (MurderResultFlags)sr.ReadInt32();
-                    if (!resultFlags.HasFlag(MurderResultFlags.FailedError) && !resultFlags.HasFlag(MurderResultFlags.FailedProtected) && target != null)
-                    {
-                        new LateTask(() => target.RpcRevive(), 0.1f);
-                    }
+                    if (!resultFlags.HasFlag(MurderResultFlags.FailedError) && !resultFlags.HasFlag(MurderResultFlags.FailedProtected) && target != null && !target.Data.IsDead)
+                        target.RpcRevive();
                     HandleCheat(pc, "Invalid Rpc");
                     return true;
                 case RpcCalls.SendChat:

@@ -41,7 +41,12 @@ namespace MoreGamemodes
 
         public override bool OnCheckVanish()
         {
-            if (ClassicGamemode.instance.IsCamouflageActive)
+            if (ClassicGamemode.instance.IsCamouflageActive || Utils.IsActive(SystemTypes.MushroomMixupSabotage))
+            {
+                new LateTask(() => Player.RpcSetAbilityCooldown(0.001f), 0.2f);
+                return false;
+            }
+            if (Utils.IsSabotage() && !CanCamouflageDuringSabotage.GetBool())
             {
                 new LateTask(() => Player.RpcSetAbilityCooldown(0.001f), 0.2f);
                 return false;
@@ -101,6 +106,7 @@ namespace MoreGamemodes
         public static OptionItem Count;
         public static OptionItem CamouflageCooldown;
         public static OptionItem CamouflageDuration;
+        public static OptionItem CanCamouflageDuringSabotage;
         public static void SetupOptionItem()
         {
             Chance = RoleOptionItem.Create(500400, CustomRoles.Camouflager, TabGroup.ImpostorRoles, false);
@@ -112,6 +118,8 @@ namespace MoreGamemodes
             CamouflageDuration = FloatOptionItem.Create(500403, "Camouflage duration", new(5f, 30f, 1f), 10f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
+            CanCamouflageDuringSabotage = BooleanOptionItem.Create(500404, "Can camouflage during sabotage", true, TabGroup.ImpostorRoles, false)
+                .SetParent(Chance);
             Options.RolesChance[CustomRoles.Camouflager] = Chance;
             Options.RolesCount[CustomRoles.Camouflager] = Count;
         }

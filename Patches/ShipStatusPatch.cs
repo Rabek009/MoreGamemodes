@@ -361,7 +361,7 @@ namespace MoreGamemodes
                 {
                     if (pc.Data.IsDead) continue;
                     if (pc.AmOwner)
-                        pc.SetPet("pet_test");
+                        pc.RawSetPet("pet_test", pc.Data.DefaultOutfit.ColorId);
                     else
                     {
                         CustomRpcSender sender = CustomRpcSender.Create(SendOption.Reliable);
@@ -379,7 +379,7 @@ namespace MoreGamemodes
                         sender.SendMessage();
                     }
                 }
-            }, 0.2f, "Set MixUp Name");
+            }, 1.2f, "Set MixUp Name");
         }
     }
 }

@@ -177,6 +177,7 @@ namespace MoreGamemodes
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
     static class FixedUpdatePatch
     {
+        public static int NameUpdatePlayerIndex;
         public static void Postfix(PlayerControl __instance)
         {
             if (Main.GameStarted && __instance.AmOwner)
@@ -196,7 +197,11 @@ namespace MoreGamemodes
             if (!__instance.AmOwner) return;
             if (Main.GameStarted && !MeetingHud.Instance && !ExileController.Instance)
             {
-                Utils.SyncAllPlayersName(false, SendOption.None);
+                ++NameUpdatePlayerIndex;
+                if (NameUpdatePlayerIndex >= PlayerControl.AllPlayerControls.Count)
+                    NameUpdatePlayerIndex = 0;
+                PlayerControl player = PlayerControl.AllPlayerControls[NameUpdatePlayerIndex];
+                player.SyncPlayerName(false, SendOption.None);
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (((pc.moveable || pc.petting) && !pc.inVent && !pc.shapeshifting) || pc.ForceKillTimerContinue)
@@ -349,10 +354,7 @@ namespace MoreGamemodes
                 .EndRpc();
             sender.EndMessage();
             sender.SendMessage();
-            new LateTask(() =>
-            {
-                __instance.Data.MarkDirty();
-            }, 0.5f);
+            new LateTask(() => __instance.Data.MarkDirty(), 0.5f);
             return false;
         }
     }
@@ -627,7 +629,7 @@ namespace MoreGamemodes
                     .EndRpc();
                 sender.EndMessage();
                 sender.SendMessage();
-                new LateTask(() => phantom.RpcSetKillTimer(Math.Max(Main.KillCooldowns[phantom.PlayerId], 0.001f)), 0.2f);
+                phantom.RpcSetKillTimer(Math.Max(Main.KillCooldowns[phantom.PlayerId], 0.001f));
             }
             return false;
         }

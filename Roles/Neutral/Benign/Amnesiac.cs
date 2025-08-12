@@ -53,7 +53,7 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(800200, CustomRoles.Amnesiac, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(800201, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            SeeArrowToNearestBody = BooleanOptionItem.Create(800202, "See arrow to nearest body", false, TabGroup.NeutralRoles, false)
+            SeeArrowToNearestBody = BooleanOptionItem.Create(800202, "See arrow to nearest body", true, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             Options.RolesChance[CustomRoles.Amnesiac] = Chance;
             Options.RolesCount[CustomRoles.Amnesiac] = Count;

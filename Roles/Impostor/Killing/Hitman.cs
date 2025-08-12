@@ -140,7 +140,7 @@ namespace MoreGamemodes
                 .SetValueFormat(OptionFormat.Seconds);
             ShowArrowToTarget = BooleanOptionItem.Create(600203, "Show arrow to target", true, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            KillCooldownAfterKill = FloatOptionItem.Create(600204, "Kill cooldown after kill", new(0f, 30f, 0.5f), 5f, TabGroup.ImpostorRoles, false)
+            KillCooldownAfterKill = FloatOptionItem.Create(600204, "Kill cooldown after kill", new(0f, 30f, 0.5f), 10f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
             Options.RolesChance[CustomRoles.Hitman] = Chance;

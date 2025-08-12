@@ -94,7 +94,7 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(900200, CustomRoles.Executioner, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(900201, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            RoleAfterTargetDeath = StringOptionItem.Create(900202, "Role after target death", rolesAfterTargetDeath, 0, TabGroup.NeutralRoles, false)
+            RoleAfterTargetDeath = StringOptionItem.Create(900202, "Role after target death", rolesAfterTargetDeath, 2, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
             CanVoteForTarget = BooleanOptionItem.Create(900203, "Can vote for target", true, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);

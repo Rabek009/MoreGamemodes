@@ -31,7 +31,7 @@ namespace MoreGamemodes
                 Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
                 Main.NameColors[(Player.PlayerId, Player.PlayerId)] = Color.white;
-                new LateTask(() => Player.RpcSetKillTimer(Math.Max(Cooldown, 0.001f)), 0.5f);
+                Player.RpcSetKillTimer(Math.Max(Cooldown, 0.001f));
             }
             else if (BaseRole == BaseRoles.DesyncImpostor)
             {

@@ -142,7 +142,7 @@ namespace MoreGamemodes
                 }
                 Player.RpcSetDesyncRole(RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
-                new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
+                Player.RpcSetKillTimer(10f);
             }
         }
 
@@ -164,7 +164,7 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(1000200, CustomRoles.Pelican, TabGroup.NeutralRoles, false);
             Count = IntegerOptionItem.Create(1000201, "Max", new(1, 15, 1), 1, TabGroup.NeutralRoles, false)
                 .SetParent(Chance);
-            EatCooldown = FloatOptionItem.Create(1000202, "Eat cooldown", new(10f, 60f, 2.5f), 30f, TabGroup.NeutralRoles, false)
+            EatCooldown = FloatOptionItem.Create(1000202, "Eat cooldown", new(10f, 120f, 2.5f), 35f, TabGroup.NeutralRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
             CanUseVents = BooleanOptionItem.Create(1000203, "Can use vents", true, TabGroup.NeutralRoles, false)

@@ -352,7 +352,7 @@ namespace MoreGamemodes
             new LateTask(() => {
 		        if (GameSettingMenu.Instance == null) return;
                 GameSettingMenu.Instance.ChangeTab(tab, false);
-            }, 0.01f);
+            }, 0f);
         }
     }
 
@@ -379,6 +379,7 @@ namespace MoreGamemodes
                 __instance.CheckMark.enabled = !__instance.CheckMark.enabled;
                 var item = OptionItem.AllOptions[index];
                 item.SetValue(__instance.GetBool() ? 1 : 0);
+                __instance.OnValueChanged.Invoke(__instance);
                 return false;
             }
             return true;

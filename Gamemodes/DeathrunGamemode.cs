@@ -59,7 +59,7 @@ namespace MoreGamemodes
                     pc.RpcSetKillTimer(Options.RoundCooldown.GetFloat());
                 pc.RpcResetAbilityCooldown();
             }
-            new LateTask(() =>{
+            new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if (pc.Data.Role.IsImpostor)

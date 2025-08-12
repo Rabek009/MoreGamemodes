@@ -87,7 +87,7 @@ namespace MoreGamemodes
             ProtectionAfterCompletingTaskDuration = FloatOptionItem.Create(300102, "Protection after completing task duration", new(0f, 30f, 1f), 10f, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance)
                 .SetValueFormat(OptionFormat.Seconds);
-            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 3, TabGroup.CrewmateRoles, false)
+            TimesProtectedAfterCompletingAllTasks = IntegerOptionItem.Create(300103, "Times protected after completing all tasks", new(1, 25, 1), 2, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);
             CanBeGuessed = BooleanOptionItem.Create(300104, "Can be guessed", true, TabGroup.CrewmateRoles, false)
                 .SetParent(Chance);

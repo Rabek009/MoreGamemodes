@@ -104,6 +104,7 @@ namespace MoreGamemodes
         public override bool OnCheckMurderAsTarget(PlayerControl killer)
         {
             if (LoverId == byte.MaxValue) return true;
+            if (killer.PlayerId == LoverId) return false;
             if (ProtectionTimer > 0f)
             {
                 killer.RpcGuardAndKill(Player);
@@ -268,7 +269,7 @@ namespace MoreGamemodes
                 }
                 Player.RpcSetDesyncRole(CanProtect.GetBool() ? RoleTypes.Phantom : RoleTypes.Impostor, Player);
                 Player.SyncPlayerSettings();
-                new LateTask(() => Player.RpcSetKillTimer(9.5f), 0.5f);
+                Player.RpcSetKillTimer(10f);
             }
             ProtectionTimer = -1f;
         }

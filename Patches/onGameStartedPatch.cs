@@ -42,6 +42,7 @@ namespace MoreGamemodes
             RpcSetRolePatch.RoleAssigned = new Dictionary<byte, bool>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
+            FixedUpdatePatch.NameUpdatePlayerIndex = 0;
             PlayerTagManager.ResetPlayerTags();
             AntiBlackout.Reset();
             Main.StandardNames = new Dictionary<byte, string>();
@@ -97,9 +98,7 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return;
             CustomGamemode.Instance.OnSelectRolesPostfix();
-            new LateTask(() => {
-                Utils.SyncAllSettings();
-            }, 1.5f);
+            Utils.SyncAllSettings();
         }
     }
 

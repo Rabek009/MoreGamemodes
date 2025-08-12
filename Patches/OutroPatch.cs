@@ -347,6 +347,7 @@ namespace MoreGamemodes
             Main.IsInvisible = new Dictionary<byte, bool>();
             ExplosionHole.LastSpeedDecrease = new Dictionary<byte, int>();
             CoEnterVentPatch.PlayersToKick = new List<byte>();
+            FixedUpdatePatch.NameUpdatePlayerIndex = 0;
             AntiBlackout.Reset();
             if (Options.CurrentGamemode == Gamemodes.Speedrun)
             {

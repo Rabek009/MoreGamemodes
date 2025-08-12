@@ -134,23 +134,21 @@ namespace MoreGamemodes
 
         public override void OnSelectRolesPostfix()
         {
-            new LateTask(() => {
-                foreach (var pc in PlayerControl.AllPlayerControls)
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc.Data.Role.IsImpostor)
                 {
-                    if (pc.Data.Role.IsImpostor)
-                    {
-                        pc.RpcSetColor(0);
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                            Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
-                    }
-                    else
-                    {
-                        pc.RpcSetColor(11);
-                        foreach (var ar in PlayerControl.AllPlayerControls)
-                            Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.green;
-                    }
+                    pc.RpcSetColor(0);
+                    foreach (var ar in PlayerControl.AllPlayerControls)
+                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.red;
                 }
-            }, 1.2f);
+                else
+                {
+                    pc.RpcSetColor(11);
+                    foreach (var ar in PlayerControl.AllPlayerControls)
+                        Main.NameColors[(pc.PlayerId, ar.PlayerId)] = Color.green;
+                }
+            }
         }
 
         public override void OnIntroDestroy()

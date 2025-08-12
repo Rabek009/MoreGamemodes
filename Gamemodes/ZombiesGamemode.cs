@@ -14,8 +14,11 @@ namespace MoreGamemodes
             if (exiled != null && exiled.Object != null && Options.EjectedPlayersAreZombies.GetBool() && !Main.StandardRoles[exiled.PlayerId].IsImpostor())
             {
                 SendRPC(exiled.Object, ZombieTypes.FullZombie, 0);
-                new LateTask(() => exiled.Object.RpcSetRoleV2(RoleTypes.Crewmate), 0.5f);
-                new LateTask(() => exiled.Object.RpcSetDesyncRole(RoleTypes.Impostor, exiled.Object), 1f);
+                new LateTask(() =>
+                {
+                    exiled.Object.RpcSetRoleV2(RoleTypes.Crewmate);
+                    exiled.Object.RpcSetDesyncRole(RoleTypes.Impostor, exiled.Object);
+                }, 0.5f);
                 exiled.Object.RpcSetOutfit(18, "", "", "", "");
                 exiled.RpcSetTasks(new byte[0]);
                 if (!AntiCheat.ChangedTasks.Contains(exiled.PlayerId))
@@ -40,7 +43,7 @@ namespace MoreGamemodes
                         pc.RpcSetDesyncRole(RoleTypes.Impostor, pc);
                 }
                 Utils.SetAllVentInteractions();
-            }, 1f);
+            }, 0.5f);
         }
         public override void OnSetFilterText(HauntMenuMinigame __instance)
         {
@@ -114,7 +117,7 @@ namespace MoreGamemodes
                 {
                     pc.Data.IsDead = false;
                     pc.Data.MarkDirty();
-                    new LateTask(() => pc.RpcSetDesyncRole(RoleTypes.Crewmate, pc), 0.5f);
+                    pc.RpcSetDesyncRole(RoleTypes.Crewmate, pc);
                 }
             }
             if (exiled != null && exiled.Object != null && !Main.StandardRoles[exiled.PlayerId].IsImpostor() && GetKillsRemain(exiled.Object) > 0)
@@ -126,7 +129,7 @@ namespace MoreGamemodes
                 }
                 Main.NameColors[(exiled.PlayerId, exiled.PlayerId)] = Color.clear;
             }
-            new LateTask(() =>{
+            new LateTask(() => {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
                     if ((IsZombie(pc) && GetZombieType(pc) != ZombieTypes.Dead) || (exiled != null && pc.PlayerId == exiled.PlayerId && Options.EjectedPlayersAreZombies.GetBool()))
@@ -211,8 +214,10 @@ namespace MoreGamemodes
             if (Main.StandardRoles[killer.PlayerId].IsImpostor() || (IsZombie(killer) && Options.ZombieKillsTurnIntoZombie.GetBool()))
             {
                 SendRPC(target, ZombieTypes.JustTurned, 0);
-                new LateTask(() => target.RpcSetRoleV2(RoleTypes.Crewmate), 0.5f);
-                new LateTask(() => target.RpcSetDesyncRole(RoleTypes.Impostor, target), 1f);
+                new LateTask(() => {
+                    target.RpcSetRoleV2(RoleTypes.Crewmate);
+                    target.RpcSetDesyncRole(RoleTypes.Impostor, target);
+                }, 0.5f);
                 target.RpcSetOutfit(18, "", "", "", "");
                 target.Data.RpcSetTasks(new byte[0]);
                 if (!AntiCheat.ChangedTasks.Contains(target.PlayerId))

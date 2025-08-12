@@ -756,7 +756,7 @@ namespace MoreGamemodes
                             pc.SyncPlayerSettings();
                         Utils.SetAllVentInteractions();
                     }
-                }, 0.01f);
+                }, 0f);
                 new LateTask(() => Utils.SyncAllPlayersName(true, SendOption.Reliable, true), 0.5f);
             }
             return report;
@@ -871,7 +871,10 @@ namespace MoreGamemodes
         {
             if (RoleblockTimer[player.PlayerId] > 0f)
                 return false;
-            if (IsCamouflageActive && systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1) return false;
+            if (IsCamouflageActive && systemType == SystemTypes.Sabotage && !Camouflager.CanCamouflageDuringSabotage.GetBool())
+                return false;
+            if (IsCamouflageActive && systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1)
+                return false;
             if (!player.GetRole().OnUpdateSystem(__instance, systemType, reader))
                 return false;
             bool cancel = false;
@@ -1179,7 +1182,7 @@ namespace MoreGamemodes
                     player.Data.Tasks.Add(new NetworkedPlayerInfo.TaskInfo(DefaultTasks[player.PlayerId][i].TypeId, DefaultTasks[player.PlayerId][i].Id));
                 player.Data.MarkDirty();
             }
-            new LateTask(() => player.RpcSetKillTimer(9.8f), 0.2f);
+            player.RpcSetKillTimer(10f);
             player.RpcResetAbilityCooldown();
             player.SyncPlayerSettings();
             player.RpcSetVentInteraction();

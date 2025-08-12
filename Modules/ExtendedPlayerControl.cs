@@ -483,6 +483,38 @@ namespace MoreGamemodes
             Main.OptionProtectCooldowns[player.PlayerId] = opt.GetFloat(FloatOptionNames.GuardianAngelCooldown);
         }
 
+        public static void SyncPlayerName(this PlayerControl player, bool isMeeting, SendOption sendOption, bool classicMeeting = false)
+        {
+            bool doSend = false;
+            CustomRpcSender sender = CustomRpcSender.Create(sendOption);
+            sender.StartMessage(player.GetClientId());
+            foreach (var ar in PlayerControl.AllPlayerControls)
+            {
+                var name = ar.BuildPlayerName(player, isMeeting, classicMeeting);
+                Main.LastNotifyNames[(ar.PlayerId, player.PlayerId)] = name;
+                if (player.AmOwner)
+                {
+                    ar.cosmetics.nameText.SetText(name);
+                    continue;
+                }
+                sender.StartRpc(ar.NetId, (byte)RpcCalls.SetName)
+                    .Write(ar.Data.NetId)
+                    .Write(name)
+                    .EndRpc();
+                doSend = true;
+                if (sender.stream.Length > 500)
+                {
+                    sender.EndMessage();
+                    sender.SendMessage();
+                    sender = CustomRpcSender.Create(sendOption);
+                    sender.StartMessage(player.GetClientId());
+                    doSend = false;
+                }
+            }
+            sender.EndMessage();
+            sender.SendMessage(doSend);
+        }
+
         public static void RpcSetOutfit(this PlayerControl player, byte colorId, string hatId, string skinId, string petId, string visorId)
         {
             player.RpcSetColor(colorId);
@@ -492,7 +524,7 @@ namespace MoreGamemodes
             player.RpcSetPet(player.Data.IsDead ? "" : petId);
             if (Main.AllShapeshifts[player.PlayerId] != player.PlayerId)
             {
-                new LateTask(() => player.RpcShapeshift(player, false), 0f);
+                new LateTask(() => player.RpcShapeshift(player, false), 0.2f);
             }
         }
 
@@ -510,7 +542,7 @@ namespace MoreGamemodes
                 if (Main.DesyncRoles.ContainsKey((player.PlayerId, pc.PlayerId)))
                     Main.DesyncRoles.Remove((player.PlayerId, pc.PlayerId));
             }
-            new LateTask(() => player.RpcSetVentInteraction(), 0.1f);
+            player.RpcSetVentInteraction();
             AntiCheat.TimeSinceRoleChange[player.PlayerId] = 0f;
             Main.KillCooldowns[player.PlayerId] = 0f;
         }
@@ -1002,17 +1034,12 @@ namespace MoreGamemodes
                 sender2.EndMessage();
                 sender2.SendMessage();
             }
-            new LateTask(() => {
-                if (!MeetingHud.Instance)
-                {
-                    if (player.GetSelfRole().IsImpostor())
-                        player.RpcSetKillTimer(Math.Max(Main.KillCooldowns[player.PlayerId], 0.001f));
-                    if (player.GetSelfRole() != RoleTypes.Crewmate && player.GetSelfRole() != RoleTypes.Impostor && player.GetSelfRole() != RoleTypes.Noisemaker && !isDroner)
-                        player.RpcResetAbilityCooldown();
-                    if (Options.EnableMidGameChat.GetBool())
-                        player.SetChatVisible(true);
-                }        
-            }, 0.2f);
+            if (player.GetSelfRole().IsImpostor())
+                player.RpcSetKillTimer(Math.Max(Main.KillCooldowns[player.PlayerId], 0.001f));
+            if (player.GetSelfRole() != RoleTypes.Crewmate && player.GetSelfRole() != RoleTypes.Impostor && player.GetSelfRole() != RoleTypes.Noisemaker && !isDroner)
+                player.RpcResetAbilityCooldown();
+            if (Options.EnableMidGameChat.GetBool())
+                player.SetChatVisible(true);
         }
     }
 }

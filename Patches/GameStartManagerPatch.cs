@@ -16,7 +16,7 @@ namespace MoreGamemodes
         }
     }
     [HarmonyPatch(typeof(IGameOptionsExtensions), nameof(IGameOptionsExtensions.GetAdjustedNumImpostors))]
-    class UnrestrictedNumImpostorsPatch
+    class GetAdjustedNumImpostorsPatch
     {
         public static bool Prefix(ref int __result)
         {

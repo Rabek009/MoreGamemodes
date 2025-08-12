@@ -388,7 +388,7 @@ namespace MoreGamemodes
             MeetingHud.Instance = Object.Instantiate(HudManager.Instance.MeetingPrefab);
             MeetingHud.Instance.ServerStart(PlayerControl.LocalPlayer.PlayerId);
             AmongUsClient.Instance.Spawn(MeetingHud.Instance, -2, SpawnFlags.None);
-            new LateTask(() => MeetingHud.Instance.RpcClose(), 0.5f);
+            new LateTask(() => MeetingHud.Instance.RpcClose(), 0.2f);
         }
 
         public static Sprite LoadSprite(string path, float pixelsPerUnit = 1f)
@@ -451,36 +451,7 @@ namespace MoreGamemodes
         public static void SyncAllPlayersName(bool isMeeting, SendOption sendOption, bool classicMeeting = false)
         {
             foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                bool doSend = false;
-                CustomRpcSender sender = CustomRpcSender.Create(sendOption);
-                sender.StartMessage(pc.GetClientId());
-                foreach (var ar in PlayerControl.AllPlayerControls)
-                {
-                    var name = ar.BuildPlayerName(pc, isMeeting, classicMeeting);
-                    Main.LastNotifyNames[(ar.PlayerId, pc.PlayerId)] = name;
-                    if (pc.AmOwner)
-                    {
-                        ar.cosmetics.nameText.SetText(name);
-                        continue;
-                    }
-                    sender.StartRpc(ar.NetId, (byte)RpcCalls.SetName)
-                        .Write(ar.Data.NetId)
-                        .Write(name)
-                        .EndRpc();
-                    doSend = true;
-                    if (sender.stream.Length > 500)
-                    {
-                        sender.EndMessage();
-                        sender.SendMessage();
-                        sender = CustomRpcSender.Create(sendOption);
-                        sender.StartMessage(pc.GetClientId());
-                        doSend = false;
-                    }
-                }
-                sender.EndMessage();
-                sender.SendMessage(doSend);
-            }
+                pc.SyncPlayerName(isMeeting, sendOption, classicMeeting);
         }
 
         public static void RpcSetDesyncRoles(RoleTypes selfRole, RoleTypes othersRole)
@@ -516,10 +487,7 @@ namespace MoreGamemodes
                 sender.EndMessage();
                 sender.SendMessage();
             }
-            new LateTask(() =>
-            {
-                player.Data.MarkDirty();
-            }, 0.5f);
+            new LateTask(() => player.Data.MarkDirty(), 0.5f);
         }
 
         public static void SetDesyncRoleForPlayers(PlayerControl player, List<byte> list, RoleTypes listRole, RoleTypes othersRole)
@@ -549,10 +517,7 @@ namespace MoreGamemodes
                 sender.EndMessage();
                 sender.SendMessage();
             }
-            new LateTask(() =>
-            {
-                player.Data.MarkDirty();
-            }, 0.5f);
+            new LateTask(() => player.Data.MarkDirty(), 0.5f);
         }
 
         public static void RpcSetUnshiftButton()
@@ -566,35 +531,31 @@ namespace MoreGamemodes
                 writer.WriteNetObject(PlayerControl.LocalPlayer);
                 writer.Write(false);
                 AmongUsClient.Instance.FinishRpcImmediately(writer);
-                new LateTask(() =>
-                {
-                    //pc.RpcSetNamePrivate(pc.BuildPlayerName(pc, false), pc, true);
-                    var outfit = pc.Data.Outfits[PlayerOutfitType.Default];
-                    var sender = CustomRpcSender.Create(SendOption.Reliable);
-                    sender.StartMessage(pc.GetClientId());
-                    sender.StartRpc(pc.NetId, RpcCalls.SetColor)
-                        .Write(pc.Data.NetId)
-                        .Write((byte)outfit.ColorId)
-                        .EndRpc();
-                    sender.StartRpc(pc.NetId, RpcCalls.SetHatStr)
-                        .Write(outfit.HatId)
-                        .Write(pc.GetNextRpcSequenceId(RpcCalls.SetHatStr))
-                        .EndRpc();
-                    sender.StartRpc(pc.NetId, RpcCalls.SetSkinStr)
-                        .Write(outfit.SkinId)
-                        .Write(pc.GetNextRpcSequenceId(RpcCalls.SetSkinStr))
-                        .EndRpc();
-                    sender.StartRpc(pc.NetId, RpcCalls.SetVisorStr)
-                        .Write(outfit.VisorId)
-                        .Write(pc.GetNextRpcSequenceId(RpcCalls.SetVisorStr))
-                        .EndRpc();
-                    sender.StartRpc(pc.NetId, RpcCalls.SetPetStr)
-                        .Write(outfit.PetId)
-                        .Write(pc.GetNextRpcSequenceId(RpcCalls.SetPetStr))
-                        .EndRpc();
-                    sender.EndMessage();
-                    sender.SendMessage();
-                }, 0.2f);
+                var outfit = pc.Data.Outfits[PlayerOutfitType.Default];
+                var sender = CustomRpcSender.Create(SendOption.Reliable);
+                sender.StartMessage(pc.GetClientId());
+                sender.StartRpc(pc.NetId, RpcCalls.SetColor)
+                    .Write(pc.Data.NetId)
+                    .Write((byte)outfit.ColorId)
+                    .EndRpc();
+                sender.StartRpc(pc.NetId, RpcCalls.SetHatStr)
+                    .Write(outfit.HatId)
+                    .Write(pc.GetNextRpcSequenceId(RpcCalls.SetHatStr))
+                    .EndRpc();
+                sender.StartRpc(pc.NetId, RpcCalls.SetSkinStr)
+                    .Write(outfit.SkinId)
+                    .Write(pc.GetNextRpcSequenceId(RpcCalls.SetSkinStr))
+                    .EndRpc();
+                sender.StartRpc(pc.NetId, RpcCalls.SetVisorStr)
+                    .Write(outfit.VisorId)
+                    .Write(pc.GetNextRpcSequenceId(RpcCalls.SetVisorStr))
+                    .EndRpc();
+                sender.StartRpc(pc.NetId, RpcCalls.SetPetStr)
+                    .Write(outfit.PetId)
+                    .Write(pc.GetNextRpcSequenceId(RpcCalls.SetPetStr))
+                    .EndRpc();
+                sender.EndMessage();
+                sender.SendMessage();
             }
         }
 

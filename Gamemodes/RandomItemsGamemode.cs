@@ -227,21 +227,18 @@ namespace MoreGamemodes
                         target.Data.RpcSetTasks(playerTasks.ToArray());
                         if (!AntiCheat.ChangedTasks.Contains(target.PlayerId))
                             AntiCheat.ChangedTasks.Add(target.PlayerId);
-                        new LateTask(() =>
+                        NoItemGive = true;
+                        foreach (var task in pc.Data.Tasks)
                         {
-                            NoItemGive = true;
-                            foreach (var task in pc.Data.Tasks)
-                            {
-                                if (completedTasksTarget.Contains(task.Id))
-                                    pc.RpcCompleteTask(task.Id);
-                            }
-                            foreach (var task in target.Data.Tasks)
-                            {
-                                if (completedTasksPlayer.Contains(task.Id))
-                                    target.RpcCompleteTask(task.Id);
-                            }
-                            NoItemGive = false;
-                        }, 0.1f, "Set tasks done");   
+                            if (completedTasksTarget.Contains(task.Id))
+                                pc.RpcCompleteTask(task.Id);
+                        }
+                        foreach (var task in target.Data.Tasks)
+                        {
+                            if (completedTasksPlayer.Contains(task.Id))
+                                target.RpcCompleteTask(task.Id);
+                        }
+                        NoItemGive = false;
                         SendRPC(pc, Items.None);
                         break;
                     case Items.TimeSpeeder:
@@ -264,7 +261,7 @@ namespace MoreGamemodes
                         SendRPC(pc, Items.None);
                         break;
                     case Items.Camouflage:
-                        if (pc.IsMushroomMixupActive()) break;
+                        if (Utils.IsActive(SystemTypes.MushroomMixupSabotage)) break;
                         SendRPC(pc, Items.None);
                         CamouflageTimer = Options.CamouflageDuration.GetFloat();
                         Utils.Camouflage();
