@@ -5,9 +5,9 @@ namespace MoreGamemodes
 {
     public class Undertaker : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            __instance.ReportButton.OverrideText(TranslationController.Instance.GetString(StringNames.ReportButton));
+            base.OnHudUpdate(__instance);
             __instance.AbilityButton.OverrideText("Select Target");
             if (IsLastImpostor())
                 __instance.AbilityButton.SetDisabled();

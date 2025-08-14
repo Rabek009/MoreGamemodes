@@ -11,7 +11,7 @@ namespace MoreGamemodes
 
         }
 
-        public virtual void OnHudUpate(HudManager __instance)
+        public virtual void OnHudUpdate(HudManager __instance)
         {
 
         }

@@ -85,6 +85,8 @@ namespace MoreGamemodes
         public static OptionItem HnSImpostorsCanVent;
         public static OptionItem HnSImpostorsCanCloseDoors;
         public static OptionItem HnSImpostorsAreVisible;
+        public static OptionItem HnSHiders;
+        public static OptionItem HnSShowDangerMeter;
 
         //Shift and seek
         public static OptionItem Shifters;
@@ -94,6 +96,8 @@ namespace MoreGamemodes
         public static OptionItem SnSImpostorsCanCloseDoors;
         public static OptionItem SnSImpostorsAreVisible;
         public static OptionItem InstantShapeshift;
+        public static OptionItem SnSHiders;
+        public static OptionItem SnSShowDangerMeter;
 
         //Bomb tag
         public static OptionItem BtGameplay;
@@ -318,7 +322,7 @@ namespace MoreGamemodes
         public static OptionItem UnfreezeDuration;
         public static OptionItem UnfreezeRadius;
         public static OptionItem TaskCompleteTimeDuringFreeze;
-        public static OptionItem ShowDangerMeter;
+        public static OptionItem FtShowDangerMeter;
 
         //Color wars
         public static OptionItem Leaders;
@@ -451,6 +455,11 @@ namespace MoreGamemodes
                 .SetGamemode(Gamemodes.HideAndSeek);
             HnSImpostorsAreVisible = BooleanOptionItem.Create(1005, "Impostors are visible", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.HideAndSeek);
+            HnSHiders = TextOptionItem.Create(1010, "Hiders", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.HideAndSeek)
+                .SetColor(Color.cyan);
+            HnSShowDangerMeter = BooleanOptionItem.Create(1011, "Show danger meter", true, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.HideAndSeek);
 
             //Shift and seek
             Shifters = TextOptionItem.Create(2000, "Shifters", TabGroup.GamemodeSettings)
@@ -468,6 +477,11 @@ namespace MoreGamemodes
             SnSImpostorsAreVisible = BooleanOptionItem.Create(2005, "Impostors are visible", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
             InstantShapeshift = BooleanOptionItem.Create(2006, "Instant shapeshift", false, TabGroup.GamemodeSettings, false)
+                .SetGamemode(Gamemodes.ShiftAndSeek);
+            SnSHiders = TextOptionItem.Create(2010, "Hiders", TabGroup.GamemodeSettings)
+                .SetGamemode(Gamemodes.ShiftAndSeek)
+                .SetColor(Color.cyan);
+            SnSShowDangerMeter = BooleanOptionItem.Create(2011, "Show danger meter", false, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.ShiftAndSeek);
 
             //Bomb tag
@@ -1046,7 +1060,7 @@ namespace MoreGamemodes
             TaskCompleteTimeDuringFreeze = FloatOptionItem.Create(15013, "Task complete duration during freeze", new(5f, 180f, 2.5f), 60f, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.FreezeTag)
                 .SetValueFormat(OptionFormat.Seconds);
-            ShowDangerMeter = BooleanOptionItem.Create(15014, "Show danger meter", true, TabGroup.GamemodeSettings, false)
+            FtShowDangerMeter = BooleanOptionItem.Create(15014, "Show danger meter", true, TabGroup.GamemodeSettings, false)
                 .SetGamemode(Gamemodes.FreezeTag);
             
             //Color wars

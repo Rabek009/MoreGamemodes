@@ -5,11 +5,13 @@ namespace MoreGamemodes
 {
     public class Camouflager : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            base.OnHudUpate(__instance);
+            base.OnHudUpdate(__instance);
             if (Player.Data.IsDead) return;
             __instance.AbilityButton.OverrideText("Camouflage");
+            if (ClassicGamemode.instance.IsCamouflageActive || Utils.IsActive(SystemTypes.MushroomMixupSabotage) || (Utils.IsSabotage() && !CanCamouflageDuringSabotage.GetBool()))
+                __instance.AbilityButton.SetDisabled();
         }
 
         public void OnReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target)
@@ -21,6 +23,7 @@ namespace MoreGamemodes
                 {
                     Utils.RevertCamouflage();
                     ClassicGamemode.instance.IsCamouflageActive = false;
+                    ClassicGamemode.instance.SendRPC(GameManager.Instance);
                 }
             }
         }
@@ -53,6 +56,7 @@ namespace MoreGamemodes
             }
             Utils.Camouflage();
             ClassicGamemode.instance.IsCamouflageActive = true;
+            ClassicGamemode.instance.SendRPC(GameManager.Instance);
             AbilityDuration = CamouflageDuration.GetFloat();
             new LateTask(() => Player.RpcSetAbilityCooldown(CamouflageDuration.GetFloat()), 0.2f);
             new LateTask(() =>
@@ -61,6 +65,7 @@ namespace MoreGamemodes
                 {
                     Utils.RevertCamouflage();
                     ClassicGamemode.instance.IsCamouflageActive = false;
+                    ClassicGamemode.instance.SendRPC(GameManager.Instance);
                 }
             }, CamouflageDuration.GetFloat());
             return false;

@@ -85,12 +85,13 @@ namespace MoreGamemodes
         {
             if (!AmongUsClient.Instance.AmHost) return true;
             Utils.SyncAllSettings();
-            new LateTask(() => {
+            new LateTask(() =>
+            {
                 foreach (var pc in PlayerControl.AllPlayerControls)
-					PlayerNameColor.Set(pc);
-				PlayerControl.LocalPlayer.StopAllCoroutines();
-				DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
-				DestroyableSingleton<HudManager>.Instance.HideGameLoader();
+                    PlayerNameColor.Set(pc);
+                PlayerControl.LocalPlayer.StopAllCoroutines();
+                DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoShowIntro());
+                DestroyableSingleton<HudManager>.Instance.HideGameLoader();
             }, 0f);
             return CustomGamemode.Instance.OnSelectRolesPrefix();
         }

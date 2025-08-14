@@ -28,6 +28,12 @@ namespace MoreGamemodes
             SendRPC();
         }
 
+        public override int GetPlayerCount()
+        {
+            if (AbilityUsed || DieAfterUsingAbility.GetBool()) return 1;
+            return 2;
+        }
+
         public void SendRPC()
         {
             AbilityUsed = true;
@@ -38,12 +44,6 @@ namespace MoreGamemodes
         public override void ReceiveRPC(MessageReader reader)
         {
             AbilityUsed = true;
-        }
-
-        public override int GetPlayerCount()
-        {
-            if (AbilityUsed || DieAfterUsingAbility.GetBool()) return 1;
-            return 2;
         }
 
         // https://github.com/EnhancedNetwork/TownofHost-Enhanced/blob/main/Modules/GuessManager.cs#L638

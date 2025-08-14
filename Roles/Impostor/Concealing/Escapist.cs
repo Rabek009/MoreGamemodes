@@ -6,9 +6,9 @@ namespace MoreGamemodes
 {
     public class Escapist : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            base.OnHudUpate(__instance);
+            base.OnHudUpdate(__instance);
             if (Player.Data.IsDead) return;
             if (MarkedPosition == null)
                 __instance.AbilityButton.OverrideText("Mark");

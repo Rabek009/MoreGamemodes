@@ -61,7 +61,7 @@ namespace MoreGamemodes
                 __instance.FilterText.text = "Crewmate";
         }
 
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             if (!IsZombie(player) && GetKillsRemain(player) > 0)

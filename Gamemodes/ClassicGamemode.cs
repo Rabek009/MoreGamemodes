@@ -47,14 +47,14 @@ namespace MoreGamemodes
             __instance.FilterText.text = !__instance.HauntTarget.Data.Role.IsDead ? __instance.HauntTarget.GetRole().RoleName : "Ghost";
         }
 
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             if (!player.GetRole().CanUseKillButton() && player.GetRole().ForceKillButton() && !player.Data.IsDead)
                 __instance.KillButton.ToggleVisible(true);
-            player.GetRole().OnHudUpate(__instance);
+            player.GetRole().OnHudUpdate(__instance);
             foreach (var addOn in player.GetAddOns())
-                addOn.OnHudUpate(__instance);
+                addOn.OnHudUpdate(__instance);
             if (IsRoleblocked[player.PlayerId])
             {
                 __instance.AbilityButton.SetDisabled();
@@ -873,7 +873,7 @@ namespace MoreGamemodes
                 return false;
             if (IsCamouflageActive && systemType == SystemTypes.Sabotage && !Camouflager.CanCamouflageDuringSabotage.GetBool())
                 return false;
-            if (IsCamouflageActive && systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1)
+            if (IsCamouflageActive && systemType == SystemTypes.Sabotage && (SystemTypes)reader.ReadByte() == SystemTypes.MushroomMixupSabotage)
                 return false;
             if (!player.GetRole().OnUpdateSystem(__instance, systemType, reader))
                 return false;
@@ -1014,6 +1014,18 @@ namespace MoreGamemodes
             if (IsCamouflageActive && player != seer)
                 name = Utils.ColorString(Color.clear, "Player");
             return prefix + name + postfix;
+        }
+
+        public void SendRPC(GameManager manager)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(manager.NetId, (byte)CustomRPC.SyncGamemode, SendOption.Reliable, -1);
+            writer.Write(IsCamouflageActive);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public override void ReceiveRPC(GameManager manager, MessageReader reader)
+        {
+            IsCamouflageActive = reader.ReadBoolean();
         }
 
         public void SetFreezeTimer(PlayerControl player, float timer)

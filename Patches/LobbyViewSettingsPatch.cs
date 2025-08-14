@@ -18,7 +18,6 @@ namespace MoreGamemodes
         [HarmonyPostfix]
         public static void AwakePostfix(LobbyViewSettingsPane __instance)
         {
-            if (GameManager.Instance.IsHideAndSeek()) return;
             __instance.gameModeText.DestroyTranslator();
             __instance.gameModeText.text = Options.Gamemode.GetString();
             
@@ -204,7 +203,6 @@ namespace MoreGamemodes
         [HarmonyPostfix]
         public static void OnEnablePostfix(LobbyViewSettingsPane __instance)
         {
-            if (GameManager.Instance.IsHideAndSeek()) return;
             ReCreateButtons(__instance);
         }
     }

@@ -7,7 +7,7 @@ namespace MoreGamemodes
 {
     public class BaseWarsGamemode : CustomGamemode
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             var room = player.GetPlainShipRoom();

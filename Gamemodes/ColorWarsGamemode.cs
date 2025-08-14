@@ -8,7 +8,7 @@ namespace MoreGamemodes
 {
     public class ColorWarsGamemode : CustomGamemode
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             __instance.ImpostorVentButton.SetDisabled();

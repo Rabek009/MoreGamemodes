@@ -8,9 +8,9 @@ namespace MoreGamemodes
 {
     public class Arsonist : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            base.OnHudUpate(__instance);
+            base.OnHudUpdate(__instance);
             if (Player.Data.IsDead) return;
             if (__instance.KillButton.currentTarget != null && DouseState[__instance.KillButton.currentTarget.PlayerId] == DouseStates.Doused)
                 __instance.KillButton.OverrideText("Ignite");

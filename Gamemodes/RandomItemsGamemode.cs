@@ -23,7 +23,7 @@ namespace MoreGamemodes
                 __instance.FilterText.text += " (" + ItemString(GetItem(__instance.HauntTarget)) + ")";
         }
 
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             __instance.ReportButton.OverrideText(GetItem(player) == Items.Medicine ? "Revive" : "Report");
@@ -543,7 +543,7 @@ namespace MoreGamemodes
         public override bool OnUpdateSystem(ShipStatus __instance, SystemTypes systemType, PlayerControl player, MessageReader reader)
         {
             if (IsHackActive && (!player.Data.Role.IsImpostor || Options.HackAffectsImpostors.GetBool())) return false;
-            if (CamouflageTimer > -1f && systemType == SystemTypes.MushroomMixupSabotage && reader.ReadByte() == 1) return false;
+            if (CamouflageTimer > -1f && systemType == SystemTypes.Sabotage && (SystemTypes)reader.ReadByte() == SystemTypes.MushroomMixupSabotage) return false;
             return true;
         }
 

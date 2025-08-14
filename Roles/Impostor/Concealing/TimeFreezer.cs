@@ -7,9 +7,9 @@ namespace MoreGamemodes
 {
     public class TimeFreezer : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            base.OnHudUpate(__instance);
+            base.OnHudUpdate(__instance);
             if (Player.Data.IsDead) return;
             __instance.AbilityButton.OverrideText("Freeze Time");
             if (Utils.IsSabotage())

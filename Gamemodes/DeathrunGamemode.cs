@@ -25,7 +25,7 @@ namespace MoreGamemodes
             }, 2f);
         }
         
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.Role.IsImpostor)

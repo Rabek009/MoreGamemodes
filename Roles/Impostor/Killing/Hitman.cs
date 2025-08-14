@@ -9,9 +9,9 @@ namespace MoreGamemodes
 {
     public class Hitman : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            base.OnHudUpate(__instance);
+            base.OnHudUpdate(__instance);
             if (Player.Data.IsDead) return;
             __instance.AbilityButton.OverrideText("Target Change");
             if (__instance.KillButton.currentTarget != null && __instance.KillButton.currentTarget.PlayerId != Target)

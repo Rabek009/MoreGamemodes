@@ -6,9 +6,10 @@ namespace MoreGamemodes
 {
     public class Droner : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            __instance.ReportButton.OverrideText(TranslationController.Instance.GetString(StringNames.ReportButton));
+            __instance.ReportButton.OverrideText("Report");
+            __instance.KillButton.OverrideText("Kill");
             if (Player.Data.IsDead) return;
             __instance.AbilityButton.OverrideText("Drone");
             if (RealPosition != null)

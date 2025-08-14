@@ -13,9 +13,10 @@ namespace MoreGamemodes
             Player.RpcSetPetAbilityCooldown(true);
         }
 
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            __instance.ReportButton.OverrideText(TranslationController.Instance.GetString(StringNames.ReportButton));
+            __instance.ReportButton.OverrideText("Report");
+            __instance.KillButton.OverrideText("Kill");
             __instance.PetButton.OverrideText("Block vent");
             if (AbilityUses < 1f || ClassicGamemode.instance.IsOnPetAbilityCooldown[Player.PlayerId])
                 __instance.PetButton.SetDisabled();

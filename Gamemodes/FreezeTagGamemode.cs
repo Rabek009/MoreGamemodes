@@ -37,7 +37,7 @@ namespace MoreGamemodes
                 __instance.FilterText.text = "Tracker";
         }
 
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.Role.IsImpostor)
@@ -309,7 +309,7 @@ namespace MoreGamemodes
 
         public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
         {
-            if (Options.ShowDangerMeter.GetBool() && !player.Data.Role.IsImpostor && player == seer)
+            if (Options.FtShowDangerMeter.GetBool() && !player.Data.Role.IsImpostor && player == seer)
             {
                 var impostor = player.GetClosestImpostor();
                 if (impostor == null) return name;

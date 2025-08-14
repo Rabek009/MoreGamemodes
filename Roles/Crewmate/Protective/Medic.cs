@@ -12,9 +12,9 @@ namespace MoreGamemodes
             Cooldown = ShieldCooldown.GetFloat();
         }
 
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            base.OnHudUpate(__instance);
+            base.OnHudUpdate(__instance);
             if (Player.Data.IsDead) return;
             __instance.KillButton.OverrideText("Shield");
             if (AbilityUses < 1f)

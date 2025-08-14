@@ -1,18 +1,27 @@
 using UnityEngine;
+using Hazel;
 
 namespace MoreGamemodes
 {
     public class Altruist : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            base.OnHudUpate(__instance);
-            __instance.ReportButton.OverrideText("Revive");
+            __instance.ReportButton.OverrideText("Report");
+            __instance.KillButton.OverrideText("Kill");
+            __instance.PetButton.OverrideText("Change Mode");
+            if (ReviveMode)
+                __instance.ReportButton.OverrideText("Revive");
+        }
+
+        public override void OnPet()
+        {
+            SendRPC(!ReviveMode);
         }
 
         public override bool OnReportDeadBody(NetworkedPlayerInfo target)
         {
-            if (target == null || target.Object == null || target.Disconnected) return true;
+            if (!ReviveMode || target == null || target.Object == null || target.Disconnected) return true;
             var player = target.Object;
             player.RpcRevive();
             Player.RpcSetDeathReason(DeathReasons.Suicide);
@@ -34,6 +43,7 @@ namespace MoreGamemodes
         {
             Revived = byte.MaxValue;
             Killer = byte.MaxValue;
+            SendRPC(true);
         }
 
         public override void OnFixedUpdate()
@@ -47,14 +57,38 @@ namespace MoreGamemodes
 
         public override string GetNamePostfix()
         {
+            string postfix = "";
+            if (ReviveMode)
+                postfix = Utils.ColorString(Color, "\n<size=1.8>Mode: Revive\n</size><size=65%>");
+            else
+                postfix = Utils.ColorString(Color, "\n<size=1.8>Mode: Report\n</size><size=65%>");
+            postfix += Utils.ColorString(Color.magenta, "(") + Utils.ColorString(Color.cyan, "Pet to change mode") + Utils.ColorString(Color.magenta, ")</size>");
             if (SeeArrowToNearestBody.GetBool() && !Player.Data.IsDead && Player.GetClosestDeadBody() != null)
-                return Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.transform.position, Player.GetClosestDeadBody().transform.position));
-            return "";
+                postfix += Utils.ColorString(Color, "\n" + Utils.GetArrow(Player.transform.position, Player.GetClosestDeadBody().transform.position));
+            return postfix;
+        }
+
+        public override void OnRevive()
+        {
+            SendRPC(true);
         }
 
         public override bool ShouldContinueGame()
         {
             return Object.FindObjectOfType<DeadBody>() != null;
+        }
+
+        public void SendRPC(bool reviveMode)
+        {
+            ReviveMode = reviveMode;
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(Player.NetId, (byte)CustomRPC.SyncCustomRole, SendOption.Reliable, -1);
+            writer.Write(reviveMode);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
+
+        public override void ReceiveRPC(MessageReader reader)
+        {
+            ReviveMode = reader.ReadBoolean();
         }
 
         public Altruist(PlayerControl player)
@@ -64,10 +98,12 @@ namespace MoreGamemodes
             Player = player;
             Utils.SetupRoleInfo(this);
             AbilityUses = -1f;
+            ReviveMode = true;
             Revived = byte.MaxValue;
             Killer = byte.MaxValue;
         }
 
+        public bool ReviveMode;
         public byte Revived;
         public byte Killer;
 

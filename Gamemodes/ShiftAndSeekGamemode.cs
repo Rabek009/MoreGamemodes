@@ -31,7 +31,7 @@ namespace MoreGamemodes
                 __instance.FilterText.text = "Shifter Ghost";
         }
 
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             var player = PlayerControl.LocalPlayer;
             if (player.Data.Role.IsImpostor)
@@ -202,6 +202,29 @@ namespace MoreGamemodes
                 opt.SetFloat(FloatOptionNames.PlayerSpeedMod, 0f);
             } 
             return opt;
+        }
+
+        public override string BuildPlayerName(PlayerControl player, PlayerControl seer, string name)
+        {
+            if (Options.SnSShowDangerMeter.GetBool() && !player.Data.Role.IsImpostor && player == seer)
+            {
+                var impostor = player.GetClosestImpostor();
+                if (impostor == null) return name;
+                var distance = Vector2.Distance(player.transform.position, impostor.transform.position);
+                if (distance <= 2f)
+                    name += "\n<#ff1313>■■■■■</color>";
+                else if (distance <= 4.5f)
+                    name += "\n<#ff6a00>■■■■</color><#aaaaaa>■</color>";
+                else if (distance <= 7f)
+                    name += "\n<#ffaa00>■■■</color><#aaaaaa>■■</color>";
+                else if (distance <= 10f)
+                    name += "\n<#ffea00>■■</color><#aaaaaa>■■■</color>";
+                else if (distance <= 13f)
+                    name += "\n<#ffff00>■</color><#aaaaaa>■■■■</color>";
+                else
+                    name += "\n<#aaaaaa>■■■■■</color>";
+            }
+            return name;
         }
 
         public ShiftAndSeekGamemode()

@@ -18,7 +18,7 @@ Join to discord server: https://discord.gg/jJe5kPpbFJ
 | `Shift`             | Start the game immediately          | In Countdown |
 | `Ctrl` + `Delete`   | Reset options to default            | In Lobby     |
 | `Shift`+`V`+`Enter` | End meeting (with counting votes)   | In Meeting   |
-| `Shift`+`R`+`Enter` | Enable all custom roles and add-ons | In Lobby     |
+| `Shift`+`R`+`Enter` | Enable all custom roles and add ons | In Lobby     |
 
 ### Mod client only
 | HotKey | Function              | Usable Scene |
@@ -91,6 +91,7 @@ Impostors need to kill every single crewmate, crewmate need to do every task. No
 | Impostors can vent              |
 | Impostors can close doors       |
 | Impostors are visible           |
+| Show danger meter               |
 
 ### Shift and seek
 Everyone is engineer or shapeshifter. Impostors need to kill every single crewmate, crewmate need to do every task. No reports, emergiences and sabotages. Depending on options impostors can vent and closing doors. Impostors are visible to others or not. Impostors must shapeshift into person they want to kill.
@@ -104,6 +105,7 @@ Everyone is engineer or shapeshifter. Impostors need to kill every single crewma
 | Impostors can close doors       |
 | Impostors are visible           |
 | Instant shapeshift              |
+| Show danger meter               |
 
 ### Bomb tag
 Everyone is impostor. Rounds last for some seconds. After every round players with bomb die and new players get bomb. No reports, meetings, sabotages or venting. Click kill button to give bomb away. Depending on options players with bomb see arrow to nearest non bombed. Last standing alive wins!
@@ -134,7 +136,6 @@ Increases discussion and voting time. Only crewmates can get this item.
 | Enable time slower       |
 | Discussion time increase |
 | Voting time increase     |
-
 
 ##### Knowledge
 You can investigate nearby player. If this player is good, he has green name. If this player is bad, he has red name. Depending on options target can see your name in gray after this. Only crewmates can get this item.
@@ -558,6 +559,445 @@ You can chat during rounds. If proximity chat is on only nearby players see you 
 #### Disable zipline
 Players can't use zipline on the fungle.
 
+## Roles
+
+### Crewmate investigative
+
+#### Investigator
+You can use pet button to switch between task and investigate mode. In task mode you can do tasks. In investigate mode you have kill button. Use kill button to investigate player. If players is good, his name will become green. But if player is evil then his name will turn red. But some roles that are good can show as evil, also sometimes evil roles show as good. You have limited ability uses, but you can do tasks to increase it.<br><br>If you have mod installed, you don't have task and investigate mode. You can do tasks and investigate at the same time.
+
+##### Game options
+| Name                                      |
+| ----------------------------------------- |
+| Investigate cooldown                      |
+| Neutral killing show red                  |
+| Neutral evil show red                     |
+| Neutral benign show red                   |
+| Crewmate killing show red                 |
+| Incorrect result chance                   |
+| Initial ability use limit                 |
+| Ability use gain with each task completed |
+
+#### Mortician
+When you report dead body, you know target's role, killer's role and how old is body. During meeting you see death reasons. Depending on options you have arrow pointing to nearest dead body.
+
+| Name                      |
+| ------------------------- |
+| See arrow to nearest body |
+| Can be guessed            |
+
+#### Oracle
+You can use pet button to switch between task and confess mode. In task mode you can do tasks. In confess mode you have kill button. Use kill button to select x players (amount is defined in options). When you select these players, the most evil of them will confess (you will see that he confessed and his name will be red). Only you know who confessed. If 2 or more players are the most evil, then 1 random of them will confess. These are aligments from the most evil:<br>1. Impostor<br>2. Neutral killer<br>3. Neutral evil<br>4.Neutral benign<br>5. Crewmate killing<br>6. Crewmate non-killing<br><br>If you have mod installed, you don't have task and confess mode. You can do tasks and make people confess at the same time.
+
+##### Game options
+| Name                                      |
+| ----------------------------------------- |
+| Confess cooldown                          |
+| Number of selected players                |
+| Unselect dead players                     |
+| Initial ability use limit                 |
+| Ability use gain with each task completed |
+
+#### Sniffer
+You can use pet button to switch between task and sniff mode. In task mode you can do tasks. In sniff mode you have kill button. Use kill button to sniff a player once per round. During meeting you can see who was near that player after you sniffed him. These players are given in random order. Invisible players don't count and shapeshifter can cause fake result.<br><br>If you have mod installed, you don't have task and sniff mode. You can do tasks and sniff at the same time.
+
+##### Game options
+| Name           |
+| -------------- |
+| Sniff cooldown |
+| Sniff radius   |
+
+#### Snitch
+After completing all tasks you see who is impostor and depending on options neutral killer. Depending on options you can also see arrows to them. But if you're close to complete tasks, killers will know you and see arrow to you. Depending on options you might have more tasks than other crewmates. Finish tasks fast and don't get killed!
+
+##### Game options
+| Name                          |
+| ----------------------------- |
+| Can find neutral killers      |
+| See arrow to impostors        |
+| Tasks remaining when revealed |
+| Additional short tasks        |
+| Additional long tasks         |
+
+### Crewmate killing
+
+#### Nice guesser
+You can guess evil roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 6 is trapster, you should type <i>/guess 6 trapster</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead.
+
+##### Game options
+| Name                      |
+| ------------------------- |
+| Can guess neutral killing |
+| Can guess neutral evil    |
+| Can guess neutral benign  |
+| Can guess add ons         |
+
+#### Shaman
+During meeting you can curse someone. To do this open kick menu (open chat and click red button), select player who you want to curse and click "kick". If that player is killer he has to kill someone next round, or he will die and is informed about it. If that player can't kill, nothing will happen. You can curse max 1 person per meeting. You can't call meeting, but you can still report dead body. You have limited ability uses, but you can do tasks to increase it.<br><br>If you have mod installed you can use curse button to curse someone.
+
+##### Game options
+| Name                                      |
+| ----------------------------------------- |
+| Initial ability use limit                 |
+| Ability use gain with each task completed |
+
+#### Sheriff
+You can use pet button to switch between task and kill mode. In task mode you can do tasks. In kill mode you have kill button. You can kill impostors and depending on options neutrals. If you try to kill someone you can't, you die from misfire. Depending on options your target dies on misfire too.<br><br>If you have mod installed, you don't have task and kill mode. You can do tasks and kill at the same time.
+
+##### Game options
+| Name                     |
+| ------------------------ |
+| Kill cooldown            |
+| Misfire kills target     |
+| Can kill neutral killing |
+| Can kill neutral evil    |
+| Can kill neutral benign  |
+| Can kill jester          |
+
+### Crewmate protective
+
+#### Altruist
+You can use pet button to switch between report and revive mode. In report mode you can report dead bodies. In revive mode you can use report button to revive someone. After reviving someone you die. Revived player can still use their abilities, chat and do everything else. Depending on options you have arrow pointing to nearest dead body.
+
+##### Game options
+| Name                        |
+| --------------------------- |
+| See arrow to nearest body   |
+| Killer see arrow to revived |
+
+#### Immortal
+After completing all tasks you can survive few kill attempts. In addition after you complete task, you get temporarily protection. If impostor tries to kill you, his cooldown will reset to 50%.
+
+##### Game options
+| Name                                       |
+| ------------------------------------------ |
+| Protection after completing task duration  |
+| Times protected after completing all tasks |
+| Can be guessed                             |
+
+#### Medic
+You can use pet button to switch between task and shield mode. In task mode you can do tasks. In shield mode you have kill button. Use kill button to give shield to crewmate. Player with shield can't be killed. If player with shield die, you can give shield to another player. You get alerted when someone try to kill protected player and depending on options killer's cooldown reset to 50%. When you die, shield disappear.<br><br>If you have mod installed, you don't have task and shield mode. You can do tasks and give shield at the same time.
+
+##### Game options
+| Name                    |
+| ----------------------- |
+| Shield cooldown         |
+| Reset kill cooldown     |
+| Shielded can see shield |
+
+### Crewmate support
+
+#### Bloody
+If you get killed, dead bodies of you are going to spawn on killer for some time making a body trail. If you get killed indirectly or get eaten by pelican, your ability doesn't work. Bloody can't be bait.
+
+##### Game options
+| Name                       |
+| -------------------------- |
+| Dead bodies spawn duration |
+| Dead bodies interval       |
+
+#### Judge
+During meeting you can eject anyone you want one time. To do this open kick menu (open chat and click red button), select player who you want to exile and click "kick". After that meeting will instantly end and that player will be ejected. Depending on options you might die after using ability.<br><br>If you have mod installed you can use judge button to exile player.
+
+##### Game options
+| Name                    |
+| ----------------------- |
+| Die after using ability |
+
+#### Mayor
+Your vote counts as multiple votes. Use it to eject impostors easier.
+
+##### Game options
+| Name                  |
+| --------------------- |
+| Additional vote count |
+| Hide additional votes |
+| Can be guessed        |
+
+#### Mutant
+You can use pet button during sabotage to instantly fix it from anywhere. You can't fix mushroom mixup sabotage.
+
+##### Game options
+| Name                                      |
+| ----------------------------------------- |
+| Initial ability use limit                 |
+| Ability use gain with each task completed |
+
+#### Security guard
+You can use pet button near vent to block it permanently. Blocked vent can't be used by anyone. When you're looking at cameras/doorlog/binoculars you get alerted when someone die. Depending on options cameras don't blink when you're using it.
+
+##### Game options
+| Name                                      |
+| ----------------------------------------- |
+| Block vent cooldown                       |
+| Initial ability use limit                 |
+| Ability use gain with each task completed |
+| Hide camera usage                         |
+| Blocked vents update mode                 |
+| Can be guessed                            |
+
+### Impostor concealing
+
+#### Camouflager
+Click vanish button to camouflage everyone temporarily. During camouflage everyone looks exactly the same and all names are hidden.
+
+##### Game options
+| Name                           |
+| ------------------------------ |
+| Camouflage cooldown            |
+| Camouflage duration            |
+| Can camouflage during sabotage |
+
+#### Droner
+You can use vanish button to launch the drone from your position. You can control this drone and everyone can see it. Drone can stay on map for limited amount of time. When controlling drone you can kill people using it. Use pet button to stop using it or it will stop automatically when ability duration is over. After that you have cooldown before you can use your ability again. When you're using a drone, your real character is not moving (other people see you standing still). People can still interact with you when you're using a drone. When using drone you can't vent, report, call meetings and interact with objects. When ability expires a drone stays on map, but is 2 times smaller.
+
+##### Game options
+| Name                |
+| ------------------- |
+| Drone cooldown      |
+| Drone duration      |
+| Drone speed         |
+| Drone vision        |
+| Drone kill distance |
+
+#### Escapist
+You can mark position with your vanish button. You can teleport to that position by using vanish button again. After teleporting or after meeting your marked position reset and you have to mark again.
+
+##### Game options
+| Name              |
+| ----------------- |
+| Mark cooldown     |
+| Teleport cooldown |
+| Can use vents     |
+
+#### Time freezer
+Click vanish button to freeze time for short period of time. When time is frozen other players can't move and are blind. They can't use their abilities, kill, report bodies, call meeting, sabotage, vent. You can't freeze time during sabotage.
+
+##### Game options
+| Name                   |
+| ---------------------- |
+| Freeze cooldown        |
+| Freeze duration        |
+| Can use vents          |
+| Can kill during freeze |
+
+### Impostor killing
+
+#### Archer
+You can use pet button to kill nearest player without teleporting to them, but it uses arrow. Kill range is limited, but you can kill through walls. You can kill normally without using it. You have limited arrows, but you can get more by killing. You can only shoot, when your cooldown is 0.
+
+##### Game options
+| Name                            |
+| ------------------------------- |
+| Can kill impostors              |
+| Arrow distance                  |
+| Initial ability use limit       |
+| Ability use gain with each kill |
+
+#### Evil guesser
+You can guess roles during meeting. To guess player type <b>/guess PLAYER_ID ROLE_NAME</b>. You see player id in his name. For example: if you want to guess that player with number 2 is sheriff, you should type <i>/guess 2 sheriff</i>. If you guess role correctly, that player dies instantly. But if you're wrong, you die instead. During rounds you can kill like regular impostor.
+
+##### Game options
+| Name                      |
+| ------------------------- |
+| Can guess neutral killing |
+| Can guess neutral evil    |
+| Can guess neutral benign  |
+| Can guess "Crewmate" role |
+| Can guess add ons         |
+
+#### Hitman
+Your target is random non impostor and you're only allowed to kill that target. After killing you have very short kill cooldown and your target changes. Target changes when your current target dies, after meeting or when your shift timer goes to 0. Depending on options you have arrow pointing to your target. You can see your target name at any time and you see target's name in black.
+
+##### Game options
+| Name                     |
+| ------------------------ |
+| Target change time       |
+| Show arrow to target     |
+| Kill cooldown after kill |
+
+### Impostor support
+
+#### Parasite
+You can use pet button to turn nearby player into impostor, but you die after doing it. Depending on options that person becomes regular impostor, parasite or random impostor role. You can kill like regular impostor, but after kill your ability cooldown reset. You can use ability when you're suspicious to turn someone less suspicious into impostor.
+
+##### Game options
+| Name                 |
+| -------------------- |
+| Infect cooldown      |
+| Turned impostor role |
+
+#### Trapster
+After killing someone, you place trap on dead body. Next player, who tries to report that body (or interact with it in any way) will be trapped on it unable to move and use abilities. Dead body can trap only 1 person at the time. If someone gets trapped on your body, your kill cooldown will decrease and you will get alerted.
+
+##### Game options
+| Name                           |
+| ------------------------------ |
+| Kill cooldown decrease on trap |
+
+#### Undertaker
+You can use shift button to select a target (it must be another impostor). That impostor is target until either he kills someone, dies or after some time passes. If selected impostor kills someone, dead body is teleported to you. When you're last impostor you can't use your ability, but depending on options you might get kill cooldown reduction.
+
+##### Game options
+| Name                                      |
+| ----------------------------------------- |
+| Select target cooldown                    |
+| Target time to kill                       |
+| Kill cooldown decrease when last impostor |
+
+### Neutral benign
+
+#### Amnesiac
+You can use pet button to switch between report and remember mode. In report mode you can report dead bodies. In remember mode you can use report button on dead body to steal role of dead player. Depending on options you have arrow pointing to nearest dead body. You don't have win condition, you have to steal role from dead body and then win.
+
+##### Game options
+| Name                      |
+| ------------------------- |
+| See arrow to nearest body |
+
+#### Opportunist
+Survive to the end to win with winning team. If you die, you lose.
+
+#### Romantic
+Use kill button to choose your lover. Your goal is to protect your lover and help him win. If your lover wins, you win. If your lover loses, you lose. If one of you die, the other one dies too. Your role/team can't change and other romantics can't select you as lover. Depending on options after choosing target, you can use vanish button to protect both of you for some time. You might know lover's role and be able to chat with him privately during round by typing /lc MESSAGE
+
+##### Game options
+| Name                               |
+| ---------------------------------- |
+| Romance cooldown                   |
+| Can protect                        |
+| Protect cooldown                   |
+| Protect duration                   |
+| Ability use limit                  |
+| See lover role                     |
+| Can chat with lover                |
+| Disable chat during comms sabotage |
+
+### Neutral evil
+
+#### Executioner
+You have random target that is crewmate. If your target is ejected, you win alone. You see your target name in black. If your target dies, you either become amnesiac, opportunist, jester or crewmate depending on options.
+
+##### Game options
+| Name                    |
+| ----------------------- |
+| Role after target death |
+| Can vote for target     |
+| Can win after death     |
+
+#### Jester
+Get voted out to win alone. Act suspicious to make people think you're impostor.
+
+##### Game options
+| Name                 |
+| -------------------- |
+| Can use vents        |
+| Has impostor vision  |
+| Can vote for himself |
+
+#### Soul collector
+Use kill button to predict that selected player will die. When your target dies in any way, you collect their soul and you can choose new target. Depending on options you can change target anytime. When you collect enough souls, you instantly win alone.
+
+##### Game options
+| Name                  |
+| --------------------- |
+| Predict cooldown      |
+| Can change target     |
+| Souls required to win |
+
+### Neutral killing
+
+#### Arsonist
+Use kill button on not doused player to douse him. If you click kill button on doused player, you ignite him. Ignited player will ignite every doused player that he touches and die after some time. Doused players have black name, ignited have orange name. Igniting bypasses all protections. Kill everyone to win alone.
+
+##### Game options
+| Name                  |
+| --------------------- |
+| Douse/Ignite cooldown |
+| Ignite duration       |
+| Ignite radius         |
+| Can use vents         |
+
+#### Ninja
+You can use vanish button to become invisible - there is no animation. During invisibility your speed is greatly increased and you don't teleport when killing. Depending on options you can vent when you're not invisible. Kill everyone to win alone.
+
+##### Game options
+| Name                           |
+| ------------------------------ |
+| Kill cooldown                  |
+| Vanish cooldown                |
+| Vanish duration                |
+| Speed increase while invisible |
+| Can use vents                  |
+
+#### Pelican
+You can eat players by using your kill button. It means you can kill players without leaving bodies. Eat everyone to win alone.
+
+##### Game options
+| Name          |
+| ------------- |
+| Eat cooldown  |
+| Can use vents |
+
+#### Serial killer
+Your goal is to kill everyone. You have lower kill cooldown, so you can kill faster than impostors.
+
+##### Game options
+| Name          |
+| ------------- |
+| Kill cooldown |
+
+## Add ons
+
+### Helpful
+
+#### Bait
+When you're killed, your killer instantly self report. Depending on options there might be report delay.
+
+##### Game options
+| Name                          |
+| ----------------------------- |
+| Report delay                  |
+| Warn killer about self report |
+| Neutrals can become bait      |
+| Impostors can become bait     |
+| Can be guessed                |
+
+#### Radar
+You see arrow to nearest player. That arrow is always updated.
+
+#### Watcher
+You see who votes for who in meeting, like with anonymous votes turned off.
+
+### Harmful
+
+#### Blind
+Your vision is decreased.
+
+##### Game options
+| Name                     |
+| ------------------------ |
+| Crewmate vision decrease |
+| Impostor vision decrease |
+
+#### Oblivious
+You can't report dead bodies. Depending on options you also avoid bait self report. Mortician can't be oblivious.
+
+##### Game options
+| Name                      |
+| ------------------------- |
+| Report after killing bait |
+
+### Impostor
+
+#### Lurker
+Your kill cooldown continues to go down when you're in a vent. Only impostors can get this add on.
+
+##### Game options
+| Name                    |
+| ----------------------- |
+| Cooldown decrease speed |
+
 ## Other functions
 
 ### Anti-cheat
@@ -571,7 +1011,7 @@ If you ban a player, he can't join any More Gamemodes lobby you host in the futu
 You can start game when you only want even if there's less than 4 players in lobby.
 
 ### Unlimited impostors
-There is no impostors limit. You can start 4 players game with 3 impostors. Or even do 1 crewmate vs 14 impostors.
+There is no impostors limit. You can start 4 players game with 3 impostors or even do 1 crewmate vs 14 impostors.
 
 ### Walking throught walls in public lobby
 `Ctrl` works in non modded lobbies, so you can just walk throught walls. This function works only in lobby.
@@ -606,10 +1046,10 @@ https://github.com/0xDrMoe/TownofHost-Enhanced
 4. Game options menu from TOHY
 https://github.com/Yumenopai/TownOfHost_Y
 
-5. Many role ideas from Town Of Us
+5. Many role ideas from Town Of Us Reactivated
 https://github.com/eDonnes124/Town-Of-Us-R
 
-6. Security guard role idea from The Other Roles
+6. Security guard role idea and inspiration for bloody role from The Other Roles
 https://github.com/TheOtherRolesAU/TheOtherRoles
 
 This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.

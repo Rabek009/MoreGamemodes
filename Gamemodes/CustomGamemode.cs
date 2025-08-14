@@ -33,7 +33,7 @@ namespace MoreGamemodes
                 __instance.FilterText.text = "Tracker";
         }
 
-        public virtual void OnHudUpate(HudManager __instance)
+        public virtual void OnHudUpdate(HudManager __instance)
         {
             
         }

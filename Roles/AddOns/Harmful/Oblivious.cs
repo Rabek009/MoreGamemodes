@@ -2,7 +2,7 @@ namespace MoreGamemodes
 {
     public class Oblivious : AddOn
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
             __instance.ReportButton.SetDisabled();
             __instance.ReportButton.ToggleVisible(false);

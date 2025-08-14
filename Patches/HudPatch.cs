@@ -12,7 +12,7 @@ namespace MoreGamemodes
             var player = PlayerControl.LocalPlayer;
             if (player == null) return;
             if (!Main.GameStarted || MeetingHud.Instance || !SetHudActivePatch.IsActive) return;
-            CustomGamemode.Instance.OnHudUpate(__instance);
+            CustomGamemode.Instance.OnHudUpdate(__instance);
         }
     }
 

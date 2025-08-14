@@ -4,9 +4,10 @@ namespace MoreGamemodes
 {
     public class Archer : CustomRole
     {
-        public override void OnHudUpate(HudManager __instance)
+        public override void OnHudUpdate(HudManager __instance)
         {
-            __instance.ReportButton.OverrideText(TranslationController.Instance.GetString(StringNames.ReportButton));
+            __instance.ReportButton.OverrideText("Report");
+            __instance.KillButton.OverrideText("Kill");
             __instance.PetButton.OverrideText("Shoot");
             if (ClassicGamemode.instance.IsOnPetAbilityCooldown[Player.PlayerId])
                 __instance.PetButton.SetDisabled();
@@ -60,7 +61,7 @@ namespace MoreGamemodes
             Chance = RoleOptionItem.Create(600300, CustomRoles.Archer, TabGroup.ImpostorRoles, false);
             Count = IntegerOptionItem.Create(600301, "Max", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
-            CanKillImpostors = BooleanOptionItem.Create(600302, "Can kill impostors", true, TabGroup.ImpostorRoles, false)
+            CanKillImpostors = BooleanOptionItem.Create(600302, "Can kill impostors", false, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance);
             ArrowDistance = FloatOptionItem.Create(600303, "Arrow distance", new(0.5f, 2.5f, 0.1f), 1f, TabGroup.ImpostorRoles, false)
                 .SetParent(Chance)

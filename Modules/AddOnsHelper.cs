@@ -40,7 +40,7 @@ namespace MoreGamemodes
         {
             {AddOns.Bait, "Bait (Add on): When you're killed, your killer instantly self report. Depending on options there might be report delay."},
             {AddOns.Watcher, "Watcher (Add on): You see who votes for who in meeting, like with anonymous votes turned off."},
-            {AddOns.Radar, "Radar (Add on): You see arrow to nearest player that is always updated."},
+            {AddOns.Radar, "Radar (Add on): You see arrow to nearest player. That arrow is always updated."},
             {AddOns.Oblivious, "Oblivious (Add on): You can't report dead bodies. Depending on options you also avoid bait self report. Mortician can't be oblivious."},
             {AddOns.Blind, "Blind (Add on): Your vision is decreased."},
             {AddOns.Lurker, "Lurker (Add on): Your kill cooldown continues to go down when you're in a vent. Only impostors can get this add on."},

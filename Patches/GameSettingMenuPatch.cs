@@ -20,7 +20,6 @@ namespace MoreGamemodes
         [HarmonyPriority(Priority.First)]
         public static void StartPostfix(GameSettingMenu __instance)
         {
-            if (GameManager.Instance.IsHideAndSeek()) return;
             ModSettingsButtons = new();
             int tabNum = 0;
             foreach (var tab in Enum.GetValues<TabGroup>())
@@ -83,7 +82,8 @@ namespace MoreGamemodes
         [HarmonyPatch(nameof(GameSettingMenu.ChangeTab)), HarmonyPrefix]
         public static bool ChangeTabPrefix(GameSettingMenu __instance, ref int tabNum, [HarmonyArgument(1)] bool previewOnly)
         {
-            ModGameOptionsMenu.TabIndex = tabNum;
+            if (!previewOnly)
+                ModGameOptionsMenu.TabIndex = tabNum;
             GameOptionsMenu settingsTab;
             PassiveButton button;
 
@@ -156,7 +156,6 @@ namespace MoreGamemodes
         [HarmonyPatch(nameof(GameSettingMenu.OnEnable)), HarmonyPrefix]
         private static bool OnEnablePrefix(GameSettingMenu __instance)
         {
-            if (GameManager.Instance.IsHideAndSeek()) return true;
             if (templateGameOptionsMenu == null)
             {
                 templateGameOptionsMenu = Object.Instantiate(__instance.GameSettingsTab, __instance.GameSettingsTab.transform.parent);
