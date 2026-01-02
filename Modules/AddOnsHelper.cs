@@ -8,7 +8,7 @@ namespace MoreGamemodes
     {
         public static Dictionary<string, AddOns> CommandAddOnNames = new() 
         {
-            {"bait", AddOns.Bait},
+            {"诱饵", AddOns.Bait},
             {"watcher", AddOns.Watcher},
             {"radar", AddOns.Radar},
             {"guesser", AddOns.Guesser},
@@ -19,7 +19,7 @@ namespace MoreGamemodes
 
         public static Dictionary<AddOns, string> AddOnNames = new() 
         {
-            {AddOns.Bait, "Bait"},
+            {AddOns.Bait, "诱饵"},
             {AddOns.Watcher, "Watcher"},
             {AddOns.Radar, "Radar"},
             {AddOns.Guesser, "Guesser"},
